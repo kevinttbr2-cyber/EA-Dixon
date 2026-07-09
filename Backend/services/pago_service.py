@@ -51,6 +51,14 @@ class PagoService:
     def obtener_pagados_hoy():
         return PagoRepository.obtener_pagados_hoy()
     
+    # ============================
+    # 🔴 AGREGAR ESTE MÉTODO
+    # ============================
+    @staticmethod
+    def obtener_todos_pagados():
+        """Obtiene todos los pagos con estado 'pagado'"""
+        return PagoRepository.obtener_todos_pagados()
+    
     @staticmethod
     def obtener_por_id(id_reg):
         return PagoRepository.obtener_por_id(id_reg)
