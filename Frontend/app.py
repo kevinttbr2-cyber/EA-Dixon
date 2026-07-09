@@ -5,7 +5,7 @@ import secrets
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend")
+app.secret_key = os.environ.get("37b2354ab919f0a5515e81a6d4586147ecc9487cdfd33078d110a1361fd6bb86", "37b2354ab919f0a5515e81a6d4586147ecc9487cdfd33078d110a1361fd6bb86")
 
 # URL del backend en Railway
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://tu-backend.railway.app")
