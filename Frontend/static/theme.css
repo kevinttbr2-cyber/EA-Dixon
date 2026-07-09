@@ -1,0 +1,9 @@
+/* Estilos globales - complemento de base.html */
+body { background: #0a0a0a; color: #fff; }
+.navbar { background: rgba(10,10,10,0.95) !important; border-bottom: 2px solid #00ff66 !important; }
+.btn-primary { background: #00ff66 !important; color: #000 !important; font-weight: 700; }
+.btn-primary:hover { background: #00cc52 !important; }
+.form-control { background: rgba(0,0,0,0.50) !important; color: #fff !important; border: 1px solid #00ff66 !important; }
+.form-control:focus { border-color: #00ff66 !important; box-shadow: 0 0 0 0.2rem rgba(0,255,102,0.25); }
+.table-dark { background: #141414 !important; }
+.table-dark thead { background: #00ff66 !important; color: #000 !important; }

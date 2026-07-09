@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="color:#00ff66; font-weight:700; text-align:center; margin-bottom:20px;">🚛 Clientes Frecuentes</h2>
+
+{% for cliente in clientes %}
+<div class="card-android">
+    <div style="font-size:18px; font-weight:700; color:#00ff66;">{{ cliente.nombre }}</div>
+    <div>🚗 Vehículos: {{ cliente.total_vehiculos or 0 }}</div>
+    <div>📋 Servicios: {{ cliente.total_servicios or 0 }}</div>
+    <div>💰 Total: ${{ "{:,.0f}".format(cliente.total_gastado or 0) }}</div>
+</div>
+{% else %}
+<div style="text-align:center; color:#666; padding:40px 0;">
+    <i class="fa-solid fa-users" style="font-size:48px; color:#00ff66; opacity:0.3;"></i>
+    <p style="margin-top:15px;">No hay clientes frecuentes registrados</p>
+</div>
+{% endfor %}
+{% endblock %}

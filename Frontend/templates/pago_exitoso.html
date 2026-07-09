@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="text-align:center; max-width:600px; margin:0 auto;">
+    <i class="fa-solid fa-circle-check" style="font-size:64px; color:#00ff66;"></i>
+    <h2 style="color:#00ff66; font-weight:700; margin-top:10px;">✅ ¡Pago Completado!</h2>
+    <p style="color:#90e0a0;">El pago se ha registrado exitosamente.</p>
+
+    <div style="background:rgba(255,255,255,0.04); border-radius:12px; padding:15px 20px; text-align:left; margin:20px 0;">
+        <p><strong style="color:#90e0a0;">Cliente:</strong> {{ registro.nombre }}</p>
+        <p><strong style="color:#90e0a0;">Monto:</strong> <span style="color:#00ff66;">${{ "{:,.0f}".format(registro.monto) }}</span></p>
+        <p><strong style="color:#90e0a0;">Vehículo:</strong> {{ registro.marca }} {{ registro.modelo }}</p>
+        <p><strong style="color:#90e0a0;">Patente:</strong> {{ registro.patente }}</p>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <a href="{{ url_pdf }}" target="_blank" class="btn" style="background:#00ff66; color:#000; font-weight:700; border-radius:10px; padding:10px 24px; text-decoration:none;">
+            <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+        </a>
+        <a href="/estado" class="btn" style="background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.10); border-radius:10px; padding:10px 24px; text-decoration:none;">
+            Volver al Estado
+        </a>
+    </div>
+</div>
+{% endblock %}

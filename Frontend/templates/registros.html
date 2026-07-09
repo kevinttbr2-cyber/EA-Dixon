@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="color:#00ff66; font-weight:700; text-align:center; margin-bottom:20px;">📋 Registros de Pagos</h2>
+
+<table class="table table-dark table-hover table-bordered" style="font-size:13px;">
+    <thead style="background:#00ff66; color:#000;">
+        <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Monto</th>
+            <th>Fecha</th>
+            <th>Patente</th>
+            <th>Marca/Modelo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in registros %}
+        <tr>
+            <td>{{ r.id }}</td>
+            <td>{{ r.nombre }}</td>
+            <td style="color:#00ff66;">${{ "{:,.0f}".format(r.monto) }}</td>
+            <td>{{ r.fecha[:10] if r.fecha else '' }}</td>
+            <td>{{ r.patente }}</td>
+            <td>{{ r.marca }} {{ r.modelo }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

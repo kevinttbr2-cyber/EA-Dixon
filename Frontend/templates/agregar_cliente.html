@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="color:#00ff66; font-weight:700; text-align:center; margin-bottom:20px;">Agregar Cliente</h2>
+
+<form method="POST" action="/agregar">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    
+    <div class="mb-3">
+        <label style="color:#90e0a0;">Nombre del cliente</label>
+        <input type="text" name="nombre" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label style="color:#90e0a0;">Patente</label>
+        <input type="text" name="patente" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label style="color:#90e0a0;">Marca</label>
+        <select id="marca" name="marca" class="form-control" required>
+            <option value="">Seleccione</option>
+            {% for m in marcas %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+            <option value="__manual__">OTRA</option>
+        </select>
+        <input type="text" id="marca_manual" name="marca_manual" class="form-control mt-2" style="display:none;" placeholder="Escriba la marca">
+    </div>
+
+    <div class="mb-3">
+        <label style="color:#90e0a0;">Modelo</label>
+        <select id="modelo" name="modelo" class="form-control" required>
+            <option value="">Seleccione</option>
+        </select>
+        <input type="text" id="modelo_manual" name="modelo_manual" class="form-control mt-2" style="display:none;" placeholder="Escriba el modelo">
+    </div>
+
+    <div class="mb-3">
+        <label style="color:#90e0a0;">Teléfono</label>
+        <input type="tel" name="telefono" class="form-control" placeholder="+56912345678">
+    </div>
+
+    <div class="mb-3">
+        <label style="color:#90e0a0;">Observaciones</label>
+        <textarea name="observaciones" class="form-control" rows="2"></textarea>
+    </div>
+
+    <button class="btn btn-primary w-100">Registrar</button>
+</form>
+
+<script>
+    document.getElementById('marca').addEventListener('change', function() {
+        const marca = this.value;
+        const modeloSelect = document.getElementById('modelo');
+        const marcaManual = document.getElementById('marca_manual');
+        const modeloManual = document.getElementById('modelo_manual');
+        
+        if (marca === '__manual__') {
+            marcaManual.style.display = 'block';
+            modeloSelect.innerHTML = '<option value="">Seleccione</option>';
+            modeloManual.style.display = 'block';
+            return;
+        }
+        marcaManual.style.display = 'none';
+        modeloManual.style.display = 'none';
+        
+        fetch('/modelos/' + marca)
+            .then(r => r.json())
+            .then(data => {
+                modeloSelect.innerHTML = '<option value="">Seleccione</option>';
+                data.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    modeloSelect.appendChild(opt);
+                });
+                const optManual = document.createElement('option');
+                optManual.value = '__manual__';
+                optManual.textContent = 'OTRO';
+                modeloSelect.appendChild(optManual);
+            });
+    });
+</script>
+{% endblock %}
