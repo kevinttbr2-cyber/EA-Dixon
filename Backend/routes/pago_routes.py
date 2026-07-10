@@ -1,8 +1,16 @@
 from flask import Blueprint, request, jsonify
 from services.pago_service import PagoService
+from database import get_connection, get_cursor
 
+# ============================
+# BLUEPRINT
+# ============================
 pago_bp = Blueprint('pago', __name__, url_prefix='/api')
 
+
+# ============================
+# 1. ESTADO (PENDIENTES + PAGADOS HOY)
+# ============================
 @pago_bp.route('/estado', methods=['GET'])
 def get_estado():
     pendientes = PagoService.obtener_pendientes()
@@ -14,6 +22,10 @@ def get_estado():
         "total_pagados_hoy": len(pagados)
     })
 
+
+# ============================
+# 2. OBTENER REGISTRO POR ID (¡ESTA ES LA QUE FALTABA!)
+# ============================
 @pago_bp.route('/registro/<int:id_reg>', methods=['GET'])
 def get_registro(id_reg):
     pago = PagoService.obtener_por_id(id_reg)
@@ -21,6 +33,19 @@ def get_registro(id_reg):
         return jsonify(pago.to_dict())
     return jsonify({"error": "No encontrado"}), 404
 
+
+# ============================
+# 3. OBTENER TODOS LOS REGISTROS PAGADOS
+# ============================
+@pago_bp.route('/registros', methods=['GET'])
+def get_registros():
+    pagados = PagoService.obtener_todos_pagados()
+    return jsonify([p.to_dict() for p in pagados])
+
+
+# ============================
+# 4. AGREGAR CLIENTE (PAGO EXPRESS - PASO 1)
+# ============================
 @pago_bp.route('/agregar', methods=['POST'])
 def agregar_pago():
     data = request.json
@@ -29,6 +54,10 @@ def agregar_pago():
         return jsonify({"success": True, "id": id_reg})
     return jsonify({"success": False, "error": "Error al guardar"}), 500
 
+
+# ============================
+# 5. PROCESAR PAGO (PASO 1 - PAGO EXPRESS)
+# ============================
 @pago_bp.route('/pagar/<int:id_reg>', methods=['POST'])
 def pagar(id_reg):
     data = request.json
@@ -37,10 +66,10 @@ def pagar(id_reg):
         return jsonify({"success": True, "pago": pago.to_dict()})
     return jsonify({"success": False, "error": "Error al procesar"}), 500
 
-@pago_bp.route('/registros', methods=['GET'])
-def get_registros():
-    pagados = PagoService.obtener_todos_pagados()
-    return jsonify([p.to_dict() for p in pagados])
+
+# ============================
+# 6. PENDIENTES DE VALIDACIÓN (PASO 2 - PENDIENTES)
+# ============================
 @pago_bp.route('/pendientes_validacion', methods=['GET'])
 def get_pendientes_validacion():
     """Obtiene pagos pendientes de validación"""
@@ -80,4 +109,46 @@ def get_pendientes_validacion():
         })
     except Exception as e:
         print(f"Error en get_pendientes_validacion: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================
+# 7. VALIDAR PAGO (PASO 2 - VALIDACIÓN DE COSTOS)
+# ============================
+@pago_bp.route('/validar_pago/<int:id_reg>', methods=['POST'])
+def validar_pago(id_reg):
+    """Paso 2: Validar costos y ganancia neta"""
+    data = request.json
+    
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            UPDATE pagos 
+            SET costo_repuestos_real = %s,
+                costo_mano_obra_real = %s,
+                costo_diagnostico_real = %s,
+                ganancia_neta = %s,
+                observaciones_pago = %s,
+                validado = TRUE,
+                validado_por = %s,
+                fecha_validacion = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """, (
+            data.get('costo_repuestos_real', 0),
+            data.get('costo_mano_obra_real', 0),
+            data.get('costo_diagnostico_real', 0),
+            data.get('ganancia_neta', 0),
+            data.get('observaciones_pago', ''),
+            data.get('validado_por', 'Sistema'),
+            id_reg
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Error en validar_pago: {e}")
         return jsonify({"error": str(e)}), 500
