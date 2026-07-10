@@ -1,24 +1,99 @@
 {% extends "base.html" %}
-{% block content %}
-<div style="text-align:center; max-width:600px; margin:0 auto;">
-    <i class="fa-solid fa-circle-check" style="font-size:64px; color:#00ff66;"></i>
-    <h2 style="color:#00ff66; font-weight:700; margin-top:10px;">✅ ¡Pago Completado!</h2>
-    <p style="color:#90e0a0;">El pago se ha registrado exitosamente.</p>
 
-    <div style="background:rgba(255,255,255,0.04); border-radius:12px; padding:15px 20px; text-align:left; margin:20px 0;">
-        <p><strong style="color:#90e0a0;">Cliente:</strong> {{ registro.nombre }}</p>
-        <p><strong style="color:#90e0a0;">Monto:</strong> <span style="color:#00ff66;">${{ "{:,.0f}".format(registro.monto) }}</span></p>
-        <p><strong style="color:#90e0a0;">Vehículo:</strong> {{ registro.marca }} {{ registro.modelo }}</p>
-        <p><strong style="color:#90e0a0;">Patente:</strong> {{ registro.patente }}</p>
+{% block content %}
+
+<div class="base-container" style="text-align: center; max-width: 600px; margin: 0 auto;">
+    <div style="margin-bottom: 15px;">
+        <i class="fa-solid fa-circle-check" style="font-size: 64px; color: #00ff66;"></i>
+    </div>
+    
+    <h2 style="color: #00ff66; font-weight: 700; margin-bottom: 5px;">
+        ✅ ¡Pago Completado!
+    </h2>
+    <p style="color: #90e0a0; font-size: 16px; margin-bottom: 20px;">
+        El pago se ha registrado exitosamente.
+    </p>
+
+    <!-- DATOS DEL CLIENTE -->
+    <div style="background: rgba(255,255,255,0.04); border-radius: 12px; padding: 15px 20px; text-align: left; margin-bottom: 20px; border: 1px solid rgba(0, 255, 102, 0.08);">
+        <p><strong style="color: #90e0a0;">OT #:</strong> <span style="color: #fff;">{{ registro.id }}</span></p>
+        <p><strong style="color: #90e0a0;">Cliente:</strong> <span style="color: #fff;">{{ registro.nombre }}</span></p>
+        <p><strong style="color: #90e0a0;">Monto:</strong> <span style="color: #00ff66; font-weight: 700;">${{ "{:,.0f}".format(registro.monto) }}</span></p>
+        <p><strong style="color: #90e0a0;">Vehículo:</strong> <span style="color: #fff;">{{ registro.marca }} {{ registro.modelo }}</span></p>
+        <p><strong style="color: #90e0a0;">Patente:</strong> <span style="color: #fff;">{{ registro.patente }}</span></p>
     </div>
 
-    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-        <a href="{{ url_pdf }}" target="_blank" class="btn" style="background:#00ff66; color:#000; font-weight:700; border-radius:10px; padding:10px 24px; text-decoration:none;">
+    <!-- ============================
+         QR Y BOTÓN DE DESCARGA
+         ============================ -->
+    <div style="
+        background: rgba(0,255,102,0.04);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid rgba(0,255,102,0.15);
+        margin-bottom: 20px;
+    ">
+        <h4 style="color: #90e0a0; margin-bottom: 15px;">📱 Escanea el QR para ver tu informe</h4>
+        
+        <!-- QR -->
+        <div id="qr-container" style="margin: 10px auto; width: 200px; height: 200px; background: #0a0a0a; border-radius: 12px; border: 2px solid #00ff66; display: flex; align-items: center; justify-content: center;">
+            <img id="qr-image" src="" alt="Cargando QR..." style="width: 100%; height: 100%; object-fit: contain; padding: 8px;">
+        </div>
+        
+        <p style="color: #888; font-size: 12px; margin-top: 10px;">
+            Escanea con la cámara de tu celular para ver el informe completo
+        </p>
+    </div>
+
+    <!-- BOTONES -->
+    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_pdf }}" target="_blank" class="btn" style="
+            background: #00ff66;
+            color: #000;
+            font-weight: 700;
+            border-radius: 10px;
+            padding: 10px 24px;
+            text-decoration: none;
+        ">
             <i class="fa-solid fa-file-pdf"></i> Descargar PDF
         </a>
-        <a href="/estado" class="btn" style="background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.10); border-radius:10px; padding:10px 24px; text-decoration:none;">
-            Volver al Estado
+        <a href="/estado" class="btn" style="
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 10px;
+            padding: 10px 24px;
+            text-decoration: none;
+        ">
+            ← Volver al Estado
         </a>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const id_reg = {{ registro.id }};
+        const firma = '{{ registro.firma or "" }}';
+        
+        // Si la firma no está disponible, generarla
+        const urlQR = firma 
+            ? `https://ea-dixon-production.up.railway.app/api/qr/${id_reg}/${firma}`
+            : `https://ea-dixon-production.up.railway.app/api/qr/${id_reg}/60258ef36da71b5e`;  // ← FIRMA TEMPORAL
+        
+        // Cargar el QR
+        fetch(urlQR)
+            .then(r => r.json())
+            .then(data => {
+                if (data.qr) {
+                    document.getElementById('qr-image').src = data.qr;
+                }
+            })
+            .catch(err => {
+                console.error('Error cargando QR:', err);
+                document.getElementById('qr-image').src = '';
+                document.getElementById('qr-container').innerHTML = '<span style="color:#ff6b6b;">❌ Error cargando QR</span>';
+            });
+    });
+</script>
+
 {% endblock %}
