@@ -22,12 +22,26 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
+# Agrega este decorador para roles específicos
+def role_required(allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if not session.get("usuario"):
+                return redirect("/login")
+            if session.get("rol") not in allowed_roles:
+                return "No tienes permisos para acceder a esta sección", 403
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
 def generar_firma_pdf(id_reg):
     return hmac.new(
         PDF_SECRET_KEY.encode(),
         str(id_reg).encode(),
         hashlib.sha256
     ).hexdigest()[:16]
+    
 @app.context_processor
 def inject_globals():
     return dict(backend_url=BACKEND_URL)
@@ -211,6 +225,7 @@ def cambiar_password():
 
 @app.route('/pendientes_validacion')
 @login_required
+@role_required(['admin', 'operador'])
 def pendientes_validacion():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/pendientes_validacion", timeout=10)
@@ -232,6 +247,7 @@ def pendientes_validacion():
 
 @app.route('/validar_pago/<int:id_reg>', methods=['GET', 'POST'])
 @login_required
+@role_required(['admin', 'operador'])
 def validar_pago(id_reg):
     if session.get('rol') not in ['admin', 'operador']:
         return "No tienes permisos para validar pagos", 403
@@ -300,6 +316,7 @@ def validar_pago(id_reg):
 
 @app.route('/pago_validado/<int:id_reg>')
 @login_required
+@role_required(['admin', 'operador'])
 def pago_validado(id_reg):
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
@@ -314,6 +331,7 @@ def pago_validado(id_reg):
 # ============================
 @app.route('/registros')
 @login_required
+@role_required(['admin', 'operador'])
 def registros():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registros", timeout=10)
@@ -347,6 +365,7 @@ def registros():
 # ============================
 @app.route('/balance')
 @login_required
+@role_required(['admin', 'operador'])
 def balance():
     filtro = request.args.get('filtro', 'hoy')
     try:
@@ -397,6 +416,7 @@ def modelos(marca):
         return jsonify([])
 @app.route('/editar_completo/<int:id_reg>', methods=['POST'])
 @login_required
+@role_required(['admin', 'operador'])
 def editar_completo(id_reg):
     """Edición completa de un registro (todos los campos)"""
     data = request.json
@@ -413,6 +433,7 @@ def editar_completo(id_reg):
 
 @app.route('/flotas')
 @login_required
+@role_required(['admin', 'operador'])
 def flotas():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/flotas", timeout=10)
@@ -423,6 +444,7 @@ def flotas():
 
 @app.route('/register', methods=['GET', 'POST'])
 @login_required
+@role_required(['admin', 'operador'])
 def register():
     if session.get('rol') != 'admin':
         return "No tienes permisos", 403
@@ -461,6 +483,7 @@ def register():
 
 @app.route('/usuarios')
 @login_required
+@role_required(['admin', 'operador'])
 def usuarios():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/usuarios", timeout=10)
@@ -472,6 +495,7 @@ def usuarios():
 
 @app.route('/auditoria_descargas')
 @login_required
+@role_required(['admin', 'operador'])
 def auditoria_descargas():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/auditoria", timeout=10)
