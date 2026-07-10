@@ -352,9 +352,12 @@ def balance():
         total_mano_obra=total_mano_obra,
         total_diagnostico=total_diagnostico,
         ganancia_neta=ganancia_neta,
-        filtro=filtro
+        filtro=filtro,
+        hoy=[],  # ← Para que no falle el template
+        semana=[],
+        mes=[],
+        todos=[]
     )
-
 @app.route('/modelos/<marca>')
 @login_required
 def modelos(marca):
