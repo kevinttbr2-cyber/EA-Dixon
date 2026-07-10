@@ -444,7 +444,6 @@ def flotas():
 
 @app.route('/register', methods=['GET', 'POST'])
 @login_required
-@role_required(['admin', 'operador'])
 def register():
     if session.get('rol') != 'admin':
         return "No tienes permisos", 403
@@ -472,7 +471,8 @@ def register():
                 }
                 resp = requests.post(f"{BACKEND_URL}/api/crear_usuario", json=data, timeout=10)
                 if resp.status_code == 200:
-                    success = f"✅ Usuario {username} creado correctamente"
+                    # ✅ REDIRIGIR A USUARIOS DESPUÉS DE CREAR
+                    return redirect("/usuarios")
                 else:
                     error = resp.json().get('error', '❌ Error al crear usuario')
             except Exception as e:
