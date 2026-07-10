@@ -142,7 +142,7 @@ def get_balance():
         
         query = """
             SELECT * FROM pagos 
-            WHERE estado = 'pagado'"
+            WHERE estado = 'pagado'
         """
         params = []
         
