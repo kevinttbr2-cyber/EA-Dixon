@@ -4,6 +4,11 @@ from services.pdf_service import PDFService
 from repositories.pago_repo import PagoRepository
 
 pdf_bp = Blueprint('pdf', __name__, url_prefix='/api')
+@pdf_bp.route('/firma/<int:id_reg>', methods=['GET'])
+def get_firma(id_reg):
+    """Devuelve la firma para un ID de registro"""
+    firma = PDFService.generar_firma(id_reg)
+    return jsonify({"firma": firma})
 
 @pdf_bp.route('/pdf/<int:id_reg>/<firma>', methods=['GET'])
 def descargar_pdf(id_reg, firma):
