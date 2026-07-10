@@ -95,11 +95,10 @@ class UsuarioRepository:
             import bcrypt
             conn = get_connection()
             cur = conn.cursor()
-            
-            hashed = bcrypt.hashpw(nueva_password.encode('utf-8'), bcrypt.gensalt())
-            hash_str = hashed.decode('utf-8')
-            
-            cur.execute("UPDATE usuarios SET password = %s WHERE username = %s", (hash_str, username))
+        
+        # 🔥 TODO EN UNA SOLA LÍNEA - SIN INDENTACIÓN COMPLEJA
+            cur.execute("UPDATE usuarios SET password = %s WHERE username = %s", 
+                     (bcrypt.hashpw(nueva_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), username))
             conn.commit()
             cur.close()
             conn.close()
