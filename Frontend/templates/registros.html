@@ -382,6 +382,8 @@
      SCRIPTS
      ============================ -->
 <script>
+    const BACKEND_URL = "{{ BACKEND_URL }}";
+
     document.addEventListener('DOMContentLoaded', function() {
 
         // ============================
@@ -389,8 +391,10 @@
         // ============================
         function toggleVista() {
             const isMobile = window.innerWidth < 768;
-            document.querySelector('.vista-escritorio').style.display = isMobile ? 'none' : 'block';
-            document.querySelector('.vista-movil').style.display = isMobile ? 'flex' : 'none';
+            const escritorio = document.querySelector('.vista-escritorio');
+            const movil = document.querySelector('.vista-movil');
+            if (escritorio) escritorio.style.display = isMobile ? 'none' : 'block';
+            if (movil) movil.style.display = isMobile ? 'flex' : 'none';
         }
         window.addEventListener('resize', toggleVista);
         toggleVista();
@@ -420,7 +424,6 @@
                 }
                 fila.style.display = valor.toLowerCase().includes(texto) ? '' : 'none';
             });
-            // También filtrar tarjetas móviles
             document.querySelectorAll('.card-android').forEach(card => {
                 const texto = card.textContent.toLowerCase();
                 card.style.display = texto.includes(buscadorInput.value.toLowerCase().trim()) ? '' : 'none';
@@ -460,7 +463,7 @@
         });
 
         // ============================
-        // 4. ACCIONES: DETALLE, EDITAR, ELIMINAR
+        // 4. ACCIONES
         // ============================
         document.querySelectorAll('.accion-item').forEach(item => {
             item.addEventListener('click', function(e) {
@@ -477,7 +480,7 @@
         });
 
         // ============================
-        // 5. FUNCIONES (verDetalle, editarRegistro, eliminarRegistro)
+        // 5. VER DETALLE
         // ============================
         async function verDetalle(id) {
             const modal = document.getElementById('modalDetalle');
@@ -486,7 +489,7 @@
             contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
 
             try {
-                const resp = await fetch(`{{ BACKEND_URL }}/api/registro/${id}`);
+                const resp = await fetch(`${BACKEND_URL}/api/registro/${id}`);
                 const data = await resp.json();
                 contenido.innerHTML = `
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:14px;">
@@ -523,12 +526,15 @@
             if (e.target === this) this.style.display = 'none';
         });
 
+        // ============================
+        // 6. EDITAR
+        // ============================
         async function editarRegistro(id) {
             const modal = document.getElementById('modalEditar');
             modal.style.display = 'flex';
 
             try {
-                const resp = await fetch(`{{ BACKEND_URL }}/api/registro/${id}`);
+                const resp = await fetch(`${BACKEND_URL}/api/registro/${id}`);
                 const data = await resp.json();
                 document.getElementById('edit_id').value = data.id;
                 document.getElementById('edit_nombre').value = data.nombre || '';
@@ -562,7 +568,7 @@
             };
 
             try {
-                const resp = await fetch(`{{ BACKEND_URL }}/api/editar_registro/${id}`, {
+                const resp = await fetch(`${BACKEND_URL}/api/editar_registro/${id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -578,9 +584,12 @@
             }
         });
 
+        // ============================
+        // 7. ELIMINAR
+        // ============================
         function eliminarRegistro(id) {
             if (!confirm(`¿Eliminar el registro #${id} permanentemente?`)) return;
-            fetch(`{{ BACKEND_URL }}/api/eliminar_registro/${id}`, {
+            fetch(`${BACKEND_URL}/api/eliminar_registro/${id}`, {
                 method: 'DELETE'
             }).then(resp => {
                 if (resp.ok) {
@@ -593,7 +602,7 @@
         }
 
         // ============================
-        // 6. ORDENAR TABLA
+        // 8. ORDENAR TABLA
         // ============================
         window.ordenarTabla = function(columna) {
             const tbody = document.querySelector('#tablaRegistros tbody');
@@ -620,5 +629,4 @@
         };
     });
 </script>
-
 {% endblock %}
