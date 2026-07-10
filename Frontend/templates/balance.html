@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="base-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+        <h2 style="color: #4fc3f7; font-weight: 700; margin: 0;">
+            📊 Balance de Ganancia
+        </h2>
+        <a href="/registros" class="btn btn-sm" style="
+            background: rgba(255,255,255,0.06);
+            color: #888;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 6px 16px;
+            text-decoration: none;
+        ">
+            ← Volver a Registros
+        </a>
+    </div>
+
+    <!-- ============================
+         FILTROS RÁPIDOS
+         ============================ -->
+    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
+        <a href="?filtro=hoy" class="filtro-card {% if filtro == 'hoy' %}active-pagados{% endif %}">
+            <div class="etiqueta">Hoy</div>
+            <div class="numero">{{ hoy|length }}</div>
+        </a>
+        <a href="?filtro=7d" class="filtro-card {% if filtro == '7d' %}active-pagados{% endif %}">
+            <div class="etiqueta">7 días</div>
+            <div class="numero">{{ semana|length }}</div>
+        </a>
+        <a href="?filtro=mes" class="filtro-card {% if filtro == 'mes' %}active-pagados{% endif %}">
+            <div class="etiqueta">1 Mes</div>
+            <div class="numero">{{ mes|length }}</div>
+        </a>
+        <a href="?filtro=todos" class="filtro-card {% if filtro == 'todos' %}active-total{% endif %}">
+            <div class="etiqueta">Todos</div>
+            <div class="numero">{{ todos|length }}</div>
+        </a>
+    </div>
+
+    <!-- ============================
+         RESUMEN DE BALANCE
+         ============================ -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px;">
+        <div style="background: rgba(0,255,102,0.06); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(0,255,102,0.12); text-align: center;">
+            <div style="color: #888; font-size: 11px;">💰 Total Pagado</div>
+            <div style="color: #00ff66; font-size: 20px; font-weight: 700;">${{ "{:,.0f}".format(total_pagado) }}</div>
+        </div>
+        <div style="background: rgba(255,200,0,0.06); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(255,200,0,0.12); text-align: center;">
+            <div style="color: #888; font-size: 11px;">📦 Costo Repuestos</div>
+            <div style="color: #ffcc00; font-size: 20px; font-weight: 700;">${{ "{:,.0f}".format(total_repuestos) }}</div>
+        </div>
+        <div style="background: rgba(79,195,247,0.06); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(79,195,247,0.12); text-align: center;">
+            <div style="color: #888; font-size: 11px;">👨‍🔧 Mano de Obra</div>
+            <div style="color: #4fc3f7; font-size: 20px; font-weight: 700;">${{ "{:,.0f}".format(total_mano_obra) }}</div>
+        </div>
+        <div style="background: rgba(255,107,107,0.06); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(255,107,107,0.12); text-align: center;">
+            <div style="color: #888; font-size: 11px;">🩺 Diagnóstico</div>
+            <div style="color: #ff6b6b; font-size: 20px; font-weight: 700;">${{ "{:,.0f}".format(total_diagnostico) }}</div>
+        </div>
+        <div style="background: rgba(0,255,102,0.12); border-radius: 10px; padding: 12px 16px; border: 2px solid #00ff66; text-align: center;">
+            <div style="color: #888; font-size: 11px;">📊 GANANCIA NETA</div>
+            <div style="color: {% if ganancia_neta >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-size: 24px; font-weight: 700;">
+                ${{ "{:,.0f}".format(ganancia_neta) }}
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================
+         TABLA DE DETALLE DE COSTOS
+         ============================ -->
+    <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(79, 195, 247, 0.15); background: #141414;">
+        <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 800px; width: 100%;">
+            <thead style="background: #4fc3f7 !important
