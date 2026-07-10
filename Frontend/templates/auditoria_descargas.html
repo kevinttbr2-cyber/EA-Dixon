@@ -1,9 +1,173 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2 style="color:#00ff66; font-weight:700; text-align:center; margin-bottom:20px;">📊 Auditoría de Descargas</h2>
-<p style="text-align:center; color:#888;">Historial de descargas de PDFs</p>
-<div style="text-align:center; color:#666; padding:20px;">
-    <i class="fa-solid fa-file-pdf" style="font-size:32px; color:#00ff66; opacity:0.3;"></i>
-    <p>Los registros de descargas se muestran aquí</p>
+
+<div class="base-container">
+    <h2 style="color: #00ff66; font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 20px;">
+        📊 Auditoría de Descargas de Informes
+    </h2>
+
+    <!-- ============================
+         TARJETAS COMPACTAS ALINEADAS A LA IZQUIERDA
+         ============================ -->
+    <div style="
+        display: flex;
+        gap: 0;
+        border-radius: 12px 12px 0 0;
+        overflow: hidden;
+        border: 1px solid rgba(0, 255, 102, 0.20);
+        border-bottom: none;
+        background: #141414;
+        justify-content: flex-start;
+        width: 100%;
+    ">
+        <!-- TOTAL -->
+        <div style="
+            padding: 6px 18px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.04);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            min-width: 70px;
+        ">
+            <div style="font-size: 8px; color: #90e0a0; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700;">
+                Total
+            </div>
+            <div style="font-size: 16px; font-weight: 700; color: #ffffff;">
+                {{ historial|length }}
+            </div>
+        </div>
+
+        <!-- ADMIN -->
+        <div style="
+            padding: 6px 18px;
+            text-align: center;
+            background: rgba(0, 255, 102, 0.06);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            min-width: 70px;
+        ">
+            <div style="font-size: 8px; color: #00ff66; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700;">
+                Admin
+            </div>
+            <div style="font-size: 16px; font-weight: 700; color: #00ff66;">
+                {{ historial|selectattr('tipo', 'equalto', 'admin')|list|length }}
+            </div>
+        </div>
+
+        <!-- OPERADOR -->
+        <div style="
+            padding: 6px 18px;
+            text-align: center;
+            background: rgba(79, 195, 247, 0.06);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            min-width: 70px;
+        ">
+            <div style="font-size: 8px; color: #4fc3f7; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700;">
+                Operador
+            </div>
+            <div style="font-size: 16px; font-weight: 700; color: #4fc3f7;">
+                {{ historial|selectattr('tipo', 'equalto', 'operador')|list|length }}
+            </div>
+        </div>
+
+        <!-- CLIENTE -->
+        <div style="
+            padding: 6px 18px;
+            text-align: center;
+            background: rgba(255, 200, 0, 0.06);
+            min-width: 70px;
+        ">
+            <div style="font-size: 8px; color: #ffcc00; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700;">
+                Cliente
+            </div>
+            <div style="font-size: 16px; font-weight: 700; color: #ffcc00;">
+                {{ historial|selectattr('tipo', 'equalto', 'cliente')|list|length }}
+            </div>
+        </div>
+
+        <!-- Espaciador para que quede alineado a la izquierda -->
+        <div style="flex: 1;"></div>
+    </div>
+
+    <!-- ============================
+         TABLA DE DATOS
+         ============================ -->
+    <div style="overflow-x: auto; border-radius: 0 0 12px 12px; border: 1px solid rgba(0, 255, 102, 0.20); border-top: none; background: #141414;">
+        <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 750px; width: 100%; margin-bottom: 0;">
+            <thead style="background: #2a6d44 !important; color: #ffffff !important;">
+                <tr>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">#</th>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">OT</th>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Cliente</th>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Usuario</th>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Rol</th>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Fecha/Hora</th>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Vehículo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in historial %}
+                <tr>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center;">{{ loop.index }}</td>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center;">
+                        <a href="/orden_trabajo_publico/{{ item.id_registro }}/{{ item.firma }}" 
+                           target="_blank" 
+                           style="color: #00ff66; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-file-pdf" style="font-size: 12px;"></i> #{{ item.id_registro }}
+                        </a>
+                    </td>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center;">{{ item.cliente or 'N/A' }}</td>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center;">
+                        {% if item.tipo == 'cliente' %}
+                        <span style="color: #ffcc00;">{{ item.usuario }}</span>
+                        {% else %}
+                        {{ item.usuario }}
+                        {% endif %}
+                    </td>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center;">
+                        {% if item.tipo == 'admin' %}
+                        <span style="color: #00ff66;">🔴 Admin</span>
+                        {% elif item.tipo == 'operador' %}
+                        <span style="color: #4fc3f7;">🟢 Operador</span>
+                        {% else %}
+                        <span style="color: #ffcc00;">👤 Cliente</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center; font-size: 12px; white-space: nowrap;">
+                        {{ item.fecha.strftime('%d/%m/%Y') if item.fecha else '' }}
+                        <br><span style="color: #888; font-size: 10px;">{{ item.fecha.strftime('%H:%M') if item.fecha else '' }}</span>
+                    </td>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center; font-size: 12px;">
+                        {{ item.marca or '' }} {{ item.modelo or '' }}
+                        <br><span style="color: #888; font-size: 10px;">{{ item.patente or '' }}</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #666; padding: 40px 0;">
+                        <i class="fa-solid fa-file-pdf" style="font-size: 48px; color: #00ff66; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
+                        <p style="font-size: 16px;">No hay descargas registradas</p>
+                        <p style="color: #888; font-size: 13px;">Los informes se registrarán automáticamente cuando se descarguen</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Botón volver -->
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="/estado" class="btn btn-sm" style="
+            background: rgba(255,255,255,0.06);
+            color: #888;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 8px 24px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        " onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+            ← Volver al Estado
+        </a>
+    </div>
 </div>
+
 {% endblock %}
