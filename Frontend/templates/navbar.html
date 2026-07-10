@@ -16,7 +16,13 @@
                     <a class="nav-link" href="/registros">📄 Registros</a>
                 </li>
                 {% endif %}
-                
+                <!-- 📊 PENDIENTES DE VALIDACIÓN -->
+                {% if session.get("rol") in ["admin", "operador"] %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/pendientes_validacion">📊 Validar Pagos</a>
+                </li>
+                {% endif %}
+            
                 <!-- 🚗 FLOTAS -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item">
