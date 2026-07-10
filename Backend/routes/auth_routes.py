@@ -43,3 +43,19 @@ def eliminar_usuario(id_usuario):
     if AuthService.eliminar_usuario(id_usuario):
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "Error al eliminar"}), 500
+@auth_bp.route('/cambiar_password', methods=['POST'])
+def cambiar_password():
+    data = request.json
+    username = data.get('username')
+    password_actual = data.get('password_actual')
+    password_nueva = data.get('password_nueva')
+    
+    # Verificar credenciales actuales
+    usuario = AuthService.login(username, password_actual)
+    if not usuario:
+        return jsonify({"error": "❌ Contraseña actual incorrecta"}), 401
+    
+    # Cambiar contraseña
+    if AuthService.cambiar_password(username, password_nueva):
+        return jsonify({"success": True})
+    return jsonify({"error": "❌ Error al cambiar contraseña"}), 500
