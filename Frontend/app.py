@@ -131,58 +131,6 @@ def pago_exitoso(id_reg):
         url_pdf = ""
     
     return render_template("pago_exitoso.html", registro=registro, url_pdf=url_pdf)
-@app.route('/registros')
-@login_required
-def registros():
-    try:
-        # ✅ Usa BACKEND_URL
-        resp = requests.get(f"{BACKEND_URL}/api/registros", timeout=10)
-        registros = resp.json() if resp.status_code == 200 else []
-    except Exception as e:
-        print(f"Error en /registros: {e}")
-        registros = []
-    
-    return render_template("registros.html", registros=registros)
-@app.route('/modelos/<marca>')
-@login_required
-def modelos(marca):
-    resp = requests.get(f"{BACKEND_URL}/api/modelos/{marca}")
-    return jsonify(resp.json() if resp.status_code == 200 else [])
-
-@app.route('/flotas')
-@login_required
-def flotas():
-    resp = requests.get(f"{BACKEND_URL}/api/flotas")
-    clientes = resp.json() if resp.status_code == 200 else []
-    return render_template("flotas.html", clientes=clientes)
-@app.route('/register')
-@login_required
-def register():
-    return render_template("register.html")
-
-@app.route('/usuarios')
-@login_required
-def usuarios():
-    try:
-        resp = requests.get(f"{BACKEND_URL}/api/usuarios", timeout=10)
-        usuarios = resp.json() if resp.status_code == 200 else []
-    except Exception as e:
-        print(f"Error en /usuarios: {e}")
-        usuarios = []
-    return render_template("usuarios.html", usuarios=usuarios)
-    
-@app.route('/auditoria_descargas')
-@login_required
-def auditoria_descargas():
-    """Página de auditoría de descargas de informes"""
-    try:
-        resp = requests.get(f"{BACKEND_URL}/api/auditoria", timeout=10)
-        historial = resp.json() if resp.status_code == 200 else []
-    except Exception as e:
-        print(f"Error en /auditoria_descargas: {e}")
-        historial = []
-    
-    return render_template("auditoria_descargas.html", historial=historial)
 @app.route('/cambiar_password', methods=['GET', 'POST'])
 @login_required
 def cambiar_password():
@@ -252,6 +200,71 @@ def pendientes_validacion():
         validados=validados,
         total_pagado=total_pagado
     )
+@app.route('/pago_validado/<int:id_reg>')
+@login_required
+def pago_validado(id_reg):
+    """Página de confirmación de validación"""
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
+        registro = resp.json() if resp.status_code == 200 else {}
+    except Exception as e:
+        print(f"Error en /pago_validado: {e}")
+        registro = {}
+    
+    return render_template("pago_validado.html", registro=registro)
+@app.route('/registros')
+@login_required
+def registros():
+    try:
+        # ✅ Usa BACKEND_URL
+        resp = requests.get(f"{BACKEND_URL}/api/registros", timeout=10)
+        registros = resp.json() if resp.status_code == 200 else []
+    except Exception as e:
+        print(f"Error en /registros: {e}")
+        registros = []
+    
+    return render_template("registros.html", registros=registros)
+@app.route('/modelos/<marca>')
+@login_required
+def modelos(marca):
+    resp = requests.get(f"{BACKEND_URL}/api/modelos/{marca}")
+    return jsonify(resp.json() if resp.status_code == 200 else [])
+
+@app.route('/flotas')
+@login_required
+def flotas():
+    resp = requests.get(f"{BACKEND_URL}/api/flotas")
+    clientes = resp.json() if resp.status_code == 200 else []
+    return render_template("flotas.html", clientes=clientes)
+@app.route('/register')
+@login_required
+def register():
+    return render_template("register.html")
+
+@app.route('/usuarios')
+@login_required
+def usuarios():
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/usuarios", timeout=10)
+        usuarios = resp.json() if resp.status_code == 200 else []
+    except Exception as e:
+        print(f"Error en /usuarios: {e}")
+        usuarios = []
+    return render_template("usuarios.html", usuarios=usuarios)
+    
+@app.route('/auditoria_descargas')
+@login_required
+def auditoria_descargas():
+    """Página de auditoría de descargas de informes"""
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/auditoria", timeout=10)
+        historial = resp.json() if resp.status_code == 200 else []
+    except Exception as e:
+        print(f"Error en /auditoria_descargas: {e}")
+        historial = []
+    
+    return render_template("auditoria_descargas.html", historial=historial)
+
 # ============================
 # RUTAS ESTÁTICAS
 # ============================
