@@ -8,6 +8,7 @@ import hashlib
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
+PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "clave_pdf_2025")
 
 # URL del backend en Railway
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
