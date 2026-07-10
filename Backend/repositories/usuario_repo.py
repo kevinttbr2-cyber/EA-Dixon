@@ -90,19 +90,19 @@ class UsuarioRepository:
             return False
     @staticmethod
     def cambiar_password(username, nueva_password):
-    try:
-        import bcrypt
-        conn = get_connection()
-        cur = conn.cursor()
+        try:
+            import bcrypt
+            conn = get_connection()
+            cur = conn.cursor()
         
-        hashed = bcrypt.hashpw(nueva_password.encode('utf-8'), bcrypt.gensalt())
-        hash_str = hashed.decode('utf-8')
+             hashed = bcrypt.hashpw(nueva_password.encode('utf-8'), bcrypt.gensalt())
+            hash_str = hashed.decode('utf-8')
         
-        cur.execute("UPDATE usuarios SET password = %s WHERE username = %s", (hash_str, username))
-        conn.commit()
-        cur.close()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"Error cambiar password: {e}")
-        return False
+            cur.execute("UPDATE usuarios SET password = %s WHERE username = %s", (hash_str, username))
+            conn.commit()
+            cur.close()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"Error cambiar password: {e}")
+            return False
