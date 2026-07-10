@@ -167,17 +167,11 @@ def cambiar_password():
                 error = "⚠️ Error de conexión con el servidor"
     
     return render_template("cambiar_password.html", error=error, success=success)
+
 @app.route('/pendientes_validacion')
 @login_required
 def pendientes_validacion():
-    """Panel de pagos pendientes de validación"""
-    
-    # Verificar permisos
-    if session.get('rol') not in ['admin', 'operador']:
-        return "No tienes permisos para acceder a esta sección", 403
-    
     try:
-        # Obtener pagos pendientes de validación (pagados pero no validados)
         resp = requests.get(f"{BACKEND_URL}/api/pendientes_validacion", timeout=10)
         if resp.status_code == 200:
             data = resp.json()
@@ -199,7 +193,9 @@ def pendientes_validacion():
         pendientes=pendientes,
         validados=validados,
         total_pagado=total_pagado
-    )@app.route('/validar_pago/<int:id_reg>', methods=['GET', 'POST'])
+    )
+
+@app.route('/validar_pago/<int:id_reg>', methods=['GET', 'POST'])
 @login_required
 def validar_pago(id_reg):
     """Paso 2: Validación de costos y ganancia neta"""
