@@ -76,10 +76,10 @@ def get_registros_filtrados():
         return jsonify({"error": str(e)}), 500
 
 # ============================
-# EDITAR REGISTRO
+# EDITAR REGISTRO COMPLETO
 # ============================
-@pago_bp.route('/editar_registro/<int:id_reg>', methods=['POST'])
-def editar_registro(id_reg):
+@pago_bp.route('/editar_completo/<int:id_reg>', methods=['POST'])
+def editar_completo(id_reg):
     data = request.json
     try:
         conn = get_connection()
@@ -87,19 +87,51 @@ def editar_registro(id_reg):
         cur.execute("""
             UPDATE pagos 
             SET nombre = %s,
-                monto = %s,
+                telefono = %s,
                 patente = %s,
                 marca = %s,
                 modelo = %s,
-                observaciones_cliente = %s
+                anio = %s,
+                flota = %s,
+                fecha = %s,
+                hora = %s,
+                observaciones_cliente = %s,
+                diagnostico = %s,
+                reparacion = %s,
+                resultado = %s,
+                tiempo_estimado = %s,
+                costo_repuestos_real = %s,
+                costo_mano_obra_real = %s,
+                costo_diagnostico_real = %s,
+                ganancia_neta = %s,
+                observaciones_pago = %s,
+                validado_por = %s,
+                atendido_por = %s,
+                validado = %s
             WHERE id = %s
         """, (
             data.get('nombre'),
-            data.get('monto', 0),
+            data.get('telefono'),
             data.get('patente'),
             data.get('marca'),
             data.get('modelo'),
-            data.get('observaciones'),
+            data.get('anio', 0),
+            data.get('flota'),
+            data.get('fecha'),
+            data.get('hora'),
+            data.get('observaciones_cliente'),
+            data.get('diagnostico'),
+            data.get('reparacion', 'Reparación realizada'),
+            data.get('resultado', 'reparado'),
+            data.get('tiempo_estimado', '00:00:00'),
+            data.get('costo_repuestos_real', 0),
+            data.get('costo_mano_obra_real', 0),
+            data.get('costo_diagnostico_real', 0),
+            data.get('ganancia_neta', 0),
+            data.get('observaciones_pago'),
+            data.get('validado_por'),
+            data.get('atendido_por'),
+            data.get('validado', False),
             id_reg
         ))
         conn.commit()
@@ -107,9 +139,8 @@ def editar_registro(id_reg):
         conn.close()
         return jsonify({"success": True})
     except Exception as e:
-        print(f"Error en editar_registro: {e}")
+        print(f"Error en editar_completo: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 # ============================
 # ELIMINAR REGISTRO
