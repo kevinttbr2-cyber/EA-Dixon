@@ -136,6 +136,21 @@ def flotas():
     resp = requests.get(f"{BACKEND_URL}/api/flotas")
     clientes = resp.json() if resp.status_code == 200 else []
     return render_template("flotas.html", clientes=clientes)
+@app.route('/register')
+@login_required
+def register():
+    return render_template("register.html")
+
+@app.route('/usuarios')
+@login_required
+def usuarios():
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/usuarios", timeout=10)
+        usuarios = resp.json() if resp.status_code == 200 else []
+    except Exception as e:
+        print(f"Error en /usuarios: {e}")
+        usuarios = []
+    return render_template("usuarios.html", usuarios=usuarios)
 
 # ============================
 # RUTAS ESTÁTICAS
