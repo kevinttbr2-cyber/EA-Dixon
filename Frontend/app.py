@@ -283,15 +283,15 @@ def pago_validado(id_reg):
 @app.route('/registros')
 @login_required
 def registros():
-    try:
-        # ✅ Usa BACKEND_URL
-        resp = requests.get(f"{BACKEND_URL}/api/registros", timeout=10)
-        registros = resp.json() if resp.status_code == 200 else []
-    except Exception as e:
-        print(f"Error en /registros: {e}")
-        registros = []
-    
-    return render_template("registros.html", registros=registros)
+    filtro = request.args.get('filtro', 'todos')  # hoy, 7d, mes, todos
+    # Llamar a backend con filtro
+    resp = requests.get(f"{BACKEND_URL}/api/registros?filtro={filtro}")
+    return render_template("registros.html", registros=resp.json(), filtro=filtro)
+
+@app.route('/balance')
+@login_required
+def balance():
+    return render_template("balance.html")
 @app.route('/modelos/<marca>')
 @login_required
 def modelos(marca):
