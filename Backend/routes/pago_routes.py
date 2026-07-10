@@ -124,6 +124,11 @@ def validar_pago(id_reg):
         conn = get_connection()
         cur = conn.cursor()
         
+        # Convertir detalles_repuestos a JSON
+        detalles_repuestos = data.get('detalles_repuestos', [])
+        import json
+        detalles_json = json.dumps(detalles_repuestos)
+        
         cur.execute("""
             UPDATE pagos 
             SET costo_repuestos_real = %s,
@@ -133,7 +138,12 @@ def validar_pago(id_reg):
                 observaciones_pago = %s,
                 validado = TRUE,
                 validado_por = %s,
-                fecha_validacion = CURRENT_TIMESTAMP
+                fecha_validacion = CURRENT_TIMESTAMP,
+                diagnostico = %s,
+                reparacion = %s,
+                resultado = %s,
+                tiempo_estimado = %s,
+                detalles_repuestos = %s::jsonb
             WHERE id = %s
         """, (
             data.get('costo_repuestos_real', 0),
@@ -142,6 +152,11 @@ def validar_pago(id_reg):
             data.get('ganancia_neta', 0),
             data.get('observaciones_pago', ''),
             data.get('validado_por', 'Sistema'),
+            data.get('diagnostico', ''),
+            data.get('reparacion', 'Reparación realizada'),
+            data.get('resultado', 'reparado'),
+            data.get('tiempo_estimado', '00:00:00'),
+            detalles_json,
             id_reg
         ))
         
