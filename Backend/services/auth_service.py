@@ -21,3 +21,7 @@ class AuthService:
     @staticmethod
     def crear_admin():
         return UsuarioRepository.crear_admin_si_no_existe()
+
+    @staticmethod
+    def cambiar_password(username, nueva_password):
+        return UsuarioRepository.cambiar_password(username, nueva_password)
