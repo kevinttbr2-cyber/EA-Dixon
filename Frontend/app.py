@@ -151,7 +151,19 @@ def usuarios():
         print(f"Error en /usuarios: {e}")
         usuarios = []
     return render_template("usuarios.html", usuarios=usuarios)
-
+    
+@app.route('/auditoria_descargas')
+@login_required
+def auditoria_descargas():
+    """Página de auditoría de descargas de informes"""
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/auditoria", timeout=10)
+        historial = resp.json() if resp.status_code == 200 else []
+    except Exception as e:
+        print(f"Error en /auditoria_descargas: {e}")
+        historial = []
+    
+    return render_template("auditoria_descargas.html", historial=historial)
 # ============================
 # RUTAS ESTÁTICAS
 # ============================
