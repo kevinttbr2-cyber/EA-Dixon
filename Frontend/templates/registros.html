@@ -156,17 +156,17 @@
                         </button>
                         <div class="menu-acciones" style="
                             display: none;
-                            position: absolute;
-                            right: 0;
+                            position: fixed;  /* ← CAMBIADO de absolute a fixed */
                             margin-top: 4px;
                             background: rgba(15,15,15,0.98);
                             border: 1px solid rgba(0,255,102,0.20);
                             border-radius: 10px;
                             padding: 6px 0;
                             min-width: 160px;
-                            z-index: 9999;
-                            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-                        ">
+                            z-index: 99999;  /* ← AUMENTADO */
+                            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+                          ">
+                       
                             <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="
                                 background: transparent;
                                 border: none;
@@ -408,19 +408,23 @@
         });
 
         // MENÚ ACCIONES
-        document.querySelectorAll('.btn-acciones, .btn-acciones-movil').forEach(btn => {
+       document.querySelectorAll('.btn-acciones').forEach(btn => {
             btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const menu = this.closest('td')?.querySelector('.menu-acciones') || 
-                             this.closest('.card-android')?.querySelector('.menu-acciones');
-                if (menu) {
-                    document.querySelectorAll('.menu-acciones').forEach(m => {
-                        if (m !== menu) m.style.display = 'none';
-                    });
-                    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-                }
+            e.stopPropagation();
+        const menu = this.closest('td').querySelector('.menu-acciones');
+        if (menu) {
+            // Ocultar otros menús
+            document.querySelectorAll('.menu-acciones').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
             });
-        });
+            // Posicionar el menú debajo del botón
+            const rect = this.getBoundingClientRect();
+            menu.style.left = (rect.left - 100) + 'px';
+            menu.style.top = (rect.bottom + 4) + 'px';
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+    });
+});
         document.addEventListener('click', function() {
             document.querySelectorAll('.menu-acciones').forEach(m => m.style.display = 'none');
         });
