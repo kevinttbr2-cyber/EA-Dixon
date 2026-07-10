@@ -144,7 +144,7 @@
                     <td style="padding: 6px 8px; text-align: center;">{{ r.marca }}</td>
                     <td style="padding: 6px 8px; text-align: center;">{{ r.modelo }}</td>
                     <td style="padding: 6px 8px; text-align: center;">{{ r.atendido_por or r.usuario or '-' }}</td>
-                    <td style="padding: 6px 8px; text-align: center;">
+                    <td style="padding: 6px 8px; text-align: center; position: relative;">
                         <button class="btn-acciones" style="
                             background: transparent;
                             border: none;
@@ -158,7 +158,7 @@
                         <div class="menu-acciones" style="
                             display: none;
                             position: absolute;
-                            right: 20px;
+                            right: 0;
                             margin-top: 4px;
                             background: rgba(15,15,15,0.98);
                             border: 1px solid rgba(0,255,102,0.20);
@@ -253,6 +253,56 @@
                     " data-id="{{ r.id }}">
                         ⋮
                     </button>
+                    <div class="menu-acciones" style="
+                        display: none;
+                        position: absolute;
+                        right: 10px;
+                        margin-top: 4px;
+                        background: rgba(15,15,15,0.98);
+                        border: 1px solid rgba(0,255,102,0.20);
+                        border-radius: 10px;
+                        padding: 6px 0;
+                        min-width: 160px;
+                        z-index: 9999;
+                        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+                    ">
+                        <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="
+                            background: transparent;
+                            border: none;
+                            color: #fff;
+                            padding: 6px 16px;
+                            width: 100%;
+                            text-align: left;
+                            cursor: pointer;
+                            font-size: 13px;
+                        ">
+                            📄 Ver detalle
+                        </button>
+                        <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="
+                            background: transparent;
+                            border: none;
+                            color: #4fc3f7;
+                            padding: 6px 16px;
+                            width: 100%;
+                            text-align: left;
+                            cursor: pointer;
+                            font-size: 13px;
+                        ">
+                            ✏️ Editar
+                        </button>
+                        <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="
+                            background: transparent;
+                            border: none;
+                            color: #ff6b6b;
+                            padding: 6px 16px;
+                            width: 100%;
+                            text-align: left;
+                            cursor: pointer;
+                            font-size: 13px;
+                        ">
+                            🗑️ Eliminar
+                        </button>
+                    </div>
                 </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; margin-top: 6px; font-size: 13px;">
@@ -276,7 +326,7 @@
 </div>
 
 <!-- ============================
-     MODAL DETALLE (igual que antes)
+     MODAL DETALLE
      ============================ -->
 <div id="modalDetalle" style="
     display: none;
@@ -314,7 +364,7 @@
 </div>
 
 <!-- ============================
-     MODAL EDITAR (igual que antes)
+     MODAL EDITAR
      ============================ -->
 <div id="modalEditar" style="
     display: none;
@@ -379,7 +429,7 @@
 </div>
 
 <!-- ============================
-     SCRIPTS
+     SCRIPT COMPLETO
      ============================ -->
 <script>
     const BACKEND_URL = "{{ BACKEND_URL }}";
@@ -463,7 +513,7 @@
         });
 
         // ============================
-        // 4. ACCIONES
+        // 4. ACCIONES: DETALLE, EDITAR, ELIMINAR
         // ============================
         document.querySelectorAll('.accion-item').forEach(item => {
             item.addEventListener('click', function(e) {
@@ -480,7 +530,7 @@
         });
 
         // ============================
-        // 5. VER DETALLE
+        // 5. VER DETALLE (CON LOGS)
         // ============================
         async function verDetalle(id) {
             const modal = document.getElementById('modalDetalle');
@@ -489,7 +539,10 @@
             contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
 
             try {
+                console.log(`🔍 Fetching: ${BACKEND_URL}/api/registro/${id}`);
                 const resp = await fetch(`${BACKEND_URL}/api/registro/${id}`);
+                console.log(`📡 Status: ${resp.status}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
                 contenido.innerHTML = `
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:14px;">
@@ -515,7 +568,8 @@
                     </div>
                 `;
             } catch(e) {
-                contenido.innerHTML = '<div style="color:#ff6b6b;">❌ Error al cargar los datos</div>';
+                console.error('❌ Error en verDetalle:', e);
+                contenido.innerHTML = `<div style="color:#ff6b6b;">❌ Error al cargar los datos: ${e.message}</div>`;
             }
         }
 
@@ -527,14 +581,16 @@
         });
 
         // ============================
-        // 6. EDITAR
+        // 6. EDITAR (CON LOGS)
         // ============================
         async function editarRegistro(id) {
             const modal = document.getElementById('modalEditar');
             modal.style.display = 'flex';
 
             try {
+                console.log(`🔍 Fetching para editar: ${BACKEND_URL}/api/registro/${id}`);
                 const resp = await fetch(`${BACKEND_URL}/api/registro/${id}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
                 document.getElementById('edit_id').value = data.id;
                 document.getElementById('edit_nombre').value = data.nombre || '';
@@ -544,6 +600,7 @@
                 document.getElementById('edit_modelo').value = data.modelo || '';
                 document.getElementById('edit_observaciones').value = data.observaciones_pago || data.observaciones_cliente || '';
             } catch(e) {
+                console.error('❌ Error en editarRegistro:', e);
                 alert('❌ Error al cargar los datos para editar');
             }
         }
@@ -580,6 +637,7 @@
                     alert('❌ Error al actualizar');
                 }
             } catch(e) {
+                console.error('❌ Error en submit editar:', e);
                 alert('❌ Error de conexión');
             }
         });
@@ -598,7 +656,10 @@
                 } else {
                     alert('❌ Error al eliminar');
                 }
-            }).catch(() => alert('❌ Error de conexión'));
+            }).catch(err => {
+                console.error('❌ Error en eliminar:', err);
+                alert('❌ Error de conexión');
+            });
         }
 
         // ============================
@@ -617,16 +678,4 @@
                     valA = parseFloat(valA.replace(/[$,]/g, '')) || 0;
                     valB = parseFloat(valB.replace(/[$,]/g, '')) || 0;
                 }
-                if (columna === 0) {
-                    valA = parseInt(valA) || 0;
-                    valB = parseInt(valB) || 0;
-                }
-                if (valA < valB) return -1;
-                if (valA > valB) return 1;
-                return 0;
-            });
-            filasArray.forEach(fila => tbody.appendChild(fila));
-        };
-    });
-</script>
-{% endblock %}
+                if (columna === 
