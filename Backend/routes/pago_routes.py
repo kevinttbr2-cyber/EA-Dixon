@@ -150,25 +150,22 @@ def get_balance():
             query += " AND fecha = %s"
             params.append(hoy.strftime('%Y-%m-%d'))
         elif filtro == '7d':
-            fecha_7d = hoy - timedelta(days=7)
             query += " AND fecha >= %s"
-            params.append(fecha_7d.strftime('%Y-%m-%d'))
+            params.append((hoy - timedelta(days=7)).strftime('%Y-%m-%d'))
         elif filtro == 'mes':
-            fecha_mes = hoy - timedelta(days=30)
             query += " AND fecha >= %s"
-            params.append(fecha_mes.strftime('%Y-%m-%d'))
+            params.append((hoy - timedelta(days=30)).strftime('%Y-%m-%d'))
         
         query += " ORDER BY fecha DESC, hora DESC"
-        
         cur.execute(query, params)
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
-        # Calcular totales
-        total_pagado = sum(r.get('monto', 0) for r in registros)
-        total_repuestos = sum(r.get('costo_repuestos_real', 0) for r in registros)
-        total_mano_obra = sum(r.get('costo_mano_obra_real', 0) for r in registros)
-        total_diagnostico = sum(r.get('costo_diagnostico_real', 0) for r in registros)
+        # 🔥 CONVERTIR A FLOAT PARA EVITAR ERROR DE DECIMAL
+        total_pagado = float(sum(r.get('monto', 0) or 0 for r in registros))
+        total_repuestos = float(sum(r.get('costo_repuestos_real', 0) or 0 for r in registros))
+        total_mano_obra = float(sum(r.get('costo_mano_obra_real', 0) or 0 for r in registros))
+        total_diagnostico = float(sum(r.get('costo_diagnostico_real', 0) or 0 for r in registros))
         ganancia_neta = total_pagado - (total_repuestos + total_mano_obra + total_diagnostico)
         
         cur.close()
