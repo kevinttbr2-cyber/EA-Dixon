@@ -41,3 +41,43 @@ def pagar(id_reg):
 def get_registros():
     pagados = PagoService.obtener_todos_pagados()
     return jsonify([p.to_dict() for p in pagados])
+@bp.route('/pendientes_validacion', methods=['GET'])
+def get_pendientes_validacion():
+    """Obtiene pagos pendientes de validación"""
+    try:
+        conn, cur = get_cursor()
+        
+        # Pagos pagados pero NO validados
+        cur.execute("""
+            SELECT * FROM pagos 
+            WHERE estado = 'pagado' AND (validado IS NULL OR validado = FALSE)
+            ORDER BY fecha DESC, hora DESC
+        """)
+        pendientes = [dict(row) for row in cur.fetchall()]
+        
+        # Pagos ya validados
+        cur.execute("""
+            SELECT * FROM pagos 
+            WHERE estado = 'pagado' AND validado = TRUE
+            ORDER BY fecha DESC, hora DESC
+        """)
+        validados = [dict(row) for row in cur.fetchall()]
+        
+        # Total pagado (solo pagos validados)
+        cur.execute("""
+            SELECT SUM(monto) as total FROM pagos 
+            WHERE estado = 'pagado' AND validado = TRUE
+        """)
+        total_pagado = cur.fetchone()[0] or 0
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "pendientes": pendientes,
+            "validados": validados,
+            "total_pagado": total_pagado
+        })
+    except Exception as e:
+        print(f"Error en get_pendientes_validacion: {e}")
+        return jsonify({"error": str(e)}), 500
