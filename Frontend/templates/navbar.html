@@ -10,30 +10,31 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 
-                <!-- 📄 REGISTROS -->
+                <!-- 📄 REGISTROS (solo admin y operador) -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item">
                     <a class="nav-link" href="/registros">📄 Registros</a>
                 </li>
                 {% endif %}
-                <!-- 📊 PENDIENTES DE VALIDACIÓN -->
-                {% if session.get("rol") in ["admin", "operador"] %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/pendientes_validacion">📊 Validar Pagos</a>
-                </li>
-                {% endif %}
-            
-                <!-- 🚗 FLOTAS -->
+                
+                <!-- 🚗 FLOTAS (solo admin y operador) -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item">
                     <a class="nav-link" href="/flotas">🚗 Flotas</a>
                 </li>
                 {% endif %}
                 
-                <!-- 📊 DESCARGAS -->
+                <!-- 📊 DESCARGAS / AUDITORÍA (solo admin y operador) -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item">
                     <a class="nav-link" href="/auditoria_descargas">📊 Descargas</a>
+                </li>
+                {% endif %}
+
+                <!-- 📊 VALIDAR PAGOS (solo admin y operador) - NUEVO -->
+                {% if session.get("rol") in ["admin", "operador"] %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/pendientes_validacion">📊 Validar Pagos</a>
                 </li>
                 {% endif %}
 
