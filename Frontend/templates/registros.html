@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div id="backend-url" style="display:none;">{{ backend_url }}</div>
 
 <div class="base-container">
     <!-- ENCABEZADO -->
@@ -352,7 +353,7 @@
 </div>
 
 <script>
-    const BACKEND_URL = "{{ BACKEND_URL }}";
+    const BACKEND_URL = document.getElementById('backend-url').textContent.trim();
 
     document.addEventListener('DOMContentLoaded', function() {
 
