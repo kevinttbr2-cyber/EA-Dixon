@@ -183,6 +183,42 @@ def auditoria_descargas():
         historial = []
     
     return render_template("auditoria_descargas.html", historial=historial)
+@app.route('/cambiar_password', methods=['GET', 'POST'])
+@login_required
+def cambiar_password():
+    error = None
+    success = None
+    
+    if request.method == 'POST':
+        password_actual = request.form.get('password_actual')
+        password_nueva = request.form.get('password_nueva')
+        password_confirmar = request.form.get('password_confirmar')
+        
+        # Validaciones
+        if not password_actual or not password_nueva or not password_confirmar:
+            error = "⚠️ Todos los campos son obligatorios"
+        elif password_nueva != password_confirmar:
+            error = "⚠️ Las contraseñas nuevas no coinciden"
+        elif len(password_nueva) < 6:
+            error = "⚠️ La contraseña debe tener al menos 6 caracteres"
+        else:
+            # Enviar al backend
+            try:
+                data = {
+                    'username': session.get('usuario'),
+                    'password_actual': password_actual,
+                    'password_nueva': password_nueva
+                }
+                resp = requests.post(f"{BACKEND_URL}/api/cambiar_password", json=data, timeout=10)
+                if resp.status_code == 200:
+                    success = "✅ Contraseña actualizada correctamente"
+                else:
+                    error = resp.json().get('error', '❌ Error al cambiar contraseña')
+            except Exception as e:
+                print(f"Error en /cambiar_password: {e}")
+                error = "⚠️ Error de conexión con el servidor"
+    
+    return render_template("cambiar_password.html", error=error, success=success)
 # ============================
 # RUTAS ESTÁTICAS
 # ============================
