@@ -77,43 +77,63 @@ def estado():
                           pagados_mes=len(data.get('pagados_hoy', [])),
                           estado="todos")
 
+# ============================
+# AGREGAR CLIENTE (CON FLOTAS)
+# ============================
 @app.route('/agregar_cliente')
 @login_required
 def agregar_cliente():
     try:
-        resp = requests.get(f"{BACKEND_URL}/api/marcas", timeout=10)
-        marcas = resp.json() if resp.status_code == 200 else []
-    except:
+        resp_marcas = requests.get(f"{BACKEND_URL}/api/marcas", timeout=10)
+        marcas = resp_marcas.json() if resp_marcas.status_code == 200 else []
+        
+        resp_flotas = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=10)
+        flotas = resp_flotas.json() if resp_flotas.status_code == 200 else []
+    except Exception as e:
+        print(f"Error en /agregar_cliente: {e}")
         marcas = []
-    return render_template("agregar_cliente.html", marcas=marcas, flotas=[])
+        flotas = []
+    
+    hoy = datetime.now().strftime('%Y-%m-%d')
+    return render_template("agregar_cliente.html", marcas=marcas, flotas=flotas, hoy=hoy)
 
 @app.route('/agregar', methods=['POST'])
 @login_required
 def agregar():
+    # Obtener flota (si viene como "__nueva__" usar el valor manual)
+    flota = request.form.get('flota', '').strip()
+    if flota == '__nueva__':
+        flota = request.form.get('flota_nueva', '').strip()
+    
     data = {
-        'nombre': request.form.get('nombre'),
-        'patente': request.form.get('patente'),
-        'marca': request.form.get('marca'),
-        'modelo': request.form.get('modelo'),
-        'telefono': request.form.get('telefono', ''),
-        'observaciones': request.form.get('observaciones', ''),
-        'kilometraje': request.form.get('kilometraje', 0),
-        'flota': request.form.get('flota'),
+        'nombre': request.form.get('nombre', '').strip(),
+        'patente': request.form.get('patente', '').strip().upper(),
+        'marca': request.form.get('marca', '').strip(),
+        'modelo': request.form.get('modelo', '').strip(),
+        'telefono': request.form.get('telefono', '').strip(),
+        'observaciones': request.form.get('observaciones', '').strip(),
+        'kilometraje': int(request.form.get('kilometraje', 0) or 0),
+        'anio': int(request.form.get('anio', 0) or 0),
+        'flota': flota if flota else None,
         'usuario': session.get('usuario')
     }
+    
     try:
-        requests.post(f"{BACKEND_URL}/api/agregar", json=data, timeout=10)
-    except:
-        pass
+        resp = requests.post(f"{BACKEND_URL}/api/agregar", json=data, timeout=10)
+        if resp.status_code != 200:
+            print(f"Error al agregar: {resp.text}")
+    except Exception as e:
+        print(f"Error en /agregar: {e}")
+    
     return redirect("/estado")
 
 @app.route('/pagar/<int:id_reg>', methods=['GET', 'POST'])
 @login_required
 def pagar(id_reg):
-    print(f"🔍 ID recibido: {id_reg}")  # LOG
+    print(f"🔍 ID recibido: {id_reg}")
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
-        print(f"📡 Status: {resp.status_code}")  # LOG
+        print(f"📡 Status: {resp.status_code}")
         if resp.status_code != 200:
             return f"Registro {id_reg} no encontrado en backend", 404
         registro = resp.json()
@@ -287,7 +307,7 @@ def pago_validado(id_reg):
     return render_template("pago_validado.html", registro=registro)
 
 # ============================
-# REGISTROS CON FILTROS (CORREGIDO)
+# REGISTROS CON FILTROS
 # ============================
 @app.route('/registros')
 @login_required
@@ -344,7 +364,6 @@ def balance():
         registros = []
         total_pagado = total_repuestos = total_mano_obra = total_diagnostico = ganancia_neta = 0
     
-    # 🔥 CALCULAR FILTROS PARA LAS TARJETAS
     hoy = [r for r in registros if r.get('fecha') == datetime.now().strftime('%Y-%m-%d')]
     semana = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')]
     mes = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')]
@@ -359,11 +378,12 @@ def balance():
         total_diagnostico=total_diagnostico,
         ganancia_neta=ganancia_neta,
         filtro=filtro,
-        hoy=hoy,        # ← AGREGAR
-        semana=semana,  # ← AGREGAR
-        mes=mes,        # ← AGREGAR
-        todos=todos     # ← AGREGAR
+        hoy=hoy,
+        semana=semana,
+        mes=mes,
+        todos=todos
     )
+
 @app.route('/modelos/<marca>')
 @login_required
 def modelos(marca):
