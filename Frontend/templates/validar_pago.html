@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<div class="base-container" style="max-width: 700px; margin: 0 auto;">
+<div class="base-container" style="max-width: 800px; margin: 0 auto;">
     <h2 style="color: #4fc3f7; font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 5px;">
         📊 Validación de Costos
     </h2>
@@ -13,45 +13,24 @@
     <!-- ============================
          RESUMEN DEL CLIENTE
          ============================ -->
-    <div style="
-        background: rgba(79, 195, 247, 0.06);
-        border-radius: 12px;
-        padding: 15px 20px;
-        margin-bottom: 20px;
-        border: 1px solid rgba(79, 195, 247, 0.15);
-    ">
+    <div style="background: rgba(79, 195, 247, 0.06); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; border: 1px solid rgba(79, 195, 247, 0.15);">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; font-size: 14px;">
+            <div><span style="color: #888;">🔢 OT:</span> <span style="color: #fff; font-weight: 600;">#{{ registro.id }}</span></div>
+            <div><span style="color: #888;">📅 Fecha:</span> <span style="color: #fff;">{{ registro.fecha }}</span></div>
+            <div><span style="color: #888;">👤 Cliente:</span> <span style="color: #fff; font-weight: 600;">{{ registro.nombre }}</span></div>
+            <div><span style="color: #888;">📞 Teléfono:</span> <span style="color: #fff;">{{ registro.telefono or 'No registrado' }}</span></div>
+            <div><span style="color: #888;">🚗 Vehículo:</span> <span style="color: #fff;">{{ registro.marca }} {{ registro.modelo }}</span></div>
+            <div><span style="color: #888;">🔢 Patente:</span> <span style="color: #fff; font-weight: 600;">{{ registro.patente }}</span></div>
+            <div><span style="color: #888;">💰 Cliente pagó:</span> <span style="color: #00ff66; font-weight: 700; font-size: 18px;">${{ "{:,.0f}".format(registro.monto) }}</span></div>
             <div>
-                <span style="color: #888;">🔢 OT:</span>
-                <span style="color: #fff; font-weight: 600;">#{{ registro.id }}</span>
-            </div>
-            <div>
-                <span style="color: #888;">📅 Fecha:</span>
-                <span style="color: #fff;">{{ registro.fecha }}</span>
-            </div>
-            <div>
-                <span style="color: #888;">👤 Cliente:</span>
-                <span style="color: #fff; font-weight: 600;">{{ registro.nombre }}</span>
-            </div>
-            <div>
-                <span style="color: #888;">📞 Teléfono:</span>
-                <span style="color: #fff;">{{ registro.telefono or 'No registrado' }}</span>
-            </div>
-            <div>
-                <span style="color: #888;">🚗 Vehículo:</span>
-                <span style="color: #fff;">{{ registro.marca }} {{ registro.modelo }}</span>
-            </div>
-            <div>
-                <span style="color: #888;">🔢 Patente:</span>
-                <span style="color: #fff; font-weight: 600;">{{ registro.patente }}</span>
-            </div>
-            <div>
-                <span style="color: #888;">💰 Cliente pagó:</span>
-                <span style="color: #00ff66; font-weight: 700; font-size: 18px;">${{ "{:,.0f}".format(registro.monto) }}</span>
-            </div>
-            <div>
-                <span style="color: #888;">👨‍🔧 Atendido por:</span>
-                <span style="color: #fff;">{{ registro.atendido_por or registro.usuario or 'No registrado' }}</span>
+                <span style="color: #888;">⏱️ Tiempo de reparación:</span>
+                <span id="tiempoReparacion" style="color: #4fc3f7; font-weight: 600;">
+                    {% if registro.tiempo_estimado %}
+                        {{ registro.tiempo_estimado }}
+                    {% else %}
+                        Calculando...
+                    {% endif %}
+                </span>
             </div>
         </div>
     </div>
@@ -60,16 +39,7 @@
          MENSAJES DE ERROR
          ============================ -->
     {% if error %}
-    <div style="
-        background: rgba(255, 68, 68, 0.10);
-        border: 1px solid rgba(255, 68, 68, 0.20);
-        border-radius: 10px;
-        padding: 10px 14px;
-        color: #ff6b6b;
-        font-size: 14px;
-        text-align: center;
-        margin-bottom: 16px;
-    ">
+    <div style="background: rgba(255, 68, 68, 0.10); border: 1px solid rgba(255, 68, 68, 0.20); border-radius: 10px; padding: 10px 14px; color: #ff6b6b; font-size: 14px; text-align: center; margin-bottom: 16px;">
         <i class="fas fa-exclamation-circle"></i> {{ error }}
     </div>
     {% endif %}
@@ -77,84 +47,14 @@
     <!-- ============================
          FORMULARIO DE VALIDACIÓN
          ============================ -->
-    <form method="POST" action="{{ url_for('validar_pago', id_reg=id) }}">
+    <form method="POST" id="formValidacion">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="tiempo_estimado" id="tiempoEstimadoHidden" value="{{ registro.tiempo_estimado or '00:00:00' }}">
 
         <!-- ============================
-             COSTOS REALES
+             SECCIÓN 1: DETALLES DE REPARACIÓN (PRIMERO)
              ============================ -->
-        <div style="
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            padding: 18px 20px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        ">
-            <h5 style="color: #4fc3f7; font-weight: 600; margin-bottom: 15px;">
-                📊 Costos Reales
-            </h5>
-
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-                    🔧 Costo de repuestos
-                </label>
-                <input type="number" name="costo_repuestos" class="form-control" step="0.01" 
-                       value="{{ registro.costo_repuestos_real or 0 }}" 
-                       placeholder="Ej: 5000" min="0"
-                       style="font-size: 16px;">
-                <small style="color: #666; font-size: 11px;">Costo real de los repuestos utilizados</small>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-                    👨‍🔧 Costo de mano de obra
-                </label>
-                <input type="number" name="costo_mano_obra" class="form-control" step="0.01" 
-                       value="{{ registro.costo_mano_obra_real or 0 }}" 
-                       placeholder="Ej: 8000" min="0"
-                       style="font-size: 16px;">
-                <small style="color: #666; font-size: 11px;">Costo real de la mano de obra</small>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-                    🩺 Costo de diagnóstico
-                </label>
-                <input type="number" name="costo_diagnostico" class="form-control" step="0.01" 
-                       value="{{ registro.costo_diagnostico_real or 0 }}" 
-                       placeholder="Ej: 2000" min="0"
-                       style="font-size: 16px;">
-                <small style="color: #666; font-size: 11px;">Costo real del diagnóstico</small>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-                    📝 Observaciones de costos
-                </label>
-                <textarea name="observaciones_costos" class="form-control" rows="3" 
-                          placeholder="Detalla los costos...">{{ registro.observaciones_pago or '' }}</textarea>
-            </div>
-            <div class="mb-3">
-    <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-        👤 Validado por (nombre del técnico)
-    </label>
-    <input type="text" name="validado_por" class="form-control" 
-           value="{{ session.get('nombre_completo', session.get('usuario')) }}"
-           placeholder="Ej: Dina Bravo">
-    <small style="color: #666; font-size: 11px;">Nombre de la persona que valida los costos</small>
-</div>
-        </div>
-
-        <!-- ============================
-             REPARACIÓN Y RESULTADO
-             ============================ -->
-        <div style="
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            padding: 18px 20px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        ">
+        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 18px 20px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.06);">
             <h5 style="color: #4fc3f7; font-weight: 600; margin-bottom: 15px;">
                 🔧 Detalles de la Reparación
             </h5>
@@ -179,71 +79,150 @@
                 </label>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 6px;">
                     <label style="display: flex; align-items: center; gap: 6px; color: #00ff66; cursor: pointer;">
-                        <input type="radio" name="resultado" value="reparado" 
-                               {% if registro.resultado == 'reparado' %}checked{% endif %}
-                               style="accent-color: #00ff66; width: 16px; height: 16px;">
+                        <input type="radio" name="resultado" value="reparado" {% if registro.resultado == 'reparado' %}checked{% endif %}>
                         Reparado
                     </label>
                     <label style="display: flex; align-items: center; gap: 6px; color: #ffcc00; cursor: pointer;">
-                        <input type="radio" name="resultado" value="pendiente" 
-                               {% if registro.resultado == 'pendiente' %}checked{% endif %}
-                               style="accent-color: #ffcc00; width: 16px; height: 16px;">
+                        <input type="radio" name="resultado" value="pendiente" {% if registro.resultado == 'pendiente' %}checked{% endif %}>
                         Pendiente
                     </label>
                     <label style="display: flex; align-items: center; gap: 6px; color: #ff6b6b; cursor: pointer;">
-                        <input type="radio" name="resultado" value="derivado" 
-                               {% if registro.resultado == 'derivado' %}checked{% endif %}
-                               style="accent-color: #ff6b6b; width: 16px; height: 16px;">
+                        <input type="radio" name="resultado" value="derivado" {% if registro.resultado == 'derivado' %}checked{% endif %}>
                         Derivado
                     </label>
                 </div>
             </div>
+        </div>
+
+        <!-- ============================
+             SECCIÓN 2: COSTOS REALES
+             ============================ -->
+        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 18px 20px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.06);">
+            <h5 style="color: #4fc3f7; font-weight: 600; margin-bottom: 15px;">
+                📊 Costos Reales
+            </h5>
+
+            <!-- ============================
+                 TABLA DE REPUESTOS DINÁMICA
+                 ============================ -->
+            <div class="mb-3">
+                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+                    🔧 Lista de repuestos
+                </label>
+                <div style="background: rgba(0,0,0,0.20); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.06);">
+                    <table id="tablaRepuestos" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.10);">
+                                <th style="text-align: left; padding: 6px 8px; color: #90e0a0; font-size: 12px;">Repuesto</th>
+                                <th style="text-align: right; padding: 6px 8px; color: #90e0a0; font-size: 12px;">Costo ($)</th>
+                                <th style="width: 30px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoRepuestos">
+                            <!-- Fila inicial -->
+                            <tr class="fila-repuesto">
+                                <td style="padding: 4px 8px;">
+                                    <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm" placeholder="Nombre del repuesto" style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px;">
+                                </td>
+                                <td style="padding: 4px 8px;">
+                                    <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" step="0.01" placeholder="0" style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right;">
+                                </td>
+                                <td style="padding: 4px 8px; text-align: center;">
+                                    <button type="button" class="btn-eliminar-repuesto" style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px; opacity: 0.3; display: none;">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" id="agregarRepuestoBtn" class="btn btn-sm" style="margin-top: 8px; background: rgba(0,255,102,0.10); color: #00ff66; border: 1px solid rgba(0,255,102,0.20); border-radius: 8px; padding: 4px 12px; font-size: 12px;">
+                        <i class="fa-solid fa-plus"></i> Agregar repuesto
+                    </button>
+                    <div style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #888; font-size: 11px;">Total repuestos:</span>
+                        <span id="totalRepuestos" style="color: #ffcc00; font-weight: 700; font-size: 16px;">$0</span>
+                    </div>
+                    <input type="hidden" name="costo_repuestos" id="costoRepuestosHidden" value="0">
+                </div>
+                <small style="color: #666; font-size: 11px;">Agrega cada repuesto con su costo. El total se sumará automáticamente.</small>
+            </div>
 
             <div class="mb-3">
                 <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-                    ⏱️ Tiempo de reparación (HH:MM:SS)
+                    👨‍🔧 Costo de mano de obra
                 </label>
-                <input type="text" name="tiempo_estimado" class="form-control" 
-                       value="{{ registro.tiempo_estimado or '00:00:00' }}"
-                       placeholder="Ej: 02:30:45">
+                <input type="number" name="costo_mano_obra" class="form-control" step="0.01" 
+                       value="{{ registro.costo_mano_obra_real or 0 }}" placeholder="Ej: 8000" min="0">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+                    🩺 Costo de diagnóstico
+                </label>
+                <input type="number" name="costo_diagnostico" class="form-control" step="0.01" 
+                       value="{{ registro.costo_diagnostico_real or 0 }}" placeholder="Ej: 2000" min="0">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+                    📝 Observaciones de costos
+                </label>
+                <textarea name="observaciones_costos" class="form-control" rows="3" placeholder="Detalla los costos...">{{ registro.observaciones_pago or '' }}</textarea>
             </div>
         </div>
 
         <!-- ============================
-             RESUMEN Y GANANCIA (AUTOCALCULADO)
+             SECCIÓN 3: VALIDADOR
              ============================ -->
-        <div style="
-            background: rgba(0, 255, 102, 0.06);
-            border-radius: 12px;
-            padding: 18px 20px;
-            margin-bottom: 20px;
-            border: 2px solid rgba(0, 255, 102, 0.20);
-        ">
+        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 18px 20px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.06);">
+            <h5 style="color: #4fc3f7; font-weight: 600; margin-bottom: 15px;">
+                👤 Validación
+            </h5>
+
+            <div class="mb-3">
+                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+                    👤 Validado por (nombre del técnico)
+                </label>
+                <select name="validado_por" class="form-control" required>
+                    <option value="">-- Seleccionar técnico --</option>
+                    {% for usuario in usuarios %}
+                        <option value="{{ usuario.nombre_completo }}" 
+                                {% if usuario.nombre_completo == session.get('nombre_completo') %}selected{% endif %}>
+                            {{ usuario.nombre_completo }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <small style="color: #666; font-size: 11px;">Selecciona el técnico que valida los costos</small>
+            </div>
+        </div>
+
+        <!-- ============================
+             RESUMEN Y GANANCIA
+             ============================ -->
+        <div style="background: rgba(0, 255, 102, 0.06); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; border: 2px solid rgba(0, 255, 102, 0.20);">
             <h5 style="color: #00ff66; font-weight: 700; margin-bottom: 15px; text-align: center;">
                 📈 RESUMEN FINANCIERO
             </h5>
             
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <span style="color: #90e0a0;">💰 Cliente pagó:</span>
-                <span style="color: #00ff66; font-weight: 700; font-size: 18px;" id="montoCliente">
-                    ${{ "{:,.0f}".format(registro.monto) }}
-                </span>
+                <span style="color: #00ff66; font-weight: 700; font-size: 18px;">${{ "{:,.0f}".format(registro.monto) }}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <span style="color: #90e0a0;">📦 Costo repuestos:</span>
-                <span style="color: #ffcc00; font-weight: 600; font-size: 16px;" id="costoRepuestos">$0</span>
+                <span style="color: #ffcc00; font-weight: 600;" id="costoRepuestos">$0</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <span style="color: #90e0a0;">👨‍🔧 Costo mano de obra:</span>
-                <span style="color: #ffcc00; font-weight: 600; font-size: 16px;" id="costoManoObra">$0</span>
+                <span style="color: #ffcc00; font-weight: 600;" id="costoManoObra">$0</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <span style="color: #90e0a0;">🩺 Costo diagnóstico:</span>
-                <span style="color: #ffcc00; font-weight: 600; font-size: 16px;" id="costoDiagnostico">$0</span>
+                <span style="color: #ffcc00; font-weight: 600;" id="costoDiagnostico">$0</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <span style="color: #90e0a0;">📊 Costos Totales:</span>
-                <span style="color: #ff6b6b; font-weight: 600; font-size: 16px;" id="costosTotales">$0</span>
+                <span style="color: #ff6b6b; font-weight: 600;" id="costosTotales">$0</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 12px 0; margin-top: 6px; border-top: 2px solid #00ff66;">
                 <span style="color: #ffffff; font-weight: 700; font-size: 18px;">📊 GANANCIA NETA:</span>
@@ -256,30 +235,10 @@
              BOTONES
              ============================ -->
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button type="submit" class="btn" style="
-                flex: 1;
-                background: #4fc3f7;
-                color: #000;
-                font-weight: 700;
-                border-radius: 10px;
-                padding: 14px;
-                font-size: 18px;
-                border: none;
-                transition: all 0.3s ease;
-                min-width: 150px;
-            " onmouseover="this.style.background='#3da8d6'" onmouseout="this.style.background='#4fc3f7'">
+            <button type="submit" class="btn" style="flex: 1; background: #4fc3f7; color: #000; font-weight: 700; border-radius: 10px; padding: 14px; font-size: 18px; border: none; min-width: 150px;">
                 ✅ Validar y Guardar
             </button>
-            <a href="/pendientes_validacion" class="btn" style="
-                background: rgba(255,255,255,0.06);
-                color: #888;
-                border: 1px solid rgba(255,255,255,0.08);
-                border-radius: 10px;
-                padding: 14px 24px;
-                text-decoration: none;
-                text-align: center;
-                transition: all 0.3s ease;
-            " onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+            <a href="/pendientes_validacion" class="btn" style="background: rgba(255,255,255,0.06); color: #888; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 24px; text-decoration: none; text-align: center;">
                 ← Volver
             </a>
         </div>
@@ -287,47 +246,176 @@
 </div>
 
 <!-- ============================
-     SCRIPT PARA CÁLCULO AUTOMÁTICO
+     SCRIPTS
      ============================ -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ============================
+        // 1. TIEMPO DE REPARACIÓN AUTOMÁTICO
+        // ============================
+        const horaIngreso = '{{ registro["hora"] if registro["hora"] else "" }}';
+        const fechaIngreso = '{{ registro["fecha"] if registro["fecha"] else "" }}';
+        const tiempoElement = document.getElementById('tiempoReparacion');
+        const tiempoHidden = document.getElementById('tiempoEstimadoHidden');
+
+        function calcularTiempo() {
+            if (!horaIngreso || !fechaIngreso) {
+                tiempoElement.textContent = '⏳ No disponible';
+                return;
+            }
+
+            const ahora = new Date();
+            const partesHora = horaIngreso.split(':').map(Number);
+            const partesFecha = fechaIngreso.split('-').map(Number);
+
+            const fechaIngresoObj = new Date(
+                partesFecha[0],
+                (partesFecha[1] || 1) - 1,
+                partesFecha[2] || 1,
+                partesHora[0] || 0,
+                partesHora[1] || 0,
+                partesHora[2] || 0
+            );
+
+            const diffMs = ahora - fechaIngresoObj;
+            if (diffMs < 0) {
+                tiempoElement.textContent = '⏳ Esperando ingreso...';
+                return;
+            }
+
+            const totalSegundos = Math.floor(diffMs / 1000);
+            const horas = Math.floor(totalSegundos / 3600);
+            const minutos = Math.floor((totalSegundos % 3600) / 60);
+            const segundos = totalSegundos % 60;
+
+            const tiempo = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+            tiempoElement.textContent = tiempo;
+            tiempoHidden.value = tiempo;
+
+            if (horas > 2) tiempoElement.style.color = '#ff6b6b';
+            else if (horas > 1) tiempoElement.style.color = '#ffcc00';
+            else tiempoElement.style.color = '#4fc3f7';
+        }
+
+        calcularTiempo();
+        setInterval(calcularTiempo, 5000);
+
+        // ============================
+        // 2. TABLA DE REPUESTOS DINÁMICA
+        // ============================
+        const tablaBody = document.getElementById('cuerpoRepuestos');
+        const btnAgregar = document.getElementById('agregarRepuestoBtn');
+        const totalRepuestosSpan = document.getElementById('totalRepuestos');
+        const costoRepuestosHidden = document.getElementById('costoRepuestosHidden');
+
+        function actualizarTotalRepuestos() {
+            let total = 0;
+            const costos = document.querySelectorAll('.costo-repuesto');
+            costos.forEach(input => {
+                const val = parseFloat(input.value) || 0;
+                total += val;
+            });
+            totalRepuestosSpan.textContent = `$${total.toLocaleString('es-CL')}`;
+            costoRepuestosHidden.value = total.toFixed(2);
+            recalcularResumen();
+        }
+
+        function agregarFilaRepuesto(nombre = '', costo = '') {
+            const fila = document.createElement('tr');
+            fila.className = 'fila-repuesto';
+            fila.innerHTML = `
+                <td style="padding: 4px 8px;">
+                    <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm" 
+                           placeholder="Nombre del repuesto" value="${nombre}"
+                           style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px;">
+                </td>
+                <td style="padding: 4px 8px;">
+                    <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
+                           step="0.01" placeholder="0" value="${costo}"
+                           style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right;">
+                </td>
+                <td style="padding: 4px 8px; text-align: center;">
+                    <button type="button" class="btn-eliminar-repuesto" 
+                            style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            `;
+
+            const eliminarBtn = fila.querySelector('.btn-eliminar-repuesto');
+            eliminarBtn.addEventListener('click', function() {
+                if (document.querySelectorAll('.fila-repuesto').length > 1) {
+                    fila.remove();
+                    actualizarTotalRepuestos();
+                } else {
+                    alert('Debe haber al menos una fila de repuestos.');
+                }
+            });
+
+            const costoInput = fila.querySelector('.costo-repuesto');
+            costoInput.addEventListener('input', actualizarTotalRepuestos);
+
+            tablaBody.appendChild(fila);
+            actualizarTotalRepuestos();
+        }
+
+        btnAgregar.addEventListener('click', function() {
+            agregarFilaRepuesto();
+        });
+
+        // Inicializar con una fila vacía si no hay datos
+        const filasIniciales = document.querySelectorAll('.fila-repuesto');
+        if (filasIniciales.length === 0) {
+            agregarFilaRepuesto();
+        }
+
+        // ============================
+        // 3. RESUMEN FINANCIERO AUTOMÁTICO
+        // ============================
         const montoCliente = {{ registro.monto or 0 }};
-        
-        const inputRepuestos = document.querySelector('input[name="costo_repuestos"]');
         const inputManoObra = document.querySelector('input[name="costo_mano_obra"]');
         const inputDiagnostico = document.querySelector('input[name="costo_diagnostico"]');
-        
+
         const spanRepuestos = document.getElementById('costoRepuestos');
         const spanManoObra = document.getElementById('costoManoObra');
         const spanDiagnostico = document.getElementById('costoDiagnostico');
         const spanCostosTotales = document.getElementById('costosTotales');
         const spanGanancia = document.getElementById('gananciaNeta');
         const hiddenGanancia = document.getElementById('gananciaNetaHidden');
-        
-        function calcularGanancia() {
-            const r = parseFloat(inputRepuestos.value) || 0;
-            const m = parseFloat(inputManoObra.value) || 0;
-            const d = parseFloat(inputDiagnostico.value) || 0;
-            const totalCostos = r + m + d;
+
+        function recalcularResumen() {
+            const repuestos = parseFloat(costoRepuestosHidden.value) || 0;
+            const manoObra = parseFloat(inputManoObra.value) || 0;
+            const diagnostico = parseFloat(inputDiagnostico.value) || 0;
+            const totalCostos = repuestos + manoObra + diagnostico;
             const ganancia = montoCliente - totalCostos;
-            
-            spanRepuestos.textContent = `$${r.toLocaleString('es-CL')}`;
-            spanManoObra.textContent = `$${m.toLocaleString('es-CL')}`;
-            spanDiagnostico.textContent = `$${d.toLocaleString('es-CL')}`;
+
+            spanRepuestos.textContent = `$${repuestos.toLocaleString('es-CL')}`;
+            spanManoObra.textContent = `$${manoObra.toLocaleString('es-CL')}`;
+            spanDiagnostico.textContent = `$${diagnostico.toLocaleString('es-CL')}`;
             spanCostosTotales.textContent = `$${totalCostos.toLocaleString('es-CL')}`;
-            
+
             spanGanancia.textContent = `$${ganancia.toLocaleString('es-CL')}`;
             spanGanancia.style.color = ganancia >= 0 ? '#00ff66' : '#ff6b6b';
             hiddenGanancia.value = ganancia.toFixed(2);
         }
-        
-        inputRepuestos.addEventListener('input', calcularGanancia);
-        inputManoObra.addEventListener('input', calcularGanancia);
-        inputDiagnostico.addEventListener('input', calcularGanancia);
-        
-        // Calcular al cargar
-        calcularGanancia();
+
+        inputManoObra.addEventListener('input', recalcularResumen);
+        inputDiagnostico.addEventListener('input', recalcularResumen);
+
+        // Inicializar
+        setTimeout(actualizarTotalRepuestos, 100);
     });
 </script>
+
+<style>
+    .fila-repuesto .btn-eliminar-repuesto {
+        opacity: 0.3;
+        transition: opacity 0.3s ease;
+    }
+    .fila-repuesto:hover .btn-eliminar-repuesto {
+        opacity: 1;
+    }
+</style>
 
 {% endblock %}
