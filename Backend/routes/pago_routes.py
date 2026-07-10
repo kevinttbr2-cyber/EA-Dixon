@@ -115,20 +115,17 @@ def get_pendientes_validacion():
 # ============================
 # 7. VALIDAR PAGO (PASO 2 - VALIDACIÓN DE COSTOS)
 # ============================
+import json
+
 @pago_bp.route('/validar_pago/<int:id_reg>', methods=['POST'])
 def validar_pago(id_reg):
-    """Paso 2: Validar costos y ganancia neta"""
     data = request.json
-    
     try:
         conn = get_connection()
         cur = conn.cursor()
-        
-        # Convertir detalles_repuestos a JSON
-        detalles_repuestos = data.get('detalles_repuestos', [])
-        import json
-        detalles_json = json.dumps(detalles_repuestos)
-        
+
+        detalles_json = json.dumps(data.get('detalles_repuestos', []))
+
         cur.execute("""
             UPDATE pagos 
             SET costo_repuestos_real = %s,
@@ -159,7 +156,7 @@ def validar_pago(id_reg):
             detalles_json,
             id_reg
         ))
-        
+
         conn.commit()
         cur.close()
         conn.close()
