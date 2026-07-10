@@ -176,16 +176,6 @@ def get_balance():
         print(f"Error en get_balance: {e}")
         return jsonify({"error": str(e)}), 500
 
-
-# ============================
-# 3. OBTENER TODOS LOS REGISTROS PAGADOS
-# ============================
-@pago_bp.route('/registros', methods=['GET'])
-def get_registros():
-    pagados = PagoService.obtener_todos_pagados()
-    return jsonify([p.to_dict() for p in pagados])
-
-
 # ============================
 # 4. AGREGAR CLIENTE (PAGO EXPRESS - PASO 1)
 # ============================
