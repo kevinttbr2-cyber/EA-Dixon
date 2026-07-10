@@ -11,7 +11,23 @@ app = Flask(__name__)
 app.secret_key = Config.SECRET_KEY
 
 # CORS
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://ea-dixon-frontend.vercel.app")
+
+CORS(app, origins=[
+    FRONTEND_URL,
+    "https://ea-dixon-hh85dlygt-ktb2.vercel.app",
+    "https://ea-dixon-1bjjopv0m-ktb2.vercel.app",
+    "https://*.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5000"
+])
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
+
 
 # ============================
 # REGISTRAR BLUEPRINTS
