@@ -395,6 +395,21 @@ def modelos(marca):
         return jsonify(resp.json() if resp.status_code == 200 else [])
     except:
         return jsonify([])
+@app.route('/editar_completo/<int:id_reg>', methods=['POST'])
+@login_required
+def editar_completo(id_reg):
+    """Edición completa de un registro (todos los campos)"""
+    data = request.json
+    
+    try:
+        resp = requests.post(f"{BACKEND_URL}/api/editar_completo/{id_reg}", json=data, timeout=10)
+        if resp.status_code == 200:
+            return jsonify({"success": True})
+        else:
+            return jsonify({"success": False, "error": resp.text}), 500
+    except Exception as e:
+        print(f"Error en /editar_completo: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/flotas')
 @login_required
