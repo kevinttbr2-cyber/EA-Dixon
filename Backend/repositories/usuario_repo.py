@@ -95,7 +95,7 @@ class UsuarioRepository:
             conn = get_connection()
             cur = conn.cursor()
         
-             hashed = bcrypt.hashpw(nueva_password.encode('utf-8'), bcrypt.gensalt())
+            hashed = bcrypt.hashpw(nueva_password.encode('utf-8'), bcrypt.gensalt())   # ← 4 espacios de indentación
             hash_str = hashed.decode('utf-8')
         
             cur.execute("UPDATE usuarios SET password = %s WHERE username = %s", (hash_str, username))
