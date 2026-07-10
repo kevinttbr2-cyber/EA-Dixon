@@ -110,12 +110,15 @@ def agregar():
 @app.route('/pagar/<int:id_reg>', methods=['GET', 'POST'])
 @login_required
 def pagar(id_reg):
+    print(f"🔍 ID recibido: {id_reg}")  # LOG
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
+        print(f"📡 Status: {resp.status_code}")  # LOG
         if resp.status_code != 200:
-            return "Registro no encontrado", 404
+            return f"Registro {id_reg} no encontrado en backend", 404
         registro = resp.json()
-    except:
+    except Exception as e:
+        print(f"❌ Error: {e}")
         return "Error de conexión", 500
     
     if request.method == 'POST':
