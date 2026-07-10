@@ -41,7 +41,7 @@ def pagar(id_reg):
 def get_registros():
     pagados = PagoService.obtener_todos_pagados()
     return jsonify([p.to_dict() for p in pagados])
-@bp.route('/pendientes_validacion', methods=['GET'])
+@pago_bp.route('/pendientes_validacion', methods=['GET'])
 def get_pendientes_validacion():
     """Obtiene pagos pendientes de validación"""
     try:
