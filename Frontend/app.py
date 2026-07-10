@@ -344,6 +344,12 @@ def balance():
         registros = []
         total_pagado = total_repuestos = total_mano_obra = total_diagnostico = ganancia_neta = 0
     
+    # 🔥 CALCULAR FILTROS PARA LAS TARJETAS
+    hoy = [r for r in registros if r.get('fecha') == datetime.now().strftime('%Y-%m-%d')]
+    semana = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')]
+    mes = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')]
+    todos = registros
+    
     return render_template(
         "balance.html",
         registros=registros,
@@ -353,10 +359,10 @@ def balance():
         total_diagnostico=total_diagnostico,
         ganancia_neta=ganancia_neta,
         filtro=filtro,
-        hoy=[],  # ← Para que no falle el template
-        semana=[],
-        mes=[],
-        todos=[]
+        hoy=hoy,        # ← AGREGAR
+        semana=semana,  # ← AGREGAR
+        mes=mes,        # ← AGREGAR
+        todos=todos     # ← AGREGAR
     )
 @app.route('/modelos/<marca>')
 @login_required
