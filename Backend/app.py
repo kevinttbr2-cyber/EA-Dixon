@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = Config.SECRET_KEY
 
 # CORS
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://ea-dixon-frontend.vercel.app")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://ea-dixon.vercel.app")
 
 CORS(app, origins=[
     FRONTEND_URL,
