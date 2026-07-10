@@ -1,84 +1,286 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2 style="color:#00ff66; font-weight:700; text-align:center; margin-bottom:20px;">Agregar Cliente</h2>
 
-<form method="POST" action="/agregar">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    
-    <div class="mb-3">
-        <label style="color:#90e0a0;">Nombre del cliente</label>
-        <input type="text" name="nombre" class="form-control" required>
-    </div>
+<div class="base-container" style="max-width: 700px; margin: 0 auto;">
+    <h2 style="color: #00ff66; font-weight: 700; text-align: center; margin-bottom: 5px;">
+        🚗 Agregar Cliente
+    </h2>
+    <p style="color: #888; text-align: center; margin-bottom: 20px; font-size: 14px;">
+        Completa los datos del vehículo y cliente
+    </p>
 
-    <div class="mb-3">
-        <label style="color:#90e0a0;">Patente</label>
-        <input type="text" name="patente" class="form-control" required>
-    </div>
+    <form method="POST" action="/agregar" id="formAgregar">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-    <div class="mb-3">
-        <label style="color:#90e0a0;">Marca</label>
-        <select id="marca" name="marca" class="form-control" required>
-            <option value="">Seleccione</option>
-            {% for m in marcas %}
-            <option value="{{ m }}">{{ m }}</option>
-            {% endfor %}
-            <option value="__manual__">OTRA</option>
-        </select>
-        <input type="text" id="marca_manual" name="marca_manual" class="form-control mt-2" style="display:none;" placeholder="Escriba la marca">
-    </div>
+        <!-- ============================
+             FILA 1: Nombre + Flota
+             ============================ -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="mb-3">
+                <label style="color: #90e0a0; font-weight: 500;">👤 Nombre del cliente</label>
+                <input type="text" name="nombre" class="form-control" required placeholder="Ej: Juan Pérez">
+            </div>
+            <div class="mb-3">
+                <label style="color: #90e0a0; font-weight: 500;">🚛 Flota</label>
+                <div style="display: flex; gap: 6px;">
+                    <select name="flota" id="flotaSelect" class="form-control" style="flex:1;">
+                        <option value="">Sin flota</option>
+                        {% for f in flotas %}
+                        <option value="{{ f }}">{{ f }}</option>
+                        {% endfor %}
+                        <option value="__nueva__">➕ Crear nueva flota</option>
+                    </select>
+                    <button type="button" id="btnNuevaFlota" class="btn btn-sm" style="
+                        background: rgba(0,255,102,0.12);
+                        color: #00ff66;
+                        border: 1px solid rgba(0,255,102,0.20);
+                        border-radius: 8px;
+                        padding: 0 14px;
+                        white-space: nowrap;
+                    ">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <input type="text" id="flotaNuevaInput" style="display:none; margin-top: 6px;" class="form-control" placeholder="Nombre de la nueva flota">
+                <small style="color: #666; font-size: 11px;">Selecciona una flota existente o crea una nueva</small>
+            </div>
+        </div>
 
-    <div class="mb-3">
-        <label style="color:#90e0a0;">Modelo</label>
-        <select id="modelo" name="modelo" class="form-control" required>
-            <option value="">Seleccione</option>
-        </select>
-        <input type="text" id="modelo_manual" name="modelo_manual" class="form-control mt-2" style="display:none;" placeholder="Escriba el modelo">
-    </div>
+        <!-- ============================
+             FILA 2: Fecha + Patente
+             ============================ -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="mb-3">
+                <label style="color: #90e0a0; font-weight: 500;">📅 Fecha</label>
+                <input type="date" name="fecha" class="form-control" value="{{ hoy }}" readonly style="background: rgba(255,255,255,0.04); color: #888;">
+            </div>
+            <div class="mb-3">
+                <label style="color: #90e0a0; font-weight: 500;">🔢 Patente del vehículo</label>
+                <input type="text" name="patente" class="form-control" required placeholder="Ej: ABCD12" style="text-transform: uppercase;">
+            </div>
+        </div>
 
-    <div class="mb-3">
-        <label style="color:#90e0a0;">Teléfono</label>
-        <input type="tel" name="telefono" class="form-control" placeholder="+56912345678">
-    </div>
+        <!-- ============================
+             FILA 3: Marca + Modelo
+             ============================ -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="mb-3">
+                <label style="color: #90e0a0; font-weight: 500;">🏷️ Marca</label>
+                <select id="marca" name="marca" class="form-control" required>
+                    <option value="">Seleccione marca</option>
+                    {% for m in marcas %}
+                    <option value="{{ m }}">{{ m }}</option>
+                    {% endfor %}
+                    <option value="__manual__">OTRA</option>
+                </select>
+                <input type="text" id="marca_manual" name="marca_manual" class="form-control mt-2" style="display:none;" placeholder="Escriba la marca">
+            </div>
+            <div class="mb-3">
+                <label style="color: #90e0a0; font-weight: 500;">📐 Modelo</label>
+                <select id="modelo" name="modelo" class="form-control" required>
+                    <option value="">Seleccione modelo</option>
+                </select>
+                <input type="text" id="modelo_manual" name="modelo_manual" class="form-control mt-2" style="display:none;" placeholder="Escriba el modelo">
+            </div>
+        </div>
 
-    <div class="mb-3">
-        <label style="color:#90e0a0;">Observaciones</label>
-        <textarea name="observaciones" class="form-control" rows="2"></textarea>
-    </div>
+        <!-- ============================
+             FILA 4: Año (opcional) + Kilometraje
+             ============================ -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="mb-3">
+                <label style="color: #90e0a0; font-weight: 500;">📆 Año <span style="color: #666; font-weight: 400;">(opcional)</span></label>
+                <input type="number" name="anio" class="form-control" placeholder="Ej: 2020" min="1900" max="2099">
+            </div>
+            <div class="mb-3">
+                <label style="color: #90e0a0; font-weight: 500;">📊 Kilometraje</label>
+                <input type="number" name="kilometraje" class="form-control" placeholder="Ej: 45000" min="0" value="0">
+            </div>
+        </div>
 
-    <button class="btn btn-primary w-100">Registrar</button>
-</form>
+        <!-- ============================
+             USUARIO QUE REGISTRA (automático)
+             ============================ -->
+        <div class="mb-3">
+            <label style="color: #90e0a0; font-weight: 500;">👤 Usuario que registra</label>
+            <input type="text" name="usuario_registra" class="form-control" value="{{ session.get('nombre_completo', session.get('usuario')) }}" readonly style="background: rgba(255,255,255,0.04); color: #888;">
+        </div>
+
+        <!-- ============================
+             TELÉFONO
+             ============================ -->
+        <div class="mb-3">
+            <label style="color: #90e0a0; font-weight: 500;">📞 Teléfono del cliente</label>
+            <input type="tel" name="telefono" class="form-control" placeholder="Ej: +56912345678">
+        </div>
+
+        <!-- ============================
+             OBSERVACIONES
+             ============================ -->
+        <div class="mb-3">
+            <label style="color: #90e0a0; font-weight: 500;">📝 Observaciones del ingreso</label>
+            <textarea name="observaciones" class="form-control" rows="3" placeholder="Detalles del ingreso, fallas, etc."></textarea>
+        </div>
+
+        <!-- ============================
+             BOTONES
+             ============================ -->
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-primary" style="flex:1; background: #00ff66 !important; color: #000 !important; font-weight: 700; border-radius: 10px; padding: 14px; font-size: 18px; border: none;">
+                <i class="fas fa-save"></i> Registrar Cliente
+            </button>
+            <a href="/estado" class="btn" style="
+                background: rgba(255,255,255,0.06);
+                color: #888;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 10px;
+                padding: 14px 24px;
+                text-decoration: none;
+                text-align: center;
+            ">
+                ← Volver
+            </a>
+        </div>
+    </form>
+</div>
 
 <script>
-    document.getElementById('marca').addEventListener('change', function() {
-        const marca = this.value;
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // ============================
+        // 1. FLOTA: Mostrar input para nueva flota
+        // ============================
+        const flotaSelect = document.getElementById('flotaSelect');
+        const flotaNuevaInput = document.getElementById('flotaNuevaInput');
+        const btnNuevaFlota = document.getElementById('btnNuevaFlota');
+
+        flotaSelect.addEventListener('change', function() {
+            if (this.value === '__nueva__') {
+                flotaNuevaInput.style.display = 'block';
+                flotaNuevaInput.focus();
+                btnNuevaFlota.textContent = '✅ Guardar';
+                btnNuevaFlota.style.background = 'rgba(0,255,102,0.20)';
+            } else {
+                flotaNuevaInput.style.display = 'none';
+                btnNuevaFlota.textContent = '<i class="fa-solid fa-plus"></i>';
+                btnNuevaFlota.style.background = 'rgba(0,255,102,0.12)';
+            }
+        });
+
+        btnNuevaFlota.addEventListener('click', function() {
+            if (flotaSelect.value === '__nueva__') {
+                const nombre = flotaNuevaInput.value.trim();
+                if (nombre) {
+                    // Agregar al select
+                    const option = document.createElement('option');
+                    option.value = nombre;
+                    option.textContent = nombre;
+                    flotaSelect.insertBefore(option, flotaSelect.querySelector('option[value="__nueva__"]'));
+                    flotaSelect.value = nombre;
+                    flotaNuevaInput.style.display = 'none';
+                    btnNuevaFlota.textContent = '<i class="fa-solid fa-plus"></i>';
+                    btnNuevaFlota.style.background = 'rgba(0,255,102,0.12)';
+                } else {
+                    alert('⚠️ Escribe un nombre para la flota');
+                }
+            } else {
+                flotaSelect.value = '__nueva__';
+                flotaNuevaInput.style.display = 'block';
+                flotaNuevaInput.focus();
+                btnNuevaFlota.textContent = '✅ Guardar';
+                btnNuevaFlota.style.background = 'rgba(0,255,102,0.20)';
+            }
+        });
+
+        // ============================
+        // 2. MARCA + MODELO (con "OTRA")
+        // ============================
+        const marcaSelect = document.getElementById('marca');
         const modeloSelect = document.getElementById('modelo');
         const marcaManual = document.getElementById('marca_manual');
         const modeloManual = document.getElementById('modelo_manual');
-        
-        if (marca === '__manual__') {
-            marcaManual.style.display = 'block';
-            modeloSelect.innerHTML = '<option value="">Seleccione</option>';
-            modeloManual.style.display = 'block';
-            return;
-        }
-        marcaManual.style.display = 'none';
-        modeloManual.style.display = 'none';
-        
-        fetch('/modelos/' + marca)
-            .then(r => r.json())
-            .then(data => {
-                modeloSelect.innerHTML = '<option value="">Seleccione</option>';
-                data.forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m;
-                    opt.textContent = m;
-                    modeloSelect.appendChild(opt);
-                });
-                const optManual = document.createElement('option');
-                optManual.value = '__manual__';
-                optManual.textContent = 'OTRO';
-                modeloSelect.appendChild(optManual);
-            });
+
+        marcaSelect.addEventListener('change', function() {
+            const marca = this.value;
+            if (marca === '__manual__') {
+                marcaManual.style.display = 'block';
+                modeloSelect.innerHTML = '<option value="">Seleccione modelo</option>';
+                modeloSelect.disabled = true;
+                modeloManual.style.display = 'block';
+                return;
+            }
+            marcaManual.style.display = 'none';
+            modeloSelect.disabled = false;
+            modeloManual.style.display = 'none';
+
+            fetch('/modelos/' + encodeURIComponent(marca))
+                .then(r => r.json())
+                .then(data => {
+                    modeloSelect.innerHTML = '<option value="">Seleccione modelo</option>';
+                    data.forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m;
+                        opt.textContent = m;
+                        modeloSelect.appendChild(opt);
+                    });
+                    const optManual = document.createElement('option');
+                    optManual.value = '__manual__';
+                    optManual.textContent = 'OTRO';
+                    modeloSelect.appendChild(optManual);
+                })
+                .catch(() => {});
+        });
+
+        modeloSelect.addEventListener('change', function() {
+            if (this.value === '__manual__') {
+                modeloManual.style.display = 'block';
+            } else {
+                modeloManual.style.display = 'none';
+            }
+        });
+
+        // ============================
+        // 3. ENVÍO DEL FORMULARIO
+        // ============================
+        document.getElementById('formAgregar').addEventListener('submit', function(e) {
+            // Si se seleccionó "OTRA" en marca, usar el valor manual
+            if (marcaSelect.value === '__manual__') {
+                const manualVal = marcaManual.value.trim();
+                if (manualVal) {
+                    marcaSelect.value = manualVal;
+                } else {
+                    e.preventDefault();
+                    alert('⚠️ Escribe el nombre de la marca');
+                    return;
+                }
+            }
+
+            // Si se seleccionó "OTRO" en modelo, usar el valor manual
+            if (modeloSelect.value === '__manual__') {
+                const manualVal = modeloManual.value.trim();
+                if (manualVal) {
+                    modeloSelect.value = manualVal;
+                } else {
+                    e.preventDefault();
+                    alert('⚠️ Escribe el nombre del modelo');
+                    return;
+                }
+            }
+
+            // Si flota es "__nueva__", usar el valor del input
+            if (flotaSelect.value === '__nueva__') {
+                const flotaVal = flotaNuevaInput.value.trim();
+                if (flotaVal) {
+                    flotaSelect.value = flotaVal;
+                } else {
+                    e.preventDefault();
+                    alert('⚠️ Escribe el nombre de la flota');
+                    return;
+                }
+            }
+        });
     });
 </script>
+
 {% endblock %}
