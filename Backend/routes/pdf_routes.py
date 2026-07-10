@@ -2,6 +2,9 @@ from flask import Blueprint, request, jsonify, send_file
 from services.pago_service import PagoService
 from services.pdf_service import PDFService
 from repositories.pago_repo import PagoRepository
+import qrcode
+from io import BytesIO
+import base64
 
 pdf_bp = Blueprint('pdf', __name__, url_prefix='/api')
 @pdf_bp.route('/firma/<int:id_reg>', methods=['GET'])
@@ -50,3 +53,29 @@ def descargar_pdf(id_reg, firma):
         as_attachment=True,
         download_name=f'OT_{id_reg}.pdf'
     )
+
+
+@pdf_bp.route('/qr/<int:id_reg>/<firma>', methods=['GET'])
+def generar_qr(id_reg, firma):
+    """Genera un código QR con la URL del PDF"""
+    # Construir la URL del PDF
+    pdf_url = f"https://ea-dixon-production.up.railway.app/api/pdf/{id_reg}/{firma}"
+    
+    # Generar QR
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(pdf_url)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="#00ff66", back_color="#0a0a0a")
+    
+    # Convertir a base64 para mostrarlo en HTML
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    
+    return jsonify({"qr": f"data:image/png;base64,{img_base64}"})
