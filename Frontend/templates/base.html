@@ -94,14 +94,46 @@
             align-items: center;
             gap: 10px;
         }
+        /* Estilos para dropdown en navbar */
+        .dropdown-menu {
+            background: rgba(15, 15, 15, 0.95) !important;
+            border: 1px solid #00ff66 !important;
+            backdrop-filter: blur(10px) !important;
+            border-radius: 12px !important;
+            padding: 8px !important;
+            min-width: 220px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+        }
+        .dropdown-item {
+            color: #e0e0e0 !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+            font-size: 14px !important;
+        }
+        .dropdown-item:hover {
+            background: rgba(0, 255, 102, 0.10) !important;
+            color: #00ff66 !important;
+        }
+        .dropdown-divider {
+            border-color: rgba(255, 255, 255, 0.06) !important;
+            margin: 6px 0 !important;
+        }
         @media (max-width: 768px) {
             .base-container { padding: 15px !important; }
             .navbar-brand { position: static; transform: none; }
             #botonFlotante { padding: 10px 16px; font-size: 14px; bottom: 20px; right: 20px; }
+            .dropdown-menu {
+                text-align: center;
+                background: rgba(10, 10, 10, 0.98) !important;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- ============================
+         NAVBAR (CON TODAS LAS MODIFICACIONES)
+         ============================ -->
     {% if session.get("usuario") %}
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
@@ -113,27 +145,78 @@
             </a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    
+                    <!-- 📄 REGISTROS -->
                     {% if session.get("rol") in ["admin", "operador"] %}
-                    <li class="nav-item"><a class="nav-link" href="/registros">📄 Registros</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/flotas">🚗 Flotas</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/registros">📄 Registros</a>
+                    </li>
                     {% endif %}
+                    
+                    <!-- 🚗 FLOTAS -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/flotas">🚗 Flotas</a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- 📊 DESCARGAS -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/auditoria_descargas">📊 Descargas</a>
+                    </li>
+                    {% endif %}
+
+                    <!-- 📊 VALIDAR PAGOS (NUEVO) -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pendientes_validacion">📊 Validar Pagos</a>
+                    </li>
+                    {% endif %}
+
+                    <!-- 👤 USUARIOS (DROPDOWN) - SOLO ADMIN -->
                     {% if session.get("rol") == "admin" %}
-                    <li class="nav-item"><a class="nav-link" href="/register">👤 Registrar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/usuarios">👥 Usuarios</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            👤 Usuarios
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="menuUsuarios">
+                            <li><a class="dropdown-item" href="/register">➕ Crear Usuario</a></li>
+                            <li><a class="dropdown-item" href="/usuarios">👥 Lista de Usuarios</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/cambiar_password">🔑 Cambiar Contraseña</a></li>
+                        </ul>
+                    </li>
                     {% endif %}
-                    <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/logout">⛔ Salir</a></li>
+                    
+                    <!-- ⛔ SALIR -->
+                    <li class="nav-item">
+                        <a class="nav-link text-danger fw-bold" href="/logout">⛔ Salir</a>
+                    </li>
+                    
                 </ul>
             </div>
         </div>
     </nav>
     {% endif %}
 
+    <!-- ============================
+         CONTENIDO PRINCIPAL
+         ============================ -->
     <div class="base-container mt-4 mb-5">
         {% block content %}{% endblock %}
     </div>
 
-    <a href="/agregar_cliente" id="botonFlotante"><i class="fas fa-car"></i> + CLIENTE</a>
+    <!-- ============================
+         BOTÓN FLOTANTE
+         ============================ -->
+    <a href="/agregar_cliente" id="botonFlotante">
+        <i class="fas fa-car"></i> + CLIENTE
+    </a>
 
+    <!-- ============================
+         SCRIPTS
+         ============================ -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
