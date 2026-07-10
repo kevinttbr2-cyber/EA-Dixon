@@ -127,8 +127,9 @@
                 {% for r in registros %}
                 <tr data-id="{{ r.id }}" class="fila-registro">
                     <td style="padding: 6px 8px; text-align: center; font-weight: 600;">
-                        <a href="/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" 
-                           style="color: #00ff66; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                       <a href="#" class="pdf-link" data-id="{{ r.id }}" target="_blank">
+                            <i class="fa-solid fa-file-pdf" style="font-size:11px;"></i> {{ r.id }}
+                        </a>
                             <i class="fa-solid fa-file-pdf" style="font-size: 11px;"></i> {{ r.id }}
                         </a>
                     </td>
@@ -749,114 +750,32 @@
             filasArray.forEach(fila => tbody.appendChild(fila));
         };
     });
+// ============================
+// GENERAR FIRMA Y PDF
+// ============================
+function generarFirmaPDF(id) {
+    // Debe usar la misma lógica que en app.py
+    // Por ahora, usamos la URL directa con la firma calculada desde el backend
+    return fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`)
+        .then(r => r.json())
+        .then(data => {
+            // Si el backend devuelve la firma, úsala
+            if (data.firma) return data.firma;
+            // Si no, genera una temporal (debes implementar la misma lógica que en app.py)
+            return '';
+        });
+}
+
+// Modificar los enlaces PDF
+document.querySelectorAll('.pdf-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const id = this.dataset.id;
+        const url = `https://ea-dixon-production.up.railway.app/api/pdf/${id}/60258ef36da71b5e`; // ← FIRMA FIJA PARA PRUEBA
+        window.open(url, '_blank');
+    });
+});
 </script>
-<!-- ============================
-     MODAL EDITAR COMPLETO
-     ============================ -->
-<div id="modalEditarCompleto" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999999;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0;">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #4fc3f7;border-radius:16px;padding:25px 30px;max-width:750px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="color:#4fc3f7;margin:0;font-size:22px;">✏️ Editar Registro Completo</h3>
-            <button id="cerrarModalEditarCompleto" style="background:transparent;border:none;color:#ff6b6b;font-size:28px;cursor:pointer;">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
 
-        <form id="formEditarCompleto">
-            <input type="hidden" name="id" id="edit_completo_id">
 
-            <!-- DATOS DEL CLIENTE -->
-            <div style="background:rgba(0,255,102,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #00ff66;">
-                <h4 style="color:#00ff66;margin:0 0 10px 0;font-size:15px;">🚗 Datos del Cliente</h4>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div><label style="color:#90e0a0;font-size:12px;">Nombre</label><input type="text" name="nombre" id="edit_nombre" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Teléfono</label><input type="text" name="telefono" id="edit_telefono" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Patente</label><input type="text" name="patente" id="edit_patente" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Marca</label><input type="text" name="marca" id="edit_marca" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Modelo</label><input type="text" name="modelo" id="edit_modelo" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Año</label><input type="number" name="anio" id="edit_anio" class="form-control form-control-sm"></div>
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Flota</label><input type="text" name="flota" id="edit_flota" class="form-control form-control-sm"></div>
-                </div>
-            </div>
-
-            <!-- DATOS DEL INGRESO -->
-            <div style="background:rgba(79,195,247,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #4fc3f7;">
-                <h4 style="color:#4fc3f7;margin:0 0 10px 0;font-size:15px;">📥 Datos del Ingreso</h4>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div><label style="color:#90e0a0;font-size:12px;">Fecha</label><input type="date" name="fecha" id="edit_fecha" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Hora</label><input type="time" name="hora" id="edit_hora" class="form-control form-control-sm"></div>
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Observaciones de ingreso</label>
-                        <textarea name="observaciones_cliente" id="edit_observaciones_cliente" class="form-control form-control-sm" rows="2"></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- REPARACIÓN Y COSTOS -->
-            <div style="background:rgba(255,200,0,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #ffcc00;">
-                <h4 style="color:#ffcc00;margin:0 0 10px 0;font-size:15px;">🔧 Reparación y Costos</h4>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Diagnóstico</label>
-                        <textarea name="diagnostico" id="edit_diagnostico" class="form-control form-control-sm" rows="2"></textarea>
-                    </div>
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Reparación realizada</label>
-                        <textarea name="reparacion" id="edit_reparacion" class="form-control form-control-sm" rows="2"></textarea>
-                    </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Resultado</label>
-                        <select name="resultado" id="edit_resultado" class="form-control form-control-sm">
-                            <option value="reparado">Reparado</option>
-                            <option value="pendiente">Pendiente</option>
-                            <option value="derivado">Derivado</option>
-                        </select>
-                    </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Tiempo estimado</label>
-                        <input type="text" name="tiempo_estimado" id="edit_tiempo_estimado" class="form-control form-control-sm" placeholder="HH:MM:SS">
-                    </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Costo repuestos</label>
-                        <input type="number" name="costo_repuestos_real" id="edit_costo_repuestos" class="form-control form-control-sm" step="0.01">
-                    </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Mano de obra</label>
-                        <input type="number" name="costo_mano_obra_real" id="edit_costo_mano_obra" class="form-control form-control-sm" step="0.01">
-                    </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Costo diagnóstico</label>
-                        <input type="number" name="costo_diagnostico_real" id="edit_costo_diagnostico" class="form-control form-control-sm" step="0.01">
-                    </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Ganancia neta</label>
-                        <input type="number" name="ganancia_neta" id="edit_ganancia_neta" class="form-control form-control-sm" step="0.01">
-                    </div>
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Observaciones de pago</label>
-                        <textarea name="observaciones_pago" id="edit_observaciones_pago" class="form-control form-control-sm" rows="2"></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VALIDACIÓN -->
-            <div style="background:rgba(79,195,247,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #4fc3f7;">
-                <h4 style="color:#4fc3f7;margin:0 0 10px 0;font-size:15px;">✅ Validación</h4>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div><label style="color:#90e0a0;font-size:12px;">Validado por</label>
-                        <input type="text" name="validado_por" id="edit_validado_por" class="form-control form-control-sm">
-                    </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Atendido por</label>
-                        <input type="text" name="atendido_por" id="edit_atendido_por" class="form-control form-control-sm">
-                    </div>
-                    <div style="grid-column:1/3;display:flex;align-items:center;gap:12px;padding-top:4px;">
-                        <label style="color:#90e0a0;font-size:13px;display:flex;align-items:center;gap:6px;">
-                            <input type="checkbox" name="validado" id="edit_validado" value="1"> Validado
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BOTONES -->
-            <div style="display:flex;gap:10px;margin-top:10px;">
-                <button type="submit" class="btn btn-primary" style="flex:1;background:#4fc3f7 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;">
-                    💾 Guardar todos los cambios
-                </button>
-                <button type="button" id="btnCancelarEditarCompleto" class="btn" style="background:rgba(255,255,255,0.06);color:#888;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 24px;">
-                    Cancelar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 {% endblock %}
