@@ -199,8 +199,7 @@ def pendientes_validacion():
         pendientes=pendientes,
         validados=validados,
         total_pagado=total_pagado
-    )
-@app.route('/validar_pago/<int:id_reg>', methods=['GET', 'POST'])
+    )@app.route('/validar_pago/<int:id_reg>', methods=['GET', 'POST'])
 @login_required
 def validar_pago(id_reg):
     """Paso 2: Validación de costos y ganancia neta"""
@@ -209,6 +208,7 @@ def validar_pago(id_reg):
         return "No tienes permisos para validar pagos", 403
     
     try:
+        # Obtener registro
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         if resp.status_code != 200:
             return "Registro no encontrado", 404
@@ -220,11 +220,30 @@ def validar_pago(id_reg):
     if registro.get('estado') != 'pagado':
         return "Este pago no está pagado", 400
     
+    # Obtener lista de usuarios para el dropdown
+    try:
+        resp_usuarios = requests.get(f"{BACKEND_URL}/api/usuarios", timeout=10)
+        usuarios = resp_usuarios.json() if resp_usuarios.status_code == 200 else []
+    except:
+        usuarios = []
+    
     if request.method == 'POST':
-        # Obtener el nombre del validador desde el formulario
+        # Obtener datos del formulario
         validado_por = request.form.get('validado_por', '').strip()
         if not validado_por:
             validado_por = session.get('nombre_completo', session.get('usuario'))
+        
+        # Obtener lista de repuestos
+        nombres_repuestos = request.form.getlist('repuesto_nombre[]')
+        costos_repuestos = request.form.getlist('repuesto_costo[]')
+        
+        detalles_repuestos = []
+        for i in range(len(nombres_repuestos)):
+            if nombres_repuestos[i].strip():
+                detalles_repuestos.append({
+                    'nombre': nombres_repuestos[i].strip(),
+                    'costo': float(costos_repuestos[i]) if costos_repuestos[i] else 0
+                })
         
         data = {
             'costo_repuestos_real': float(request.form.get('costo_repuestos', 0)),
@@ -232,7 +251,12 @@ def validar_pago(id_reg):
             'costo_diagnostico_real': float(request.form.get('costo_diagnostico', 0)),
             'ganancia_neta': float(request.form.get('ganancia_neta', 0)),
             'observaciones_pago': request.form.get('observaciones_costos', ''),
-            'validado_por': validado_por
+            'validado_por': validado_por,
+            'diagnostico': request.form.get('diagnostico', ''),
+            'reparacion': request.form.get('reparacion', 'Reparación realizada'),
+            'resultado': request.form.get('resultado', 'reparado'),
+            'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
+            'detalles_repuestos': detalles_repuestos
         }
         
         try:
@@ -245,9 +269,9 @@ def validar_pago(id_reg):
             print(f"Error en /validar_pago POST: {e}")
             error = "Error de conexión"
         
-        return render_template("validar_pago.html", id=id_reg, registro=registro, error=error)
+        return render_template("validar_pago.html", id=id_reg, registro=registro, usuarios=usuarios, error=error)
     
-    return render_template("validar_pago.html", id=id_reg, registro=registro, error=None)
+    return render_template("validar_pago.html", id=id_reg, registro=registro, usuarios=usuarios, error=None)
 @app.route('/pago_validado/<int:id_reg>')
 @login_required
 def pago_validado(id_reg):
