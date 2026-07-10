@@ -25,18 +25,17 @@ def get_estado():
     })
 
 
+
 # ============================
-# REGISTROS CON FILTROS
+# REGISTROS CON FILTROS (NUEVO)
 # ============================
 @pago_bp.route('/registros', methods=['GET'])
-def get_registros():
+def get_registros_filtrados():
     filtro = request.args.get('filtro', 'todos')
     hoy = datetime.now().date()
     
     try:
         conn, cur = get_cursor()
-        
-        # Base query
         query = "SELECT * FROM pagos WHERE estado = 'pagado'"
         params = []
         
@@ -44,21 +43,17 @@ def get_registros():
             query += " AND fecha = %s"
             params.append(hoy.strftime('%Y-%m-%d'))
         elif filtro == '7d':
-            fecha_7d = hoy - timedelta(days=7)
             query += " AND fecha >= %s"
-            params.append(fecha_7d.strftime('%Y-%m-%d'))
+            params.append((hoy - timedelta(days=7)).strftime('%Y-%m-%d'))
         elif filtro == 'mes':
-            fecha_mes = hoy - timedelta(days=30)
             query += " AND fecha >= %s"
-            params.append(fecha_mes.strftime('%Y-%m-%d'))
+            params.append((hoy - timedelta(days=30)).strftime('%Y-%m-%d'))
         
         query += " ORDER BY fecha DESC, hora DESC"
-        
         cur.execute(query, params)
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
-        # Agregar firma para PDF
         from services.pdf_service import PDFService
         for r in registros:
             r['firma'] = PDFService.generar_firma(r['id'])
@@ -67,9 +62,8 @@ def get_registros():
         conn.close()
         return jsonify(registros)
     except Exception as e:
-        print(f"Error en get_registros: {e}")
+        print(f"Error en get_registros_filtrados: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 # ============================
 # EDITAR REGISTRO
