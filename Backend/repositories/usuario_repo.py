@@ -88,16 +88,17 @@ class UsuarioRepository:
         except Exception as e:
             print(f"Error creando admin: {e}")
             return False
+    
     @staticmethod
     def cambiar_password(username, nueva_password):
         try:
             import bcrypt
             conn = get_connection()
             cur = conn.cursor()
-        
-            hashed = bcrypt.hashpw(nueva_password.encode('utf-8'), bcrypt.gensalt())   # ← 4 espacios de indentación
+            
+            hashed = bcrypt.hashpw(nueva_password.encode('utf-8'), bcrypt.gensalt())
             hash_str = hashed.decode('utf-8')
-        
+            
             cur.execute("UPDATE usuarios SET password = %s WHERE username = %s", (hash_str, username))
             conn.commit()
             cur.close()
