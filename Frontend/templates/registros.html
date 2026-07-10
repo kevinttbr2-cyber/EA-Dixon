@@ -523,6 +523,10 @@
                     document.querySelectorAll('.menu-acciones').forEach(m => {
                         if (m !== menu) m.style.display = 'none';
                     });
+                    // Posicionar el menú
+                    const rect = this.getBoundingClientRect();
+                    menu.style.left = (rect.left - 100) + 'px';
+                    menu.style.top = (rect.bottom + 4) + 'px';
                     menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
                 }
             });
@@ -550,7 +554,7 @@
         });
 
         // ============================
-        // 5. VER DETALLE (CON URL DIRECTA)
+        // 5. VER DETALLE
         // ============================
         async function verDetalle(id) {
             const modal = document.getElementById('modalDetalle');
@@ -559,10 +563,7 @@
             contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
 
             try {
-                const url = `https://ea-dixon-production.up.railway.app/api/registro/${id}`;
-                console.log('🔍 Fetching:', url);
-                const resp = await fetch(url);
-                console.log('📡 Status:', resp.status);
+                const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`);
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
                 contenido.innerHTML = `
@@ -589,90 +590,128 @@
                     </div>
                 `;
             } catch(e) {
-                console.error('❌ Error en verDetalle:', e);
                 contenido.innerHTML = `<div style="color:#ff6b6b;">❌ Error al cargar los datos: ${e.message}</div>`;
             }
         }
 
-        document.getElementById('cerrarModalDetalle').addEventListener('click', function() {
+        document.getElementById('cerrarModalDetalle').onclick = function() {
             document.getElementById('modalDetalle').style.display = 'none';
-        });
-        document.getElementById('modalDetalle').addEventListener('click', function(e) {
+        };
+        document.getElementById('modalDetalle').onclick = function(e) {
             if (e.target === this) this.style.display = 'none';
-        });
+        };
 
         // ============================
-        // 6. EDITAR (CON URL DIRECTA)
+        // 6. EDITAR REGISTRO (MODAL COMPLETO)
         // ============================
         async function editarRegistro(id) {
-            const modal = document.getElementById('modalEditar');
+            const modal = document.getElementById('modalEditarCompleto');
             modal.style.display = 'flex';
 
             try {
-                const url = `https://ea-dixon-production.up.railway.app/api/registro/${id}`;
-                console.log('🔍 Fetching para editar:', url);
-                const resp = await fetch(url);
+                const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`);
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
-                document.getElementById('edit_id').value = data.id;
+                
+                // Llenar todos los campos
+                document.getElementById('edit_completo_id').value = data.id;
                 document.getElementById('edit_nombre').value = data.nombre || '';
-                document.getElementById('edit_monto').value = data.monto || '';
+                document.getElementById('edit_telefono').value = data.telefono || '';
                 document.getElementById('edit_patente').value = data.patente || '';
                 document.getElementById('edit_marca').value = data.marca || '';
                 document.getElementById('edit_modelo').value = data.modelo || '';
-                document.getElementById('edit_observaciones').value = data.observaciones_pago || data.observaciones_cliente || '';
+                document.getElementById('edit_anio').value = data.anio || '';
+                document.getElementById('edit_flota').value = data.flota || '';
+                document.getElementById('edit_fecha').value = data.fecha || '';
+                document.getElementById('edit_hora').value = data.hora || '';
+                document.getElementById('edit_observaciones_cliente').value = data.observaciones_cliente || '';
+                document.getElementById('edit_diagnostico').value = data.diagnostico || '';
+                document.getElementById('edit_reparacion').value = data.reparacion || '';
+                document.getElementById('edit_resultado').value = data.resultado || 'reparado';
+                document.getElementById('edit_tiempo_estimado').value = data.tiempo_estimado || '00:00:00';
+                document.getElementById('edit_costo_repuestos').value = data.costo_repuestos_real || 0;
+                document.getElementById('edit_costo_mano_obra').value = data.costo_mano_obra_real || 0;
+                document.getElementById('edit_costo_diagnostico').value = data.costo_diagnostico_real || 0;
+                document.getElementById('edit_ganancia_neta').value = data.ganancia_neta || 0;
+                document.getElementById('edit_observaciones_pago').value = data.observaciones_pago || '';
+                document.getElementById('edit_validado_por').value = data.validado_por || '';
+                document.getElementById('edit_atendido_por').value = data.atendido_por || '';
+                document.getElementById('edit_validado').checked = data.validado || false;
+                
             } catch(e) {
-                console.error('❌ Error en editarRegistro:', e);
+                console.error('Error cargando datos para editar:', e);
                 alert('❌ Error al cargar los datos para editar');
             }
         }
 
-        document.getElementById('cerrarModalEditar').addEventListener('click', function() {
-            document.getElementById('modalEditar').style.display = 'none';
-        });
-        document.getElementById('modalEditar').addEventListener('click', function(e) {
+        document.getElementById('cerrarModalEditarCompleto').onclick = function() {
+            document.getElementById('modalEditarCompleto').style.display = 'none';
+        };
+        document.getElementById('modalEditarCompleto').onclick = function(e) {
             if (e.target === this) this.style.display = 'none';
-        });
+        };
+        document.getElementById('btnCancelarEditarCompleto').onclick = function() {
+            document.getElementById('modalEditarCompleto').style.display = 'none';
+        };
 
-        document.getElementById('formEditar').addEventListener('submit', async function(e) {
+        // ============================
+        // 7. GUARDAR EDICIÓN COMPLETA
+        // ============================
+        document.getElementById('formEditarCompleto').onsubmit = async function(e) {
             e.preventDefault();
-            const id = document.getElementById('edit_id').value;
+            const id = document.getElementById('edit_completo_id').value;
+            
             const data = {
                 nombre: document.getElementById('edit_nombre').value,
-                monto: parseFloat(document.getElementById('edit_monto').value) || 0,
+                telefono: document.getElementById('edit_telefono').value,
                 patente: document.getElementById('edit_patente').value,
                 marca: document.getElementById('edit_marca').value,
                 modelo: document.getElementById('edit_modelo').value,
-                observaciones: document.getElementById('edit_observaciones').value
+                anio: parseInt(document.getElementById('edit_anio').value) || 0,
+                flota: document.getElementById('edit_flota').value,
+                fecha: document.getElementById('edit_fecha').value,
+                hora: document.getElementById('edit_hora').value,
+                observaciones_cliente: document.getElementById('edit_observaciones_cliente').value,
+                diagnostico: document.getElementById('edit_diagnostico').value,
+                reparacion: document.getElementById('edit_reparacion').value,
+                resultado: document.getElementById('edit_resultado').value,
+                tiempo_estimado: document.getElementById('edit_tiempo_estimado').value || '00:00:00',
+                costo_repuestos_real: parseFloat(document.getElementById('edit_costo_repuestos').value) || 0,
+                costo_mano_obra_real: parseFloat(document.getElementById('edit_costo_mano_obra').value) || 0,
+                costo_diagnostico_real: parseFloat(document.getElementById('edit_costo_diagnostico').value) || 0,
+                ganancia_neta: parseFloat(document.getElementById('edit_ganancia_neta').value) || 0,
+                observaciones_pago: document.getElementById('edit_observaciones_pago').value,
+                validado_por: document.getElementById('edit_validado_por').value,
+                atendido_por: document.getElementById('edit_atendido_por').value,
+                validado: document.getElementById('edit_validado').checked
             };
 
             try {
-                const url = `https://ea-dixon-production.up.railway.app/api/editar_registro/${id}`;
-                console.log('📤 Enviando edición:', url);
-                const resp = await fetch(url, {
+                const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/editar_completo/${id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
                 if (resp.ok) {
                     alert('✅ Registro actualizado correctamente');
+                    document.getElementById('modalEditarCompleto').style.display = 'none';
                     location.reload();
                 } else {
-                    alert('❌ Error al actualizar');
+                    const error = await resp.json();
+                    alert('❌ Error al actualizar: ' + (error.error || ''));
                 }
             } catch(e) {
-                console.error('❌ Error en submit editar:', e);
+                console.error('Error en submit edición completa:', e);
                 alert('❌ Error de conexión');
             }
-        });
+        };
 
         // ============================
-        // 7. ELIMINAR (CON URL DIRECTA)
+        // 8. ELIMINAR REGISTRO
         // ============================
         function eliminarRegistro(id) {
             if (!confirm(`¿Eliminar el registro #${id} permanentemente?`)) return;
-            const url = `https://ea-dixon-production.up.railway.app/api/eliminar_registro/${id}`;
-            fetch(url, {
+            fetch(`https://ea-dixon-production.up.railway.app/api/eliminar_registro/${id}`, {
                 method: 'DELETE'
             }).then(resp => {
                 if (resp.ok) {
@@ -681,24 +720,20 @@
                 } else {
                     alert('❌ Error al eliminar');
                 }
-            }).catch(err => {
-                console.error('❌ Error en eliminar:', err);
-                alert('❌ Error de conexión');
-            });
+            }).catch(() => alert('❌ Error de conexión'));
         }
 
         // ============================
-        // 8. ORDENAR TABLA
+        // 9. ORDENAR TABLA
         // ============================
         window.ordenarTabla = function(columna) {
             const tbody = document.querySelector('#tablaRegistros tbody');
             const filasArray = Array.from(tbody.querySelectorAll('.fila-registro'));
             filasArray.sort((a, b) => {
-                let valA, valB;
                 const celdasA = a.querySelectorAll('td');
                 const celdasB = b.querySelectorAll('td');
-                valA = celdasA[columna]?.textContent.trim() || '';
-                valB = celdasB[columna]?.textContent.trim() || '';
+                let valA = celdasA[columna]?.textContent.trim() || '';
+                let valB = celdasB[columna]?.textContent.trim() || '';
                 if (columna === 2) {
                     valA = parseFloat(valA.replace(/[$,]/g, '')) || 0;
                     valB = parseFloat(valB.replace(/[$,]/g, '')) || 0;
