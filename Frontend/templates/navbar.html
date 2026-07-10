@@ -9,23 +9,48 @@
         </a>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
+                
+                <!-- 📄 REGISTROS -->
                 {% if session.get("rol") in ["admin", "operador"] %}
-                <li class="nav-item"><a class="nav-link" href="/registros">📄 Registros</a></li>
-                <li class="nav-item"><a class="nav-link" href="/flotas">🚗 Flotas</a></li>
-                <li class="nav-item"><a class="nav-link" href="/auditoria_descargas">📊 Descargas</a></li>
-                {% endif %}
-                {% if session.get("rol") == "admin" %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown">
-                        👤 Usuarios
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/register">➕ Crear</a></li>
-                        <li><a class="dropdown-item" href="/usuarios">🗑 Eliminar</a></li>
-                    </ul>    
+                <li class="nav-item">
+                    <a class="nav-link" href="/registros">📄 Registros</a>
                 </li>
                 {% endif %}
-                <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/logout">⛔ Salir</a></li>
+                
+                <!-- 🚗 FLOTAS -->
+                {% if session.get("rol") in ["admin", "operador"] %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/flotas">🚗 Flotas</a>
+                </li>
+                {% endif %}
+                
+                <!-- 📊 DESCARGAS -->
+                {% if session.get("rol") in ["admin", "operador"] %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/auditoria_descargas">📊 Descargas</a>
+                </li>
+                {% endif %}
+
+                <!-- 👤 USUARIOS (DROPDOWN) - SOLO ADMIN -->
+                {% if session.get("rol") == "admin" %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        👤 Usuarios
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="menuUsuarios">
+                        <li><a class="dropdown-item" href="/register">➕ Crear Usuario</a></li>
+                        <li><a class="dropdown-item" href="/usuarios">👥 Lista de Usuarios</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/cambiar_password">🔑 Cambiar Contraseña</a></li>
+                    </ul>
+                </li>
+                {% endif %}
+                
+                <!-- ⛔ SALIR -->
+                <li class="nav-item">
+                    <a class="nav-link text-danger fw-bold" href="/logout">⛔ Salir</a>
+                </li>
+                
             </ul>
         </div>
     </div>
