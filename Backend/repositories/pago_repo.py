@@ -100,7 +100,7 @@ class PagoRepository:
             return []
     
     @staticmethod
-def obtener_todos_pagados():
+    def obtener_todos_pagados():
     try:
         conn, cur = get_cursor()
         cur.execute("SELECT * FROM pagos WHERE estado='pagado' ORDER BY fecha DESC")
