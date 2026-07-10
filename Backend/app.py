@@ -16,7 +16,7 @@ FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://ea-dixon.vercel.app")
 
 CORS(app, origins=[
     FRONTEND_URL,
-    "https://ea-dixon-hh85dlygt-ktb2.vercel.app",
+    "https://ea-dixon-ktb2.vercel.app",
     "https://ea-dixon-oz4bkkn90-ktb2.vercel.app",
     "https://*.vercel.app",
     "http://localhost:3000",
