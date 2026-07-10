@@ -28,6 +28,9 @@ def generar_firma_pdf(id_reg):
         str(id_reg).encode(),
         hashlib.sha256
     ).hexdigest()[:16]
+@app.context_processor
+def inject_globals():
+    return dict(backend_url=BACKEND_URL)
 
 @app.route('/')
 def index():
