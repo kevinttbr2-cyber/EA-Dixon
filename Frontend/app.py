@@ -5,7 +5,7 @@ import secrets
 from functools import wraps
 import hmac
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
@@ -21,6 +21,7 @@ def login_required(f):
             return redirect("/login")
         return f(*args, **kwargs)
     return decorated
+
 def generar_firma_pdf(id_reg):
     return hmac.new(
         PDF_SECRET_KEY.encode(),
@@ -42,15 +43,19 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        resp = requests.post(f"{BACKEND_URL}/api/login", json={"username": username, "password": password})
-        if resp.status_code == 200:
-            data = resp.json()
-            session["usuario"] = data['user']['username']
-            session["rol"] = data['user']['rol']
-            session["nombre_completo"] = data['user'].get('nombre_completo', username)
-            return redirect("/estado")
-        else:
-            error = "❌ Usuario o contraseña incorrectos"
+        try:
+            resp = requests.post(f"{BACKEND_URL}/api/login", json={"username": username, "password": password}, timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                session["usuario"] = data['user']['username']
+                session["rol"] = data['user']['rol']
+                session["nombre_completo"] = data['user'].get('nombre_completo', username)
+                return redirect("/estado")
+            else:
+                error = "❌ Usuario o contraseña incorrectos"
+        except Exception as e:
+            print(f"Error en /login: {e}")
+            error = "⚠️ Error de conexión con el servidor"
     return render_template("login.html", csrf_token=session['csrf_token'], error=error)
 
 @app.route('/logout')
@@ -61,8 +66,11 @@ def logout():
 @app.route('/estado')
 @login_required
 def estado():
-    resp = requests.get(f"{BACKEND_URL}/api/estado")
-    data = resp.json() if resp.status_code == 200 else {"pendientes": [], "pagados_hoy": []}
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/estado", timeout=10)
+        data = resp.json() if resp.status_code == 200 else {"pendientes": [], "pagados_hoy": []}
+    except:
+        data = {"pendientes": [], "pagados_hoy": []}
     return render_template("estado.html", 
                           registros=data.get('pendientes', []) + data.get('pagados_hoy', []),
                           pendientes_mes=len(data.get('pendientes', [])),
@@ -72,8 +80,11 @@ def estado():
 @app.route('/agregar_cliente')
 @login_required
 def agregar_cliente():
-    resp = requests.get(f"{BACKEND_URL}/api/marcas")
-    marcas = resp.json() if resp.status_code == 200 else []
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/marcas", timeout=10)
+        marcas = resp.json() if resp.status_code == 200 else []
+    except:
+        marcas = []
     return render_template("agregar_cliente.html", marcas=marcas, flotas=[])
 
 @app.route('/agregar', methods=['POST'])
@@ -90,16 +101,23 @@ def agregar():
         'flota': request.form.get('flota'),
         'usuario': session.get('usuario')
     }
-    resp = requests.post(f"{BACKEND_URL}/api/agregar", json=data)
+    try:
+        requests.post(f"{BACKEND_URL}/api/agregar", json=data, timeout=10)
+    except:
+        pass
     return redirect("/estado")
 
 @app.route('/pagar/<int:id_reg>', methods=['GET', 'POST'])
 @login_required
 def pagar(id_reg):
-    resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}")
-    if resp.status_code != 200:
-        return "Registro no encontrado", 404
-    registro = resp.json()
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
+        if resp.status_code != 200:
+            return "Registro no encontrado", 404
+        registro = resp.json()
+    except:
+        return "Error de conexión", 500
+    
     if request.method == 'POST':
         data = {
             'monto': float(request.form.get('monto', 0)),
@@ -110,9 +128,12 @@ def pagar(id_reg):
             'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
             'atendido_por': session.get('nombre_completo', session.get('usuario'))
         }
-        resp = requests.post(f"{BACKEND_URL}/api/pagar/{id_reg}", json=data)
-        if resp.status_code == 200:
-            return redirect(f"/pago_exitoso/{id_reg}")
+        try:
+            resp = requests.post(f"{BACKEND_URL}/api/pagar/{id_reg}", json=data, timeout=10)
+            if resp.status_code == 200:
+                return redirect(f"/pago_exitoso/{id_reg}")
+        except:
+            pass
     return render_template("pagar.html", id=id_reg, registro=registro)
 
 @app.route('/pago_exitoso/<int:id_reg>')
@@ -121,29 +142,24 @@ def pago_exitoso(id_reg):
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         registro = resp.json() if resp.status_code == 200 else {}
-        
-        # Calcular firma en el frontend
         firma = generar_firma_pdf(id_reg)
         url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
-        
     except Exception as e:
         print(f"Error en /pago_exitoso: {e}")
         registro = {}
         url_pdf = ""
-    
     return render_template("pago_exitoso.html", registro=registro, url_pdf=url_pdf)
+
 @app.route('/cambiar_password', methods=['GET', 'POST'])
 @login_required
 def cambiar_password():
     error = None
     success = None
-    
     if request.method == 'POST':
         password_actual = request.form.get('password_actual')
         password_nueva = request.form.get('password_nueva')
         password_confirmar = request.form.get('password_confirmar')
         
-        # Validaciones
         if not password_actual or not password_nueva or not password_confirmar:
             error = "⚠️ Todos los campos son obligatorios"
         elif password_nueva != password_confirmar:
@@ -151,7 +167,6 @@ def cambiar_password():
         elif len(password_nueva) < 6:
             error = "⚠️ La contraseña debe tener al menos 6 caracteres"
         else:
-            # Enviar al backend
             try:
                 data = {
                     'username': session.get('usuario'),
@@ -166,7 +181,6 @@ def cambiar_password():
             except Exception as e:
                 print(f"Error en /cambiar_password: {e}")
                 error = "⚠️ Error de conexión con el servidor"
-    
     return render_template("cambiar_password.html", error=error, success=success)
 
 @app.route('/pendientes_validacion')
@@ -188,24 +202,15 @@ def pendientes_validacion():
         pendientes = []
         validados = []
         total_pagado = 0
-    
-    return render_template(
-        "pendientes_validacion.html", 
-        pendientes=pendientes,
-        validados=validados,
-        total_pagado=total_pagado
-    )
+    return render_template("pendientes_validacion.html", pendientes=pendientes, validados=validados, total_pagado=total_pagado)
 
 @app.route('/validar_pago/<int:id_reg>', methods=['GET', 'POST'])
 @login_required
 def validar_pago(id_reg):
-    """Paso 2: Validación de costos y ganancia neta"""
-    
     if session.get('rol') not in ['admin', 'operador']:
         return "No tienes permisos para validar pagos", 403
     
     try:
-        # Obtener registro
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         if resp.status_code != 200:
             return "Registro no encontrado", 404
@@ -217,7 +222,6 @@ def validar_pago(id_reg):
     if registro.get('estado') != 'pagado':
         return "Este pago no está pagado", 400
     
-    # Obtener lista de usuarios para el dropdown
     try:
         resp_usuarios = requests.get(f"{BACKEND_URL}/api/usuarios", timeout=10)
         usuarios = resp_usuarios.json() if resp_usuarios.status_code == 200 else []
@@ -225,12 +229,10 @@ def validar_pago(id_reg):
         usuarios = []
     
     if request.method == 'POST':
-        # Obtener datos del formulario
         validado_por = request.form.get('validado_por', '').strip()
         if not validado_por:
             validado_por = session.get('nombre_completo', session.get('usuario'))
         
-        # Obtener lista de repuestos
         nombres_repuestos = request.form.getlist('repuesto_nombre[]')
         costos_repuestos = request.form.getlist('repuesto_costo[]')
         
@@ -269,43 +271,40 @@ def validar_pago(id_reg):
         return render_template("validar_pago.html", id=id_reg, registro=registro, usuarios=usuarios, error=error)
     
     return render_template("validar_pago.html", id=id_reg, registro=registro, usuarios=usuarios, error=None)
+
 @app.route('/pago_validado/<int:id_reg>')
 @login_required
 def pago_validado(id_reg):
-    """Página de confirmación de validación"""
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         registro = resp.json() if resp.status_code == 200 else {}
     except Exception as e:
         print(f"Error en /pago_validado: {e}")
         registro = {}
-    
     return render_template("pago_validado.html", registro=registro)
+
 # ============================
-# REGISTROS CON FILTROS
+# REGISTROS CON FILTROS (CORREGIDO)
 # ============================
 @app.route('/registros')
 @login_required
 def registros():
-    filtro = request.args.get('filtro', 'todos')
     try:
-        resp = requests.get(f"{BACKEND_URL}/api/registros?filtro={filtro}", timeout=10)
-        if resp.status_code == 200:
-            registros = resp.json()
-            total_general = sum(r.get('monto', 0) for r in registros)
-        else:
-            registros = []
-            total_general = 0
+        resp = requests.get(f"{BACKEND_URL}/api/registros", timeout=10)
+        registros = resp.json() if resp.status_code == 200 else []
     except Exception as e:
         print(f"Error en /registros: {e}")
         registros = []
-        total_general = 0
     
-    # Calcular filtros adicionales para la vista
     hoy = datetime.now().date()
-    registros_hoy = [r for r in registros if r.get('fecha') == hoy.strftime('%Y-%m-%d')]
-    registros_7d = [r for r in registros if (hoy - datetime.strptime(r.get('fecha', '2025-01-01')[:10], '%Y-%m-%d').date()).days <= 7]
-    registros_mes = [r for r in registros if (hoy - datetime.strptime(r.get('fecha', '2025-01-01')[:10], '%Y-%m-%d').date()).days <= 30]
+    hoy_str = hoy.strftime('%Y-%m-%d')
+    fecha_7d = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+    fecha_mes = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+    
+    registros_hoy = [r for r in registros if r.get('fecha', '') == hoy_str]
+    registros_7d = [r for r in registros if r.get('fecha', '') >= fecha_7d]
+    registros_mes = [r for r in registros if r.get('fecha', '') >= fecha_mes]
+    total_general = sum(r.get('monto', 0) for r in registros)
     
     return render_template(
         "registros.html",
@@ -314,9 +313,8 @@ def registros():
         registros_7d=registros_7d,
         registros_mes=registros_mes,
         total_general=total_general,
-        filtro=filtro
+        filtro=request.args.get('filtro', 'todos')
     )
-
 
 # ============================
 # BALANCE DE GANANCIA
@@ -353,18 +351,26 @@ def balance():
         ganancia_neta=ganancia_neta,
         filtro=filtro
     )
+
 @app.route('/modelos/<marca>')
 @login_required
 def modelos(marca):
-    resp = requests.get(f"{BACKEND_URL}/api/modelos/{marca}")
-    return jsonify(resp.json() if resp.status_code == 200 else [])
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/modelos/{marca}", timeout=10)
+        return jsonify(resp.json() if resp.status_code == 200 else [])
+    except:
+        return jsonify([])
 
 @app.route('/flotas')
 @login_required
 def flotas():
-    resp = requests.get(f"{BACKEND_URL}/api/flotas")
-    clientes = resp.json() if resp.status_code == 200 else []
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/flotas", timeout=10)
+        clientes = resp.json() if resp.status_code == 200 else []
+    except:
+        clientes = []
     return render_template("flotas.html", clientes=clientes)
+
 @app.route('/register')
 @login_required
 def register():
@@ -380,18 +386,16 @@ def usuarios():
         print(f"Error en /usuarios: {e}")
         usuarios = []
     return render_template("usuarios.html", usuarios=usuarios)
-    
+
 @app.route('/auditoria_descargas')
 @login_required
 def auditoria_descargas():
-    """Página de auditoría de descargas de informes"""
     try:
         resp = requests.get(f"{BACKEND_URL}/api/auditoria", timeout=10)
         historial = resp.json() if resp.status_code == 200 else []
     except Exception as e:
         print(f"Error en /auditoria_descargas: {e}")
         historial = []
-    
     return render_template("auditoria_descargas.html", historial=historial)
 
 # ============================
