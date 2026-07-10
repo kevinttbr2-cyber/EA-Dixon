@@ -11,7 +11,10 @@ app = Flask(__name__)
 app.secret_key = Config.SECRET_KEY
 
 # CORS
-CORS(app, origins=Config.CORS_ORIGINS)
+CORS(app, origins=[
+    "https://ea-dixon-8ak0j99lu-ktb2.vercel.app",
+    "https://*.vercel.app"
+])
 
 # ============================
 # REGISTRAR BLUEPRINTS
