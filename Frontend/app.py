@@ -108,9 +108,25 @@ def pagar(id_reg):
 @app.route('/pago_exitoso/<int:id_reg>')
 @login_required
 def pago_exitoso(id_reg):
-    resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}")
-    registro = resp.json() if resp.status_code == 200 else {}
-    url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}"
+    try:
+        # Obtener el registro
+        resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
+        registro = resp.json() if resp.status_code == 200 else {}
+        
+        # Obtener la firma para el PDF
+        resp_firma = requests.get(f"{BACKEND_URL}/api/firma/{id_reg}", timeout=10)
+        if resp_firma.status_code == 200:
+            firma = resp_firma.json().get('firma', '')
+        else:
+            firma = ''
+        
+        url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
+        
+    except Exception as e:
+        print(f"Error en /pago_exitoso: {e}")
+        registro = {}
+        url_pdf = ""
+    
     return render_template("pago_exitoso.html", registro=registro, url_pdf=url_pdf)
 @app.route('/registros')
 @login_required
