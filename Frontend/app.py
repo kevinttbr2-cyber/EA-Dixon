@@ -421,10 +421,43 @@ def flotas():
         clientes = []
     return render_template("flotas.html", clientes=clientes)
 
-@app.route('/register')
+@app.route('/register', methods=['GET', 'POST'])
 @login_required
 def register():
-    return render_template("register.html")
+    if session.get('rol') != 'admin':
+        return "No tienes permisos", 403
+    
+    error = None
+    success = None
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        rol = request.form.get('rol', 'basico')
+        nombre_completo = request.form.get('nombre_completo', '')
+        
+        if not username or not password:
+            error = "⚠️ Usuario y contraseña son obligatorios"
+        elif len(password) < 6:
+            error = "⚠️ La contraseña debe tener al menos 6 caracteres"
+        else:
+            try:
+                data = {
+                    'username': username,
+                    'password': password,
+                    'rol': rol,
+                    'nombre_completo': nombre_completo
+                }
+                resp = requests.post(f"{BACKEND_URL}/api/crear_usuario", json=data, timeout=10)
+                if resp.status_code == 200:
+                    success = f"✅ Usuario {username} creado correctamente"
+                else:
+                    error = resp.json().get('error', '❌ Error al crear usuario')
+            except Exception as e:
+                print(f"Error en /register POST: {e}")
+                error = "⚠️ Error de conexión con el servidor"
+    
+    return render_template("register.html", error=error, success=success)
 
 @app.route('/usuarios')
 @login_required
