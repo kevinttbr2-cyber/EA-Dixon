@@ -200,6 +200,54 @@ def pendientes_validacion():
         validados=validados,
         total_pagado=total_pagado
     )
+@app.route('/validar_pago/<int:id_reg>', methods=['GET', 'POST'])
+@login_required
+def validar_pago(id_reg):
+    """Paso 2: Validación de costos y ganancia neta"""
+    
+    if session.get('rol') not in ['admin', 'operador']:
+        return "No tienes permisos para validar pagos", 403
+    
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
+        if resp.status_code != 200:
+            return "Registro no encontrado", 404
+        registro = resp.json()
+    except Exception as e:
+        print(f"Error en /validar_pago: {e}")
+        return "Error de conexión", 500
+    
+    if registro.get('estado') != 'pagado':
+        return "Este pago no está pagado", 400
+    
+    if request.method == 'POST':
+        # Obtener el nombre del validador desde el formulario
+        validado_por = request.form.get('validado_por', '').strip()
+        if not validado_por:
+            validado_por = session.get('nombre_completo', session.get('usuario'))
+        
+        data = {
+            'costo_repuestos_real': float(request.form.get('costo_repuestos', 0)),
+            'costo_mano_obra_real': float(request.form.get('costo_mano_obra', 0)),
+            'costo_diagnostico_real': float(request.form.get('costo_diagnostico', 0)),
+            'ganancia_neta': float(request.form.get('ganancia_neta', 0)),
+            'observaciones_pago': request.form.get('observaciones_costos', ''),
+            'validado_por': validado_por
+        }
+        
+        try:
+            resp = requests.post(f"{BACKEND_URL}/api/validar_pago/{id_reg}", json=data, timeout=10)
+            if resp.status_code == 200:
+                return redirect(f"/pago_validado/{id_reg}")
+            else:
+                error = resp.json().get('error', 'Error al validar')
+        except Exception as e:
+            print(f"Error en /validar_pago POST: {e}")
+            error = "Error de conexión"
+        
+        return render_template("validar_pago.html", id=id_reg, registro=registro, error=error)
+    
+    return render_template("validar_pago.html", id=id_reg, registro=registro, error=None)
 @app.route('/pago_validado/<int:id_reg>')
 @login_required
 def pago_validado(id_reg):
