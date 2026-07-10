@@ -184,6 +184,7 @@ def pago_exitoso(id_reg):
         registro = resp.json() if resp.status_code == 200 else {}
         firma = generar_firma_pdf(id_reg)
         url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
+        print(f"📄 URL del PDF: {url_pdf}")  # ← LOG
     except Exception as e:
         print(f"Error en /pago_exitoso: {e}")
         registro = {}
