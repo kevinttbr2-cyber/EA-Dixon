@@ -1,5 +1,5 @@
 class Pago:
-    def __init__(self, id=None, nombre=None, monto=0, fecha=None, hora=None,
+    def __init__(self, id=None, nombre=None, monto=0, ganancia_neta=0, fecha=None, hora=None,
                  patente=None, marca=None, modelo=None, usuario=None, estado='pendiente',
                  observaciones_cliente=None, observaciones_pago=None, telefono=None,
                  hora_pago=None, atendido_por=None, flota=None, frecuente=False,
@@ -8,6 +8,7 @@ class Pago:
         self.id = id
         self.nombre = nombre
         self.monto = monto
+        self.ganancia_neta = ganancia_neta
         self.fecha = fecha
         self.hora = hora
         self.patente = patente
@@ -33,6 +34,7 @@ class Pago:
             "id": self.id,
             "nombre": self.nombre,
             "monto": self.monto,
+            "ganancia_neta": self.ganancia_neta,
             "fecha": self.fecha.strftime('%Y-%m-%d') if self.fecha else None,
             "hora": self.hora,
             "patente": self.patente,
