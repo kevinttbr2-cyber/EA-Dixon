@@ -24,6 +24,16 @@ def get_estado():
         "total_pagados_hoy": len(pagados)
     })
 
+# ============================
+# 2. OBTENER REGISTRO POR ID
+# ============================
+@pago_bp.route('/registro/<int:id_reg>', methods=['GET'])
+def get_registro(id_reg):
+    pago = PagoService.obtener_por_id(id_reg)
+    if pago:
+        return jsonify(pago.to_dict())
+    return jsonify({"error": "No encontrado"}), 404
+
 
 
 # ============================
