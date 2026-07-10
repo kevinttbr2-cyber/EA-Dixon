@@ -183,14 +183,14 @@ def pago_exitoso(id_reg):
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         registro = resp.json() if resp.status_code == 200 else {}
         firma = generar_firma_pdf(id_reg)
+        registro['firma'] = firma  # ← AGREGAR LA FIRMA
         url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
-        print(f"📄 URL del PDF: {url_pdf}")  # ← LOG
     except Exception as e:
         print(f"Error en /pago_exitoso: {e}")
         registro = {}
         url_pdf = ""
     return render_template("pago_exitoso.html", registro=registro, url_pdf=url_pdf)
-
+    
 @app.route('/cambiar_password', methods=['GET', 'POST'])
 @login_required
 def cambiar_password():
