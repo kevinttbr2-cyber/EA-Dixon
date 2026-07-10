@@ -3,6 +3,8 @@ import os
 import requests
 import secrets
 from functools import wraps
+import hmac
+import hashlib
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
@@ -17,6 +19,12 @@ def login_required(f):
             return redirect("/login")
         return f(*args, **kwargs)
     return decorated
+def generar_firma_pdf(id_reg):
+    return hmac.new(
+        PDF_SECRET_KEY.encode(),
+        str(id_reg).encode(),
+        hashlib.sha256
+    ).hexdigest()[:16]
 
 @app.route('/')
 def index():
@@ -109,17 +117,11 @@ def pagar(id_reg):
 @login_required
 def pago_exitoso(id_reg):
     try:
-        # Obtener el registro
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         registro = resp.json() if resp.status_code == 200 else {}
         
-        # Obtener la firma para el PDF
-        resp_firma = requests.get(f"{BACKEND_URL}/api/firma/{id_reg}", timeout=10)
-        if resp_firma.status_code == 200:
-            firma = resp_firma.json().get('firma', '')
-        else:
-            firma = ''
-        
+        # Calcular firma en el frontend
+        firma = generar_firma_pdf(id_reg)
         url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
         
     except Exception as e:
