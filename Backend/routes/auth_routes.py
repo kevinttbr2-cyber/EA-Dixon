@@ -29,14 +29,17 @@ def get_usuarios():
 @auth_bp.route('/crear_usuario', methods=['POST'])
 def crear_usuario():
     data = request.json
-    if AuthService.registrar_usuario(
-        data['username'], 
-        data['password'], 
-        data['rol'], 
-        data.get('nombre_completo')
-    ):
+    username = data.get('username')
+    password = data.get('password')
+    rol = data.get('rol', 'basico')
+    nombre_completo = data.get('nombre_completo', '')
+    
+    if not username or not password:
+        return jsonify({"error": "Usuario y contraseña son obligatorios"}), 400
+    
+    if AuthService.registrar_usuario(username, password, rol, nombre_completo):
         return jsonify({"success": True})
-    return jsonify({"success": False, "error": "Error al crear"}), 500
+    return jsonify({"error": "Error al crear usuario"}), 500
 
 @auth_bp.route('/eliminar_usuario/<int:id_usuario>', methods=['DELETE'])
 def eliminar_usuario(id_usuario):
