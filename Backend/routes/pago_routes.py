@@ -24,14 +24,161 @@ def get_estado():
 
 
 # ============================
-# 2. OBTENER REGISTRO POR ID (¡ESTA ES LA QUE FALTABA!)
+# REGISTROS CON FILTROS
 # ============================
-@pago_bp.route('/registro/<int:id_reg>', methods=['GET'])
-def get_registro(id_reg):
-    pago = PagoService.obtener_por_id(id_reg)
-    if pago:
-        return jsonify(pago.to_dict())
-    return jsonify({"error": "No encontrado"}), 404
+@pago_bp.route('/registros', methods=['GET'])
+def get_registros():
+    filtro = request.args.get('filtro', 'todos')
+    hoy = datetime.now().date()
+    
+    try:
+        conn, cur = get_cursor()
+        
+        # Base query
+        query = "SELECT * FROM pagos WHERE estado = 'pagado'"
+        params = []
+        
+        if filtro == 'hoy':
+            query += " AND fecha = %s"
+            params.append(hoy.strftime('%Y-%m-%d'))
+        elif filtro == '7d':
+            fecha_7d = hoy - timedelta(days=7)
+            query += " AND fecha >= %s"
+            params.append(fecha_7d.strftime('%Y-%m-%d'))
+        elif filtro == 'mes':
+            fecha_mes = hoy - timedelta(days=30)
+            query += " AND fecha >= %s"
+            params.append(fecha_mes.strftime('%Y-%m-%d'))
+        
+        query += " ORDER BY fecha DESC, hora DESC"
+        
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        registros = [dict(row) for row in rows]
+        
+        # Agregar firma para PDF
+        from services.pdf_service import PDFService
+        for r in registros:
+            r['firma'] = PDFService.generar_firma(r['id'])
+        
+        cur.close()
+        conn.close()
+        return jsonify(registros)
+    except Exception as e:
+        print(f"Error en get_registros: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================
+# EDITAR REGISTRO
+# ============================
+@pago_bp.route('/editar_registro/<int:id_reg>', methods=['POST'])
+def editar_registro(id_reg):
+    data = request.json
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE pagos 
+            SET nombre = %s,
+                monto = %s,
+                patente = %s,
+                marca = %s,
+                modelo = %s,
+                observaciones_cliente = %s
+            WHERE id = %s
+        """, (
+            data.get('nombre'),
+            data.get('monto', 0),
+            data.get('patente'),
+            data.get('marca'),
+            data.get('modelo'),
+            data.get('observaciones'),
+            id_reg
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Error en editar_registro: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================
+# ELIMINAR REGISTRO
+# ============================
+@pago_bp.route('/eliminar_registro/<int:id_reg>', methods=['DELETE'])
+def eliminar_registro(id_reg):
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM pagos WHERE id = %s", (id_reg,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Error en eliminar_registro: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================
+# BALANCE DE GANANCIA
+# ============================
+@pago_bp.route('/balance', methods=['GET'])
+def get_balance():
+    filtro = request.args.get('filtro', 'hoy')
+    hoy = datetime.now().date()
+    
+    try:
+        conn, cur = get_cursor()
+        
+        query = """
+            SELECT * FROM pagos 
+            WHERE estado = 'pagado' AND validado = TRUE
+        """
+        params = []
+        
+        if filtro == 'hoy':
+            query += " AND fecha = %s"
+            params.append(hoy.strftime('%Y-%m-%d'))
+        elif filtro == '7d':
+            fecha_7d = hoy - timedelta(days=7)
+            query += " AND fecha >= %s"
+            params.append(fecha_7d.strftime('%Y-%m-%d'))
+        elif filtro == 'mes':
+            fecha_mes = hoy - timedelta(days=30)
+            query += " AND fecha >= %s"
+            params.append(fecha_mes.strftime('%Y-%m-%d'))
+        
+        query += " ORDER BY fecha DESC, hora DESC"
+        
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        registros = [dict(row) for row in rows]
+        
+        # Calcular totales
+        total_pagado = sum(r.get('monto', 0) for r in registros)
+        total_repuestos = sum(r.get('costo_repuestos_real', 0) for r in registros)
+        total_mano_obra = sum(r.get('costo_mano_obra_real', 0) for r in registros)
+        total_diagnostico = sum(r.get('costo_diagnostico_real', 0) for r in registros)
+        ganancia_neta = total_pagado - (total_repuestos + total_mano_obra + total_diagnostico)
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "registros": registros,
+            "total_pagado": total_pagado,
+            "total_repuestos": total_repuestos,
+            "total_mano_obra": total_mano_obra,
+            "total_diagnostico": total_diagnostico,
+            "ganancia_neta": ganancia_neta
+        })
+    except Exception as e:
+        print(f"Error en get_balance: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # ============================
