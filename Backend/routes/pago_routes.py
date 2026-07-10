@@ -120,6 +120,8 @@ import json
 @pago_bp.route('/validar_pago/<int:id_reg>', methods=['POST'])
 def validar_pago(id_reg):
     data = request.json
+    print(f"📥 Datos recibidos: {data}")
+    print(f"📦 Detalles repuestos: {data.get('detalles_repuestos', [])}")
     try:
         conn = get_connection()
         cur = conn.cursor()
