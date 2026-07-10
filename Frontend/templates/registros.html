@@ -106,9 +106,7 @@
         </span>
     </div>
 
-    <!-- ============================
-         VISTA ESCRITORIO: TABLA
-         ============================ -->
+    <!-- VISTA ESCRITORIO: TABLA -->
     <div class="vista-escritorio" style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(0, 255, 102, 0.15); background: #141414;">
         <table class="table table-dark table-hover table-bordered mb-0" id="tablaRegistros" style="font-size: 13px; min-width: 1000px; width: 100%;">
             <thead style="background: #2a6d44 !important; color: #ffffff !important;">
@@ -219,9 +217,7 @@
         </table>
     </div>
 
-    <!-- ============================
-         VISTA MÓVIL: TARJETAS
-         ============================ -->
+    <!-- VISTA MÓVIL: TARJETAS -->
     <div class="vista-movil" style="display: none; flex-direction: column; gap: 12px;">
         {% for r in registros %}
         <div class="card-android" style="
@@ -325,120 +321,41 @@
     </div>
 </div>
 
-<!-- ============================
-     MODAL DETALLE
-     ============================ -->
-<div id="modalDetalle" style="
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.85);
-    z-index: 99999;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-">
-    <div style="
-        background: rgba(15,15,15,0.98);
-        border: 1px solid #00ff66;
-        border-radius: 16px;
-        padding: 20px 25px;
-        max-width: 600px;
-        width: 95%;
-        max-height: 90vh;
-        overflow-y: auto;
-    ">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="color: #00ff66; margin: 0; font-size: 20px;">📄 Detalle Completo</h3>
-            <button id="cerrarModalDetalle" style="background: transparent; border: none; color: #ff6b6b; font-size: 24px; cursor: pointer;">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+<!-- MODALES... -->
+<div id="modalDetalle" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="background:rgba(15,15,15,0.98);border:1px solid #00ff66;border-radius:16px;padding:20px 25px;max-width:600px;width:95%;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3 style="color:#00ff66;margin:0;font-size:20px;">📄 Detalle Completo</h3>
+            <button id="cerrarModalDetalle" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div id="contenidoDetalle">
-            <!-- Se llena con JS -->
-        </div>
+        <div id="contenidoDetalle"></div>
     </div>
 </div>
 
-<!-- ============================
-     MODAL EDITAR
-     ============================ -->
-<div id="modalEditar" style="
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.85);
-    z-index: 99999;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-">
-    <div style="
-        background: rgba(15,15,15,0.98);
-        border: 1px solid #4fc3f7;
-        border-radius: 16px;
-        padding: 20px 25px;
-        max-width: 500px;
-        width: 95%;
-        max-height: 90vh;
-        overflow-y: auto;
-    ">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="color: #4fc3f7; margin: 0; font-size: 20px;">✏️ Editar Registro</h3>
-            <button id="cerrarModalEditar" style="background: transparent; border: none; color: #ff6b6b; font-size: 24px; cursor: pointer;">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+<div id="modalEditar" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="background:rgba(15,15,15,0.98);border:1px solid #4fc3f7;border-radius:16px;padding:20px 25px;max-width:500px;width:95%;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3 style="color:#4fc3f7;margin:0;font-size:20px;">✏️ Editar Registro</h3>
+            <button id="cerrarModalEditar" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <form id="formEditar">
             <input type="hidden" name="id" id="edit_id">
-            <div class="mb-2">
-                <label style="color: #90e0a0; font-size: 13px;">Cliente</label>
-                <input type="text" name="nombre" id="edit_nombre" class="form-control">
-            </div>
-            <div class="mb-2">
-                <label style="color: #90e0a0; font-size: 13px;">Monto</label>
-                <input type="number" name="monto" id="edit_monto" class="form-control" step="0.01">
-            </div>
-            <div class="mb-2">
-                <label style="color: #90e0a0; font-size: 13px;">Patente</label>
-                <input type="text" name="patente" id="edit_patente" class="form-control">
-            </div>
-            <div class="mb-2">
-                <label style="color: #90e0a0; font-size: 13px;">Marca</label>
-                <input type="text" name="marca" id="edit_marca" class="form-control">
-            </div>
-            <div class="mb-2">
-                <label style="color: #90e0a0; font-size: 13px;">Modelo</label>
-                <input type="text" name="modelo" id="edit_modelo" class="form-control">
-            </div>
-            <div class="mb-2">
-                <label style="color: #90e0a0; font-size: 13px;">Observaciones</label>
-                <textarea name="observaciones" id="edit_observaciones" class="form-control" rows="3"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary w-100" style="background: #4fc3f7 !important; color: #000 !important;">
-                💾 Guardar cambios
-            </button>
+            <div class="mb-2"><label style="color:#90e0a0;font-size:13px;">Cliente</label><input type="text" name="nombre" id="edit_nombre" class="form-control"></div>
+            <div class="mb-2"><label style="color:#90e0a0;font-size:13px;">Monto</label><input type="number" name="monto" id="edit_monto" class="form-control" step="0.01"></div>
+            <div class="mb-2"><label style="color:#90e0a0;font-size:13px;">Patente</label><input type="text" name="patente" id="edit_patente" class="form-control"></div>
+            <div class="mb-2"><label style="color:#90e0a0;font-size:13px;">Marca</label><input type="text" name="marca" id="edit_marca" class="form-control"></div>
+            <div class="mb-2"><label style="color:#90e0a0;font-size:13px;">Modelo</label><input type="text" name="modelo" id="edit_modelo" class="form-control"></div>
+            <div class="mb-2"><label style="color:#90e0a0;font-size:13px;">Observaciones</label><textarea name="observaciones" id="edit_observaciones" class="form-control" rows="3"></textarea></div>
+            <button type="submit" class="btn btn-primary w-100" style="background:#4fc3f7 !important;color:#000 !important;">💾 Guardar cambios</button>
         </form>
     </div>
 </div>
 
-<!-- ============================
-     SCRIPT COMPLETO
-     ============================ -->
 <script>
     const BACKEND_URL = "{{ BACKEND_URL }}";
 
     document.addEventListener('DOMContentLoaded', function() {
 
-        // ============================
-        // 1. DETECTAR MÓVIL / ESCRITORIO
-        // ============================
         function toggleVista() {
             const isMobile = window.innerWidth < 768;
             const escritorio = document.querySelector('.vista-escritorio');
@@ -449,9 +366,7 @@
         window.addEventListener('resize', toggleVista);
         toggleVista();
 
-        // ============================
-        // 2. BUSCADOR
-        // ============================
+        // BUSCADOR
         const campoBusqueda = document.getElementById('campoBusqueda');
         const buscadorInput = document.getElementById('buscadorInput');
         const btnBuscar = document.getElementById('btnBuscar');
@@ -491,9 +406,7 @@
             filtrarTabla();
         });
 
-        // ============================
-        // 3. MENÚ DE 3 PUNTITOS (⋮)
-        // ============================
+        // MENÚ ACCIONES
         document.querySelectorAll('.btn-acciones, .btn-acciones-movil').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -507,14 +420,11 @@
                 }
             });
         });
-
         document.addEventListener('click', function() {
             document.querySelectorAll('.menu-acciones').forEach(m => m.style.display = 'none');
         });
 
-        // ============================
-        // 4. ACCIONES: DETALLE, EDITAR, ELIMINAR
-        // ============================
+        // ACCIONES
         document.querySelectorAll('.accion-item').forEach(item => {
             item.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -522,26 +432,20 @@
                 const id = this.dataset.id;
                 const menu = this.closest('.menu-acciones');
                 if (menu) menu.style.display = 'none';
-
                 if (accion === 'detalle') verDetalle(id);
                 else if (accion === 'editar') editarRegistro(id);
                 else if (accion === 'eliminar') eliminarRegistro(id);
             });
         });
 
-        // ============================
-        // 5. VER DETALLE (CON LOGS)
-        // ============================
+        // VER DETALLE
         async function verDetalle(id) {
             const modal = document.getElementById('modalDetalle');
             const contenido = document.getElementById('contenidoDetalle');
             modal.style.display = 'flex';
             contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
-
             try {
-                console.log(`🔍 Fetching: ${BACKEND_URL}/api/registro/${id}`);
                 const resp = await fetch(`${BACKEND_URL}/api/registro/${id}`);
-                console.log(`📡 Status: ${resp.status}`);
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
                 contenido.innerHTML = `
@@ -568,27 +472,18 @@
                     </div>
                 `;
             } catch(e) {
-                console.error('❌ Error en verDetalle:', e);
                 contenido.innerHTML = `<div style="color:#ff6b6b;">❌ Error al cargar los datos: ${e.message}</div>`;
             }
         }
 
-        document.getElementById('cerrarModalDetalle').addEventListener('click', function() {
-            document.getElementById('modalDetalle').style.display = 'none';
-        });
-        document.getElementById('modalDetalle').addEventListener('click', function(e) {
-            if (e.target === this) this.style.display = 'none';
-        });
+        document.getElementById('cerrarModalDetalle').onclick = function() { document.getElementById('modalDetalle').style.display = 'none'; };
+        document.getElementById('modalDetalle').onclick = function(e) { if (e.target === this) this.style.display = 'none'; };
 
-        // ============================
-        // 6. EDITAR (CON LOGS)
-        // ============================
+        // EDITAR
         async function editarRegistro(id) {
             const modal = document.getElementById('modalEditar');
             modal.style.display = 'flex';
-
             try {
-                console.log(`🔍 Fetching para editar: ${BACKEND_URL}/api/registro/${id}`);
                 const resp = await fetch(`${BACKEND_URL}/api/registro/${id}`);
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
@@ -600,19 +495,14 @@
                 document.getElementById('edit_modelo').value = data.modelo || '';
                 document.getElementById('edit_observaciones').value = data.observaciones_pago || data.observaciones_cliente || '';
             } catch(e) {
-                console.error('❌ Error en editarRegistro:', e);
                 alert('❌ Error al cargar los datos para editar');
             }
         }
 
-        document.getElementById('cerrarModalEditar').addEventListener('click', function() {
-            document.getElementById('modalEditar').style.display = 'none';
-        });
-        document.getElementById('modalEditar').addEventListener('click', function(e) {
-            if (e.target === this) this.style.display = 'none';
-        });
+        document.getElementById('cerrarModalEditar').onclick = function() { document.getElementById('modalEditar').style.display = 'none'; };
+        document.getElementById('modalEditar').onclick = function(e) { if (e.target === this) this.style.display = 'none'; };
 
-        document.getElementById('formEditar').addEventListener('submit', async function(e) {
+        document.getElementById('formEditar').onsubmit = async function(e) {
             e.preventDefault();
             const id = document.getElementById('edit_id').value;
             const data = {
@@ -623,59 +513,51 @@
                 modelo: document.getElementById('edit_modelo').value,
                 observaciones: document.getElementById('edit_observaciones').value
             };
-
             try {
                 const resp = await fetch(`${BACKEND_URL}/api/editar_registro/${id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                if (resp.ok) {
-                    alert('✅ Registro actualizado correctamente');
-                    location.reload();
-                } else {
-                    alert('❌ Error al actualizar');
-                }
-            } catch(e) {
-                console.error('❌ Error en submit editar:', e);
-                alert('❌ Error de conexión');
-            }
-        });
+                if (resp.ok) { alert('✅ Registro actualizado'); location.reload(); }
+                else { alert('❌ Error al actualizar'); }
+            } catch(e) { alert('❌ Error de conexión'); }
+        };
 
-        // ============================
-        // 7. ELIMINAR
-        // ============================
+        // ELIMINAR
         function eliminarRegistro(id) {
             if (!confirm(`¿Eliminar el registro #${id} permanentemente?`)) return;
-            fetch(`${BACKEND_URL}/api/eliminar_registro/${id}`, {
-                method: 'DELETE'
-            }).then(resp => {
-                if (resp.ok) {
-                    alert('✅ Registro eliminado');
-                    location.reload();
-                } else {
-                    alert('❌ Error al eliminar');
-                }
-            }).catch(err => {
-                console.error('❌ Error en eliminar:', err);
-                alert('❌ Error de conexión');
-            });
+            fetch(`${BACKEND_URL}/api/eliminar_registro/${id}`, { method: 'DELETE' })
+                .then(resp => {
+                    if (resp.ok) { alert('✅ Eliminado'); location.reload(); }
+                    else { alert('❌ Error al eliminar'); }
+                }).catch(() => alert('❌ Error de conexión'));
         }
 
-        // ============================
-        // 8. ORDENAR TABLA
-        // ============================
+        // ORDENAR
         window.ordenarTabla = function(columna) {
             const tbody = document.querySelector('#tablaRegistros tbody');
             const filasArray = Array.from(tbody.querySelectorAll('.fila-registro'));
             filasArray.sort((a, b) => {
-                let valA, valB;
                 const celdasA = a.querySelectorAll('td');
                 const celdasB = b.querySelectorAll('td');
-                valA = celdasA[columna]?.textContent.trim() || '';
-                valB = celdasB[columna]?.textContent.trim() || '';
+                let valA = celdasA[columna]?.textContent.trim() || '';
+                let valB = celdasB[columna]?.textContent.trim() || '';
                 if (columna === 2) {
                     valA = parseFloat(valA.replace(/[$,]/g, '')) || 0;
                     valB = parseFloat(valB.replace(/[$,]/g, '')) || 0;
                 }
-                if (columna === 
+                if (columna === 0) {
+                    valA = parseInt(valA) || 0;
+                    valB = parseInt(valB) || 0;
+                }
+                if (valA < valB) return -1;
+                if (valA > valB) return 1;
+                return 0;
+            });
+            filasArray.forEach(fila => tbody.appendChild(fila));
+        };
+    });
+</script>
+
+{% endblock %}
