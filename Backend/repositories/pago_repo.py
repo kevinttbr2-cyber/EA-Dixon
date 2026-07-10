@@ -101,16 +101,16 @@ class PagoRepository:
     
     @staticmethod
     def obtener_todos_pagados():
-    try:
-        conn, cur = get_cursor()
-        cur.execute("SELECT * FROM pagos WHERE estado='pagado' ORDER BY fecha DESC")
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        return [Pago.from_db_row(row) for row in rows]
-    except Exception as e:
-        print(f"Error obtener todos pagados: {e}")
-        return []
+        try:
+            conn, cur = get_cursor()
+            cur.execute("SELECT * FROM pagos WHERE estado='pagado' ORDER BY fecha DESC")
+            rows = cur.fetchall()
+            cur.close()
+            conn.close()
+            return [Pago.from_db_row(row) for row in rows]
+        except Exception as e:
+            print(f"Error obtener todos pagados: {e}")
+            return []
     
     @staticmethod
     def obtener_flotas():
