@@ -74,4 +74,53 @@
          ============================ -->
     <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(79, 195, 247, 0.15); background: #141414;">
         <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 800px; width: 100%;">
-            <thead style="background: #4fc3f7 !important
+            <thead style="background: #4fc3f7 !important; color: #000 !important;">
+                <tr>
+                    <th style="padding: 8px 10px; text-align: center;">ID</th>
+                    <th style="padding: 8px 10px; text-align: center;">Cliente</th>
+                    <th style="padding: 8px 10px; text-align: center;">Pagado</th>
+                    <th style="padding: 8px 10px; text-align: center;">Repuestos</th>
+                    <th style="padding: 8px 10px; text-align: center;">M.Obra</th>
+                    <th style="padding: 8px 10px; text-align: center;">Diagnóstico</th>
+                    <th style="padding: 8px 10px; text-align: center;">Ganancia</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in registros %}
+                <tr>
+                    <td style="text-align: center;">#{{ r.id }}</td>
+                    <td style="text-align: center;">{{ r.nombre }}</td>
+                    <td style="text-align: center; color: #00ff66; font-weight: 600;">${{ "{:,.0f}".format(r.monto) }}</td>
+                    <td style="text-align: center; color: #ffcc00;">${{ "{:,.0f}".format(r.costo_repuestos_real or 0) }}</td>
+                    <td style="text-align: center; color: #4fc3f7;">${{ "{:,.0f}".format(r.costo_mano_obra_real or 0) }}</td>
+                    <td style="text-align: center; color: #ff6b6b;">${{ "{:,.0f}".format(r.costo_diagnostico_real or 0) }}</td>
+                    <td style="text-align: center; color: {% if r.ganancia_neta >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight: 700;">
+                        ${{ "{:,.0f}".format(r.ganancia_neta or 0) }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #666; padding: 40px 0;">
+                        <i class="fa-solid fa-chart-simple" style="font-size: 48px; color: #4fc3f7; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
+                        <p style="font-size: 16px;">No hay registros validados en este período</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot style="background: rgba(0,255,102,0.06);">
+                <tr>
+                    <th colspan="2" style="text-align: right; padding: 8px 10px; color: #90e0a0;">TOTALES</th>
+                    <th style="text-align: center; color: #00ff66;">${{ "{:,.0f}".format(total_pagado) }}</th>
+                    <th style="text-align: center; color: #ffcc00;">${{ "{:,.0f}".format(total_repuestos) }}</th>
+                    <th style="text-align: center; color: #4fc3f7;">${{ "{:,.0f}".format(total_mano_obra) }}</th>
+                    <th style="text-align: center; color: #ff6b6b;">${{ "{:,.0f}".format(total_diagnostico) }}</th>
+                    <th style="text-align: center; color: {% if ganancia_neta >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight: 700;">
+                        ${{ "{:,.0f}".format(ganancia_neta) }}
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
