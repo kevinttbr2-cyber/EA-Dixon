@@ -5,6 +5,7 @@ import secrets
 from functools import wraps
 import hmac
 import hashlib
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
@@ -280,18 +281,78 @@ def pago_validado(id_reg):
         registro = {}
     
     return render_template("pago_validado.html", registro=registro)
+# ============================
+# REGISTROS CON FILTROS
+# ============================
 @app.route('/registros')
 @login_required
 def registros():
-    filtro = request.args.get('filtro', 'todos')  # hoy, 7d, mes, todos
-    # Llamar a backend con filtro
-    resp = requests.get(f"{BACKEND_URL}/api/registros?filtro={filtro}")
-    return render_template("registros.html", registros=resp.json(), filtro=filtro)
+    filtro = request.args.get('filtro', 'todos')
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/registros?filtro={filtro}", timeout=10)
+        if resp.status_code == 200:
+            registros = resp.json()
+            total_general = sum(r.get('monto', 0) for r in registros)
+        else:
+            registros = []
+            total_general = 0
+    except Exception as e:
+        print(f"Error en /registros: {e}")
+        registros = []
+        total_general = 0
+    
+    # Calcular filtros adicionales para la vista
+    hoy = datetime.now().date()
+    registros_hoy = [r for r in registros if r.get('fecha') == hoy.strftime('%Y-%m-%d')]
+    registros_7d = [r for r in registros if (hoy - datetime.strptime(r.get('fecha', '2025-01-01')[:10], '%Y-%m-%d').date()).days <= 7]
+    registros_mes = [r for r in registros if (hoy - datetime.strptime(r.get('fecha', '2025-01-01')[:10], '%Y-%m-%d').date()).days <= 30]
+    
+    return render_template(
+        "registros.html",
+        registros=registros,
+        registros_hoy=registros_hoy,
+        registros_7d=registros_7d,
+        registros_mes=registros_mes,
+        total_general=total_general,
+        filtro=filtro
+    )
 
+
+# ============================
+# BALANCE DE GANANCIA
+# ============================
 @app.route('/balance')
 @login_required
 def balance():
-    return render_template("balance.html")
+    filtro = request.args.get('filtro', 'hoy')
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/balance?filtro={filtro}", timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            registros = data.get('registros', [])
+            total_pagado = data.get('total_pagado', 0)
+            total_repuestos = data.get('total_repuestos', 0)
+            total_mano_obra = data.get('total_mano_obra', 0)
+            total_diagnostico = data.get('total_diagnostico', 0)
+            ganancia_neta = data.get('ganancia_neta', 0)
+        else:
+            registros = []
+            total_pagado = total_repuestos = total_mano_obra = total_diagnostico = ganancia_neta = 0
+    except Exception as e:
+        print(f"Error en /balance: {e}")
+        registros = []
+        total_pagado = total_repuestos = total_mano_obra = total_diagnostico = ganancia_neta = 0
+    
+    return render_template(
+        "balance.html",
+        registros=registros,
+        total_pagado=total_pagado,
+        total_repuestos=total_repuestos,
+        total_mano_obra=total_mano_obra,
+        total_diagnostico=total_diagnostico,
+        ganancia_neta=ganancia_neta,
+        filtro=filtro
+    )
 @app.route('/modelos/<marca>')
 @login_required
 def modelos(marca):
