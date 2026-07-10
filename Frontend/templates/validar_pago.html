@@ -134,6 +134,15 @@
                 <textarea name="observaciones_costos" class="form-control" rows="3" 
                           placeholder="Detalla los costos...">{{ registro.observaciones_pago or '' }}</textarea>
             </div>
+            <div class="mb-3">
+    <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+        👤 Validado por (nombre del técnico)
+    </label>
+    <input type="text" name="validado_por" class="form-control" 
+           value="{{ session.get('nombre_completo', session.get('usuario')) }}"
+           placeholder="Ej: Dina Bravo">
+    <small style="color: #666; font-size: 11px;">Nombre de la persona que valida los costos</small>
+</div>
         </div>
 
         <!-- ============================
