@@ -221,8 +221,10 @@ def get_balance():
 @pago_bp.route('/agregar', methods=['POST'])
 def agregar_pago():
     data = request.json
-    # Si flota viene vacío, guardar como None
-    if 'flota' in data and data['flota'] == '':
+    # Si flota es "__nueva__", usar el valor de flota_nueva
+    if data.get('flota') == '__nueva__':
+        data['flota'] = data.get('flota_nueva', '').strip()
+    if not data.get('flota'):
         data['flota'] = None
     id_reg = PagoService.crear_pago(data)
     if id_reg:
