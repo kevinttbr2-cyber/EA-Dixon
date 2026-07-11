@@ -10,7 +10,7 @@
         Selecciona el rango de fechas para exportar el reporte
     </p>
 
-    <form method="POST" action="{{ url_for('exportar_flota_pdf', flota=flota) }}">
+    <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
         <div class="mb-3">
