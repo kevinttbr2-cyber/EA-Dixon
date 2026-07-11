@@ -23,13 +23,23 @@ def get_auditoria():
         
         resultado = []
         for row in rows:
+            # Convertir fecha a string
+            fecha = row[5]
+            if fecha:
+                if hasattr(fecha, 'strftime'):
+                    fecha_str = fecha.strftime('%d/%m/%Y %H:%M')
+                else:
+                    fecha_str = str(fecha)
+            else:
+                fecha_str = None
+            
             item = {
                 "id": row[0],
                 "id_registro": row[1],
                 "usuario": row[2],
                 "rol": row[3],
                 "tipo": row[4],
-                "fecha": row[5].isoformat() if row[5] else None,
+                "fecha": fecha_str,  # ← AHORA ES STRING
                 "ip": row[6],
                 "cliente": row[8] if len(row) > 8 else None,
                 "patente": row[9] if len(row) > 9 else None,
@@ -41,4 +51,5 @@ def get_auditoria():
         
         return jsonify(resultado)
     except Exception as e:
+        print(f"Error en get_auditoria: {e}")
         return jsonify({"error": str(e)}), 500
