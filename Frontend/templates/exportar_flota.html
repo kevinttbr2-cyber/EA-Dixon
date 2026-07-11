@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="base-container" style="max-width: 500px; margin: 0 auto;">
+    <h2 style="color: #00ff66; font-weight: 700; text-align: center; margin-bottom: 5px;">
+        📄 Exportar Flota: {{ flota }}
+    </h2>
+    <p style="color: #888; text-align: center; margin-bottom: 20px; font-size: 14px;">
+        Selecciona el rango de fechas para exportar el reporte
+    </p>
+
+    <form method="POST" action="{{ url_for('exportar_flota_pdf', flota=flota) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="mb-3">
+            <label style="color: #90e0a0; font-weight: 500;">📅 Fecha desde</label>
+            <input type="date" name="fecha_desde" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label style="color: #90e0a0; font-weight: 500;">📅 Fecha hasta</label>
+            <input type="date" name="fecha_hasta" class="form-control" required>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-primary" style="flex:1; background: #4fc3f7 !important; color: #000 !important; font-weight: 700; border-radius: 10px; padding: 14px; font-size: 18px; border: none;">
+                <i class="fas fa-file-pdf"></i> Generar PDF
+            </button>
+            <a href="/flotas" class="btn" style="
+                background: rgba(255,255,255,0.06);
+                color: #888;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 10px;
+                padding: 14px 24px;
+                text-decoration: none;
+                text-align: center;
+            ">
+                ← Volver a Flotas
+            </a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
