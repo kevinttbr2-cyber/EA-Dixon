@@ -458,6 +458,8 @@ def register():
         rol = request.form.get('rol', 'basico')
         nombre_completo = request.form.get('nombre_completo', '')
         
+        print(f"📝 Datos recibidos: username={username}, rol={rol}, nombre={nombre_completo}")  # ← LOG
+        
         if not username or not password:
             error = "⚠️ Usuario y contraseña son obligatorios"
         elif len(password) < 6:
@@ -470,7 +472,9 @@ def register():
                     'rol': rol,
                     'nombre_completo': nombre_completo
                 }
+                print(f"📤 Enviando a backend: {data}")  # ← LOG
                 resp = requests.post(f"{BACKEND_URL}/api/crear_usuario", json=data, timeout=10)
+                print(f"📥 Respuesta backend: {resp.status_code} - {resp.text}")  # ← LOG
                 if resp.status_code == 200:
                     success = f"✅ Usuario {username} creado correctamente"
                 else:
@@ -480,6 +484,7 @@ def register():
                 error = "⚠️ Error de conexión con el servidor"
     
     return render_template("register.html", error=error, success=success)
+    
 @app.route('/usuarios')
 @login_required
 @role_required(['admin', 'operador'])
