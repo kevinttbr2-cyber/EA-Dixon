@@ -7,6 +7,7 @@ from io import BytesIO
 import base64
 
 pdf_bp = Blueprint('pdf', __name__, url_prefix='/api')
+
 @pdf_bp.route('/firma/<int:id_reg>', methods=['GET'])
 def get_firma(id_reg):
     """Devuelve la firma para un ID de registro"""
@@ -47,13 +48,17 @@ def descargar_pdf(id_reg, firma):
     except Exception as e:
         print(f"Error registrando descarga: {e}")
     
+    # 🔥 NOMBRE DEL ARCHIVO CON CLIENTE Y FECHA
+    nombre_cliente = pago.nombre.replace(' ', '_').replace('/', '_') if pago.nombre else 'cliente'
+    fecha = pago.fecha.strftime('%Y%m%d') if pago.fecha else 'sin_fecha'
+    download_name = f'OT_{id_reg}_{nombre_cliente}_{fecha}.pdf'
+    
     return send_file(
         buffer,
         mimetype='application/pdf',
         as_attachment=True,
-        download_name=f'OT_{id_reg}_{registro.nombre}_{registro.fecha}.pdf'
+        download_name=download_name
     )
-
 
 @pdf_bp.route('/qr/<int:id_reg>/<firma>', methods=['GET'])
 def generar_qr(id_reg, firma):
