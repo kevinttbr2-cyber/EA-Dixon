@@ -3,6 +3,15 @@
 {% block content %}
 
 <div class="base-container">
+    <!-- ============================
+         MENSAJE DE DEPURACIÓN
+         ============================ -->
+    <div style="background:rgba(255,200,0,0.10);border:1px solid #ffcc00;padding:8px 12px;border-radius:8px;margin-bottom:15px;color:#ffcc00;font-size:12px;">
+        <strong>🔍 Depuración:</strong> 
+        Labels: {{ labels|length }}, Ventas: {{ ventas|length }}, 
+        Proyección: {{ proyeccion|length }}, Clientes: {{ clientes_labels|length }}
+    </div>
+
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
         <h2 style="color: #4fc3f7; font-weight: 700; margin: 0; font-size: 24px;">
             📊 Panel de Proyecciones
@@ -61,7 +70,6 @@
             📅 90 días
         </a>
         
-        <!-- FILTRO POR MES Y AÑO -->
         <form method="GET" style="display: inline-flex; gap: 6px; align-items: center;">
             <input type="hidden" name="filtro" value="mes">
             <select name="mes" class="form-control form-control-sm" style="width: auto; background: rgba(0,0,0,0.40); color: #fff; border: 1px solid rgba(0,255,102,0.20); border-radius: 8px; padding: 4px 8px; font-size: 13px;">
@@ -115,31 +123,24 @@
          GRÁFICOS
      ============================ -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-        <!-- 1. Ventas y Proyección -->
         <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
             <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">📈 Ventas y Proyección</h4>
             <div style="position:relative; height:220px; width:100%;">
                 <canvas id="chartVentas" style="width:100% !important; height:100% !important;"></canvas>
             </div>
         </div>
-
-        <!-- 2. Ganancia acumulada -->
         <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
             <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">📈 Ganancia acumulada</h4>
             <div style="position:relative; height:220px; width:100%;">
                 <canvas id="chartGanancia" style="width:100% !important; height:100% !important;"></canvas>
             </div>
         </div>
-
-        <!-- 3. Distribución de costos -->
         <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
             <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">🍩 Distribución de costos</h4>
             <div style="position:relative; height:220px; width:100%;">
                 <canvas id="chartCostos" style="width:100% !important; height:100% !important;"></canvas>
             </div>
         </div>
-
-        <!-- 4. Top clientes -->
         <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
             <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">🏆 Top clientes</h4>
             <div style="position:relative; height:220px; width:100%;">
@@ -167,18 +168,28 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // ============================
-        // 1. OBTENER DATOS
+        // 1. OBTENER DATOS (CON |safe PARA EVITAR ESCAPE)
         // ============================
-        const labels = {{ labels|tojson }};
-        const ventasData = {{ ventas|tojson }};
-        const gananciaData = {{ ganancia_acumulada|tojson }};
-        const proyeccionLabels = {{ proyeccion_labels|tojson }};
-        const proyeccionData = {{ proyeccion|tojson }};
+        const labels = {{ labels|tojson|safe }};
+        const ventasData = {{ ventas|tojson|safe }};
+        const gananciaData = {{ ganancia_acumulada|tojson|safe }};
+        const proyeccionLabels = {{ proyeccion_labels|tojson|safe }};
+        const proyeccionData = {{ proyeccion|tojson|safe }};
         const repuestos = {{ total_repuestos|float }};
         const manoObra = {{ total_mano_obra|float }};
         const diagnostico = {{ total_diagnostico|float }};
-        const clientesLabels = {{ clientes_labels|tojson }};
-        const clientesData = {{ clientes_data|tojson }};
+        const clientesLabels = {{ clientes_labels|tojson|safe }};
+        const clientesData = {{ clientes_data|tojson|safe }};
+
+        console.log('📊 Datos recibidos en JS:', { 
+            labels: labels, 
+            ventasData: ventasData,
+            gananciaData: gananciaData,
+            proyeccionLabels: proyeccionLabels,
+            proyeccionData: proyeccionData,
+            clientesLabels: clientesLabels,
+            clientesData: clientesData
+        });
 
         // ============================
         // 2. VERIFICAR DATOS
