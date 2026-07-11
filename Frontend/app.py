@@ -624,6 +624,18 @@ def dashboard():
     print(f"📊 Datos para dashboard: labels={len(data.get('labels', []))}, ventas={len(data.get('ventas', []))}")
     
     return render_template("dashboard_v2.html", **data)
+    
+@app.route('/repuestos')
+@login_required
+@role_required(['admin', 'operador'])
+def repuestos():
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/repuestos", timeout=10)
+        repuestos = resp.json() if resp.status_code == 200 else []
+    except Exception as e:
+        print(f"Error en /repuestos: {e}")
+        repuestos = []
+    return render_template("repuestos.html", repuestos=repuestos)
         
 # ============================
 # RUTAS ESTÁTICAS
