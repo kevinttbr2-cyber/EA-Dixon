@@ -316,74 +316,126 @@
         calcularTiempo();
         setInterval(calcularTiempo, 5000);
 
-        // ============================
-        // 2. TABLA DE REPUESTOS DINÁMICA
-        // ============================
-        const tablaBody = document.getElementById('cuerpoRepuestos');
-        const btnAgregar = document.getElementById('agregarRepuestoBtn');
-        const totalRepuestosSpan = document.getElementById('totalRepuestos');
-        const costoRepuestosHidden = document.getElementById('costoRepuestosHidden');
+       // ============================
+// 2. TABLA DE REPUESTOS DINÁMICA (CON TOTAL EN TIEMPO REAL)
+// ============================
+const tablaBody = document.getElementById('cuerpoRepuestos');
+const btnAgregar = document.getElementById('agregarRepuestoBtn');
+const totalRepuestosSpan = document.getElementById('totalRepuestos');
+const costoRepuestosHidden = document.getElementById('costoRepuestosHidden');
 
-        function actualizarTotalRepuestos() {
-            let total = 0;
-            const costos = document.querySelectorAll('.costo-repuesto');
-            costos.forEach(input => {
-                const val = parseFloat(input.value) || 0;
-                total += val;
-            });
-            totalRepuestosSpan.textContent = `$${total.toLocaleString('es-CL')}`;
-            costoRepuestosHidden.value = total.toFixed(2);
-            recalcularResumen();
+function actualizarTotalRepuestos() {
+    let total = 0;
+    const costos = document.querySelectorAll('.costo-repuesto');
+    costos.forEach(input => {
+        const val = parseFloat(input.value) || 0;
+        total += val;
+    });
+    totalRepuestosSpan.textContent = `$${total.toLocaleString('es-CL')}`;
+    costoRepuestosHidden.value = total.toFixed(2);
+    recalcularResumen();
+}
+
+// 🟢 FUNCIÓN PARA AGREGAR EVENTO A CADA INPUT DE COSTO
+function agregarEventoCosto(input) {
+    input.addEventListener('input', function() {
+        actualizarTotalRepuestos();
+    });
+    // También al perder el foco (por si el usuario escribe rápido)
+    input.addEventListener('blur', function() {
+        actualizarTotalRepuestos();
+    });
+}
+
+function agregarFilaRepuesto(nombre = '', costo = '') {
+    const fila = document.createElement('tr');
+    fila.className = 'fila-repuesto';
+    fila.innerHTML = `
+        <td style="padding: 4px 8px;">
+            <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm" 
+                   placeholder="Nombre del repuesto" value="${nombre}"
+                   style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px;">
+        </td>
+        <td style="padding: 4px 8px;">
+            <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
+                   step="0.01" placeholder="0" value="${costo}"
+                   style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right;">
+        </td>
+        <td style="padding: 4px 8px; text-align: center;">
+            <button type="button" class="btn-eliminar-repuesto" 
+                    style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px; opacity: 0.3;">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </td>
+    `;
+
+    // 🟢 AGREGAR EVENTO AL INPUT DE COSTO
+    const costoInput = fila.querySelector('.costo-repuesto');
+    agregarEventoCosto(costoInput);
+
+    // Eliminar fila
+    const eliminarBtn = fila.querySelector('.btn-eliminar-repuesto');
+    eliminarBtn.addEventListener('click', function() {
+        if (document.querySelectorAll('.fila-repuesto').length > 1) {
+            fila.remove();
+            actualizarTotalRepuestos();
+        } else {
+            alert('Debe haber al menos una fila de repuestos.');
         }
+    });
 
-        function agregarFilaRepuesto(nombre = '', costo = '') {
-            const fila = document.createElement('tr');
-            fila.className = 'fila-repuesto';
-            fila.innerHTML = `
-                <td style="padding: 4px 8px;">
-                    <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm" 
-                           placeholder="Nombre del repuesto" value="${nombre}"
-                           style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px;">
-                </td>
-                <td style="padding: 4px 8px;">
-                    <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
-                           step="0.01" placeholder="0" value="${costo}"
-                           style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right;">
-                </td>
-                <td style="padding: 4px 8px; text-align: center;">
-                    <button type="button" class="btn-eliminar-repuesto" 
-                            style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px;">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </td>
-            `;
+    // Mostrar botón eliminar al hacer hover
+    fila.addEventListener('mouseenter', function() {
+        eliminarBtn.style.opacity = '1';
+    });
+    fila.addEventListener('mouseleave', function() {
+        if (document.querySelectorAll('.fila-repuesto').length > 1) {
+            eliminarBtn.style.opacity = '0.3';
+        } else {
+            eliminarBtn.style.opacity = '0';
+        }
+    });
 
-            const eliminarBtn = fila.querySelector('.btn-eliminar-repuesto');
-            eliminarBtn.addEventListener('click', function() {
-                if (document.querySelectorAll('.fila-repuesto').length > 1) {
-                    fila.remove();
-                    actualizarTotalRepuestos();
-                } else {
-                    alert('Debe haber al menos una fila de repuestos.');
+    tablaBody.appendChild(fila);
+    actualizarTotalRepuestos();
+}
+
+// Al hacer clic en "Agregar repuesto"
+btnAgregar.addEventListener('click', function() {
+    agregarFilaRepuesto();
+});
+
+// Inicializar con una fila vacía si no hay datos
+const filasIniciales = document.querySelectorAll('.fila-repuesto');
+if (filasIniciales.length === 0) {
+    agregarFilaRepuesto();
+} else {
+    // 🟢 AGREGAR EVENTOS A LAS FILAS EXISTENTES
+    filasIniciales.forEach(fila => {
+        const costoInput = fila.querySelector('.costo-repuesto');
+        if (costoInput) {
+            agregarEventoCosto(costoInput);
+        }
+    });
+    actualizarTotalRepuestos();
+}
+
+// 🟢 OBSERVAR CAMBIOS EN EL DOM (para filas agregadas dinámicamente)
+const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        if (mutation.type === 'childList') {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1 && node.classList && node.classList.contains('fila-repuesto')) {
+                    const costoInput = node.querySelector('.costo-repuesto');
+                    if (costoInput) {
+                        agregarEventoCosto(costoInput);
+                    }
                 }
             });
-
-            const costoInput = fila.querySelector('.costo-repuesto');
-            costoInput.addEventListener('input', actualizarTotalRepuestos);
-
-            tablaBody.appendChild(fila);
-            actualizarTotalRepuestos();
         }
-
-        btnAgregar.addEventListener('click', function() {
-            agregarFilaRepuesto();
-        });
-
-        // Inicializar con una fila vacía si no hay datos
-        const filasIniciales = document.querySelectorAll('.fila-repuesto');
-        if (filasIniciales.length === 0) {
-            agregarFilaRepuesto();
-        }
+    });
+});
+observer.observe(tablaBody, { childList: true });
 
         // ============================
         // 3. RESUMEN FINANCIERO AUTOMÁTICO
