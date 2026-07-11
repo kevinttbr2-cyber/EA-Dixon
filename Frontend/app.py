@@ -301,6 +301,7 @@ def validar_pago(id_reg):
             'resultado': request.form.get('resultado', 'reparado'),
             'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
             'detalles_repuestos': detalles_repuestos
+            'costo_repuestos': float(request.form.get('costo_repuestos', 0)) 
         }
         
         try:
