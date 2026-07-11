@@ -20,9 +20,7 @@
         </a>
     </div>
 
-    <!-- ============================
-         FILTROS
-         ============================ -->
+    <!-- FILTROS -->
     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center;">
         <a href="?filtro=7d" class="btn btn-sm" style="
             background: {% if filtro_actual == '7d' %}rgba(0,255,102,0.20){% else %}rgba(255,255,255,0.04){% endif %};
@@ -36,34 +34,9 @@
         ">
             📅 7 días
         </a>
-        <a href="?filtro=30d" class="btn btn-sm" style="
-            background: {% if filtro_actual == '30d' %}rgba(0,255,102,0.20){% else %}rgba(255,255,255,0.04){% endif %};
-            color: {% if filtro_actual == '30d' %}#00ff66{% else %}#888{% endif %};
-            border: 1px solid {% if filtro_actual == '30d' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
-            border-radius: 20px;
-            padding: 6px 16px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-        ">
-            📅 30 días
-        </a>
-        <a href="?filtro=90d" class="btn btn-sm" style="
-            background: {% if filtro_actual == '90d' %}rgba(0,255,102,0.20){% else %}rgba(255,255,255,0.04){% endif %};
-            color: {% if filtro_actual == '90d' %}#00ff66{% else %}#888{% endif %};
-            border: 1px solid {% if filtro_actual == '90d' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
-            border-radius: 20px;
-            padding: 6px 16px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-        ">
-            📅 90 días
-        </a>
+        <a href="?filtro=30d" class="btn btn-sm" style="...">📅 30 días</a>
+        <a href="?filtro=90d" class="btn btn-sm" style="...">📅 90 días</a>
         
-        <!-- ============================
-             FILTRO POR MES Y AÑO
-             ============================ -->
         <form method="GET" style="display: inline-flex; gap: 6px; align-items: center;">
             <input type="hidden" name="filtro" value="mes">
             <select name="mes" class="form-control form-control-sm" style="width: auto; background: rgba(0,0,0,0.40); color: #fff; border: 1px solid rgba(0,255,102,0.20); border-radius: 8px; padding: 4px 8px; font-size: 13px;">
@@ -73,23 +46,11 @@
                 </option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-sm" style="
-                background: rgba(79,195,247,0.12);
-                color: #4fc3f7;
-                border: 1px solid rgba(79,195,247,0.20);
-                border-radius: 8px;
-                padding: 4px 12px;
-                font-size: 12px;
-                cursor: pointer;
-            ">
-                Filtrar Mes
-            </button>
+            <button type="submit" class="btn btn-sm" style="...">Filtrar Mes</button>
         </form>
     </div>
 
-    <!-- ============================
-         RESUMEN
-     ============================ -->
+    <!-- RESUMEN -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px;">
         <div style="background:rgba(0,255,102,0.06);border-radius:10px;padding:12px;border:1px solid rgba(0,255,102,0.12);text-align:center;">
             <div style="color:#888;font-size:11px;">💰 Total Facturado</div>
@@ -113,25 +74,23 @@
         </div>
     </div>
 
-    <!-- ============================
-         GRÁFICOS
-     ============================ -->
+    <!-- GRÁFICOS -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
         <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
             <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">📈 Ventas y Proyección</h4>
-            <canvas id="chartVentas" style="max-height:200px;"></canvas>
+            <canvas id="chartVentas" style="max-height:200px; width:100%;"></canvas>
         </div>
         <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
             <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">📈 Ganancia acumulada</h4>
-            <canvas id="chartGanancia" style="max-height:200px;"></canvas>
+            <canvas id="chartGanancia" style="max-height:200px; width:100%;"></canvas>
         </div>
         <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
             <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">🍩 Distribución de costos</h4>
-            <canvas id="chartCostos" style="max-height:200px;"></canvas>
+            <canvas id="chartCostos" style="max-height:200px; width:100%;"></canvas>
         </div>
         <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
             <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">🏆 Top clientes</h4>
-            <canvas id="chartClientes" style="max-height:200px;"></canvas>
+            <canvas id="chartClientes" style="max-height:200px; width:100%;"></canvas>
         </div>
     </div>
 
@@ -159,117 +118,144 @@
         const clientesLabels = {{ clientes_labels|tojson }};
         const clientesData = {{ clientes_data|tojson }};
 
-        // ✅ DESTRUIR GRÁFICOS ANTERIORES SI EXISTEN
+        console.log('📊 Datos del dashboard:', { labels, ventasData, gananciaData });
+
+        // Si no hay datos, mostrar mensaje
+        if (!labels || labels.length === 0) {
+            document.querySelectorAll('canvas').forEach(c => {
+                const parent = c.parentElement;
+                const msg = document.createElement('div');
+                msg.style.cssText = 'text-align:center;color:#666;padding:20px 0;';
+                msg.textContent = '📊 No hay datos para mostrar';
+                parent.innerHTML = '';
+                parent.appendChild(msg);
+            });
+            return;
+        }
+
+        // Destruir gráficos anteriores
         if (window.chartVentas) { window.chartVentas.destroy(); }
         if (window.chartGanancia) { window.chartGanancia.destroy(); }
         if (window.chartCostos) { window.chartCostos.destroy(); }
         if (window.chartClientes) { window.chartClientes.destroy(); }
 
         // 1. Ventas + Proyección
-        const ctx1 = document.getElementById('chartVentas').getContext('2d');
-        window.chartVentas = new Chart(ctx1, {
-            type: 'bar',
-            data: {
-                labels: labels.concat(proyeccionLabels),
-                datasets: [
-                    {
-                        label: 'Ventas reales',
-                        data: ventasData.concat(new Array(proyeccionLabels.length).fill(null)),
-                        backgroundColor: 'rgba(0, 255, 102, 0.6)',
-                        borderColor: '#00ff66',
-                        borderWidth: 1,
-                        order: 1
-                    },
-                    {
-                        label: 'Proyección',
-                        data: new Array(ventasData.length).fill(null).concat(proyeccionData),
-                        type: 'line',
-                        borderColor: '#4fc3f7',
-                        backgroundColor: 'rgba(79, 195, 247, 0.1)',
-                        borderDash: [6, 4],
-                        pointBackgroundColor: '#4fc3f7',
-                        tension: 0.2,
-                        fill: false,
-                        order: 0
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { labels: { color: '#888' } }
+        const ctx1 = document.getElementById('chartVentas');
+        if (ctx1) {
+            window.chartVentas = new Chart(ctx1.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels.concat(proyeccionLabels),
+                    datasets: [
+                        {
+                            label: 'Ventas reales',
+                            data: ventasData.concat(new Array(proyeccionLabels.length).fill(null)),
+                            backgroundColor: 'rgba(0, 255, 102, 0.6)',
+                            borderColor: '#00ff66',
+                            borderWidth: 1,
+                            order: 1
+                        },
+                        {
+                            label: 'Proyección',
+                            data: new Array(ventasData.length).fill(null).concat(proyeccionData),
+                            type: 'line',
+                            borderColor: '#4fc3f7',
+                            backgroundColor: 'rgba(79, 195, 247, 0.1)',
+                            borderDash: [6, 4],
+                            pointBackgroundColor: '#4fc3f7',
+                            tension: 0.2,
+                            fill: false,
+                            order: 0
+                        }
+                    ]
                 },
-                scales: {
-                    y: { beginAtZero: true, ticks: { color: '#888' } },
-                    x: { ticks: { color: '#888', maxTicksLimit: 15 } }
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#888' } } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#888' } },
+                        x: { ticks: { color: '#888', maxTicksLimit: 15 } }
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // 2. Ganancia acumulada
-        const ctx2 = document.getElementById('chartGanancia').getContext('2d');
-        window.chartGanancia = new Chart(ctx2, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Ganancia acumulada ($)',
-                    data: gananciaData,
-                    borderColor: '#4fc3f7',
-                    backgroundColor: 'rgba(79, 195, 247, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { labels: { color: '#888' } } },
-                scales: { y: { beginAtZero: true, ticks: { color: '#888' } }, x: { ticks: { color: '#888', maxTicksLimit: 10 } } }
-            }
-        });
+        const ctx2 = document.getElementById('chartGanancia');
+        if (ctx2) {
+            window.chartGanancia = new Chart(ctx2.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ganancia acumulada ($)',
+                        data: gananciaData,
+                        borderColor: '#4fc3f7',
+                        backgroundColor: 'rgba(79, 195, 247, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#888' } } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#888' } },
+                        x: { ticks: { color: '#888', maxTicksLimit: 10 } }
+                    }
+                }
+            });
+        }
 
         // 3. Distribución de costos
-        const ctx3 = document.getElementById('chartCostos').getContext('2d');
-        window.chartCostos = new Chart(ctx3, {
-            type: 'doughnut',
-            data: {
-                labels: ['Repuestos', 'Mano de obra', 'Diagnóstico'],
-                datasets: [{
-                    data: [repuestos, manoObra, diagnostico],
-                    backgroundColor: ['#ffcc00', '#4fc3f7', '#ff6b6b'],
-                    borderColor: '#0a0a0a',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#888' } }
+        const ctx3 = document.getElementById('chartCostos');
+        if (ctx3) {
+            window.chartCostos = new Chart(ctx3.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Repuestos', 'Mano de obra', 'Diagnóstico'],
+                    datasets: [{
+                        data: [repuestos, manoObra, diagnostico],
+                        backgroundColor: ['#ffcc00', '#4fc3f7', '#ff6b6b'],
+                        borderColor: '#0a0a0a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#888' } }
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // 4. Top clientes
-        const ctx4 = document.getElementById('chartClientes').getContext('2d');
-        window.chartClientes = new Chart(ctx4, {
-            type: 'bar',
-            data: {
-                labels: clientesLabels,
-                datasets: [{
-                    label: 'Total gastado ($)',
-                    data: clientesData,
-                    backgroundColor: 'rgba(79, 195, 247, 0.5)',
-                    borderColor: '#4fc3f7',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                plugins: { legend: { labels: { color: '#888' } } },
-                scales: { x: { beginAtZero: true, ticks: { color: '#888' } }, y: { ticks: { color: '#888' } } }
-            }
-        });
+        const ctx4 = document.getElementById('chartClientes');
+        if (ctx4) {
+            window.chartClientes = new Chart(ctx4.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: clientesLabels,
+                    datasets: [{
+                        label: 'Total gastado ($)',
+                        data: clientesData,
+                        backgroundColor: 'rgba(79, 195, 247, 0.5)',
+                        borderColor: '#4fc3f7',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#888' } } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { color: '#888' } },
+                        y: { ticks: { color: '#888' } }
+                    }
+                }
+            });
+        }
     });
 </script>
 
