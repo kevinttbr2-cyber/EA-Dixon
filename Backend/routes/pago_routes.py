@@ -3,6 +3,7 @@ from services.pago_service import PagoService
 from database import get_connection, get_cursor
 from datetime import datetime, timedelta
 from services.pdf_service import PDFService
+import json
 
 # ============================
 # BLUEPRINT
@@ -35,9 +36,8 @@ def get_registro(id_reg):
     return jsonify({"error": "No encontrado"}), 404
 
 
-
 # ============================
-# REGISTROS CON FILTROS (NUEVO)
+# 3. REGISTROS CON FILTROS
 # ============================
 @pago_bp.route('/registros', methods=['GET'])
 def get_registros_filtrados():
@@ -64,7 +64,6 @@ def get_registros_filtrados():
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
-        from services.pdf_service import PDFService
         for r in registros:
             r['firma'] = PDFService.generar_firma(r['id'])
         
@@ -75,8 +74,9 @@ def get_registros_filtrados():
         print(f"Error en get_registros_filtrados: {e}")
         return jsonify({"error": str(e)}), 500
 
+
 # ============================
-# EDITAR REGISTRO COMPLETO
+# 4. EDITAR REGISTRO COMPLETO
 # ============================
 @pago_bp.route('/editar_completo/<int:id_reg>', methods=['POST'])
 def editar_completo(id_reg):
@@ -142,8 +142,9 @@ def editar_completo(id_reg):
         print(f"Error en editar_completo: {e}")
         return jsonify({"error": str(e)}), 500
 
+
 # ============================
-# ELIMINAR REGISTRO
+# 5. ELIMINAR REGISTRO
 # ============================
 @pago_bp.route('/eliminar_registro/<int:id_reg>', methods=['DELETE'])
 def eliminar_registro(id_reg):
@@ -161,7 +162,7 @@ def eliminar_registro(id_reg):
 
 
 # ============================
-# BALANCE DE GANANCIA
+# 6. BALANCE DE GANANCIA
 # ============================
 @pago_bp.route('/balance', methods=['GET'])
 def get_balance():
@@ -192,7 +193,6 @@ def get_balance():
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
-        # 🔥 CONVERTIR A FLOAT PARA EVITAR ERROR DE DECIMAL
         total_pagado = float(sum(r.get('monto', 0) or 0 for r in registros))
         total_repuestos = float(sum(r.get('costo_repuestos_real', 0) or 0 for r in registros))
         total_mano_obra = float(sum(r.get('costo_mano_obra_real', 0) or 0 for r in registros))
@@ -214,12 +214,16 @@ def get_balance():
         print(f"Error en get_balance: {e}")
         return jsonify({"error": str(e)}), 500
 
+
 # ============================
-# 4. AGREGAR CLIENTE (PAGO EXPRESS - PASO 1)
+# 7. AGREGAR CLIENTE (CON FLOTA)
 # ============================
 @pago_bp.route('/agregar', methods=['POST'])
 def agregar_pago():
     data = request.json
+    # Si flota viene vacío, guardar como None
+    if 'flota' in data and data['flota'] == '':
+        data['flota'] = None
     id_reg = PagoService.crear_pago(data)
     if id_reg:
         return jsonify({"success": True, "id": id_reg})
@@ -227,7 +231,7 @@ def agregar_pago():
 
 
 # ============================
-# 5. PROCESAR PAGO (PASO 1 - PAGO EXPRESS)
+# 8. PROCESAR PAGO (PASO 1 - PAGO EXPRESS)
 # ============================
 @pago_bp.route('/pagar/<int:id_reg>', methods=['POST'])
 def pagar(id_reg):
@@ -239,7 +243,7 @@ def pagar(id_reg):
 
 
 # ============================
-# 6. PENDIENTES DE VALIDACIÓN (PASO 2 - PENDIENTES)
+# 9. PENDIENTES DE VALIDACIÓN
 # ============================
 @pago_bp.route('/pendientes_validacion', methods=['GET'])
 def get_pendientes_validacion():
@@ -284,10 +288,8 @@ def get_pendientes_validacion():
 
 
 # ============================
-# 7. VALIDAR PAGO (PASO 2 - VALIDACIÓN DE COSTOS)
+# 10. VALIDAR PAGO (PASO 2 - VALIDACIÓN DE COSTOS)
 # ============================
-import json
-
 @pago_bp.route('/validar_pago/<int:id_reg>', methods=['POST'])
 def validar_pago(id_reg):
     data = request.json
