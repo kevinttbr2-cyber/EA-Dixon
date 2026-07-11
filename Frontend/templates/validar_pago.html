@@ -90,6 +90,22 @@
                         <input type="radio" name="resultado" value="derivado" {% if registro.resultado == 'derivado' %}checked{% endif %}>
                         Derivado
                     </label>
+                    <!-- ============================
+     ESTADO DE LA OT (NUEVO)
+     ============================ -->
+<div class="mb-3">
+    <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+        📋 Estado de la Orden de Trabajo
+    </label>
+    <select name="estado_ot" class="form-control">
+        <option value="Pendiente" {% if registro.estado_ot == 'Pendiente' %}selected{% endif %}>⏳ Pendiente</option>
+        <option value="Diagnosticado" {% if registro.estado_ot == 'Diagnosticado' %}selected{% endif %}>🩺 Diagnosticado</option>
+        <option value="Aprobado" {% if registro.estado_ot == 'Aprobado' %}selected{% endif %}>✅ Aprobado</option>
+        <option value="Terminado" {% if registro.estado_ot == 'Terminado' %}selected{% endif %}>🔧 Terminado</option>
+        <option value="Entregado" {% if registro.estado_ot == 'Entregado' %}selected{% endif %}>🚗 Entregado</option>
+    </select>
+    <small style="color: #666; font-size: 11px;">Estado actual del vehículo en el taller</small>
+</div>
                 </div>
             </div>
         </div>
