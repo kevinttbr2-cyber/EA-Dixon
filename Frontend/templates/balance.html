@@ -2,89 +2,133 @@
 
 {% block content %}
 
-<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-    <h2 style="color: #4fc3f7; font-weight: 700; margin: 0;">
-        📊 Balance de Ganancia
-    </h2>
-    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <a href="/dashboard" class="btn btn-sm" style="
-            background: rgba(0,255,102,0.12);
-            color: #00ff66;
-            border: 1px solid rgba(0,255,102,0.20);
-            border-radius: 20px;
-            padding: 6px 16px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
-        ">
-            📊 Dashboard
-        </a>
-        <a href="/registros" class="btn btn-sm" style="
-            background: rgba(255,255,255,0.06);
-            color: #888;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 6px 16px;
-            text-decoration: none;
-            font-size: 13px;
-        ">
-            ← Volver a Registros
-        </a>
-    </div>
-
-
+<div class="base-container">
     <!-- ============================
-         FILTROS RÁPIDOS
+         ENCABEZADO
          ============================ -->
-    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
-        <a href="?filtro=hoy" class="filtro-card {% if filtro == 'hoy' %}active-pagados{% endif %}">
-            <div class="etiqueta">Hoy</div>
-            <div class="numero">{{ hoy|length }}</div>
-        </a>
-        <a href="?filtro=7d" class="filtro-card {% if filtro == '7d' %}active-pagados{% endif %}">
-            <div class="etiqueta">7 días</div>
-            <div class="numero">{{ semana|length }}</div>
-        </a>
-        <a href="?filtro=mes" class="filtro-card {% if filtro == 'mes' %}active-pagados{% endif %}">
-            <div class="etiqueta">1 Mes</div>
-            <div class="numero">{{ mes|length }}</div>
-        </a>
-        <a href="?filtro=todos" class="filtro-card {% if filtro == 'todos' %}active-total{% endif %}">
-            <div class="etiqueta">Todos</div>
-            <div class="numero">{{ todos|length }}</div>
-        </a>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+        <h2 style="color: #4fc3f7; font-weight: 700; margin: 0; font-size: 22px;">
+            📊 Balance de Ganancia
+        </h2>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="/dashboard" class="btn btn-sm" style="
+                background: rgba(0,255,102,0.12);
+                color: #00ff66;
+                border: 1px solid rgba(0,255,102,0.20);
+                border-radius: 20px;
+                padding: 6px 16px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 13px;
+            ">
+                📊 Dashboard
+            </a>
+            <a href="/registros" class="btn btn-sm" style="
+                background: rgba(255,255,255,0.06);
+                color: #888;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 20px;
+                padding: 6px 16px;
+                text-decoration: none;
+                font-size: 13px;
+            ">
+                ← Volver a Registros
+            </a>
+        </div>
     </div>
 
     <!-- ============================
-         RESUMEN DE BALANCE
+         FILTROS RÁPIDOS (TARJETAS)
          ============================ -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px;">
-        <div style="background: rgba(0,255,102,0.06); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(0,255,102,0.12); text-align: center;">
-            <div style="color: #888; font-size: 11px;">💰 Total Pagado</div>
-            <div style="color: #00ff66; font-size: 20px; font-weight: 700;">${{ "{:,.0f}".format(total_pagado|float) }}</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px;">
+        <a href="?filtro=hoy" class="filtro-card {% if filtro == 'hoy' %}active-pagados{% endif %}" style="
+            background: {% if filtro == 'hoy' %}rgba(0,255,102,0.15){% else %}rgba(255,255,255,0.04){% endif %};
+            border: 1px solid {% if filtro == 'hoy' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        ">
+            <div style="color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Hoy</div>
+            <div style="font-size: 22px; font-weight: 700; color: {% if filtro == 'hoy' %}#00ff66{% else %}#fff{% endif %};">
+                {{ hoy|length }}
+            </div>
+        </a>
+        <a href="?filtro=7d" class="filtro-card {% if filtro == '7d' %}active-pagados{% endif %}" style="
+            background: {% if filtro == '7d' %}rgba(0,255,102,0.15){% else %}rgba(255,255,255,0.04){% endif %};
+            border: 1px solid {% if filtro == '7d' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        ">
+            <div style="color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">7 días</div>
+            <div style="font-size: 22px; font-weight: 700; color: {% if filtro == '7d' %}#00ff66{% else %}#fff{% endif %};">
+                {{ semana|length }}
+            </div>
+        </a>
+        <a href="?filtro=mes" class="filtro-card {% if filtro == 'mes' %}active-pagados{% endif %}" style="
+            background: {% if filtro == 'mes' %}rgba(0,255,102,0.15){% else %}rgba(255,255,255,0.04){% endif %};
+            border: 1px solid {% if filtro == 'mes' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        ">
+            <div style="color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">1 Mes</div>
+            <div style="font-size: 22px; font-weight: 700; color: {% if filtro == 'mes' %}#00ff66{% else %}#fff{% endif %};">
+                {{ mes|length }}
+            </div>
+        </a>
+        <a href="?filtro=todos" class="filtro-card {% if filtro == 'todos' %}active-total{% endif %}" style="
+            background: {% if filtro == 'todos' %}rgba(0,255,102,0.15){% else %}rgba(255,255,255,0.04){% endif %};
+            border: 1px solid {% if filtro == 'todos' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        ">
+            <div style="color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Todos</div>
+            <div style="font-size: 22px; font-weight: 700; color: {% if filtro == 'todos' %}#00ff66{% else %}#fff{% endif %};">
+                {{ todos|length }}
+            </div>
+        </a>
+    </div>
+
+    <!-- ============================
+         RESUMEN DE BALANCE (TARJETAS)
+         ============================ -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px;">
+        <div style="background:rgba(0,255,102,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(0,255,102,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">💰 Total Pagado</div>
+            <div style="color:#00ff66;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_pagado|float) }}</div>
         </div>
-        <div style="background: rgba(255,200,0,0.06); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(255,200,0,0.12); text-align: center;">
-            <div style="color: #888; font-size: 11px;">📦 Costo Repuestos</div>
-            <div style="color: #ffcc00; font-size: 20px; font-weight: 700;">${{ "{:,.0f}".format(total_repuestos|float) }}</div>
+        <div style="background:rgba(255,200,0,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(255,200,0,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">📦 Costo Repuestos</div>
+            <div style="color:#ffcc00;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_repuestos|float) }}</div>
         </div>
-        <div style="background: rgba(79,195,247,0.06); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(79,195,247,0.12); text-align: center;">
-            <div style="color: #888; font-size: 11px;">👨‍🔧 Mano de Obra</div>
-            <div style="color: #4fc3f7; font-size: 20px; font-weight: 700;">${{ "{:,.0f}".format(total_mano_obra|float) }}</div>
+        <div style="background:rgba(79,195,247,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(79,195,247,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">👨‍🔧 Mano de Obra</div>
+            <div style="color:#4fc3f7;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_mano_obra|float) }}</div>
         </div>
-        <div style="background: rgba(255,107,107,0.06); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(255,107,107,0.12); text-align: center;">
-            <div style="color: #888; font-size: 11px;">🩺 Diagnóstico</div>
-            <div style="color: #ff6b6b; font-size: 20px; font-weight: 700;">${{ "{:,.0f}".format(total_diagnostico|float) }}</div>
+        <div style="background:rgba(255,107,107,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(255,107,107,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">🩺 Diagnóstico</div>
+            <div style="color:#ff6b6b;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_diagnostico|float) }}</div>
         </div>
-        <div style="background: rgba(0,255,102,0.12); border-radius: 10px; padding: 12px 16px; border: 2px solid #00ff66; text-align: center;">
-            <div style="color: #888; font-size: 11px;">📊 GANANCIA NETA</div>
-            <div style="color: {% if ganancia_neta|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-size: 24px; font-weight: 700;">
+        <div style="background:rgba(0,255,102,0.12);border-radius:10px;padding:12px 16px;border:2px solid #00ff66;text-align:center;">
+            <div style="color:#888;font-size:11px;">📊 GANANCIA NETA</div>
+            <div style="color:{% if ganancia_neta|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %};font-size:22px;font-weight:700;">
                 ${{ "{:,.0f}".format(ganancia_neta|float) }}
             </div>
         </div>
     </div>
 
     <!-- ============================
-         TABLA DE DETALLE DE COSTOS
+         TABLA DE DETALLE
          ============================ -->
     <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(79, 195, 247, 0.15); background: #141414;">
         <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 800px; width: 100%;">
@@ -102,12 +146,20 @@
             <tbody>
                 {% for r in registros %}
                 <tr>
-                    <td style="text-align: center;">#{{ r.id }}</td>
+                    <td style="text-align: center; font-weight: 600;">#{{ r.id }}</td>
                     <td style="text-align: center;">{{ r.nombre }}</td>
-                    <td style="text-align: center; color: #00ff66; font-weight: 600;">${{ "{:,.0f}".format(r.monto|float) }}</td>
-                    <td style="text-align: center; color: #ffcc00;">${{ "{:,.0f}".format(r.costo_repuestos_real|float or 0) }}</td>
-                    <td style="text-align: center; color: #4fc3f7;">${{ "{:,.0f}".format(r.costo_mano_obra_real|float or 0) }}</td>
-                    <td style="text-align: center; color: #ff6b6b;">${{ "{:,.0f}".format(r.costo_diagnostico_real|float or 0) }}</td>
+                    <td style="text-align: center; color: #00ff66; font-weight: 600;">
+                        ${{ "{:,.0f}".format(r.monto|float) }}
+                    </td>
+                    <td style="text-align: center; color: #ffcc00;">
+                        ${{ "{:,.0f}".format(r.costo_repuestos_real|float or 0) }}
+                    </td>
+                    <td style="text-align: center; color: #4fc3f7;">
+                        ${{ "{:,.0f}".format(r.costo_mano_obra_real|float or 0) }}
+                    </td>
+                    <td style="text-align: center; color: #ff6b6b;">
+                        ${{ "{:,.0f}".format(r.costo_diagnostico_real|float or 0) }}
+                    </td>
                     <td style="text-align: center; color: {% if r.ganancia_neta|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight: 700;">
                         ${{ "{:,.0f}".format(r.ganancia_neta|float or 0) }}
                     </td>
@@ -116,7 +168,7 @@
                 <tr>
                     <td colspan="7" style="text-align: center; color: #666; padding: 40px 0;">
                         <i class="fa-solid fa-chart-simple" style="font-size: 48px; color: #4fc3f7; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
-                        <p style="font-size: 16px;">No hay registros validados en este período</p>
+                        <p style="font-size: 16px;">No hay registros en este período</p>
                     </td>
                 </tr>
                 {% endfor %}
@@ -124,10 +176,18 @@
             <tfoot style="background: rgba(0,255,102,0.06);">
                 <tr>
                     <th colspan="2" style="text-align: right; padding: 8px 10px; color: #90e0a0;">TOTALES</th>
-                    <th style="text-align: center; color: #00ff66;">${{ "{:,.0f}".format(total_pagado|float) }}</th>
-                    <th style="text-align: center; color: #ffcc00;">${{ "{:,.0f}".format(total_repuestos|float) }}</th>
-                    <th style="text-align: center; color: #4fc3f7;">${{ "{:,.0f}".format(total_mano_obra|float) }}</th>
-                    <th style="text-align: center; color: #ff6b6b;">${{ "{:,.0f}".format(total_diagnostico|float) }}</th>
+                    <th style="text-align: center; color: #00ff66; font-weight: 700;">
+                        ${{ "{:,.0f}".format(total_pagado|float) }}
+                    </th>
+                    <th style="text-align: center; color: #ffcc00; font-weight: 700;">
+                        ${{ "{:,.0f}".format(total_repuestos|float) }}
+                    </th>
+                    <th style="text-align: center; color: #4fc3f7; font-weight: 700;">
+                        ${{ "{:,.0f}".format(total_mano_obra|float) }}
+                    </th>
+                    <th style="text-align: center; color: #ff6b6b; font-weight: 700;">
+                        ${{ "{:,.0f}".format(total_diagnostico|float) }}
+                    </th>
                     <th style="text-align: center; color: {% if ganancia_neta|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight: 700;">
                         ${{ "{:,.0f}".format(ganancia_neta|float) }}
                     </th>
