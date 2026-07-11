@@ -178,13 +178,20 @@ class PDFService:
         elementos.append(Spacer(1, 0.04 * inch))
         
         # ============================
-        # DATOS DEL CLIENTE
+        # DATOS DEL CLIENTE (USANDO get() PARA EVITAR ERRORES)
         # ============================
+        fecha_str = ''
+        if registro.get('fecha'):
+            if hasattr(registro['fecha'], 'strftime'):
+                fecha_str = registro['fecha'].strftime('%d/%m/%Y')
+            else:
+                fecha_str = str(registro['fecha'])[:10]
+        
         datos_data = [
-            ['N° OT', str(registro['id']), 'Fecha', registro['fecha'].strftime('%d/%m/%Y') if registro['fecha'] else ''],
-            ['Cliente', registro['nombre'] or '', 'Teléfono', registro['telefono'] or ''],
-            ['Patente', registro['patente'] or '', 'Marca/Modelo', f"{registro['marca'] or ''} {registro['modelo'] or ''}"],
-            ['Año', registro.get('anio', '') or '', 'Kilometraje', f"{registro['kilometraje'] or 0} km"],
+            ['N° OT', str(registro.get('id', '')), 'Fecha', fecha_str],
+            ['Cliente', registro.get('nombre', '') or '', 'Teléfono', registro.get('telefono', '') or ''],
+            ['Patente', registro.get('patente', '') or '', 'Marca/Modelo', f"{registro.get('marca', '') or ''} {registro.get('modelo', '') or ''}"],
+            ['Año', registro.get('anio', '') or '', 'Kilometraje', f"{registro.get('kilometraje', 0) or 0} km"],
         ]
         
         table_data = []
@@ -313,7 +320,7 @@ class PDFService:
         
         tecnico = registro.get('atendido_por', 'No registrado')
         tiempo = registro.get('tiempo_estimado', '') or '00:00:00'
-        total_cobrado = registro['monto'] or 0
+        total_cobrado = registro.get('monto', 0) or 0
         
         if isinstance(tiempo, (int, float)) and tiempo > 0:
             horas = int(tiempo // 3600)
@@ -362,7 +369,7 @@ class PDFService:
         pie_text = f"""
         <b>Dixon Electricidad Automotriz</b><br/>
         📱 +569 9855 0331 · 📍 Neptuno 163, Local C, Lo Prado, RM <br/>
-        <font size='7' color='#999999'>Reporte generado el {datetime.now().strftime('%d/%m/%Y %H:%M')} · OT N° {registro['id']}</font>
+        <font size='7' color='#999999'>Reporte generado el {datetime.now().strftime('%d/%m/%Y %H:%M')} · OT N° {registro.get('id', '')}</font>
         """
         pie = Paragraph(pie_text, pie_style)
         elementos.append(pie)
@@ -376,4 +383,6 @@ class PDFService:
             return buffer
         except Exception as e:
             print(f"Error generando PDF: {e}")
+            import traceback
+            traceback.print_exc()
             return None
