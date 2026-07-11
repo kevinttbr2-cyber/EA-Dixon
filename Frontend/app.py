@@ -458,7 +458,7 @@ def register():
         rol = request.form.get('rol', 'basico')
         nombre_completo = request.form.get('nombre_completo', '')
         
-        print(f"📝 Datos recibidos: username={username}, rol={rol}, nombre={nombre_completo}")  # ← LOG
+        print(f"📝 POST recibido: username={username}, rol={rol}")  # ← LOG
         
         if not username or not password:
             error = "⚠️ Usuario y contraseña son obligatorios"
@@ -474,7 +474,7 @@ def register():
                 }
                 print(f"📤 Enviando a backend: {data}")  # ← LOG
                 resp = requests.post(f"{BACKEND_URL}/api/crear_usuario", json=data, timeout=10)
-                print(f"📥 Respuesta backend: {resp.status_code} - {resp.text}")  # ← LOG
+                print(f"📥 Respuesta: {resp.status_code} - {resp.text}")  # ← LOG
                 if resp.status_code == 200:
                     success = f"✅ Usuario {username} creado correctamente"
                 else:
