@@ -1,39 +1,61 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2 style="color:#00ff66; font-weight:700; text-align:center; margin-bottom:20px;">Registrar Pago</h2>
 
-<form method="POST">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    
-    <div class="mb-3">
-        <label style="color:#90e0a0;">💰 Monto pagado</label>
-        <input type="number" name="monto" class="form-control" required step="0.01">
-    </div>
+<div class="base-container" style="max-width: 600px; margin: 0 auto;">
+    <h2 style="color: #00ff66; font-weight: 700; text-align: center; margin-bottom: 20px;">
+        💰 Registrar Pago
+    </h2>
 
-    <div class="mb-3">
-        <label style="color:#90e0a0;">🩺 Diagnóstico</label>
-        <textarea name="diagnostico" class="form-control" rows="2"></textarea>
-    </div>
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-    <div class="mb-3">
-        <label style="color:#90e0a0;">🔧 Reparación realizada</label>
-        <textarea name="reparacion" class="form-control" rows="2">Reparación realizada</textarea>
-    </div>
-
-    <div class="mb-3">
-        <label style="color:#90e0a0;">📝 Observaciones</label>
-        <textarea name="observaciones_pago" class="form-control" rows="2"></textarea>
-    </div>
-
-    <div class="mb-3">
-        <label style="color:#90e0a0;">✅ Resultado</label>
-        <div style="display:flex; gap:15px; margin-top:6px;">
-            <label><input type="radio" name="resultado" value="reparado" checked> Reparado</label>
-            <label><input type="radio" name="resultado" value="pendiente"> Pendiente</label>
-            <label><input type="radio" name="resultado" value="derivado"> Derivado</label>
+        <div class="mb-3">
+            <label style="color: #90e0a0;">💰 Monto pagado</label>
+            <input type="number" name="monto" class="form-control" required step="0.01">
         </div>
-    </div>
 
-    <button class="btn btn-primary w-100">Confirmar Pago</button>
-</form>
+        <div class="mb-3">
+            <label style="color: #90e0a0;">🩺 Diagnóstico</label>
+            <textarea name="diagnostico" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label style="color: #90e0a0;">🔧 Reparación realizada</label>
+            <textarea name="reparacion" class="form-control" rows="2">Reparación realizada</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label style="color: #90e0a0;">📝 Observaciones</label>
+            <textarea name="observaciones_pago" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label style="color: #90e0a0;">✅ Resultado</label>
+            <div style="display:flex; gap:15px; margin-top:6px;">
+                <label><input type="radio" name="resultado" value="reparado" checked> Reparado</label>
+                <label><input type="radio" name="resultado" value="pendiente"> Pendiente</label>
+                <label><input type="radio" name="resultado" value="derivado"> Derivado</label>
+            </div>
+        </div>
+
+        <!-- ============================
+             ESTADO DE LA OT (NUEVO)
+             ============================ -->
+        <div class="mb-3">
+            <label style="color: #90e0a0; font-weight: 500;">📋 Estado de la Orden de Trabajo</label>
+            <select name="estado_ot" class="form-control">
+                <option value="Pendiente">⏳ Pendiente</option>
+                <option value="Diagnosticado">🩺 Diagnosticado</option>
+                <option value="Aprobado">✅ Aprobado</option>
+                <option value="Terminado">🔧 Terminado</option>
+                <option value="Entregado">🚗 Entregado</option>
+            </select>
+            <small style="color: #666; font-size: 11px;">Estado actual del vehículo en el taller</small>
+        </div>
+
+        <button class="btn btn-primary w-100">Confirmar Pago</button>
+    </form>
+</div>
+
 {% endblock %}
