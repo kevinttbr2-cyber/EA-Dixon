@@ -134,7 +134,7 @@
                     </td>
                     <td style="padding: 8px 10px; color: #ffffff; text-align: center; font-size: 12px; white-space: nowrap;">
                         {{ item.fecha if item.fecha else '' }}
-                        <br><span style="color: #888; font-size: 10px;">{{ item.fecha.strftime('%H:%M') if item.fecha else '' }}</span>
+                        <br><span style="color: #888; font-size: 10px;">{{ item.fecha if item.fecha else '' }}</span>
                     </td>
                     <td style="padding: 8px 10px; color: #ffffff; text-align: center; font-size: 12px;">
                         {{ item.marca or '' }} {{ item.modelo or '' }}
