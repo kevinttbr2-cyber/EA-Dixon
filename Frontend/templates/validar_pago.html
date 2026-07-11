@@ -315,15 +315,16 @@
 
         calcularTiempo();
         setInterval(calcularTiempo, 5000);
+
         // ============================
-// 2. TABLA DE REPUESTOS - TOTAL EN TIEMPO REAL
+// 2. TABLA DE REPUESTOS - TOTAL EN TIEMPO REAL (FORZADO)
 // ============================
 const tablaBody = document.getElementById('cuerpoRepuestos');
 const btnAgregar = document.getElementById('agregarRepuestoBtn');
 const totalRepuestosSpan = document.getElementById('totalRepuestos');
 const costoRepuestosHidden = document.getElementById('costoRepuestosHidden');
 
-// 🟢 FUNCIÓN PARA ACTUALIZAR EL TOTAL
+// 🟢 FUNCIÓN PARA ACTUALIZAR EL TOTAL (LEE TODOS LOS INPUTS)
 function actualizarTotalRepuestos() {
     let total = 0;
     document.querySelectorAll('.costo-repuesto').forEach(input => {
@@ -332,20 +333,13 @@ function actualizarTotalRepuestos() {
     });
     totalRepuestosSpan.textContent = `$${total.toLocaleString('es-CL')}`;
     costoRepuestosHidden.value = total.toFixed(2);
-    // También actualizar el resumen financiero
+    // Actualizar resumen financiero
     if (typeof recalcularResumen === 'function') {
         recalcularResumen();
     }
 }
 
-// 🟢 FUNCIÓN PARA AGREGAR EVENTO A UN INPUT
-function agregarEventoInput(input) {
-    input.addEventListener('input', actualizarTotalRepuestos);
-    input.addEventListener('change', actualizarTotalRepuestos);
-    input.addEventListener('blur', actualizarTotalRepuestos);
-}
-
-// 🟢 AGREGAR FILA
+// 🟢 AGREGAR FILA (sin eventos complejos)
 function agregarFilaRepuesto(nombre = '', costo = '') {
     const fila = document.createElement('tr');
     fila.className = 'fila-repuesto';
@@ -368,10 +362,6 @@ function agregarFilaRepuesto(nombre = '', costo = '') {
         </td>
     `;
 
-    // 🟢 AGREGAR EVENTO AL INPUT DE COSTO
-    const costoInput = fila.querySelector('.costo-repuesto');
-    agregarEventoInput(costoInput);
-
     const eliminarBtn = fila.querySelector('.btn-eliminar-repuesto');
     eliminarBtn.addEventListener('click', function() {
         if (document.querySelectorAll('.fila-repuesto').length > 1) {
@@ -391,34 +381,20 @@ btnAgregar.addEventListener('click', function() {
     agregarFilaRepuesto();
 });
 
-// 🟢 INICIALIZAR: agregar eventos a las filas existentes
-document.querySelectorAll('.fila-repuesto .costo-repuesto').forEach(input => {
-    agregarEventoInput(input);
-});
-
-// Si no hay filas, crear una
+// 🟢 INICIALIZAR: crear una fila si no hay
 if (document.querySelectorAll('.fila-repuesto').length === 0) {
     agregarFilaRepuesto();
 } else {
     actualizarTotalRepuestos();
 }
 
-// 🟢 OBSERVAR NUEVAS FILAS (para cuando se agreguen dinámicamente)
-const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-        mutation.addedNodes.forEach(function(node) {
-            if (node.nodeType === 1 && node.classList && node.classList.contains('fila-repuesto')) {
-                const costoInput = node.querySelector('.costo-repuesto');
-                if (costoInput) {
-                    agregarEventoInput(costoInput);
-                }
-            }
-        });
-    });
-});
-observer.observe(tablaBody, { childList: true });
-      
-
+// ============================================================
+// 🟢 🔥 SOLUCIÓN DEFINITIVA: ACTUALIZAR CADA 500ms
+// ============================================================
+setInterval(function() {
+    actualizarTotalRepuestos();
+}, 500);
+        
         // ============================
         // 3. RESUMEN FINANCIERO AUTOMÁTICO
         // ============================
