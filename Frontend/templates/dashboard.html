@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="base-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+        <h2 style="color: #4fc3f7; font-weight: 700; margin: 0;">
+            📊 Panel de Proyecciones
+        </h2>
+        <span style="color: #888; font-size: 12px;">
+            📈 Proyección a 7 días basada en promedio histórico
+        </span>
+    </div>
+
+    <!-- RESUMEN -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px;">
+        <div style="background:rgba(0,255,102,0.06);border-radius:10px;padding:12px;border:1px solid rgba(0,255,102,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">💰 Total Facturado</div>
+            <div style="color:#00ff66;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_facturado|float) }}</div>
+        </div>
+        <div style="background:rgba(255,200,0,0.06);border-radius:10px;padding:12px;border:1px solid rgba(255,200,0,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">📦 Total Costos</div>
+            <div style="color:#ffcc00;font-size:20px;font-weight:700;">${{ "{:,.0f}".format((total_repuestos|float + total_mano_obra|float + total_diagnostico|float)) }}</div>
+        </div>
+        <div style="background:rgba(0,255,102,0.12);border-radius:10px;padding:12px;border:2px solid #00ff66;text-align:center;">
+            <div style="color:#888;font-size:11px;">📊 Ganancia Neta</div>
+            <div style="color:{% if ganancia_total|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %};font-size:22px;font-weight:700;">${{ "{:,.0f}".format(ganancia_total|float) }}</div>
+        </div>
+        <div style="background:rgba(79,195,247,0.06);border-radius:10px;padding:12px;border:1px solid rgba(79,195,247,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">📋 Total Servicios</div>
+            <div style="color:#4fc3f7;font-size:20px;font-weight:700;">{{ total_servicios }}</div>
+        </div>
+        <div style="background:rgba(255,107,107,0.06);border-radius:10px;padding:12px;border:1px solid rgba(255,107,107,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">📈 Promedio Diario</div>
+            <div style="color:#ff6b6b;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(promedio_diario|float) }}</div>
+        </div>
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <!-- 1. Ventas diarias + Proyección -->
+        <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
+            <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">📈 Ventas y Proyección</h4>
+            <canvas id="chartVentas" style="max-height:200px;"></canvas>
+        </div>
+
+        <!-- 2. Ganancia acumulada -->
+        <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
+            <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">📈 Ganancia acumulada</h4>
+            <canvas id="chartGanancia" style="max-height:200px;"></canvas>
+        </div>
+
+        <!-- 3. Distribución de costos -->
+        <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
+            <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">🍩 Distribución de costos</h4>
+            <canvas id="chartCostos" style="max-height:200px;"></canvas>
+        </div>
+
+        <!-- 4. Top clientes -->
+        <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
+            <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">🏆 Top clientes</h4>
+            <canvas id="chartClientes" style="max-height:200px;"></canvas>
+        </div>
+    </div>
+
+    <!-- PROYECCIÓN (texto) -->
+    <div style="margin-top: 16px; background:rgba(79,195,247,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(79,195,247,0.15);">
+        <span style="color:#4fc3f7;font-weight:600;">🔮 Proyección a 7 días:</span>
+        <span style="color:#fff;">
+            Basado en el promedio diario de <strong style="color:#ffcc00;">${{ "{:,.0f}".format(promedio_diario|float) }}</strong> 
+            se estiman ingresos de <strong style="color:#00ff66;">${{ "{:,.0f}".format(promedio_diario|float * 7) }}</strong> en los próximos 7 días.
+        </span>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const labels = {{ labels|tojson }};
+        const ventasData = {{ ventas|tojson }};
+        const gananciaData = {{ ganancia_acumulada|tojson }};
+        const proyeccionLabels = {{ proyeccion_labels|tojson }};
+        const proyeccionData = {{ proyeccion|tojson }};
+        const repuestos = {{ total_repuestos|float }};
+        const manoObra = {{ total_mano_obra|float }};
+        const diagnostico = {{ total_diagnostico|float }};
+        const clientesLabels = {{ clientes_labels|tojson }};
+        const clientesData = {{ clientes_data|tojson }};
+
+        // 1. Ventas + Proyección
+        const ctx1 = document.getElementById('chartVentas').getContext('2d');
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: labels.concat(proyeccionLabels),
+                datasets: [
+                    {
+                        label: 'Ventas reales',
+                        data: ventasData.concat(new Array(proyeccionLabels.length).fill(null)),
+                        backgroundColor: 'rgba(0, 255, 102, 0.6)',
+                        borderColor: '#00ff66',
+                        borderWidth: 1,
+                        order: 1
+                    },
+                    {
+                        label: 'Proyección',
+                        data: new Array(ventasData.length).fill(null).concat(proyeccionData),
+                        type: 'line',
+                        borderColor: '#4fc3f7',
+                        backgroundColor: 'rgba(79, 195, 247, 0.1)',
+                        borderDash: [6, 4],
+                        pointBackgroundColor: '#4fc3f7',
+                        tension: 0.2,
+                        fill: false,
+                        order: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { labels: { color: '#888' } }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: '#888' } },
+                    x: { ticks: { color: '#888', maxTicksLimit: 15 } }
+                }
+            }
+        });
+
+        // 2. Ganancia acumulada
+        new Chart(document.getElementById('chartGanancia'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ganancia acumulada ($)',
+                    data: gananciaData,
+                    borderColor: '#4fc3f7',
+                    backgroundColor: 'rgba(79, 195, 247, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#888' } } },
+                scales: { y: { beginAtZero: true, ticks: { color: '#888' } }, x: { ticks: { color: '#888', maxTicksLimit: 10 } } }
+            }
+        });
+
+        // 3. Distribución de costos
+        new Chart(document.getElementById('chartCostos'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Repuestos', 'Mano de obra', 'Diagnóstico'],
+                datasets: [{
+                    data: [repuestos, manoObra, diagnostico],
+                    backgroundColor: ['#ffcc00', '#4fc3f7', '#ff6b6b'],
+                    borderColor: '#0a0a0a',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#888' } }
+                }
+            }
+        });
+
+        // 4. Top clientes
+        new Chart(document.getElementById('chartClientes'), {
+            type: 'bar',
+            data: {
+                labels: clientesLabels,
+                datasets: [{
+                    label: 'Total gastado ($)',
+                    data: clientesData,
+                    backgroundColor: 'rgba(79, 195, 247, 0.5)',
+                    borderColor: '#4fc3f7',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: { legend: { labels: { color: '#888' } } },
+                scales: { x: { beginAtZero: true, ticks: { color: '#888' } }, y: { ticks: { color: '#888' } } }
+            }
+        });
+    });
+</script>
+
+{% endblock %}
