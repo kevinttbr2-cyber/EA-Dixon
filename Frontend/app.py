@@ -6,6 +6,7 @@ from functools import wraps
 import hmac
 import hashlib
 from datetime import datetime, timedelta
+import io
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
