@@ -246,6 +246,8 @@ def agregar_pago():
 @pago_bp.route('/pagar/<int:id_reg>', methods=['POST'])
 def pagar(id_reg):
     data = request.json
+    # 🔥 AGREGAR estado_ot
+    data['estado_ot'] = data.get('estado_ot', 'Pendiente')
     pago = PagoService.procesar_pago(id_reg, data)
     if pago:
         return jsonify({"success": True, "pago": pago.to_dict()})
