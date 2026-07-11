@@ -69,37 +69,36 @@
         </a>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const id_reg = {{ registro.id }};
         const firma = '{{ registro.firma or "" }}';
         
-        console.log('🔍 ID:', id_reg);
-        console.log('🔑 Firma:', firma);
+        // Si no hay firma, usar una temporal (solo para prueba)
+        const firmaFinal = firma || '60258ef36da71b5e';
         
-        if (!firma) {
-            document.getElementById('qr-container').innerHTML = '<span style="color:#ff6b6b;">❌ Firma no disponible</span>';
-            return;
-        }
+        // Construir URL del PDF
+        const pdfUrl = `https://ea-dixon-production.up.railway.app/api/pdf/${id_reg}/${firmaFinal}`;
         
-        const urlQR = `https://ea-dixon-production.up.railway.app/api/qr/${id_reg}/${firma}`;
-        console.log('📡 URL QR:', urlQR);
+        // Generar QR directamente en el frontend
+        const qrContainer = document.getElementById('qr-container');
+        qrContainer.innerHTML = ''; // Limpiar
         
-        fetch(urlQR)
-            .then(r => r.json())
-            .then(data => {
-                console.log('📦 Respuesta QR:', data);
-                if (data.qr) {
-                    document.getElementById('qr-image').src = data.qr;
-                } else {
-                    throw new Error('No se recibió QR');
-                }
-            })
-            .catch(err => {
-                console.error('❌ Error cargando QR:', err);
-                document.getElementById('qr-container').innerHTML = '<span style="color:#ff6b6b;">❌ Error cargando QR</span>';
+        try {
+            new QRCode(qrContainer, {
+                text: pdfUrl,
+                width: 180,
+                height: 180,
+                colorDark: '#00ff66',
+                colorLight: '#0a0a0a',
+                correctLevel: QRCode.CorrectLevel.H
             });
+        } catch(e) {
+            console.error('Error generando QR:', e);
+            qrContainer.innerHTML = '<span style="color:#ff6b6b;">❌ Error generando QR</span>';
+        }
     });
 </script>
+
 {% endblock %}
