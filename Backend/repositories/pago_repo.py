@@ -6,36 +6,36 @@ class PagoRepository:
     
     @staticmethod
     def insertar(pago):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO pagos 
-            (nombre, monto, fecha, hora, patente, marca, modelo, usuario, estado,
-             observaciones_cliente, observaciones_pago, telefono, flota, frecuente, 
-             kilometraje, diagnostico, reparacion, resultado, tiempo_estimado, anio,
-             costo_repuestos_real, costo_mano_obra_real, costo_diagnostico_real,
-             ganancia_neta, validado, validado_por, fecha_validacion, detalles_repuestos)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING id
-        """, (
-            pago.nombre, pago.monto, pago.fecha, pago.hora, pago.patente,
-            pago.marca, pago.modelo, pago.usuario, pago.estado,
-            pago.observaciones_cliente, pago.observaciones_pago, pago.telefono,
-            pago.flota, pago.frecuente, pago.kilometraje,
-            pago.diagnostico, pago.reparacion, pago.resultado, pago.tiempo_estimado,
-            pago.anio, pago.costo_repuestos_real, pago.costo_mano_obra_real,
-            pago.costo_diagnostico_real, pago.ganancia_neta, pago.validado,
-            pago.validado_por, pago.fecha_validacion, pago.detalles_repuestos
-        ))
-        id_reg = cur.fetchone()[0]
-        conn.commit()
-        cur.close()
-        conn.close()
-        return id_reg
-    except Exception as e:
-        print(f"Error insertar pago: {e}")
-        return None
+        try:
+            conn = get_connection()
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO pagos 
+                (nombre, monto, fecha, hora, patente, marca, modelo, usuario, estado,
+                 observaciones_cliente, observaciones_pago, telefono, flota, frecuente, 
+                 kilometraje, diagnostico, reparacion, resultado, tiempo_estimado, anio,
+                 costo_repuestos_real, costo_mano_obra_real, costo_diagnostico_real,
+                 ganancia_neta, validado, validado_por, fecha_validacion, detalles_repuestos)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                pago.nombre, pago.monto, pago.fecha, pago.hora, pago.patente,
+                pago.marca, pago.modelo, pago.usuario, pago.estado,
+                pago.observaciones_cliente, pago.observaciones_pago, pago.telefono,
+                pago.flota, pago.frecuente, pago.kilometraje,
+                pago.diagnostico, pago.reparacion, pago.resultado, pago.tiempo_estimado,
+                pago.anio, pago.costo_repuestos_real, pago.costo_mano_obra_real,
+                pago.costo_diagnostico_real, pago.ganancia_neta, pago.validado,
+                pago.validado_por, pago.fecha_validacion, pago.detalles_repuestos
+            ))
+            id_reg = cur.fetchone()[0]
+            conn.commit()
+            cur.close()
+            conn.close()
+            return id_reg
+        except Exception as e:
+            print(f"Error insertar pago: {e}")
+            return None
     
     @staticmethod
     def actualizar(id_reg, pago):
