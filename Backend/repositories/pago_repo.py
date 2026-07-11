@@ -5,7 +5,7 @@ from datetime import datetime
 class PagoRepository:
     
     @staticmethod
-def insertar(pago):
+    def insertar(pago):
     try:
         conn = get_connection()
         cur = conn.cursor()
