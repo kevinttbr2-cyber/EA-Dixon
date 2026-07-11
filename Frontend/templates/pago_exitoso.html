@@ -75,25 +75,31 @@
         const id_reg = {{ registro.id }};
         const firma = '{{ registro.firma or "" }}';
         
-        // Si la firma no está disponible, generarla
-        const urlQR = firma 
-            ? `https://ea-dixon-production.up.railway.app/api/qr/${id_reg}/${firma}`
-            : `https://ea-dixon-production.up.railway.app/api/qr/${id_reg}/60258ef36da71b5e`;  // ← FIRMA TEMPORAL
+        console.log('🔍 ID:', id_reg);
+        console.log('🔑 Firma:', firma);
         
-        // Cargar el QR
+        if (!firma) {
+            document.getElementById('qr-container').innerHTML = '<span style="color:#ff6b6b;">❌ Firma no disponible</span>';
+            return;
+        }
+        
+        const urlQR = `https://ea-dixon-production.up.railway.app/api/qr/${id_reg}/${firma}`;
+        console.log('📡 URL QR:', urlQR);
+        
         fetch(urlQR)
             .then(r => r.json())
             .then(data => {
+                console.log('📦 Respuesta QR:', data);
                 if (data.qr) {
                     document.getElementById('qr-image').src = data.qr;
+                } else {
+                    throw new Error('No se recibió QR');
                 }
             })
             .catch(err => {
-                console.error('Error cargando QR:', err);
-                document.getElementById('qr-image').src = '';
+                console.error('❌ Error cargando QR:', err);
                 document.getElementById('qr-container').innerHTML = '<span style="color:#ff6b6b;">❌ Error cargando QR</span>';
             });
     });
 </script>
-
 {% endblock %}
