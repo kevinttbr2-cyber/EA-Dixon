@@ -159,8 +159,15 @@
         const clientesLabels = {{ clientes_labels|tojson }};
         const clientesData = {{ clientes_data|tojson }};
 
+        // ✅ DESTRUIR GRÁFICOS ANTERIORES SI EXISTEN
+        if (window.chartVentas) { window.chartVentas.destroy(); }
+        if (window.chartGanancia) { window.chartGanancia.destroy(); }
+        if (window.chartCostos) { window.chartCostos.destroy(); }
+        if (window.chartClientes) { window.chartClientes.destroy(); }
+
         // 1. Ventas + Proyección
-        new Chart(document.getElementById('chartVentas'), {
+        const ctx1 = document.getElementById('chartVentas').getContext('2d');
+        window.chartVentas = new Chart(ctx1, {
             type: 'bar',
             data: {
                 labels: labels.concat(proyeccionLabels),
@@ -200,7 +207,8 @@
         });
 
         // 2. Ganancia acumulada
-        new Chart(document.getElementById('chartGanancia'), {
+        const ctx2 = document.getElementById('chartGanancia').getContext('2d');
+        window.chartGanancia = new Chart(ctx2, {
             type: 'line',
             data: {
                 labels: labels,
@@ -221,7 +229,8 @@
         });
 
         // 3. Distribución de costos
-        new Chart(document.getElementById('chartCostos'), {
+        const ctx3 = document.getElementById('chartCostos').getContext('2d');
+        window.chartCostos = new Chart(ctx3, {
             type: 'doughnut',
             data: {
                 labels: ['Repuestos', 'Mano de obra', 'Diagnóstico'],
@@ -241,7 +250,8 @@
         });
 
         // 4. Top clientes
-        new Chart(document.getElementById('chartClientes'), {
+        const ctx4 = document.getElementById('chartClientes').getContext('2d');
+        window.chartClientes = new Chart(ctx4, {
             type: 'bar',
             data: {
                 labels: clientesLabels,
