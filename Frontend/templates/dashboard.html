@@ -3,15 +3,6 @@
 {% block content %}
 
 <div class="base-container">
-    <!-- ============================
-         MENSAJE DE DEPURACIÓN
-         ============================ -->
-    <div style="background:rgba(255,200,0,0.10);border:1px solid #ffcc00;padding:8px 12px;border-radius:8px;margin-bottom:15px;color:#ffcc00;font-size:12px;">
-        <strong>🔍 Depuración:</strong> 
-        Labels: {{ labels|length }}, Ventas: {{ ventas|length }}, 
-        Proyección: {{ proyeccion|length }}, Clientes: {{ clientes_labels|length }}
-    </div>
-
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
         <h2 style="color: #4fc3f7; font-weight: 700; margin: 0; font-size: 24px;">
             📊 Panel de Proyecciones
@@ -29,9 +20,7 @@
         </a>
     </div>
 
-    <!-- ============================
-         FILTROS
-         ============================ -->
+    <!-- FILTROS -->
     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center;">
         <a href="?filtro=7d" class="btn btn-sm" style="
             background: {% if filtro_actual == '7d' %}rgba(0,255,102,0.25){% else %}rgba(255,255,255,0.04){% endif %};
@@ -45,31 +34,8 @@
         ">
             📅 7 días
         </a>
-        <a href="?filtro=30d" class="btn btn-sm" style="
-            background: {% if filtro_actual == '30d' %}rgba(0,255,102,0.25){% else %}rgba(255,255,255,0.04){% endif %};
-            color: {% if filtro_actual == '30d' %}#00ff66{% else %}#888{% endif %};
-            border: 1px solid {% if filtro_actual == '30d' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
-            border-radius: 20px;
-            padding: 6px 16px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-        ">
-            📅 30 días
-        </a>
-        <a href="?filtro=90d" class="btn btn-sm" style="
-            background: {% if filtro_actual == '90d' %}rgba(0,255,102,0.25){% else %}rgba(255,255,255,0.04){% endif %};
-            color: {% if filtro_actual == '90d' %}#00ff66{% else %}#888{% endif %};
-            border: 1px solid {% if filtro_actual == '90d' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
-            border-radius: 20px;
-            padding: 6px 16px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-        ">
-            📅 90 días
-        </a>
-        
+        <a href="?filtro=30d" class="btn btn-sm" style="...">📅 30 días</a>
+        <a href="?filtro=90d" class="btn btn-sm" style="...">📅 90 días</a>
         <form method="GET" style="display: inline-flex; gap: 6px; align-items: center;">
             <input type="hidden" name="filtro" value="mes">
             <select name="mes" class="form-control form-control-sm" style="width: auto; background: rgba(0,0,0,0.40); color: #fff; border: 1px solid rgba(0,255,102,0.20); border-radius: 8px; padding: 4px 8px; font-size: 13px;">
@@ -79,23 +45,11 @@
                 </option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-sm" style="
-                background: rgba(79,195,247,0.12);
-                color: #4fc3f7;
-                border: 1px solid rgba(79,195,247,0.20);
-                border-radius: 8px;
-                padding: 4px 12px;
-                font-size: 12px;
-                cursor: pointer;
-            ">
-                Filtrar Mes
-            </button>
+            <button type="submit" class="btn btn-sm" style="...">Filtrar Mes</button>
         </form>
     </div>
 
-    <!-- ============================
-         RESUMEN
-     ============================ -->
+    <!-- RESUMEN -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px;">
         <div style="background:rgba(0,255,102,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(0,255,102,0.12);text-align:center;">
             <div style="color:#888;font-size:11px;">💰 Total Facturado</div>
@@ -119,9 +73,7 @@
         </div>
     </div>
 
-    <!-- ============================
-         GRÁFICOS
-     ============================ -->
+    <!-- GRÁFICOS -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
         <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
             <h4 style="color:#90e0a0;font-size:14px;margin-bottom:10px;">📈 Ventas y Proyección</h4>
@@ -149,9 +101,7 @@
         </div>
     </div>
 
-    <!-- ============================
-         PROYECCIÓN
-     ============================ -->
+    <!-- PROYECCIÓN -->
     <div style="margin-top: 16px; background:rgba(79,195,247,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(79,195,247,0.15);">
         <span style="color:#4fc3f7;font-weight:600;">🔮 Proyección a 7 días:</span>
         <span style="color:#fff;">
@@ -161,15 +111,11 @@
     </div>
 </div>
 
-<!-- ============================
-     CHART.JS
-     ============================ -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // ============================
-        // 1. OBTENER DATOS (CON |safe PARA EVITAR ESCAPE)
-        // ============================
+    // Esperar a que todo el DOM esté completamente cargado
+    window.onload = function() {
+        // Obtener datos de Jinja (usando |safe para evitar escape)
         const labels = {{ labels|tojson|safe }};
         const ventasData = {{ ventas|tojson|safe }};
         const gananciaData = {{ ganancia_acumulada|tojson|safe }};
@@ -181,40 +127,22 @@
         const clientesLabels = {{ clientes_labels|tojson|safe }};
         const clientesData = {{ clientes_data|tojson|safe }};
 
-        console.log('📊 Datos recibidos en JS:', { 
-            labels: labels, 
-            ventasData: ventasData,
-            gananciaData: gananciaData,
-            proyeccionLabels: proyeccionLabels,
-            proyeccionData: proyeccionData,
-            clientesLabels: clientesLabels,
-            clientesData: clientesData
-        });
+        console.log('📊 Datos:', { labels, ventasData });
 
-        // ============================
-        // 2. VERIFICAR DATOS
-        // ============================
         if (!labels || labels.length === 0) {
             document.querySelectorAll('canvas').forEach(c => {
-                const parent = c.parentElement;
-                parent.innerHTML = '<div style="text-align:center;color:#666;padding:20px 0;">📊 No hay datos para mostrar</div>';
+                c.parentElement.innerHTML = '<div style="text-align:center;color:#666;padding:20px 0;">📊 No hay datos</div>';
             });
             return;
         }
 
-        // ============================
-        // 3. DESTRUIR GRÁFICOS ANTERIORES
-        // ============================
-        if (window.chartVentas) { window.chartVentas.destroy(); }
-        if (window.chartGanancia) { window.chartGanancia.destroy(); }
-        if (window.chartCostos) { window.chartCostos.destroy(); }
-        if (window.chartClientes) { window.chartClientes.destroy(); }
+        // Destruir gráficos anteriores (si existen)
+        if (window.chartVentas) window.chartVentas.destroy();
+        if (window.chartGanancia) window.chartGanancia.destroy();
+        if (window.chartCostos) window.chartCostos.destroy();
+        if (window.chartClientes) window.chartClientes.destroy();
 
-        // ============================
-        // 4. CREAR GRÁFICOS
-        // ============================
-
-        // 4.1 VENTAS + PROYECCIÓN
+        // 1. Ventas + Proyección
         window.chartVentas = new Chart(document.getElementById('chartVentas'), {
             type: 'bar',
             data: {
@@ -245,9 +173,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: '#888' } }
-                },
+                plugins: { legend: { labels: { color: '#888' } } },
                 scales: {
                     y: { beginAtZero: true, ticks: { color: '#888' } },
                     x: { ticks: { color: '#888', maxTicksLimit: 15 } }
@@ -255,7 +181,7 @@
             }
         });
 
-        // 4.2 GANANCIA ACUMULADA
+        // 2. Ganancia acumulada
         window.chartGanancia = new Chart(document.getElementById('chartGanancia'), {
             type: 'line',
             data: {
@@ -272,9 +198,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: '#888' } }
-                },
+                plugins: { legend: { labels: { color: '#888' } } },
                 scales: {
                     y: { beginAtZero: true, ticks: { color: '#888' } },
                     x: { ticks: { color: '#888', maxTicksLimit: 10 } }
@@ -282,7 +206,7 @@
             }
         });
 
-        // 4.3 DISTRIBUCIÓN DE COSTOS
+        // 3. Distribución de costos
         window.chartCostos = new Chart(document.getElementById('chartCostos'), {
             type: 'doughnut',
             data: {
@@ -297,13 +221,11 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#888' } }
-                }
+                plugins: { legend: { position: 'bottom', labels: { color: '#888' } } }
             }
         });
 
-        // 4.4 TOP CLIENTES
+        // 4. Top clientes
         window.chartClientes = new Chart(document.getElementById('chartClientes'), {
             type: 'bar',
             data: {
@@ -320,9 +242,7 @@
                 indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: '#888' } }
-                },
+                plugins: { legend: { labels: { color: '#888' } } },
                 scales: {
                     x: { beginAtZero: true, ticks: { color: '#888' } },
                     y: { ticks: { color: '#888' } }
@@ -330,8 +250,8 @@
             }
         });
 
-        console.log('✅ Todos los gráficos creados correctamente');
-    });
+        console.log('✅ Gráficos creados');
+    };
 </script>
 
 {% endblock %}
