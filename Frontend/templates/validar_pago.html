@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('gananciaNetaHidden').value = ganancia.toFixed(2);
     }
 
-    // 🔥 FUNCIÓN QUE CALCULA EL TOTAL DE REPUESTOS (SE EJECUTA CADA 500ms)
+    // 🔥 FUNCIÓN QUE CALCULA EL TOTAL DE REPUESTOS
     function actualizarTotalRepuestos() {
         let total = 0;
         document.querySelectorAll('.costo-repuesto').forEach(input => {
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================
-    // 3. AUTOCOMPLETADO DE REPUESTOS
+    // 3. AUTOCOMPLETADO DE REPUESTOS (COMO MARCAS)
     // ============================
     let timeoutId = null;
 
@@ -482,7 +482,6 @@ document.addEventListener('DOMContentLoaded', function() {
         actualizarTotalRepuestos();
     }
 
-    // 🔥 ACTUALIZAR CADA 500ms
     setInterval(actualizarTotalRepuestos, 500);
 
     // ============================
