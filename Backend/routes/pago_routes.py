@@ -303,13 +303,43 @@ def get_pendientes_validacion():
 def validar_pago(id_reg):
     data = request.json
     print(f"📥 Datos recibidos: {data}")
-    print(f"📦 Detalles repuestos: {data.get('detalles_repuestos', [])}")
+    
+    costo_repuestos = float(data.get('costo_repuestos', 0) or 0)
+    detalles_repuestos = data.get('detalles_repuestos', [])
+    
     try:
         conn = get_connection()
         cur = conn.cursor()
-
-        detalles_json = json.dumps(data.get('detalles_repuestos', []))
-
+        
+        # ============================
+        # 1. GUARDAR REPUESTOS EN LA TABLA repuestos
+        # ============================
+        for item in detalles_repuestos:
+            nombre = item.get('nombre', '').strip()
+            costo = float(item.get('costo', 0) or 0)
+            if nombre:
+                # Verificar si ya existe
+                cur.execute("SELECT id FROM repuestos WHERE nombre = %s", (nombre,))
+                existe = cur.fetchone()
+                if existe:
+                    # Actualizar costo si es diferente
+                    cur.execute("""
+                        UPDATE repuestos 
+                        SET costo = %s, updated_at = CURRENT_TIMESTAMP 
+                        WHERE nombre = %s
+                    """, (costo, nombre))
+                else:
+                    # Insertar nuevo repuesto
+                    cur.execute("""
+                        INSERT INTO repuestos (nombre, costo, created_at, updated_at)
+                        VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    """, (nombre, costo))
+        
+        # ============================
+        # 2. ACTUALIZAR EL PAGO
+        # ============================
+        detalles_json = json.dumps(detalles_repuestos)
+        
         cur.execute("""
             UPDATE pagos 
             SET costo_repuestos_real = %s,
@@ -325,10 +355,10 @@ def validar_pago(id_reg):
                 resultado = %s,
                 tiempo_estimado = %s,
                 detalles_repuestos = %s::jsonb,
-                estado_ot = %s  -- 🔥 AGREGADO
+                estado_ot = %s
             WHERE id = %s
         """, (
-            data.get('costo_repuestos_real', 0),
+            costo_repuestos,
             data.get('costo_mano_obra_real', 0),
             data.get('costo_diagnostico_real', 0),
             data.get('ganancia_neta', 0),
@@ -339,10 +369,10 @@ def validar_pago(id_reg):
             data.get('resultado', 'reparado'),
             data.get('tiempo_estimado', '00:00:00'),
             detalles_json,
-            data.get('estado_ot', 'Pendiente'),  # ← NUEVO
+            data.get('estado_ot', 'Pendiente'),
             id_reg
         ))
-
+        
         conn.commit()
         cur.close()
         conn.close()
@@ -350,6 +380,35 @@ def validar_pago(id_reg):
     except Exception as e:
         print(f"Error en validar_pago: {e}")
         return jsonify({"error": str(e)}), 500
+
+@pago_bp.route('/repuestos', methods=['GET'])
+def get_repuestos():
+    """Obtiene lista de repuestos para autocompletar"""
+    try:
+        search = request.args.get('q', '')
+        conn, cur = get_cursor()
+        if search:
+            cur.execute("""
+                SELECT id, nombre, costo 
+                FROM repuestos 
+                WHERE nombre ILIKE %s 
+                ORDER BY nombre 
+                LIMIT 10
+            """, (f'%{search}%',))
+        else:
+            cur.execute("""
+                SELECT id, nombre, costo 
+                FROM repuestos 
+                ORDER BY nombre 
+                LIMIT 20
+            """)
+        repuestos = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(repuestos)
+    except Exception as e:
+        print(f"Error en get_repuestos: {e}")
+        return jsonify([])
 
 
 # ============================
