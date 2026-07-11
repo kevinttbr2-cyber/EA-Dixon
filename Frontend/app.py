@@ -576,8 +576,16 @@ def eliminar_usuario(id_usuario):
 @login_required
 @role_required(['admin', 'operador'])
 def dashboard():
+    filtro = request.args.get('filtro', '7d')
+    mes = request.args.get('mes')
+    anio = request.args.get('anio')
+    
     try:
-        resp = requests.get(f"{BACKEND_URL}/api/dashboard", timeout=10)
+        url = f"{BACKEND_URL}/api/dashboard?filtro={filtro}"
+        if mes and anio:
+            url += f"&mes={mes}&anio={anio}"
+        
+        resp = requests.get(url, timeout=10)
         if resp.status_code == 200:
             data = resp.json()
         else:
@@ -586,9 +594,7 @@ def dashboard():
         print(f"Error en /dashboard: {e}")
         data = {}
     
-    # ============================
-    # VALORES POR DEFECTO
-    # ============================
+    # Valores por defecto
     default_data = {
         "total_facturado": 0,
         "total_repuestos": 0,
@@ -605,12 +611,11 @@ def dashboard():
         "clientes_labels": [],
         "clientes_data": [],
         "meses_disponibles": [],
-        "filtro_actual": '7d',
-        "mes_actual": None,
-        "anio_actual": None
+        "filtro_actual": filtro,  # ← PASAR EL FILTRO ACTUAL
+        "mes_actual": mes,
+        "anio_actual": anio
     }
     
-    # Combinar datos recibidos con valores por defecto
     for key, value in default_data.items():
         if key not in data:
             data[key] = value
