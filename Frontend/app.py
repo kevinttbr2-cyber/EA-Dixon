@@ -472,8 +472,7 @@ def register():
                 }
                 resp = requests.post(f"{BACKEND_URL}/api/crear_usuario", json=data, timeout=10)
                 if resp.status_code == 200:
-                    # ✅ REDIRIGIR A USUARIOS DESPUÉS DE CREAR
-                    return redirect("/usuarios")
+                    success = f"✅ Usuario {username} creado correctamente"
                 else:
                     error = resp.json().get('error', '❌ Error al crear usuario')
             except Exception as e:
@@ -481,7 +480,6 @@ def register():
                 error = "⚠️ Error de conexión con el servidor"
     
     return render_template("register.html", error=error, success=success)
-
 @app.route('/usuarios')
 @login_required
 @role_required(['admin', 'operador'])
