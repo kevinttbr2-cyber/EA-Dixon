@@ -341,3 +341,21 @@ def validar_pago(id_reg):
     except Exception as e:
         print(f"Error en validar_pago: {e}")
         return jsonify({"error": str(e)}), 500
+        
+@pago_bp.route('/flotas_disponibles', methods=['GET'])
+def get_flotas_disponibles():
+    """Obtiene todas las flotas registradas (nombres únicos)"""
+    try:
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT DISTINCT flota FROM pagos 
+            WHERE flota IS NOT NULL AND flota != '' 
+            ORDER BY flota
+        """)
+        flotas = [row[0] for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(flotas)
+    except Exception as e:
+        print(f"Error en get_flotas_disponibles: {e}")
+        return jsonify([])
