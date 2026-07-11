@@ -586,6 +586,35 @@ def dashboard():
         print(f"Error en /dashboard: {e}")
         data = {}
     
+    # ============================
+    # VALORES POR DEFECTO
+    # ============================
+    default_data = {
+        "total_facturado": 0,
+        "total_repuestos": 0,
+        "total_mano_obra": 0,
+        "total_diagnostico": 0,
+        "total_servicios": 0,
+        "ganancia_total": 0,
+        "promedio_diario": 0,
+        "labels": [],
+        "ventas": [],
+        "ganancia_acumulada": [],
+        "proyeccion_labels": [],
+        "proyeccion": [],
+        "clientes_labels": [],
+        "clientes_data": [],
+        "meses_disponibles": [],
+        "filtro_actual": '7d',
+        "mes_actual": None,
+        "anio_actual": None
+    }
+    
+    # Combinar datos recibidos con valores por defecto
+    for key, value in default_data.items():
+        if key not in data:
+            data[key] = value
+    
     return render_template("dashboard.html", **data)
         
 # ============================
