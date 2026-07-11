@@ -1,10 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div id="backend-url" style="display:none;">{{ backend_url }}</div>
 
 <div class="base-container">
-    <!-- ENCABEZADO -->
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
         <h2 style="color: #00ff66; font-weight: 700; margin: 0; font-size: 22px;">
             📋 Registros de Pagos
@@ -47,14 +45,7 @@
 
     <!-- BUSCADOR -->
     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);">
-        <select id="campoBusqueda" style="
-            background: rgba(0,0,0,0.40);
-            color: #fff;
-            border: 1px solid rgba(0,255,102,0.20);
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 13px;
-        ">
+        <select id="campoBusqueda" style="background:rgba(0,0,0,0.40);color:#fff;border:1px solid rgba(0,255,102,0.20);border-radius:8px;padding:6px 12px;font-size:13px;">
             <option value="nombre">Cliente</option>
             <option value="patente">Patente</option>
             <option value="marca">Marca</option>
@@ -62,156 +53,76 @@
             <option value="atendido_por">Atendido por</option>
             <option value="id">ID</option>
         </select>
-        <input type="text" id="buscadorInput" placeholder="Buscar..." style="
-            flex: 1;
-            min-width: 120px;
-            background: rgba(0,0,0,0.40);
-            color: #fff;
-            border: 1px solid rgba(0,255,102,0.20);
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 13px;
-        ">
-        <button id="btnBuscar" style="
-            background: rgba(0,255,102,0.12);
-            color: #00ff66;
-            border: 1px solid rgba(0,255,102,0.20);
-            border-radius: 8px;
-            padding: 6px 14px;
-            font-size: 13px;
-            cursor: pointer;
-        ">
-            <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-        <button id="btnLimpiar" style="
-            background: rgba(255,255,255,0.04);
-            color: #888;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 8px;
-            padding: 6px 14px;
-            font-size: 13px;
-            cursor: pointer;
-        ">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
+        <input type="text" id="buscadorInput" placeholder="Buscar..." style="flex:1;min-width:120px;background:rgba(0,0,0,0.40);color:#fff;border:1px solid rgba(0,255,102,0.20);border-radius:8px;padding:6px 12px;font-size:13px;">
+        <button id="btnBuscar" style="background:rgba(0,255,102,0.12);color:#00ff66;border:1px solid rgba(0,255,102,0.20);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <button id="btnLimpiar" style="background:rgba(255,255,255,0.04);color:#888;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
     <!-- TOTAL GENERAL -->
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding: 8px 12px; background: rgba(0,255,102,0.06); border-radius: 10px; border: 1px solid rgba(0,255,102,0.12); margin-bottom: 12px;">
-        <span style="color: #90e0a0; font-size: 14px;">
-            📊 Total general 
-            <span style="color: #888;">({{ registros|length }} registros)</span>
-        </span>
-        <span style="color: #00ff66; font-weight: 700; font-size: 20px;">
-            ${{ "{:,.0f}".format(total_general) }}
-        </span>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:8px 12px;background:rgba(0,255,102,0.06);border-radius:10px;border:1px solid rgba(0,255,102,0.12);margin-bottom:12px;">
+        <span style="color:#90e0a0;font-size:14px;">📊 Total general <span style="color:#888;">({{ registros|length }} registros)</span></span>
+        <span style="color:#00ff66;font-weight:700;font-size:20px;">${{ "{:,.0f}".format(total_general) }}</span>
     </div>
 
     <!-- VISTA ESCRITORIO: TABLA -->
-    <div class="vista-escritorio" style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(0, 255, 102, 0.15); background: #141414;">
-        <table class="table table-dark table-hover table-bordered mb-0" id="tablaRegistros" style="font-size: 13px; min-width: 1000px; width: 100%;">
-            <thead style="background: #2a6d44 !important; color: #ffffff !important;">
+    <div class="vista-escritorio" style="overflow-x:auto;border-radius:12px;border:1px solid rgba(0,255,102,0.15);background:#141414;">
+        <table class="table table-dark table-hover table-bordered mb-0" id="tablaRegistros" style="font-size:13px;min-width:1100px;width:100%;">
+            <thead style="background:#2a6d44 !important;color:#ffffff !important;">
                 <tr>
-                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(0)">ID ↕</th>
-                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(1)">Cliente ↕</th>
-                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(2)">Monto ↕</th>
-                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(3)">Fecha ↕</th>
-                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(4)">Patente ↕</th>
-                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(5)">Marca ↕</th>
-                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(6)">Modelo ↕</th>
-                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(7)">Atendido por ↕</th>
-                    <th style="padding: 8px 10px; text-align: center;">Acciones</th>
+                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(0)">ID ↕</th>
+                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(1)">Cliente ↕</th>
+                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(2)">Monto ↕</th>
+                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(3)">Fecha ↕</th>
+                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(4)">Patente ↕</th>
+                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(5)">Marca ↕</th>
+                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(6)">Modelo ↕</th>
+                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(7)">Atendido por ↕</th>
+                    <th style="padding:8px 10px;text-align:center;">Estado OT</th>
+                    <th style="padding:8px 10px;text-align:center;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for r in registros %}
                 <tr data-id="{{ r.id }}" class="fila-registro">
-                    <td style="padding: 6px 8px; text-align: center; font-weight: 600;">
-                       <a href="#" class="pdf-link" data-id="{{ r.id }}" target="_blank">
+                    <td style="padding:6px 8px;text-align:center;font-weight:600;">
+                        <a href="/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" style="color:#00ff66;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
                             <i class="fa-solid fa-file-pdf" style="font-size:11px;"></i> {{ r.id }}
                         </a>
-                            <i class="fa-solid fa-file-pdf" style="font-size: 11px;"></i> {{ r.id }}
-                        </a>
                     </td>
-                    <td style="padding: 6px 8px; text-align: center;">{{ r.nombre }}</td>
-                    <td style="padding: 6px 8px; text-align: center; color: #00ff66; font-weight: 600;">
-                        ${{ "{:,.0f}".format(r.monto) }}
+                    <td style="padding:6px 8px;text-align:center;">{{ r.nombre }}</td>
+                    <td style="padding:6px 8px;text-align:center;color:#00ff66;font-weight:600;">${{ "{:,.0f}".format(r.monto) }}</td>
+                    <td style="padding:6px 8px;text-align:center;font-size:12px;">{{ r.fecha[:10] if r.fecha else '' }}</td>
+                    <td style="padding:6px 8px;text-align:center;">{{ r.patente }}</td>
+                    <td style="padding:6px 8px;text-align:center;">{{ r.marca }}</td>
+                    <td style="padding:6px 8px;text-align:center;">{{ r.modelo }}</td>
+                    <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
+                    <td style="padding:6px 8px;text-align:center;">
+                        <span style="
+                            background: {% if r.estado_ot == 'Entregado' %}rgba(0,255,102,0.15){% elif r.estado_ot == 'Terminado' %}rgba(79,195,247,0.15){% elif r.estado_ot == 'Aprobado' %}rgba(255,200,0,0.15){% elif r.estado_ot == 'Diagnosticado' %}rgba(79,195,247,0.15){% else %}rgba(255,107,107,0.15){% endif %};
+                            color: {% if r.estado_ot == 'Entregado' %}#00ff66{% elif r.estado_ot == 'Terminado' %}#4fc3f7{% elif r.estado_ot == 'Aprobado' %}#ffcc00{% elif r.estado_ot == 'Diagnosticado' %}#4fc3f7{% else %}#ff6b6b{% endif %};
+                            padding: 2px 10px;
+                            border-radius: 12px;
+                            font-size: 11px;
+                            font-weight: 600;
+                            white-space: nowrap;
+                        ">
+                            {{ r.estado_ot or 'Pendiente' }}
+                        </span>
                     </td>
-                    <td style="padding: 6px 8px; text-align: center; font-size: 12px;">
-                        {{ r.fecha[:10] if r.fecha else '' }}
-                    </td>
-                    <td style="padding: 6px 8px; text-align: center;">{{ r.patente }}</td>
-                    <td style="padding: 6px 8px; text-align: center;">{{ r.marca }}</td>
-                    <td style="padding: 6px 8px; text-align: center;">{{ r.modelo }}</td>
-                    <td style="padding: 6px 8px; text-align: center;">{{ r.atendido_por or r.usuario or '-' }}</td>
-                    <td style="padding: 6px 8px; text-align: center; position: relative;">
-                        <button class="btn-acciones" style="
-                            background: transparent;
-                            border: none;
-                            color: #4fc3f7;
-                            cursor: pointer;
-                            padding: 4px 8px;
-                            font-size: 18px;
-                        " data-id="{{ r.id }}">
-                            ⋮
-                        </button>
-                        <div class="menu-acciones" style="
-                            display: none;
-                            position: fixed;  /* ← CAMBIADO de absolute a fixed */
-                            margin-top: 4px;
-                            background: rgba(15,15,15,0.98);
-                            border: 1px solid rgba(0,255,102,0.20);
-                            border-radius: 10px;
-                            padding: 6px 0;
-                            min-width: 160px;
-                            z-index: 99999;  /* ← AUMENTADO */
-                            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-                          ">
-                       
-                            <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="
-                                background: transparent;
-                                border: none;
-                                color: #fff;
-                                padding: 6px 16px;
-                                width: 100%;
-                                text-align: left;
-                                cursor: pointer;
-                                font-size: 13px;
-                            ">
-                                📄 Ver detalle
-                            </button>
-                            <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="
-                                background: transparent;
-                                border: none;
-                                color: #4fc3f7;
-                                padding: 6px 16px;
-                                width: 100%;
-                                text-align: left;
-                                cursor: pointer;
-                                font-size: 13px;
-                            ">
-                                ✏️ Editar
-                            </button>
-                            <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="
-                                background: transparent;
-                                border: none;
-                                color: #ff6b6b;
-                                padding: 6px 16px;
-                                width: 100%;
-                                text-align: left;
-                                cursor: pointer;
-                                font-size: 13px;
-                            ">
-                                🗑️ Eliminar
-                            </button>
+                    <td style="padding:6px 8px;text-align:center;position:relative;">
+                        <button class="btn-acciones" style="background:transparent;border:none;color:#4fc3f7;cursor:pointer;padding:4px 8px;font-size:18px;" data-id="{{ r.id }}">⋮</button>
+                        <div class="menu-acciones" style="display:none;position:fixed;background:rgba(15,15,15,0.98);border:1px solid rgba(0,255,102,0.20);border-radius:10px;padding:6px 0;min-width:160px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.8);">
+                            <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="background:transparent;border:none;color:#fff;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">📄 Ver detalle</button>
+                            <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#4fc3f7;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">✏️ Editar</button>
+                            <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#ff6b6b;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">🗑️ Eliminar</button>
                         </div>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="9" style="text-align: center; color: #666; padding: 40px 0;">
-                        <i class="fa-solid fa-inbox" style="font-size: 48px; color: #00ff66; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
-                        <p style="font-size: 16px;">No hay registros de pagos</p>
+                    <td colspan="10" style="text-align:center;color:#666;padding:40px 0;">
+                        <i class="fa-solid fa-inbox" style="font-size:48px;color:#00ff66;opacity:0.2;display:block;margin-bottom:10px;"></i>
+                        <p style="font-size:16px;">No hay registros de pagos</p>
                     </td>
                 </tr>
                 {% endfor %}
@@ -220,110 +131,60 @@
     </div>
 
     <!-- VISTA MÓVIL: TARJETAS -->
-    <div class="vista-movil" style="display: none; flex-direction: column; gap: 12px;">
+    <div class="vista-movil" style="display:none;flex-direction:column;gap:12px;">
         {% for r in registros %}
-        <div class="card-android" style="
-            background: rgba(20, 20, 20, 0.80);
-            border: 1px solid rgba(0, 255, 102, 0.20);
-            border-radius: 14px;
-            padding: 14px 16px;
-            position: relative;
-        ">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: #00ff66; font-weight: 700; font-size: 14px;">#{{ r.id }}</span>
-                    <a href="/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" 
-                       style="color: #00ff66; text-decoration: none; font-size: 12px;">
-                        <i class="fa-solid fa-file-pdf"></i>
-                    </a>
+        <div class="card-android" style="background:rgba(20,20,20,0.80);border:1px solid rgba(0,255,102,0.20);border-radius:14px;padding:14px 16px;position:relative;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="color:#00ff66;font-weight:700;font-size:14px;">#{{ r.id }}</span>
+                    <a href="/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" style="color:#00ff66;text-decoration:none;font-size:12px;"><i class="fa-solid fa-file-pdf"></i></a>
                 </div>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span style="color: #00ff66; font-weight: 700; font-size: 16px;">
-                        ${{ "{:,.0f}".format(r.monto) }}
-                    </span>
-                    <button class="btn-acciones-movil" style="
-                        background: transparent;
-                        border: none;
-                        color: #4fc3f7;
-                        cursor: pointer;
-                        padding: 0 4px;
-                        font-size: 20px;
-                    " data-id="{{ r.id }}">
-                        ⋮
-                    </button>
-                    <div class="menu-acciones" style="
-                        display: none;
-                        position: absolute;
-                        right: 10px;
-                        margin-top: 4px;
-                        background: rgba(15,15,15,0.98);
-                        border: 1px solid rgba(0,255,102,0.20);
-                        border-radius: 10px;
-                        padding: 6px 0;
-                        min-width: 160px;
-                        z-index: 9999;
-                        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-                    ">
-                        <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="
-                            background: transparent;
-                            border: none;
-                            color: #fff;
-                            padding: 6px 16px;
-                            width: 100%;
-                            text-align: left;
-                            cursor: pointer;
-                            font-size: 13px;
-                        ">
-                            📄 Ver detalle
-                        </button>
-                        <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="
-                            background: transparent;
-                            border: none;
-                            color: #4fc3f7;
-                            padding: 6px 16px;
-                            width: 100%;
-                            text-align: left;
-                            cursor: pointer;
-                            font-size: 13px;
-                        ">
-                            ✏️ Editar
-                        </button>
-                        <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="
-                            background: transparent;
-                            border: none;
-                            color: #ff6b6b;
-                            padding: 6px 16px;
-                            width: 100%;
-                            text-align: left;
-                            cursor: pointer;
-                            font-size: 13px;
-                        ">
-                            🗑️ Eliminar
-                        </button>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="color:#00ff66;font-weight:700;font-size:16px;">${{ "{:,.0f}".format(r.monto) }}</span>
+                    <button class="btn-acciones-movil" style="background:transparent;border:none;color:#4fc3f7;cursor:pointer;padding:0 4px;font-size:20px;" data-id="{{ r.id }}">⋮</button>
+                    <div class="menu-acciones" style="display:none;position:fixed;background:rgba(15,15,15,0.98);border:1px solid rgba(0,255,102,0.20);border-radius:10px;padding:6px 0;min-width:160px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.8);">
+                        <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="background:transparent;border:none;color:#fff;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">📄 Ver detalle</button>
+                        <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#4fc3f7;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">✏️ Editar</button>
+                        <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#ff6b6b;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">🗑️ Eliminar</button>
                     </div>
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; margin-top: 6px; font-size: 13px;">
-                <div><span style="color: #888;">Cliente:</span> <span style="color: #fff;">{{ r.nombre }}</span></div>
-                <div><span style="color: #888;">Fecha:</span> <span style="color: #fff;">{{ r.fecha[:10] if r.fecha else '' }}</span></div>
-                <div><span style="color: #888;">Patente:</span> <span style="color: #fff;">{{ r.patente }}</span></div>
-                <div><span style="color: #888;">Atendido:</span> <span style="color: #fff;">{{ r.atendido_por or r.usuario or '-' }}</span></div>
-                <div style="grid-column: 1/3;"><span style="color: #888;">Vehículo:</span> <span style="color: #fff;">{{ r.marca }} {{ r.modelo }}</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin-top:6px;font-size:13px;">
+                <div><span style="color:#888;">Cliente:</span> <span style="color:#fff;">{{ r.nombre }}</span></div>
+                <div><span style="color:#888;">Fecha:</span> <span style="color:#fff;">{{ r.fecha[:10] if r.fecha else '' }}</span></div>
+                <div><span style="color:#888;">Patente:</span> <span style="color:#fff;">{{ r.patente }}</span></div>
+                <div><span style="color:#888;">Atendido:</span> <span style="color:#fff;">{{ r.atendido_por or r.usuario or '-' }}</span></div>
+                <div style="grid-column:1/3;"><span style="color:#888;">Vehículo:</span> <span style="color:#fff;">{{ r.marca }} {{ r.modelo }}</span></div>
+                <div style="grid-column:1/3;margin-top:4px;">
+                    <span style="color:#888;">Estado OT:</span>
+                    <span style="
+                        background: {% if r.estado_ot == 'Entregado' %}rgba(0,255,102,0.15){% elif r.estado_ot == 'Terminado' %}rgba(79,195,247,0.15){% elif r.estado_ot == 'Aprobado' %}rgba(255,200,0,0.15){% elif r.estado_ot == 'Diagnosticado' %}rgba(79,195,247,0.15){% else %}rgba(255,107,107,0.15){% endif %};
+                        color: {% if r.estado_ot == 'Entregado' %}#00ff66{% elif r.estado_ot == 'Terminado' %}#4fc3f7{% elif r.estado_ot == 'Aprobado' %}#ffcc00{% elif r.estado_ot == 'Diagnosticado' %}#4fc3f7{% else %}#ff6b6b{% endif %};
+                        padding: 2px 10px;
+                        border-radius: 12px;
+                        font-size: 11px;
+                        font-weight: 600;
+                    ">
+                        {{ r.estado_ot or 'Pendiente' }}
+                    </span>
+                </div>
             </div>
-            <div style="margin-top: 4px; font-size: 12px; color: #666; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 4px;">
+            <div style="margin-top:4px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.05);padding-top:4px;">
                 {{ (r.observaciones_pago or r.observaciones_cliente or '')[:60] }}{% if (r.observaciones_pago or r.observaciones_cliente or '')|length > 60 %}...{% endif %}
             </div>
         </div>
         {% else %}
-        <div style="text-align: center; color: #666; padding: 40px 0;">
-            <i class="fa-solid fa-inbox" style="font-size: 48px; color: #00ff66; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
-            <p style="font-size: 16px;">No hay registros de pagos</p>
+        <div style="text-align:center;color:#666;padding:40px 0;">
+            <i class="fa-solid fa-inbox" style="font-size:48px;color:#00ff66;opacity:0.2;display:block;margin-bottom:10px;"></i>
+            <p style="font-size:16px;">No hay registros de pagos</p>
         </div>
         {% endfor %}
     </div>
 </div>
 
-<!-- MODALES... -->
+<!-- ============================
+     MODAL DETALLE
+     ============================ -->
 <div id="modalDetalle" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
     <div style="background:rgba(15,15,15,0.98);border:1px solid #00ff66;border-radius:16px;padding:20px 25px;max-width:600px;width:95%;max-height:90vh;overflow-y:auto;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -341,17 +202,12 @@
     <div style="background:rgba(15,15,15,0.98);border:2px solid #4fc3f7;border-radius:16px;padding:25px 30px;max-width:750px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
             <h3 style="color:#4fc3f7;margin:0;font-size:22px;">✏️ Editar Registro Completo</h3>
-            <button id="cerrarModalEditarCompleto" style="background:transparent;border:none;color:#ff6b6b;font-size:28px;cursor:pointer;">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <button id="cerrarModalEditarCompleto" style="background:transparent;border:none;color:#ff6b6b;font-size:28px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
-
         <form id="formEditarCompleto">
             <input type="hidden" name="id" id="edit_completo_id">
-
-            <!-- ============================
-                 SECCIÓN: DATOS DEL CLIENTE
-                 ============================ -->
+            
+            <!-- DATOS DEL CLIENTE -->
             <div style="background:rgba(0,255,102,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #00ff66;">
                 <h4 style="color:#00ff66;margin:0 0 10px 0;font-size:15px;">🚗 Datos del Cliente</h4>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -365,9 +221,7 @@
                 </div>
             </div>
 
-            <!-- ============================
-                 SECCIÓN: DATOS DEL INGRESO
-                 ============================ -->
+            <!-- DATOS DEL INGRESO -->
             <div style="background:rgba(79,195,247,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #4fc3f7;">
                 <h4 style="color:#4fc3f7;margin:0 0 10px 0;font-size:15px;">📥 Datos del Ingreso</h4>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -379,9 +233,7 @@
                 </div>
             </div>
 
-            <!-- ============================
-                 SECCIÓN: REPARACIÓN Y COSTOS
-                 ============================ -->
+            <!-- REPARACIÓN Y COSTOS -->
             <div style="background:rgba(255,200,0,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #ffcc00;">
                 <h4 style="color:#ffcc00;margin:0 0 10px 0;font-size:15px;">🔧 Reparación y Costos</h4>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -416,12 +268,21 @@
                     <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Observaciones de pago</label>
                         <textarea name="observaciones_pago" id="edit_observaciones_pago" class="form-control form-control-sm" rows="2"></textarea>
                     </div>
+                    <!-- ESTADO OT -->
+                    <div style="grid-column:1/3;">
+                        <label style="color:#90e0a0;font-size:12px;">📋 Estado OT</label>
+                        <select name="estado_ot" id="edit_estado_ot" class="form-control form-control-sm">
+                            <option value="Pendiente">⏳ Pendiente</option>
+                            <option value="Diagnosticado">🩺 Diagnosticado</option>
+                            <option value="Aprobado">✅ Aprobado</option>
+                            <option value="Terminado">🔧 Terminado</option>
+                            <option value="Entregado">🚗 Entregado</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <!-- ============================
-                 SECCIÓN: VALIDACIÓN
-                 ============================ -->
+            <!-- VALIDACIÓN -->
             <div style="background:rgba(79,195,247,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #4fc3f7;">
                 <h4 style="color:#4fc3f7;margin:0 0 10px 0;font-size:15px;">✅ Validación</h4>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -439,9 +300,7 @@
                 </div>
             </div>
 
-            <!-- ============================
-                 BOTONES
-                 ============================ -->
+            <!-- BOTONES -->
             <div style="display:flex;gap:10px;margin-top:10px;">
                 <button type="submit" class="btn btn-primary" style="flex:1;background:#4fc3f7 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;">
                     💾 Guardar todos los cambios
@@ -454,6 +313,9 @@
     </div>
 </div>
 
+<!-- ============================
+     SCRIPTS
+     ============================ -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 
@@ -579,6 +441,11 @@
                         <div><strong style="color:#90e0a0;">Modelo:</strong> ${data.modelo}</div>
                         <div><strong style="color:#90e0a0;">Atendido por:</strong> ${data.atendido_por || data.usuario || '-'}</div>
                         <div><strong style="color:#90e0a0;">Estado:</strong> ${data.estado}</div>
+                        <div><strong style="color:#90e0a0;">Estado OT:</strong>
+                            <span style="color: {% if data.estado_ot == 'Entregado' %}#00ff66{% elif data.estado_ot == 'Terminado' %}#4fc3f7{% elif data.estado_ot == 'Aprobado' %}#ffcc00{% elif data.estado_ot == 'Diagnosticado' %}#4fc3f7{% else %}#ff6b6b{% endif %}; font-weight: 600;">
+                                {{ data.estado_ot or 'Pendiente' }}
+                            </span>
+                        </div>
                         <div style="grid-column:1/3;"><strong style="color:#90e0a0;">Observaciones:</strong> ${data.observaciones_pago || data.observaciones_cliente || '-'}</div>
                         <div style="grid-column:1/3;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:6px;">
                             <strong style="color:#90e0a0;">📊 Costos:</strong>
@@ -638,6 +505,7 @@
                 document.getElementById('edit_validado_por').value = data.validado_por || '';
                 document.getElementById('edit_atendido_por').value = data.atendido_por || '';
                 document.getElementById('edit_validado').checked = data.validado || false;
+                document.getElementById('edit_estado_ot').value = data.estado_ot || 'Pendiente';
                 
             } catch(e) {
                 console.error('Error cargando datos para editar:', e);
@@ -684,7 +552,8 @@
                 observaciones_pago: document.getElementById('edit_observaciones_pago').value,
                 validado_por: document.getElementById('edit_validado_por').value,
                 atendido_por: document.getElementById('edit_atendido_por').value,
-                validado: document.getElementById('edit_validado').checked
+                validado: document.getElementById('edit_validado').checked,
+                estado_ot: document.getElementById('edit_estado_ot').value
             };
 
             try {
@@ -750,32 +619,6 @@
             filasArray.forEach(fila => tbody.appendChild(fila));
         };
     });
-// ============================
-// GENERAR FIRMA Y PDF
-// ============================
-function generarFirmaPDF(id) {
-    // Debe usar la misma lógica que en app.py
-    // Por ahora, usamos la URL directa con la firma calculada desde el backend
-    return fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`)
-        .then(r => r.json())
-        .then(data => {
-            // Si el backend devuelve la firma, úsala
-            if (data.firma) return data.firma;
-            // Si no, genera una temporal (debes implementar la misma lógica que en app.py)
-            return '';
-        });
-}
-
-// Modificar los enlaces PDF
-document.querySelectorAll('.pdf-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-        e.preventDefault();
-        const id = this.dataset.id;
-        const url = `https://ea-dixon-production.up.railway.app/api/pdf/${id}/60258ef36da71b5e`; // ← FIRMA FIJA PARA PRUEBA
-        window.open(url, '_blank');
-    });
-});
 </script>
-
 
 {% endblock %}
