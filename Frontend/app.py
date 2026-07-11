@@ -104,6 +104,7 @@ def agregar_cliente():
         resp_marcas = requests.get(f"{BACKEND_URL}/api/marcas", timeout=10)
         marcas = resp_marcas.json() if resp_marcas.status_code == 200 else []
         
+        # 🔥 CARGAR FLOTAS DISPONIBLES
         resp_flotas = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=10)
         flotas = resp_flotas.json() if resp_flotas.status_code == 200 else []
     except Exception as e:
@@ -113,7 +114,7 @@ def agregar_cliente():
     
     hoy = datetime.now().strftime('%Y-%m-%d')
     return render_template("agregar_cliente.html", marcas=marcas, flotas=flotas, hoy=hoy)
-
+    
 @app.route('/agregar', methods=['POST'])
 @login_required
 def agregar():
