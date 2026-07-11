@@ -509,7 +509,35 @@ def auditoria_descargas():
         print(f"Error en /auditoria_descargas: {e}")
         historial = []
     return render_template("auditoria_descargas.html", historial=historial)
-
+@app.route("/exportar_flota_pdf/<flota>", methods=["GET", "POST"])
+@login_required
+@role_required(['admin', 'operador'])
+def exportar_flota_pdf(flota):
+    if request.method == "GET":
+        return render_template("exportar_flota.html", flota=flota)
+    
+    fecha_desde = request.form.get("fecha_desde")
+    fecha_hasta = request.form.get("fecha_hasta")
+    
+    try:
+        resp = requests.post(
+            f"{BACKEND_URL}/api/exportar_flota_pdf/{flota}",
+            json={"fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta},
+            timeout=30
+        )
+        if resp.status_code == 200:
+            return send_file(
+                io.BytesIO(resp.content),
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=f'reporte_flota_{flota}.pdf'
+            )
+        else:
+            return resp.json().get('error', 'Error al generar PDF'), 400
+    except Exception as e:
+        print(f"Error en exportar_flota_pdf: {e}")
+        return "Error de conexión", 500
+        
 # ============================
 # RUTAS ESTÁTICAS
 # ============================
