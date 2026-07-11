@@ -31,6 +31,7 @@ class PagoService:
         
         pago.monto = data.get('monto', 0)
         pago.estado = 'pagado'
+        pago.estado_ot = data.get('estado_ot', 'Pendiente') 
         pago.observaciones_pago = data.get('observaciones_pago', '')
         pago.hora_pago = datetime.now().strftime("%H:%M:%S")
         pago.atendido_por = data.get('atendido_por', 'Técnico')
