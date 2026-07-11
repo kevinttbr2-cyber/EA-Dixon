@@ -304,6 +304,7 @@ def validar_pago(id_reg):
     data = request.json
     print(f"📥 Datos recibidos: {data}")
     
+    # 🔥 Asegurar que costo_repuestos se guarde
     costo_repuestos = float(data.get('costo_repuestos', 0) or 0)
     detalles_repuestos = data.get('detalles_repuestos', [])
     
@@ -311,29 +312,59 @@ def validar_pago(id_reg):
         conn = get_connection()
         cur = conn.cursor()
         
-        # ============================
-        # 1. GUARDAR REPUESTOS EN LA TABLA repuestos
-        # ============================
+        # Guardar repuestos en tabla separada
         for item in detalles_repuestos:
             nombre = item.get('nombre', '').strip()
             costo = float(item.get('costo', 0) or 0)
             if nombre:
-                # Verificar si ya existe
                 cur.execute("SELECT id FROM repuestos WHERE nombre = %s", (nombre,))
-                existe = cur.fetchone()
-                if existe:
-                    # Actualizar costo si es diferente
-                    cur.execute("""
-                        UPDATE repuestos 
-                        SET costo = %s, updated_at = CURRENT_TIMESTAMP 
-                        WHERE nombre = %s
-                    """, (costo, nombre))
+                if cur.fetchone():
+                    cur.execute("UPDATE repuestos SET costo = %s, updated_at = CURRENT_TIMESTAMP WHERE nombre = %s", (costo, nombre))
                 else:
-                    # Insertar nuevo repuesto
-                    cur.execute("""
-                        INSERT INTO repuestos (nombre, costo, created_at, updated_at)
-                        VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    """, (nombre, costo))
+                    cur.execute("INSERT INTO repuestos (nombre, costo, created_at, updated_at) VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", (nombre, costo))
+        
+        detalles_json = json.dumps(detalles_repuestos)
+        
+        cur.execute("""
+            UPDATE pagos 
+            SET costo_repuestos_real = %s,
+                costo_mano_obra_real = %s,
+                costo_diagnostico_real = %s,
+                ganancia_neta = %s,
+                observaciones_pago = %s,
+                validado = TRUE,
+                validado_por = %s,
+                fecha_validacion = CURRENT_TIMESTAMP,
+                diagnostico = %s,
+                reparacion = %s,
+                resultado = %s,
+                tiempo_estimado = %s,
+                detalles_repuestos = %s::jsonb,
+                estado_ot = %s
+            WHERE id = %s
+        """, (
+            costo_repuestos,  # ← ESTE ES EL CAMPO QUE DEBE GUARDARSE
+            data.get('costo_mano_obra_real', 0),
+            data.get('costo_diagnostico_real', 0),
+            data.get('ganancia_neta', 0),
+            data.get('observaciones_pago', ''),
+            data.get('validado_por', 'Sistema'),
+            data.get('diagnostico', ''),
+            data.get('reparacion', 'Reparación realizada'),
+            data.get('resultado', 'reparado'),
+            data.get('tiempo_estimado', '00:00:00'),
+            detalles_json,
+            data.get('estado_ot', 'Pendiente'),
+            id_reg
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Error en validar_pago: {e}")
+        return jsonify({"error": str(e)}), 500
         
         # ============================
         # 2. ACTUALIZAR EL PAGO
