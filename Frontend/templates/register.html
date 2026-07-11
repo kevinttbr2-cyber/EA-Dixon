@@ -7,29 +7,29 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     
     <div class="mb-3">
-        <label style="color:#90e0a0;">Nombre de usuario</label>
+        <label style="color: #90e0a0; font-weight: 500;">👤 Nombre de usuario</label>
         <input type="text" name="username" class="form-control" required>
     </div>
-    
+
     <div class="mb-3">
-        <label style="color:#90e0a0;">Nombre completo</label>
+        <label style="color: #90e0a0; font-weight: 500;">📛 Nombre completo</label>
         <input type="text" name="nombre_completo" class="form-control">
     </div>
-    
+
     <div class="mb-3">
-        <label style="color:#90e0a0;">Contraseña</label>
-        <input type="password" name="password" class="form-control" required>
+        <label style="color: #90e0a0; font-weight: 500;">🔑 Contraseña</label>
+        <input type="password" name="password" class="form-control" required minlength="6">
     </div>
-    
+
     <div class="mb-3">
-        <label style="color:#90e0a0;">Rol</label>
+        <label style="color: #90e0a0; font-weight: 500;">🎯 Rol</label>
         <select name="rol" class="form-control">
             <option value="admin">Administrador</option>
             <option value="operador">Operador</option>
             <option value="basico">Básico</option>
         </select>
     </div>
-    
-    <button class="btn btn-primary w-100">Crear usuario</button>
+
+    <button type="submit" class="btn btn-primary w-100">➕ Crear Usuario</button>
 </form>
 {% endblock %}
