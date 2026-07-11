@@ -509,6 +509,7 @@ def auditoria_descargas():
         print(f"Error en /auditoria_descargas: {e}")
         historial = []
     return render_template("auditoria_descargas.html", historial=historial)
+
 @app.route("/exportar_flota_pdf/<flota>", methods=["GET", "POST"])
 @login_required
 @role_required(['admin', 'operador'])
@@ -519,12 +520,25 @@ def exportar_flota_pdf(flota):
     fecha_desde = request.form.get("fecha_desde")
     fecha_hasta = request.form.get("fecha_hasta")
     
+    if not fecha_desde or not fecha_hasta:
+        return "Debes seleccionar ambas fechas", 400
+    
     try:
+        # 🔥 Usar la URL correcta del backend
+        backend_url = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
+        url = f"{backend_url}/api/exportar_flota_pdf/{flota}"
+        
+        print(f"📤 Enviando a: {url}")
+        print(f"📅 Fechas: {fecha_desde} - {fecha_hasta}")
+        
         resp = requests.post(
-            f"{BACKEND_URL}/api/exportar_flota_pdf/{flota}",
+            url,
             json={"fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta},
-            timeout=30
+            timeout=60
         )
+        
+        print(f"📥 Respuesta: {resp.status_code}")
+        
         if resp.status_code == 200:
             return send_file(
                 io.BytesIO(resp.content),
@@ -533,10 +547,14 @@ def exportar_flota_pdf(flota):
                 download_name=f'reporte_flota_{flota}.pdf'
             )
         else:
-            return resp.json().get('error', 'Error al generar PDF'), 400
+            return f"❌ Error: {resp.text}", resp.status_code
+            
+    except requests.exceptions.ConnectionError as e:
+        print(f"❌ Error de conexión: {e}")
+        return "❌ No se pudo conectar al servidor. Verifica que Railway esté funcionando.", 500
     except Exception as e:
-        print(f"Error en exportar_flota_pdf: {e}")
-        return "Error de conexión", 500
+        print(f"❌ Error: {e}")
+        return f"❌ Error: {str(e)}", 500
         
 # ============================
 # RUTAS ESTÁTICAS
