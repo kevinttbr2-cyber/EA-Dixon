@@ -571,6 +571,22 @@ def eliminar_usuario(id_usuario):
         print(f"Error en /eliminar_usuario: {e}")
     
     return redirect("/usuarios")
+
+@app.route('/dashboard')
+@login_required
+@role_required(['admin', 'operador'])
+def dashboard():
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/dashboard", timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+        else:
+            data = {}
+    except Exception as e:
+        print(f"Error en /dashboard: {e}")
+        data = {}
+    
+    return render_template("dashboard.html", **data)
         
 # ============================
 # RUTAS ESTÁTICAS
