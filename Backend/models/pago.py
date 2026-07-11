@@ -1,14 +1,16 @@
 class Pago:
-    def __init__(self, id=None, nombre=None, monto=0, ganancia_neta=0, fecha=None, hora=None,
+    def __init__(self, id=None, nombre=None, monto=0, fecha=None, hora=None,
                  patente=None, marca=None, modelo=None, usuario=None, estado='pendiente',
                  observaciones_cliente=None, observaciones_pago=None, telefono=None,
                  hora_pago=None, atendido_por=None, flota=None, frecuente=False,
                  kilometraje=0, diagnostico=None, reparacion=None, resultado='pendiente',
-                 tiempo_estimado='00:00:00'):
+                 tiempo_estimado='00:00:00', anio=None, costo_repuestos_real=0,
+                 costo_mano_obra_real=0, costo_diagnostico_real=0, ganancia_neta=0,
+                 validado=False, validado_por=None, fecha_validacion=None,
+                 detalles_repuestos=None):
         self.id = id
         self.nombre = nombre
         self.monto = monto
-        self.ganancia_neta = ganancia_neta
         self.fecha = fecha
         self.hora = hora
         self.patente = patente
@@ -28,13 +30,21 @@ class Pago:
         self.reparacion = reparacion
         self.resultado = resultado
         self.tiempo_estimado = tiempo_estimado
-    
+        self.anio = anio
+        self.costo_repuestos_real = costo_repuestos_real
+        self.costo_mano_obra_real = costo_mano_obra_real
+        self.costo_diagnostico_real = costo_diagnostico_real
+        self.ganancia_neta = ganancia_neta
+        self.validado = validado
+        self.validado_por = validado_por
+        self.fecha_validacion = fecha_validacion
+        self.detalles_repuestos = detalles_repuestos or []
+
     def to_dict(self):
         return {
             "id": self.id,
             "nombre": self.nombre,
             "monto": self.monto,
-            "ganancia_neta": self.ganancia_neta,
             "fecha": self.fecha.strftime('%Y-%m-%d') if self.fecha else None,
             "hora": self.hora,
             "patente": self.patente,
@@ -53,9 +63,18 @@ class Pago:
             "diagnostico": self.diagnostico,
             "reparacion": self.reparacion,
             "resultado": self.resultado,
-            "tiempo_estimado": self.tiempo_estimado
+            "tiempo_estimado": self.tiempo_estimado,
+            "anio": self.anio,
+            "costo_repuestos_real": self.costo_repuestos_real,
+            "costo_mano_obra_real": self.costo_mano_obra_real,
+            "costo_diagnostico_real": self.costo_diagnostico_real,
+            "ganancia_neta": self.ganancia_neta,
+            "validado": self.validado,
+            "validado_por": self.validado_por,
+            "fecha_validacion": self.fecha_validacion.strftime('%Y-%m-%d %H:%M') if self.fecha_validacion else None,
+            "detalles_repuestos": self.detalles_repuestos
         }
-    
+
     @staticmethod
     def from_db_row(row):
         return Pago(
@@ -80,5 +99,14 @@ class Pago:
             diagnostico=row.get('diagnostico'),
             reparacion=row.get('reparacion'),
             resultado=row.get('resultado', 'pendiente'),
-            tiempo_estimado=row.get('tiempo_estimado', '00:00:00')
+            tiempo_estimado=row.get('tiempo_estimado', '00:00:00'),
+            anio=row.get('anio'),
+            costo_repuestos_real=row.get('costo_repuestos_real', 0),
+            costo_mano_obra_real=row.get('costo_mano_obra_real', 0),
+            costo_diagnostico_real=row.get('costo_diagnostico_real', 0),
+            ganancia_neta=row.get('ganancia_neta', 0),
+            validado=row.get('validado', False),
+            validado_por=row.get('validado_por'),
+            fecha_validacion=row.get('fecha_validacion'),
+            detalles_repuestos=row.get('detalles_repuestos', [])
         )
