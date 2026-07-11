@@ -10,9 +10,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 
-                <!-- ============================
-                     DROPDOWN: REGISTROS
-                     ============================ -->
+                <!-- DROPDOWN: REGISTROS -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="menuRegistros" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -26,18 +24,14 @@
                 </li>
                 {% endif %}
 
-                <!-- ============================
-                     VALIDAR PAGOS
-                     ============================ -->
+                <!-- VALIDAR PAGOS -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item">
                     <a class="nav-link" href="/pendientes_validacion">📊 Validar Pagos</a>
                 </li>
                 {% endif %}
 
-                <!-- ============================
-                     DROPDOWN: USUARIOS (SOLO ADMIN)
-                     ============================ -->
+                <!-- DROPDOWN: USUARIOS (SOLO ADMIN) -->
                 {% if session.get("rol") == "admin" %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -52,7 +46,7 @@
                 </li>
                 {% endif %}
                 
-                <!-- ⛔ SALIR -->
+                <!-- SALIR -->
                 <li class="nav-item">
                     <a class="nav-link text-danger fw-bold" href="/logout">⛔ Salir</a>
                 </li>
