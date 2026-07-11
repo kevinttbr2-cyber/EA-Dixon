@@ -556,6 +556,22 @@ def exportar_flota_pdf(flota):
     except Exception as e:
         print(f"❌ Error: {e}")
         return f"❌ Error: {str(e)}", 500
+@app.route('/eliminar_usuario/<int:id_usuario>')
+@login_required
+@role_required(['admin'])
+def eliminar_usuario(id_usuario):
+    """Elimina un usuario (solo admin)"""
+    try:
+        resp = requests.delete(f"{BACKEND_URL}/api/eliminar_usuario/{id_usuario}", timeout=10)
+        if resp.status_code == 200:
+            flash("✅ Usuario eliminado correctamente", "success")
+        else:
+            flash("❌ Error al eliminar usuario", "error")
+    except Exception as e:
+        print(f"Error en /eliminar_usuario: {e}")
+        flash("⚠️ Error de conexión con el servidor", "error")
+    
+    return redirect("/usuarios")
         
 # ============================
 # RUTAS ESTÁTICAS
