@@ -26,7 +26,7 @@ def descargar_pdf(id_reg, firma):
         return jsonify({"error": "Registro no encontrado"}), 404
     
     # Generar PDF
-    buffer = PDFService.generar_pdf(pago)
+    buffer = PDFService.generar_pdf_formal(pago.to_dict())
     if not buffer:
         return jsonify({"error": "Error generando PDF"}), 500
     
@@ -48,9 +48,19 @@ def descargar_pdf(id_reg, firma):
     except Exception as e:
         print(f"Error registrando descarga: {e}")
     
-    # 🔥 NOMBRE DEL ARCHIVO CON CLIENTE Y FECHA
+    # 🔥 NOMBRE DEL ARCHIVO CON CLIENTE Y FECHA (MANEJANDO STRING O DATETIME)
     nombre_cliente = pago.nombre.replace(' ', '_').replace('/', '_') if pago.nombre else 'cliente'
-    fecha = pago.fecha.strftime('%Y%m%d') if pago.fecha else 'sin_fecha'
+    
+    # Manejar fecha (puede ser string o datetime)
+    if pago.fecha:
+        if hasattr(pago.fecha, 'strftime'):
+            fecha = pago.fecha.strftime('%Y%m%d')
+        else:
+            # Si es string, tomar los primeros 10 caracteres (YYYY-MM-DD)
+            fecha = str(pago.fecha)[:10].replace('-', '')
+    else:
+        fecha = 'sin_fecha'
+    
     download_name = f'OT_{id_reg}_{nombre_cliente}_{fecha}.pdf'
     
     return send_file(
@@ -63,6 +73,10 @@ def descargar_pdf(id_reg, firma):
 @pdf_bp.route('/qr/<int:id_reg>/<firma>', methods=['GET'])
 def generar_qr(id_reg, firma):
     """Genera un código QR con la URL del PDF"""
+    # Verificar firma
+    if not PDFService.verificar_firma(id_reg, firma):
+        return jsonify({"error": "Firma inválida"}), 403
+    
     # Construir la URL del PDF
     pdf_url = f"https://ea-dixon-production.up.railway.app/api/pdf/{id_reg}/{firma}"
     
@@ -78,7 +92,7 @@ def generar_qr(id_reg, firma):
     
     img = qr.make_image(fill_color="#00ff66", back_color="#0a0a0a")
     
-    # Convertir a base64 para mostrarlo en HTML
+    # Convertir a base64
     buffer = BytesIO()
     img.save(buffer, format="PNG")
     img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
