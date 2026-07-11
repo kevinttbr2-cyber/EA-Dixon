@@ -585,41 +585,22 @@ def dashboard():
         if mes and anio:
             url += f"&mes={mes}&anio={anio}"
         
+        print(f"📤 Llamando a: {url}")  # ← LOG
+        
         resp = requests.get(url, timeout=10)
+        print(f"📥 Status: {resp.status_code}")  # ← LOG
+        
         if resp.status_code == 200:
             data = resp.json()
+            print(f"📦 Datos recibidos: {len(data.get('labels', []))} labels")  # ← LOG
         else:
             data = {}
+            print(f"❌ Error: {resp.status_code}")
     except Exception as e:
-        print(f"Error en /dashboard: {e}")
+        print(f"❌ Error en /dashboard: {e}")
         data = {}
     
-    # Valores por defecto
-    default_data = {
-        "total_facturado": 0,
-        "total_repuestos": 0,
-        "total_mano_obra": 0,
-        "total_diagnostico": 0,
-        "total_servicios": 0,
-        "ganancia_total": 0,
-        "promedio_diario": 0,
-        "labels": [],
-        "ventas": [],
-        "ganancia_acumulada": [],
-        "proyeccion_labels": [],
-        "proyeccion": [],
-        "clientes_labels": [],
-        "clientes_data": [],
-        "meses_disponibles": [],
-        "filtro_actual": filtro,  # ← PASAR EL FILTRO ACTUAL
-        "mes_actual": mes,
-        "anio_actual": anio
-    }
-    
-    for key, value in default_data.items():
-        if key not in data:
-            data[key] = value
-    
+    # Valores por defecto...
     return render_template("dashboard.html", **data)
         
 # ============================
