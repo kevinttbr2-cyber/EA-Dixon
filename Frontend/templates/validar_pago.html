@@ -1,4 +1,4 @@
-       {% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 
@@ -257,7 +257,6 @@
         </div>
     </form>
 </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // ============================
@@ -299,6 +298,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalRepuestosSpan = document.getElementById('totalRepuestos');
     const costoRepuestosHidden = document.getElementById('costoRepuestosHidden');
 
+    // 🔥 FUNCIÓN PARA ACTUALIZAR EL TOTAL (GLOBAL)
+    function recalcularResumen() {
+        const repuestos = parseFloat(costoRepuestosHidden.value) || 0;
+        const manoObra = parseFloat(document.querySelector('input[name="costo_mano_obra"]')?.value) || 0;
+        const diagnostico = parseFloat(document.querySelector('input[name="costo_diagnostico"]')?.value) || 0;
+        const totalCostos = repuestos + manoObra + diagnostico;
+        const ganancia = ({{ registro.monto or 0 }}) - totalCostos;
+
+        document.getElementById('costoRepuestos').textContent = `$${repuestos.toLocaleString('es-CL')}`;
+        document.getElementById('costoManoObra').textContent = `$${manoObra.toLocaleString('es-CL')}`;
+        document.getElementById('costoDiagnostico').textContent = `$${diagnostico.toLocaleString('es-CL')}`;
+        document.getElementById('costosTotales').textContent = `$${totalCostos.toLocaleString('es-CL')}`;
+        const spanGanancia = document.getElementById('gananciaNeta');
+        spanGanancia.textContent = `$${ganancia.toLocaleString('es-CL')}`;
+        spanGanancia.style.color = ganancia >= 0 ? '#00ff66' : '#ff6b6b';
+        document.getElementById('gananciaNetaHidden').value = ganancia.toFixed(2);
+    }
+
+    // 🔥 FUNCIÓN QUE CALCULA EL TOTAL DE REPUESTOS (SE EJECUTA CADA 500ms)
     function actualizarTotalRepuestos() {
         let total = 0;
         document.querySelectorAll('.costo-repuesto').forEach(input => {
@@ -310,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
         recalcularResumen();
     }
 
+    // 🔥 AGREGAR FILA
     function agregarFilaRepuesto(nombre = '', costo = '') {
         const fila = document.createElement('tr');
         fila.className = 'fila-repuesto';
@@ -358,7 +377,6 @@ document.addEventListener('DOMContentLoaded', function() {
         tablaBody.appendChild(fila);
         actualizarTotalRepuestos();
         
-        // Agregar eventos al nuevo input
         const inputNombre = fila.querySelector('.repuesto-nombre');
         if (inputNombre) {
             inputNombre.addEventListener('input', manejarAutocompletado);
@@ -464,61 +482,15 @@ document.addEventListener('DOMContentLoaded', function() {
         actualizarTotalRepuestos();
     }
 
+    // 🔥 ACTUALIZAR CADA 500ms
     setInterval(actualizarTotalRepuestos, 500);
 
     // ============================
-    // 5. RESUMEN FINANCIERO
+    // 5. EVENTOS PARA MANO DE OBRA Y DIAGNÓSTICO
     // ============================
-    const montoCliente = {{ registro.monto or 0 }};
-    const inputManoObra = document.querySelector('input[name="costo_mano_obra"]');
-    const inputDiagnostico = document.querySelector('input[name="costo_diagnostico"]');
-
-    const spanRepuestos = document.getElementById('costoRepuestos');
-    const spanManoObra = document.getElementById('costoManoObra');
-    const spanDiagnostico = document.getElementById('costoDiagnostico');
-    const spanCostosTotales = document.getElementById('costosTotales');
-    const spanGanancia = document.getElementById('gananciaNeta');
-    const hiddenGanancia = document.getElementById('gananciaNetaHidden');
-
-    function recalcularResumen() {
-        const repuestos = parseFloat(costoRepuestosHidden.value) || 0;
-        const manoObra = parseFloat(inputManoObra.value) || 0;
-        const diagnostico = parseFloat(inputDiagnostico.value) || 0;
-        const totalCostos = repuestos + manoObra + diagnostico;
-        const ganancia = montoCliente - totalCostos;
-
-        spanRepuestos.textContent = `$${repuestos.toLocaleString('es-CL')}`;
-        spanManoObra.textContent = `$${manoObra.toLocaleString('es-CL')}`;
-        spanDiagnostico.textContent = `$${diagnostico.toLocaleString('es-CL')}`;
-        spanCostosTotales.textContent = `$${totalCostos.toLocaleString('es-CL')}`;
-        spanGanancia.textContent = `$${ganancia.toLocaleString('es-CL')}`;
-        spanGanancia.style.color = ganancia >= 0 ? '#00ff66' : '#ff6b6b';
-        hiddenGanancia.value = ganancia.toFixed(2);
-    }
-
-    inputManoObra.addEventListener('input', recalcularResumen);
-    inputDiagnostico.addEventListener('input', recalcularResumen);
+    document.querySelector('input[name="costo_mano_obra"]').addEventListener('input', recalcularResumen);
+    document.querySelector('input[name="costo_diagnostico"]').addEventListener('input', recalcularResumen);
 });
 </script>
-
-<style>
-    .fila-repuesto .btn-eliminar-repuesto {
-        opacity: 0.3;
-        transition: opacity 0.3s ease;
-    }
-    .fila-repuesto:hover .btn-eliminar-repuesto {
-        opacity: 1;
-    }
-    .repuesto-sugerencias::-webkit-scrollbar {
-        width: 4px;
-    }
-    .repuesto-sugerencias::-webkit-scrollbar-track {
-        background: rgba(255,255,255,0.02);
-    }
-    .repuesto-sugerencias::-webkit-scrollbar-thumb {
-        background: #00ff66;
-        border-radius: 4px;
-    }
-</style>
 
 {% endblock %}
