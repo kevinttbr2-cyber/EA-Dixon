@@ -6,55 +6,20 @@
     <title>Dixon Electricidad Automotriz</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00ff66">
+    
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=3">
+    
     <style>
-        body {
-            background: #0a0a0a;
-            color: #ffffff;
-            font-family: 'Roboto', sans-serif;
-            min-height: 100vh;
-            padding-top: 70px;
-        }
-        .base-container {
-            background: rgba(15, 15, 15, 0.85);
-            border: 1px solid #00ff66;
-            border-radius: 16px;
-            padding: 25px 30px;
-            backdrop-filter: blur(8px);
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .card-android {
-            background: rgba(20, 20, 20, 0.70);
-            border: 1px solid rgba(0, 255, 102, 0.30);
-            border-radius: 14px;
-            padding: 18px 20px;
-            margin-bottom: 16px;
-            backdrop-filter: blur(4px);
-        }
-        .btn-primary {
-            background-color: #00ff66 !important;
-            border: none !important;
-            color: #000000 !important;
-            font-weight: 700;
-            border-radius: 10px !important;
-            padding: 12px !important;
-        }
-        .btn-primary:hover {
-            background-color: #00cc52 !important;
-            transform: scale(1.02);
-        }
-        .filtro-card {
-            padding: 8px 20px;
-            border-radius: 14px;
-            text-decoration: none;
-            background: rgba(255, 255, 255, 0.04);
-            text-align: center;
-            display: inline-block;
-            color: #777777;
-        }
+        /* ... tus estilos ... */
+        body { background: #0a0a0a; color: #ffffff; font-family: 'Roboto', sans-serif; min-height: 100vh; padding-top: 70px; }
+        .base-container { background: rgba(15, 15, 15, 0.85); border: 1px solid #00ff66; border-radius: 16px; padding: 25px 30px; backdrop-filter: blur(8px); max-width: 1200px; margin: 0 auto; }
+        .card-android { background: rgba(20, 20, 20, 0.70); border: 1px solid rgba(0, 255, 102, 0.30); border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; backdrop-filter: blur(4px); }
+        .btn-primary { background-color: #00ff66 !important; border: none !important; color: #000000 !important; font-weight: 700; border-radius: 10px !important; padding: 12px !important; }
+        .btn-primary:hover { background-color: #00cc52 !important; transform: scale(1.02); }
+        .filtro-card { padding: 8px 20px; border-radius: 14px; text-decoration: none; background: rgba(255, 255, 255, 0.04); text-align: center; display: inline-block; color: #777777; }
         .filtro-card .numero { font-size: 24px; font-weight: 700; }
         .filtro-card .etiqueta { font-size: 10px; text-transform: uppercase; opacity: 0.5; }
         .filtro-card.active-total { background: rgba(255,255,255,0.10); }
@@ -63,142 +28,23 @@
         .filtro-card.active-pagados .numero { color: #00ff66; }
         .filtro-card.active-pendientes { background: rgba(255,107,107,0.10); }
         .filtro-card.active-pendientes .numero { color: #ff6b6b; }
-        .navbar {
-            background: rgba(10, 10, 10, 0.95) !important;
-            border-bottom: 2px solid #00ff66 !important;
-            padding: 8px 15px !important;
-            position: fixed !important;
-            top: 0 !important;
-            width: 100% !important;
-            z-index: 1000 !important;
-        }
-        .navbar-brand {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
+        .navbar { background: rgba(10, 10, 10, 0.95) !important; border-bottom: 2px solid #00ff66 !important; padding: 8px 15px !important; position: fixed !important; top: 0 !important; width: 100% !important; z-index: 1000 !important; }
+        .navbar-brand { position: absolute; left: 50%; transform: translateX(-50%); }
         .navbar-logo { height: 45px; width: auto; }
-        #botonFlotante {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #00ff66;
-            color: #000;
-            padding: 14px 24px;
-            border-radius: 50px;
-            font-weight: 700;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(0,255,102,0.4);
-            z-index: 999999;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        /* Estilos para dropdown en navbar */
-        .dropdown-menu {
-            background: rgba(15, 15, 15, 0.95) !important;
-            border: 1px solid #00ff66 !important;
-            backdrop-filter: blur(10px) !important;
-            border-radius: 12px !important;
-            padding: 8px !important;
-            min-width: 220px !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
-        }
-        .dropdown-item {
-            color: #e0e0e0 !important;
-            padding: 8px 16px !important;
-            border-radius: 8px !important;
-            transition: all 0.2s ease !important;
-            font-size: 14px !important;
-        }
-        .dropdown-item:hover {
-            background: rgba(0, 255, 102, 0.10) !important;
-            color: #00ff66 !important;
-        }
-        .dropdown-divider {
-            border-color: rgba(255, 255, 255, 0.06) !important;
-            margin: 6px 0 !important;
-        }
-        @media (max-width: 768px) {
-            .base-container { padding: 15px !important; }
-            .navbar-brand { position: static; transform: none; }
-            #botonFlotante { padding: 10px 16px; font-size: 14px; bottom: 20px; right: 20px; }
-            .dropdown-menu {
-                text-align: center;
-                background: rgba(10, 10, 10, 0.98) !important;
-            }
-        }
+        #botonFlotante { position: fixed; bottom: 30px; right: 30px; background: #00ff66; color: #000; padding: 14px 24px; border-radius: 50px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 15px rgba(0,255,102,0.4); z-index: 1000; display: flex; align-items: center; gap: 10px; }
+        .dropdown-menu { background: rgba(15, 15, 15, 0.95) !important; border: 1px solid #00ff66 !important; backdrop-filter: blur(10px) !important; border-radius: 12px !important; padding: 8px !important; min-width: 220px !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important; }
+        .dropdown-item { color: #e0e0e0 !important; padding: 8px 16px !important; border-radius: 8px !important; transition: all 0.2s ease !important; font-size: 14px !important; }
+        .dropdown-item:hover { background: rgba(0, 255, 102, 0.10) !important; color: #00ff66 !important; }
+        .dropdown-divider { border-color: rgba(255, 255, 255, 0.06) !important; margin: 6px 0 !important; }
+        @media (max-width: 768px) { .base-container { padding: 15px !important; } .navbar-brand { position: static; transform: none; } #botonFlotante { padding: 10px 16px; font-size: 14px; bottom: 20px; right: 20px; } .dropdown-menu { text-align: center; background: rgba(10, 10, 10, 0.98) !important; } }
     </style>
 </head>
 <body>
+
     <!-- ============================
-         NAVBAR (CON TODAS LAS MODIFICACIONES)
+         NAVBAR INCLUIDO DESDE ARCHIVO SEPARADO
          ============================ -->
-    {% if session.get("usuario") %}
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <a class="navbar-brand" href="/estado">
-                <img src="{{ url_for('static', filename='images/dixon-navbar.png') }}" alt="Dixon" class="navbar-logo">
-            </a>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    
-                    <!-- 📄 REGISTROS -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/registros">📄 Registros</a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- 🚗 FLOTAS -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/flotas">🚗 Flotas</a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- 📊 DESCARGAS -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/auditoria_descargas">📊 Descargas</a>
-                    </li>
-                    {% endif %}
-
-                    <!-- 📊 VALIDAR PAGOS (NUEVO) -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pendientes_validacion">📊 Validar Pagos</a>
-                    </li>
-                    {% endif %}
-
-                    <!-- 👤 USUARIOS (DROPDOWN) - SOLO ADMIN -->
-                    {% if session.get("rol") == "admin" %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            👤 Usuarios
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="menuUsuarios">
-                            <li><a class="dropdown-item" href="/register">➕ Crear Usuario</a></li>
-                            <li><a class="dropdown-item" href="/usuarios">👥 Lista de Usuarios</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/cambiar_password">🔑 Cambiar Contraseña</a></li>
-                        </ul>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- ⛔ SALIR -->
-                    <li class="nav-item">
-                        <a class="nav-link text-danger fw-bold" href="/logout">⛔ Salir</a>
-                    </li>
-                    
-                </ul>
-            </div>
-        </div>
-    </nav>
-    {% endif %}
+    {% include 'navbar.html' %}
 
     <!-- ============================
          CONTENIDO PRINCIPAL
@@ -215,7 +61,7 @@
     </a>
 
     <!-- ============================
-         SCRIPTS
+         SCRIPTS DE BOOTSTRAP
          ============================ -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
