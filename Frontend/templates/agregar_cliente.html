@@ -42,7 +42,7 @@
                         <i class="fa-solid fa-plus"></i>
                     </button>
                 </div>
-                <input type="text" id="flotaNuevaInput" style="display:none; margin-top: 6px;" class="form-control" placeholder="Nombre de la nueva flota">
+                <input type="text" id="flotaNuevaInput" name="flota_nueva" style="display:none; margin-top: 6px;" class="form-control" placeholder="Nombre de la nueva flota">
                 <small style="color: #666; font-size: 11px;">Selecciona una flota existente o crea una nueva</small>
             </div>
         </div>
@@ -163,7 +163,7 @@
                 btnNuevaFlota.style.background = 'rgba(0,255,102,0.20)';
             } else {
                 flotaNuevaInput.style.display = 'none';
-                btnNuevaFlota.textContent = '<i class="fa-solid fa-plus"></i>';
+                btnNuevaFlota.innerHTML = '<i class="fa-solid fa-plus"></i>';
                 btnNuevaFlota.style.background = 'rgba(0,255,102,0.12)';
             }
         });
@@ -179,7 +179,7 @@
                     flotaSelect.insertBefore(option, flotaSelect.querySelector('option[value="__nueva__"]'));
                     flotaSelect.value = nombre;
                     flotaNuevaInput.style.display = 'none';
-                    btnNuevaFlota.textContent = '<i class="fa-solid fa-plus"></i>';
+                    btnNuevaFlota.innerHTML = '<i class="fa-solid fa-plus"></i>';
                     btnNuevaFlota.style.background = 'rgba(0,255,102,0.12)';
                 } else {
                     alert('⚠️ Escribe un nombre para la flota');
@@ -248,7 +248,12 @@
             if (marcaSelect.value === '__manual__') {
                 const manualVal = marcaManual.value.trim();
                 if (manualVal) {
-                    marcaSelect.value = manualVal;
+                    // Crear una opción temporal y seleccionarla
+                    const opt = document.createElement('option');
+                    opt.value = manualVal;
+                    opt.textContent = manualVal;
+                    opt.selected = true;
+                    marcaSelect.appendChild(opt);
                 } else {
                     e.preventDefault();
                     alert('⚠️ Escribe el nombre de la marca');
@@ -260,7 +265,11 @@
             if (modeloSelect.value === '__manual__') {
                 const manualVal = modeloManual.value.trim();
                 if (manualVal) {
-                    modeloSelect.value = manualVal;
+                    const opt = document.createElement('option');
+                    opt.value = manualVal;
+                    opt.textContent = manualVal;
+                    opt.selected = true;
+                    modeloSelect.appendChild(opt);
                 } else {
                     e.preventDefault();
                     alert('⚠️ Escribe el nombre del modelo');
@@ -272,7 +281,12 @@
             if (flotaSelect.value === '__nueva__') {
                 const flotaVal = flotaNuevaInput.value.trim();
                 if (flotaVal) {
-                    flotaSelect.value = flotaVal;
+                    // Crear una opción temporal
+                    const opt = document.createElement('option');
+                    opt.value = flotaVal;
+                    opt.textContent = flotaVal;
+                    opt.selected = true;
+                    flotaSelect.appendChild(opt);
                 } else {
                     e.preventDefault();
                     alert('⚠️ Escribe el nombre de la flota');
