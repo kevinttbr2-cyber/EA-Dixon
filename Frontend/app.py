@@ -620,6 +620,9 @@ def dashboard():
         if key not in data:
             data[key] = value
     
+    # ✅ LOG PARA VERIFICAR DATOS
+    print(f"📊 Datos para dashboard: labels={len(data.get('labels', []))}, ventas={len(data.get('ventas', []))}")
+    
     return render_template("dashboard.html", **data)
         
 # ============================
