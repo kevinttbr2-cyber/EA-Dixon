@@ -105,66 +105,67 @@
             </h5>
 
             <!-- TABLA DE REPUESTOS CON AUTOCOMPLETADO -->
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-                    🔧 Lista de repuestos
-                </label>
-                <div style="background: rgba(0,0,0,0.20); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.06);">
-                    <table id="tablaRepuestos" style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.10);">
-                                <th style="text-align: left; padding: 6px 8px; color: #90e0a0; font-size: 12px;">Repuesto</th>
-                                <th style="text-align: right; padding: 6px 8px; color: #90e0a0; font-size: 12px;">Costo ($)</th>
-                                <th style="width: 30px;"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="cuerpoRepuestos">
-                            <tr class="fila-repuesto">
-                                <td style="padding: 4px 8px; position: relative;">
-                                    <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm repuesto-nombre" 
-                                           placeholder="Escribe para buscar..." autocomplete="off"
-                                           style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; width: 100%;">
-                                    <div class="repuesto-sugerencias" style="
-                                        display: none;
-                                        position: absolute;
-                                        top: 100%;
-                                        left: 0;
-                                        right: 0;
-                                        background: rgba(15,15,15,0.98);
-                                        border: 1px solid rgba(0,255,102,0.30);
-                                        border-radius: 6px;
-                                        max-height: 180px;
-                                        overflow-y: auto;
-                                        z-index: 9999;
-                                        margin-top: 2px;
-                                        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-                                    "></div>
-                                </td>
-                                <td style="padding: 4px 8px;">
-                                    <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
-                                           step="0.01" placeholder="0" 
-                                           style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right; width: 100%;">
-                                </td>
-                                <td style="padding: 4px 8px; text-align: center;">
-                                    <button type="button" class="btn-eliminar-repuesto" 
-                                            style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px; opacity: 0.3;">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <button type="button" id="agregarRepuestoBtn" class="btn btn-sm" style="margin-top: 8px; background: rgba(0,255,102,0.10); color: #00ff66; border: 1px solid rgba(0,255,102,0.20); border-radius: 8px; padding: 4px 12px; font-size: 12px;">
-                        <i class="fa-solid fa-plus"></i> Agregar repuesto
-                    </button>
-                    <div style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #888; font-size: 11px;">Total repuestos:</span>
-                        <span id="totalRepuestos" style="color: #ffcc00; font-weight: 700; font-size: 16px;">$0</span>
-                    </div>
-                    <input type="hidden" name="costo_repuestos" id="costoRepuestosHidden" value="0">
-                </div>
-                <small style="color: #666; font-size: 11px;">Escribe el nombre del repuesto para buscar en el historial.</small>
-            </div>
+<div class="mb-3">
+    <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+        🔧 Lista de repuestos
+    </label>
+    <div style="background: rgba(0,0,0,0.20); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.06);">
+        <table id="tablaRepuestos" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.10);">
+                    <th style="text-align: left; padding: 6px 8px; color: #90e0a0; font-size: 12px;">Repuesto</th>
+                    <th style="text-align: right; padding: 6px 8px; color: #90e0a0; font-size: 12px;">Costo ($)</th>
+                    <th style="width: 30px;"></th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoRepuestos">
+                <tr class="fila-repuesto">
+                    <td style="padding: 4px 8px; position: relative;">
+                        <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm repuesto-nombre" 
+                               placeholder="Escribe para buscar..." autocomplete="off"
+                               style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; width: 100%;">
+                        <!-- 🔥 MENÚ DESPLEGABLE DE REPUESTOS -->
+                        <div class="repuesto-sugerencias" style="
+                            display: none;
+                            position: absolute;
+                            top: 100%;
+                            left: 0;
+                            right: 0;
+                            background: rgba(15,15,15,0.98);
+                            border: 1px solid rgba(0,255,102,0.30);
+                            border-radius: 6px;
+                            max-height: 180px;
+                            overflow-y: auto;
+                            z-index: 9999;
+                            margin-top: 2px;
+                            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+                        "></div>
+                    </td>
+                    <td style="padding: 4px 8px;">
+                        <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
+                               step="0.01" placeholder="0" 
+                               style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right; width: 100%;">
+                    </td>
+                    <td style="padding: 4px 8px; text-align: center;">
+                        <button type="button" class="btn-eliminar-repuesto" 
+                                style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px; opacity: 0.3;">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="button" id="agregarRepuestoBtn" class="btn btn-sm" style="margin-top: 8px; background: rgba(0,255,102,0.10); color: #00ff66; border: 1px solid rgba(0,255,102,0.20); border-radius: 8px; padding: 4px 12px; font-size: 12px;">
+            <i class="fa-solid fa-plus"></i> Agregar repuesto
+        </button>
+        <div style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #888; font-size: 11px;">Total repuestos:</span>
+            <span id="totalRepuestos" style="color: #ffcc00; font-weight: 700; font-size: 16px;">$0</span>
+        </div>
+        <input type="hidden" name="costo_repuestos" id="costoRepuestosHidden" value="0">
+    </div>
+    <small style="color: #666; font-size: 11px;">Escribe el nombre del repuesto para buscar en el historial.</small>
+</div>
 
             <div class="mb-3">
                 <label class="form-label" style="color: #90e0a0; font-weight: 500;">
