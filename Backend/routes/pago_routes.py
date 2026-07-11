@@ -650,11 +650,12 @@ def get_dashboard():
         else:
             fecha_desde = hoy - timedelta(days=7)
         
-        conn, cur = get_cursor()
+        # ============================
+        # 2. CONEXIÓN Y CONSULTAS
+        # ============================
+        conn, cur = get_cursor()  # ← CORRECTO: desempacar tupla
         
-        # ============================
-        # 2. TOTALES GENERALES (en el rango)
-        # ============================
+        # Totales generales
         cur.execute("""
             SELECT 
                 COALESCE(SUM(monto), 0) as total_facturado,
@@ -668,9 +669,7 @@ def get_dashboard():
         """, (fecha_desde,))
         totales = cur.fetchone()
         
-        # ============================
-        # 3. VENTAS DIARIAS
-        # ============================
+        # Ventas diarias
         cur.execute("""
             SELECT 
                 fecha,
@@ -683,9 +682,7 @@ def get_dashboard():
         """, (fecha_desde,))
         ventas = cur.fetchall()
         
-        # ============================
-        # 4. GANANCIA ACUMULADA
-        # ============================
+        # Ganancia acumulada
         cur.execute("""
             SELECT 
                 fecha,
@@ -698,9 +695,7 @@ def get_dashboard():
         """, (fecha_desde,))
         ganancias = cur.fetchall()
         
-        # ============================
-        # 5. TOP 5 CLIENTES
-        # ============================
+        # Top 5 clientes
         cur.execute("""
             SELECT 
                 nombre,
@@ -715,9 +710,7 @@ def get_dashboard():
         """, (fecha_desde,))
         clientes = cur.fetchall()
         
-        # ============================
-        # 6. PROMEDIO DIARIO
-        # ============================
+        # Promedio diario
         cur.execute("""
             SELECT 
                 COALESCE(AVG(monto), 0) as promedio_diario
@@ -732,7 +725,7 @@ def get_dashboard():
         conn.close()
         
         # ============================
-        # 7. FORMATO DE RESPUESTA
+        # 3. FORMATO DE RESPUESTA
         # ============================
         labels = []
         ventas_data = []
@@ -756,9 +749,9 @@ def get_dashboard():
             proyeccion_labels.append(fecha_futura.strftime('%d/%m'))
             proyeccion.append(round(promedio_diario * 0.85, 0))
         
-        # Obtener meses disponibles para el selector
-        cur = get_cursor()
-        cur.execute("""
+        # Obtener meses disponibles (con una nueva conexión)
+        conn2, cur2 = get_cursor()
+        cur2.execute("""
             SELECT DISTINCT 
                 EXTRACT(YEAR FROM fecha) as anio,
                 EXTRACT(MONTH FROM fecha) as mes
@@ -768,13 +761,13 @@ def get_dashboard():
             ORDER BY anio DESC, mes DESC
         """)
         meses_disponibles = []
-        for row in cur.fetchall():
+        for row in cur2.fetchall():
             meses_disponibles.append({
                 'anio': int(row[0]),
                 'mes': int(row[1])
             })
-        cur.close()
-        conn.close()
+        cur2.close()
+        conn2.close()
         
         return jsonify({
             "total_facturado": float(totales[0]),
@@ -798,4 +791,6 @@ def get_dashboard():
         })
     except Exception as e:
         print(f"Error en get_dashboard: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
