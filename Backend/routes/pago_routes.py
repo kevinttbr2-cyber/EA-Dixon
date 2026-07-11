@@ -431,9 +431,13 @@ def get_flotas_disponibles():
     except Exception as e:
         print(f"Error en get_flotas_disponibles: {e}")
         return jsonify([])
+# ============================
+# REPUESTOS - CRUD COMPLETO
+# ============================
+
 @pago_bp.route('/repuestos', methods=['GET'])
 def get_repuestos_lista():
-    """Obtiene todos los repuestos para el listado"""
+    """Obtiene todos los repuestos"""
     try:
         conn, cur = get_cursor()
         cur.execute("SELECT id, nombre, costo, proveedor FROM repuestos ORDER BY nombre")
@@ -444,6 +448,63 @@ def get_repuestos_lista():
     except Exception as e:
         print(f"Error en get_repuestos_lista: {e}")
         return jsonify([])
+
+@pago_bp.route('/repuestos', methods=['POST'])
+def crear_repuesto():
+    """Crea un nuevo repuesto"""
+    try:
+        data = request.json
+        nombre = data.get('nombre', '').strip()
+        costo = float(data.get('costo', 0))
+        proveedor = data.get('proveedor', '').strip()
+        
+        if not nombre:
+            return jsonify({"error": "El nombre es obligatorio"}), 400
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO repuestos (nombre, costo, proveedor, created_at, updated_at)
+            VALUES (%s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            RETURNING id
+        """, (nombre, costo, proveedor))
+        id_repuesto = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True, "id": id_repuesto})
+    except Exception as e:
+        print(f"Error en crear_repuesto: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
+def actualizar_repuesto(id_repuesto):
+    """Actualiza un repuesto existente"""
+    try:
+        data = request.json
+        nombre = data.get('nombre', '').strip()
+        costo = float(data.get('costo', 0))
+        proveedor = data.get('proveedor', '').strip()
+        
+        if not nombre:
+            return jsonify({"error": "El nombre es obligatorio"}), 400
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE repuestos 
+            SET nombre = %s, costo = %s, proveedor = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """, (nombre, costo, proveedor, id_repuesto))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Error en actualizar_repuesto: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['DELETE'])
 def eliminar_repuesto(id_repuesto):
@@ -459,6 +520,30 @@ def eliminar_repuesto(id_repuesto):
     except Exception as e:
         print(f"Error en eliminar_repuesto: {e}")
         return jsonify({"error": str(e)}), 500
+
+@pago_bp.route('/repuestos/buscar', methods=['GET'])
+def buscar_repuestos():
+    """Busca repuestos por nombre (autocompletado)"""
+    try:
+        query = request.args.get('q', '').strip()
+        if len(query) < 2:
+            return jsonify([])
+        
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT id, nombre, costo 
+            FROM repuestos 
+            WHERE nombre ILIKE %s 
+            ORDER BY nombre 
+            LIMIT 10
+        """, (f'%{query}%',))
+        repuestos = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(repuestos)
+    except Exception as e:
+        print(f"Error en buscar_repuestos: {e}")
+        return jsonify([])
 
 
 # ============================
