@@ -431,6 +431,34 @@ def get_flotas_disponibles():
     except Exception as e:
         print(f"Error en get_flotas_disponibles: {e}")
         return jsonify([])
+@pago_bp.route('/repuestos', methods=['GET'])
+def get_repuestos_lista():
+    """Obtiene todos los repuestos para el listado"""
+    try:
+        conn, cur = get_cursor()
+        cur.execute("SELECT id, nombre, costo, proveedor FROM repuestos ORDER BY nombre")
+        repuestos = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(repuestos)
+    except Exception as e:
+        print(f"Error en get_repuestos_lista: {e}")
+        return jsonify([])
+
+@pago_bp.route('/repuestos/<int:id_repuesto>', methods=['DELETE'])
+def eliminar_repuesto(id_repuesto):
+    """Elimina un repuesto por ID"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM repuestos WHERE id = %s", (id_repuesto,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Error en eliminar_repuesto: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # ============================
