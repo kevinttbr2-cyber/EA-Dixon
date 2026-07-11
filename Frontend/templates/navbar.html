@@ -10,35 +10,34 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 
-                <!-- 📄 REGISTROS (solo admin y operador) -->
+                <!-- ============================
+                     DROPDOWN: REGISTROS
+                     ============================ -->
                 {% if session.get("rol") in ["admin", "operador"] %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/registros">📄 Registros</a>
-                </li>
-                {% endif %}
-                
-                <!-- 🚗 FLOTAS (solo admin y operador) -->
-                {% if session.get("rol") in ["admin", "operador"] %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/flotas">🚗 Flotas</a>
-                </li>
-                {% endif %}
-                
-                <!-- 📊 DESCARGAS / AUDITORÍA (solo admin y operador) -->
-                {% if session.get("rol") in ["admin", "operador"] %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/auditoria_descargas">📊 Descargas</a>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="menuRegistros" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        📋 Registros
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="menuRegistros">
+                        <li><a class="dropdown-item" href="/registros">📄 Registros</a></li>
+                        <li><a class="dropdown-item" href="/flotas">🚗 Flotas</a></li>
+                        <li><a class="dropdown-item" href="/auditoria_descargas">📊 Descargas</a></li>
+                    </ul>
                 </li>
                 {% endif %}
 
-                <!-- 📊 VALIDAR PAGOS (solo admin y operador) - NUEVO -->
+                <!-- ============================
+                     VALIDAR PAGOS
+                     ============================ -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item">
                     <a class="nav-link" href="/pendientes_validacion">📊 Validar Pagos</a>
                 </li>
                 {% endif %}
 
-                <!-- 👤 USUARIOS (DROPDOWN) - SOLO ADMIN -->
+                <!-- ============================
+                     DROPDOWN: USUARIOS (SOLO ADMIN)
+                     ============================ -->
                 {% if session.get("rol") == "admin" %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown" aria-expanded="false">
