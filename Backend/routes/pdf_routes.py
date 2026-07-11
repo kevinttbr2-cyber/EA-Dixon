@@ -51,7 +51,7 @@ def descargar_pdf(id_reg, firma):
         buffer,
         mimetype='application/pdf',
         as_attachment=True,
-        download_name=f'OT_{id_reg}.pdf'
+        download_name=f'OT_{id_reg}_{registro.nombre}_{registro.fecha}.pdf'
     )
 
 
