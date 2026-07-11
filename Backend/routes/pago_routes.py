@@ -619,14 +619,41 @@ def exportar_flota_pdf(flota):
         error_trace = traceback.format_exc()
         print(f"❌ Error en exportar_flota_pdf: {error_trace}")
         return jsonify({"error": str(e)}), 500
+        
 @pago_bp.route('/dashboard', methods=['GET'])
 def get_dashboard():
-    """Devuelve datos agregados para el dashboard con proyecciones"""
+    """Devuelve datos agregados para el dashboard con filtros"""
     try:
+        filtro = request.args.get('filtro', '7d')
+        mes = request.args.get('mes')
+        anio = request.args.get('anio')
+        
+        from datetime import timedelta
+        hoy = datetime.now().date()
+        
+        # ============================
+        # 1. DETERMINAR RANGO DE FECHAS
+        # ============================
+        fecha_desde = None
+        
+        if filtro == '7d':
+            fecha_desde = hoy - timedelta(days=7)
+        elif filtro == '30d':
+            fecha_desde = hoy - timedelta(days=30)
+        elif filtro == '90d':
+            fecha_desde = hoy - timedelta(days=90)
+        elif filtro == 'mes' and mes and anio:
+            try:
+                fecha_desde = datetime(int(anio), int(mes), 1).date()
+            except:
+                fecha_desde = hoy - timedelta(days=30)
+        else:
+            fecha_desde = hoy - timedelta(days=7)
+        
         conn, cur = get_cursor()
         
         # ============================
-        # 1. TOTALES GENERALES
+        # 2. TOTALES GENERALES (en el rango)
         # ============================
         cur.execute("""
             SELECT 
@@ -636,12 +663,13 @@ def get_dashboard():
                 COALESCE(SUM(costo_diagnostico_real), 0) as total_diagnostico,
                 COUNT(*) as total_servicios
             FROM pagos 
-            WHERE estado = 'pagado'
-        """)
+            WHERE estado = 'pagado' 
+            AND fecha >= %s
+        """, (fecha_desde,))
         totales = cur.fetchone()
         
         # ============================
-        # 2. VENTAS DIARIAS (ÚLTIMOS 30 DÍAS)
+        # 3. VENTAS DIARIAS
         # ============================
         cur.execute("""
             SELECT 
@@ -649,14 +677,14 @@ def get_dashboard():
                 COALESCE(SUM(monto), 0) as total
             FROM pagos 
             WHERE estado = 'pagado' 
-            AND fecha >= CURRENT_DATE - INTERVAL '30 days'
+            AND fecha >= %s
             GROUP BY fecha
             ORDER BY fecha ASC
-        """)
+        """, (fecha_desde,))
         ventas = cur.fetchall()
         
         # ============================
-        # 3. GANANCIA ACUMULADA
+        # 4. GANANCIA ACUMULADA
         # ============================
         cur.execute("""
             SELECT 
@@ -664,14 +692,14 @@ def get_dashboard():
                 COALESCE(SUM(monto - COALESCE(costo_repuestos_real, 0) - COALESCE(costo_mano_obra_real, 0) - COALESCE(costo_diagnostico_real, 0)), 0) as ganancia
             FROM pagos 
             WHERE estado = 'pagado' 
-            AND fecha >= CURRENT_DATE - INTERVAL '30 days'
+            AND fecha >= %s
             GROUP BY fecha
             ORDER BY fecha ASC
-        """)
+        """, (fecha_desde,))
         ganancias = cur.fetchall()
         
         # ============================
-        # 4. TOP 5 CLIENTES
+        # 5. TOP 5 CLIENTES
         # ============================
         cur.execute("""
             SELECT 
@@ -680,22 +708,23 @@ def get_dashboard():
             FROM pagos 
             WHERE estado = 'pagado' 
             AND nombre IS NOT NULL
+            AND fecha >= %s
             GROUP BY nombre
             ORDER BY total_gastado DESC
             LIMIT 5
-        """)
+        """, (fecha_desde,))
         clientes = cur.fetchall()
         
         # ============================
-        # 5. PROMEDIO DIARIO (para proyección)
+        # 6. PROMEDIO DIARIO
         # ============================
         cur.execute("""
             SELECT 
                 COALESCE(AVG(monto), 0) as promedio_diario
             FROM pagos 
             WHERE estado = 'pagado' 
-            AND fecha >= CURRENT_DATE - INTERVAL '15 days'
-        """)
+            AND fecha >= %s
+        """, (fecha_desde,))
         promedio = cur.fetchone()
         promedio_diario = float(promedio[0]) if promedio and promedio[0] else 0
         
@@ -703,36 +732,49 @@ def get_dashboard():
         conn.close()
         
         # ============================
-        # 6. FORMATO DE RESPUESTA
+        # 7. FORMATO DE RESPUESTA
         # ============================
         labels = []
         ventas_data = []
-        fechas_reales = []
         
         for row in ventas:
             if row[0]:
-                fecha_str = row[0].strftime('%d/%m')
-                labels.append(fecha_str)
+                labels.append(row[0].strftime('%d/%m'))
                 ventas_data.append(float(row[1]))
-                fechas_reales.append(row[0])
         
-        # Ganancia acumulada
         ganancia_data = []
         acumulado = 0
         for row in ganancias:
             acumulado += float(row[1])
             ganancia_data.append(acumulado)
         
-        # ============================
-        # 7. PROYECCIÓN A 7 DÍAS
-        # ============================
+        # Proyección a 7 días
         proyeccion = []
         proyeccion_labels = []
         for i in range(1, 8):
-            from datetime import timedelta
-            fecha_futura = datetime.now().date() + timedelta(days=i)
+            fecha_futura = hoy + timedelta(days=i)
             proyeccion_labels.append(fecha_futura.strftime('%d/%m'))
-            proyeccion.append(round(promedio_diario * 0.85, 0))  # 85% del promedio diario
+            proyeccion.append(round(promedio_diario * 0.85, 0))
+        
+        # Obtener meses disponibles para el selector
+        cur = get_cursor()
+        cur.execute("""
+            SELECT DISTINCT 
+                EXTRACT(YEAR FROM fecha) as anio,
+                EXTRACT(MONTH FROM fecha) as mes
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND fecha IS NOT NULL
+            ORDER BY anio DESC, mes DESC
+        """)
+        meses_disponibles = []
+        for row in cur.fetchall():
+            meses_disponibles.append({
+                'anio': int(row[0]),
+                'mes': int(row[1])
+            })
+        cur.close()
+        conn.close()
         
         return jsonify({
             "total_facturado": float(totales[0]),
@@ -748,7 +790,11 @@ def get_dashboard():
             "proyeccion_labels": proyeccion_labels,
             "proyeccion": proyeccion,
             "clientes_labels": [row[0] for row in clientes],
-            "clientes_data": [float(row[1]) for row in clientes]
+            "clientes_data": [float(row[1]) for row in clientes],
+            "meses_disponibles": meses_disponibles,
+            "filtro_actual": filtro,
+            "mes_actual": mes,
+            "anio_actual": anio
         })
     except Exception as e:
         print(f"Error en get_dashboard: {e}")
