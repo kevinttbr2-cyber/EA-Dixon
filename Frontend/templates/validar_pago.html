@@ -52,7 +52,7 @@
         <input type="hidden" name="tiempo_estimado" id="tiempoEstimadoHidden" value="{{ registro.tiempo_estimado or '00:00:00' }}">
 
         <!-- ============================
-             SECCIÓN 1: DETALLES DE REPARACIÓN (PRIMERO)
+             SECCIÓN 1: DETALLES DE REPARACIÓN
              ============================ -->
         <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 18px 20px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.06);">
             <h5 style="color: #4fc3f7; font-weight: 600; margin-bottom: 15px;">
@@ -90,23 +90,24 @@
                         <input type="radio" name="resultado" value="derivado" {% if registro.resultado == 'derivado' %}checked{% endif %}>
                         Derivado
                     </label>
-                    <!-- ============================
-     ESTADO DE LA OT (NUEVO)
-     ============================ -->
-<div class="mb-3">
-    <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-        📋 Estado de la Orden de Trabajo
-    </label>
-    <select name="estado_ot" class="form-control">
-        <option value="Pendiente" {% if registro.estado_ot == 'Pendiente' %}selected{% endif %}>⏳ Pendiente</option>
-        <option value="Diagnosticado" {% if registro.estado_ot == 'Diagnosticado' %}selected{% endif %}>🩺 Diagnosticado</option>
-        <option value="Aprobado" {% if registro.estado_ot == 'Aprobado' %}selected{% endif %}>✅ Aprobado</option>
-        <option value="Terminado" {% if registro.estado_ot == 'Terminado' %}selected{% endif %}>🔧 Terminado</option>
-        <option value="Entregado" {% if registro.estado_ot == 'Entregado' %}selected{% endif %}>🚗 Entregado</option>
-    </select>
-    <small style="color: #666; font-size: 11px;">Estado actual del vehículo en el taller</small>
-</div>
                 </div>
+            </div>
+
+            <!-- ============================
+                 ESTADO DE LA OT
+                 ============================ -->
+            <div class="mb-3">
+                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+                    📋 Estado de la Orden de Trabajo
+                </label>
+                <select name="estado_ot" class="form-control">
+                    <option value="Pendiente" {% if registro.estado_ot == 'Pendiente' %}selected{% endif %}>⏳ Pendiente</option>
+                    <option value="Diagnosticado" {% if registro.estado_ot == 'Diagnosticado' %}selected{% endif %}>🩺 Diagnosticado</option>
+                    <option value="Aprobado" {% if registro.estado_ot == 'Aprobado' %}selected{% endif %}>✅ Aprobado</option>
+                    <option value="Terminado" {% if registro.estado_ot == 'Terminado' %}selected{% endif %}>🔧 Terminado</option>
+                    <option value="Entregado" {% if registro.estado_ot == 'Entregado' %}selected{% endif %}>🚗 Entregado</option>
+                </select>
+                <small style="color: #666; font-size: 11px;">Estado actual del vehículo en el taller</small>
             </div>
         </div>
 
@@ -118,9 +119,7 @@
                 📊 Costos Reales
             </h5>
 
-            <!-- ============================
-                 TABLA DE REPUESTOS DINÁMICA
-                 ============================ -->
+            <!-- TABLA DE REPUESTOS CON AUTOCOMPLETADO -->
             <div class="mb-3">
                 <label class="form-label" style="color: #90e0a0; font-weight: 500;">
                     🔧 Lista de repuestos
@@ -135,16 +134,31 @@
                             </tr>
                         </thead>
                         <tbody id="cuerpoRepuestos">
-                            <!-- Fila inicial -->
                             <tr class="fila-repuesto">
-                                <td style="padding: 4px 8px;">
-                                    <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm" placeholder="Nombre del repuesto" style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px;">
+                                <td style="padding: 4px 8px; position: relative;">
+                                    <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm repuesto-nombre" 
+                                           placeholder="Nombre del repuesto" style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px;">
+                                    <div class="repuesto-sugerencias" style="
+                                        display: none;
+                                        position: absolute;
+                                        top: 100%;
+                                        left: 0;
+                                        right: 0;
+                                        background: rgba(15,15,15,0.98);
+                                        border: 1px solid rgba(0,255,102,0.20);
+                                        border-radius: 6px;
+                                        max-height: 150px;
+                                        overflow-y: auto;
+                                        z-index: 999;
+                                        margin-top: 2px;
+                                    "></div>
                                 </td>
                                 <td style="padding: 4px 8px;">
-                                    <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" step="0.01" placeholder="0" style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right;">
+                                    <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
+                                           step="0.01" placeholder="0" style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right;">
                                 </td>
                                 <td style="padding: 4px 8px; text-align: center;">
-                                    <button type="button" class="btn-eliminar-repuesto" style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px; opacity: 0.3; display: none;">
+                                    <button type="button" class="btn-eliminar-repuesto" style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px; opacity: 0.3;">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </td>
@@ -247,9 +261,7 @@
             <input type="hidden" name="ganancia_neta" id="gananciaNetaHidden" value="0">
         </div>
 
-        <!-- ============================
-             BOTONES
-             ============================ -->
+        <!-- BOTONES -->
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button type="submit" class="btn" style="flex: 1; background: #4fc3f7; color: #000; font-weight: 700; border-radius: 10px; padding: 14px; font-size: 18px; border: none; min-width: 150px;">
                 ✅ Validar y Guardar
@@ -317,86 +329,152 @@
         setInterval(calcularTiempo, 5000);
 
         // ============================
-// 2. TABLA DE REPUESTOS - TOTAL EN TIEMPO REAL (FORZADO)
-// ============================
-const tablaBody = document.getElementById('cuerpoRepuestos');
-const btnAgregar = document.getElementById('agregarRepuestoBtn');
-const totalRepuestosSpan = document.getElementById('totalRepuestos');
-const costoRepuestosHidden = document.getElementById('costoRepuestosHidden');
-
-// 🟢 FUNCIÓN PARA ACTUALIZAR EL TOTAL (LEE TODOS LOS INPUTS)
-function actualizarTotalRepuestos() {
-    let total = 0;
-    document.querySelectorAll('.costo-repuesto').forEach(input => {
-        const val = parseFloat(input.value) || 0;
-        total += val;
-    });
-    totalRepuestosSpan.textContent = `$${total.toLocaleString('es-CL')}`;
-    costoRepuestosHidden.value = total.toFixed(2);
-    // Actualizar resumen financiero
-    if (typeof recalcularResumen === 'function') {
-        recalcularResumen();
-    }
-}
-
-// 🟢 AGREGAR FILA (sin eventos complejos)
-function agregarFilaRepuesto(nombre = '', costo = '') {
-    const fila = document.createElement('tr');
-    fila.className = 'fila-repuesto';
-    fila.innerHTML = `
-        <td style="padding: 4px 8px;">
-            <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm" 
-                   placeholder="Nombre del repuesto" value="${nombre}"
-                   style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px;">
-        </td>
-        <td style="padding: 4px 8px;">
-            <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
-                   step="0.01" placeholder="0" value="${costo}"
-                   style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right;">
-        </td>
-        <td style="padding: 4px 8px; text-align: center;">
-            <button type="button" class="btn-eliminar-repuesto" 
-                    style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px; opacity: 0.3;">
-                <i class="fa-solid fa-trash-can"></i>
-            </button>
-        </td>
-    `;
-
-    const eliminarBtn = fila.querySelector('.btn-eliminar-repuesto');
-    eliminarBtn.addEventListener('click', function() {
-        if (document.querySelectorAll('.fila-repuesto').length > 1) {
-            fila.remove();
-            actualizarTotalRepuestos();
-        } else {
-            alert('Debe haber al menos una fila de repuestos.');
-        }
-    });
-
-    tablaBody.appendChild(fila);
-    actualizarTotalRepuestos();
-}
-
-// 🟢 BOTÓN AGREGAR REPUESTO
-btnAgregar.addEventListener('click', function() {
-    agregarFilaRepuesto();
-});
-
-// 🟢 INICIALIZAR: crear una fila si no hay
-if (document.querySelectorAll('.fila-repuesto').length === 0) {
-    agregarFilaRepuesto();
-} else {
-    actualizarTotalRepuestos();
-}
-
-// ============================================================
-// 🟢 🔥 SOLUCIÓN DEFINITIVA: ACTUALIZAR CADA 500ms
-// ============================================================
-setInterval(function() {
-    actualizarTotalRepuestos();
-}, 500);
-        
+        // 2. TABLA DE REPUESTOS - TOTAL EN TIEMPO REAL
         // ============================
-        // 3. RESUMEN FINANCIERO AUTOMÁTICO
+        const tablaBody = document.getElementById('cuerpoRepuestos');
+        const btnAgregar = document.getElementById('agregarRepuestoBtn');
+        const totalRepuestosSpan = document.getElementById('totalRepuestos');
+        const costoRepuestosHidden = document.getElementById('costoRepuestosHidden');
+
+        function actualizarTotalRepuestos() {
+            let total = 0;
+            document.querySelectorAll('.costo-repuesto').forEach(input => {
+                const val = parseFloat(input.value) || 0;
+                total += val;
+            });
+            totalRepuestosSpan.textContent = `$${total.toLocaleString('es-CL')}`;
+            costoRepuestosHidden.value = total.toFixed(2);
+            if (typeof recalcularResumen === 'function') {
+                recalcularResumen();
+            }
+        }
+
+        function agregarFilaRepuesto(nombre = '', costo = '') {
+            const fila = document.createElement('tr');
+            fila.className = 'fila-repuesto';
+            fila.innerHTML = `
+                <td style="padding: 4px 8px; position: relative;">
+                    <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm repuesto-nombre" 
+                           placeholder="Nombre del repuesto" value="${nombre}"
+                           style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px;">
+                    <div class="repuesto-sugerencias" style="
+                        display: none;
+                        position: absolute;
+                        top: 100%;
+                        left: 0;
+                        right: 0;
+                        background: rgba(15,15,15,0.98);
+                        border: 1px solid rgba(0,255,102,0.20);
+                        border-radius: 6px;
+                        max-height: 150px;
+                        overflow-y: auto;
+                        z-index: 999;
+                        margin-top: 2px;
+                    "></div>
+                </td>
+                <td style="padding: 4px 8px;">
+                    <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
+                           step="0.01" placeholder="0" value="${costo}"
+                           style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right;">
+                </td>
+                <td style="padding: 4px 8px; text-align: center;">
+                    <button type="button" class="btn-eliminar-repuesto" 
+                            style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px; opacity: 0.3;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            `;
+
+            const eliminarBtn = fila.querySelector('.btn-eliminar-repuesto');
+            eliminarBtn.addEventListener('click', function() {
+                if (document.querySelectorAll('.fila-repuesto').length > 1) {
+                    fila.remove();
+                    actualizarTotalRepuestos();
+                } else {
+                    alert('Debe haber al menos una fila de repuestos.');
+                }
+            });
+
+            tablaBody.appendChild(fila);
+            actualizarTotalRepuestos();
+        }
+
+        btnAgregar.addEventListener('click', function() {
+            agregarFilaRepuesto();
+        });
+
+        // Inicializar
+        if (document.querySelectorAll('.fila-repuesto').length === 0) {
+            agregarFilaRepuesto();
+        } else {
+            actualizarTotalRepuestos();
+        }
+
+        setInterval(actualizarTotalRepuestos, 500);
+
+        // ============================
+        // 3. AUTOCOMPLETADO DE REPUESTOS
+        // ============================
+        document.addEventListener('input', function(e) {
+            if (e.target.classList && e.target.classList.contains('repuesto-nombre')) {
+                const input = e.target;
+                const sugerencias = input.parentElement.querySelector('.repuesto-sugerencias');
+                const query = input.value.trim();
+                
+                if (query.length < 2) {
+                    sugerencias.style.display = 'none';
+                    return;
+                }
+                
+                fetch(`https://ea-dixon-production.up.railway.app/api/repuestos?q=${encodeURIComponent(query)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            sugerencias.style.display = 'none';
+                            return;
+                        }
+                        sugerencias.innerHTML = data.map(item => `
+                            <div class="sugerencia-item" 
+                                 data-nombre="${item.nombre}" 
+                                 data-costo="${item.costo}"
+                                 style="padding: 6px 10px; cursor: pointer; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <span>${item.nombre}</span>
+                                <span style="color: #ffcc00; float: right;">$${item.costo}</span>
+                            </div>
+                        `).join('');
+                        sugerencias.style.display = 'block';
+                        
+                        sugerencias.querySelectorAll('.sugerencia-item').forEach(el => {
+                            el.addEventListener('click', function() {
+                                const nombre = this.dataset.nombre;
+                                const costo = this.dataset.costo;
+                                input.value = nombre;
+                                const fila = input.closest('.fila-repuesto');
+                                const costoInput = fila.querySelector('.costo-repuesto');
+                                if (costoInput) {
+                                    costoInput.value = costo;
+                                    setTimeout(actualizarTotalRepuestos, 100);
+                                }
+                                sugerencias.style.display = 'none';
+                            });
+                        });
+                    })
+                    .catch(() => {
+                        sugerencias.style.display = 'none';
+                    });
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('repuesto-nombre')) {
+                document.querySelectorAll('.repuesto-sugerencias').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+        });
+
+        // ============================
+        // 4. RESUMEN FINANCIERO
         // ============================
         const montoCliente = {{ registro.monto or 0 }};
         const inputManoObra = document.querySelector('input[name="costo_mano_obra"]');
@@ -428,8 +506,6 @@ setInterval(function() {
 
         inputManoObra.addEventListener('input', recalcularResumen);
         inputDiagnostico.addEventListener('input', recalcularResumen);
-
-        // Inicializar
         setTimeout(actualizarTotalRepuestos, 100);
     });
 </script>
@@ -441,6 +517,16 @@ setInterval(function() {
     }
     .fila-repuesto:hover .btn-eliminar-repuesto {
         opacity: 1;
+    }
+    .repuesto-sugerencias::-webkit-scrollbar {
+        width: 4px;
+    }
+    .repuesto-sugerencias::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.02);
+    }
+    .repuesto-sugerencias::-webkit-scrollbar-thumb {
+        background: #00ff66;
+        border-radius: 4px;
     }
 </style>
 
