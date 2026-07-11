@@ -619,3 +619,137 @@ def exportar_flota_pdf(flota):
         error_trace = traceback.format_exc()
         print(f"❌ Error en exportar_flota_pdf: {error_trace}")
         return jsonify({"error": str(e)}), 500
+@pago_bp.route('/dashboard', methods=['GET'])
+def get_dashboard():
+    """Devuelve datos agregados para el dashboard con proyecciones"""
+    try:
+        conn, cur = get_cursor()
+        
+        # ============================
+        # 1. TOTALES GENERALES
+        # ============================
+        cur.execute("""
+            SELECT 
+                COALESCE(SUM(monto), 0) as total_facturado,
+                COALESCE(SUM(costo_repuestos_real), 0) as total_repuestos,
+                COALESCE(SUM(costo_mano_obra_real), 0) as total_mano_obra,
+                COALESCE(SUM(costo_diagnostico_real), 0) as total_diagnostico,
+                COUNT(*) as total_servicios
+            FROM pagos 
+            WHERE estado = 'pagado'
+        """)
+        totales = cur.fetchone()
+        
+        # ============================
+        # 2. VENTAS DIARIAS (ÚLTIMOS 30 DÍAS)
+        # ============================
+        cur.execute("""
+            SELECT 
+                fecha,
+                COALESCE(SUM(monto), 0) as total
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND fecha >= CURRENT_DATE - INTERVAL '30 days'
+            GROUP BY fecha
+            ORDER BY fecha ASC
+        """)
+        ventas = cur.fetchall()
+        
+        # ============================
+        # 3. GANANCIA ACUMULADA
+        # ============================
+        cur.execute("""
+            SELECT 
+                fecha,
+                COALESCE(SUM(monto - COALESCE(costo_repuestos_real, 0) - COALESCE(costo_mano_obra_real, 0) - COALESCE(costo_diagnostico_real, 0)), 0) as ganancia
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND fecha >= CURRENT_DATE - INTERVAL '30 days'
+            GROUP BY fecha
+            ORDER BY fecha ASC
+        """)
+        ganancias = cur.fetchall()
+        
+        # ============================
+        # 4. TOP 5 CLIENTES
+        # ============================
+        cur.execute("""
+            SELECT 
+                nombre,
+                COALESCE(SUM(monto), 0) as total_gastado
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND nombre IS NOT NULL
+            GROUP BY nombre
+            ORDER BY total_gastado DESC
+            LIMIT 5
+        """)
+        clientes = cur.fetchall()
+        
+        # ============================
+        # 5. PROMEDIO DIARIO (para proyección)
+        # ============================
+        cur.execute("""
+            SELECT 
+                COALESCE(AVG(monto), 0) as promedio_diario
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND fecha >= CURRENT_DATE - INTERVAL '15 days'
+        """)
+        promedio = cur.fetchone()
+        promedio_diario = float(promedio[0]) if promedio and promedio[0] else 0
+        
+        cur.close()
+        conn.close()
+        
+        # ============================
+        # 6. FORMATO DE RESPUESTA
+        # ============================
+        labels = []
+        ventas_data = []
+        fechas_reales = []
+        
+        for row in ventas:
+            if row[0]:
+                fecha_str = row[0].strftime('%d/%m')
+                labels.append(fecha_str)
+                ventas_data.append(float(row[1]))
+                fechas_reales.append(row[0])
+        
+        # Ganancia acumulada
+        ganancia_data = []
+        acumulado = 0
+        for row in ganancias:
+            acumulado += float(row[1])
+            ganancia_data.append(acumulado)
+        
+        # ============================
+        # 7. PROYECCIÓN A 7 DÍAS
+        # ============================
+        proyeccion = []
+        proyeccion_labels = []
+        for i in range(1, 8):
+            from datetime import timedelta
+            fecha_futura = datetime.now().date() + timedelta(days=i)
+            proyeccion_labels.append(fecha_futura.strftime('%d/%m'))
+            proyeccion.append(round(promedio_diario * 0.85, 0))  # 85% del promedio diario
+        
+        return jsonify({
+            "total_facturado": float(totales[0]),
+            "total_repuestos": float(totales[1]),
+            "total_mano_obra": float(totales[2]),
+            "total_diagnostico": float(totales[3]),
+            "total_servicios": totales[4],
+            "ganancia_total": float(totales[0]) - float(totales[1]) - float(totales[2]) - float(totales[3]),
+            "promedio_diario": promedio_diario,
+            "labels": labels,
+            "ventas": ventas_data,
+            "ganancia_acumulada": ganancia_data,
+            "proyeccion_labels": proyeccion_labels,
+            "proyeccion": proyeccion,
+            "clientes_labels": [row[0] for row in clientes],
+            "clientes_data": [float(row[1]) for row in clientes]
+        })
+    except Exception as e:
+        print(f"Error en get_dashboard: {e}")
+        return jsonify({"error": str(e)}), 500
