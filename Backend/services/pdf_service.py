@@ -24,17 +24,17 @@ class PDFService:
     
     @staticmethod
     def generar_pdf_formal(registro):
-    """Genera un PDF con el formato formal de Dixon Electricidad Automotriz"""
-    import io
-    from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
-    from reportlab.lib import colors
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    import os
-    from datetime import datetime
+        """Genera un PDF con el formato formal de Dixon Electricidad Automotriz"""
+        import io
+        from reportlab.lib.pagesizes import letter
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        import os
+        from datetime import datetime
     
-    buffer = io.BytesIO()
+        buffer = io.BytesIO()
     
     # ============================
     # CONFIGURACIÓN DE PÁGINA
