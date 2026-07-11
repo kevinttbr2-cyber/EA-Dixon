@@ -105,6 +105,7 @@
             </h5>
 
             <!-- TABLA DE REPUESTOS CON AUTOCOMPLETADO -->
+<!-- TABLA DE REPUESTOS CON AUTOCOMPLETADO -->
 <div class="mb-3">
     <label class="form-label" style="color: #90e0a0; font-weight: 500;">
         🔧 Lista de repuestos
@@ -122,9 +123,9 @@
                 <tr class="fila-repuesto">
                     <td style="padding: 4px 8px; position: relative;">
                         <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm repuesto-nombre" 
-                               placeholder="Escribe para buscar..." autocomplete="off"
+                               placeholder="Escribe para buscar o crea uno nuevo..." autocomplete="off"
                                style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; width: 100%;">
-                        <!-- 🔥 MENÚ DESPLEGABLE DE REPUESTOS -->
+                        <!-- MENÚ DESPLEGABLE -->
                         <div class="repuesto-sugerencias" style="
                             display: none;
                             position: absolute;
@@ -164,7 +165,7 @@
         </div>
         <input type="hidden" name="costo_repuestos" id="costoRepuestosHidden" value="0">
     </div>
-    <small style="color: #666; font-size: 11px;">Escribe el nombre del repuesto para buscar en el historial.</small>
+    <small style="color: #666; font-size: 11px;">Escribe el nombre del repuesto para buscar. Si es nuevo, presiona Enter para guardarlo.</small>
 </div>
 
             <div class="mb-3">
@@ -388,92 +389,184 @@ document.addEventListener('DOMContentLoaded', function() {
         agregarFilaRepuesto();
     });
 
-    // ============================
-    // 3. AUTOCOMPLETADO DE REPUESTOS (COMO MARCAS)
-    // ============================
-    let timeoutId = null;
+   // ============================
+// 3. AUTOCOMPLETADO + GUARDADO AUTOMÁTICO DE REPUESTOS
+// ============================
+let timeoutId = null;
 
-    function manejarAutocompletado(e) {
-        const input = e.target;
-        const sugerencias = input.parentElement.querySelector('.repuesto-sugerencias');
-        const query = input.value.trim();
-        
-        if (timeoutId) clearTimeout(timeoutId);
-        
-        if (query.length < 2) {
-            sugerencias.style.display = 'none';
-            return;
+function guardarRepuesto(nombre, costo) {
+    return fetch('https://ea-dixon-production.up.railway.app/api/repuestos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: nombre, costo: costo, proveedor: '' })
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (resp.success) {
+            console.log('✅ Repuesto guardado:', nombre);
+            return resp;
+        } else {
+            console.error('❌ Error al guardar:', resp.error);
+            return null;
         }
-        
-        timeoutId = setTimeout(function() {
-            fetch(`https://ea-dixon-production.up.railway.app/api/repuestos?q=${encodeURIComponent(query)}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        sugerencias.style.display = 'none';
-                        return;
-                    }
-                    sugerencias.innerHTML = data.map(item => `
-                        <div class="sugerencia-item" 
-                             data-nombre="${item.nombre}" 
-                             data-costo="${item.costo}"
-                             style="padding: 8px 12px; cursor: pointer; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
-                            <span>${item.nombre}</span>
-                            <span style="color: #ffcc00; font-weight: 600;">$${item.costo}</span>
+    })
+    .catch(err => {
+        console.error('❌ Error de conexión:', err);
+        return null;
+    });
+}
+
+function manejarAutocompletado(e) {
+    const input = e.target;
+    const sugerencias = input.parentElement.querySelector('.repuesto-sugerencias');
+    const query = input.value.trim();
+    const fila = input.closest('.fila-repuesto');
+    const costoInput = fila.querySelector('.costo-repuesto');
+    
+    // Limpiar timeout anterior
+    if (timeoutId) clearTimeout(timeoutId);
+    
+    // Si no hay suficiente texto, ocultar el menú
+    if (query.length < 2) {
+        sugerencias.style.display = 'none';
+        return;
+    }
+    
+    // Mostrar "Buscando..."
+    sugerencias.innerHTML = '<div style="padding:8px 12px;color:#888;text-align:center;">🔍 Buscando...</div>';
+    sugerencias.style.display = 'block';
+    
+    timeoutId = setTimeout(function() {
+        fetch(`https://ea-dixon-production.up.railway.app/api/repuestos?q=${encodeURIComponent(query)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) {
+                    // 🔥 Si no hay resultados, mostrar opción para crear nuevo
+                    sugerencias.innerHTML = `
+                        <div class="sugerencia-crear" style="
+                            padding: 8px 12px; 
+                            cursor: pointer; 
+                            color: #00ff66; 
+                            border-bottom: 1px solid rgba(255,255,255,0.05); 
+                            display: flex; 
+                            justify-content: space-between; 
+                            align-items: center;
+                            font-weight: 600;
+                        ">
+                            <span>➕ Crear "${query}"</span>
+                            <span style="color: #888; font-size: 12px;">(nuevo)</span>
                         </div>
-                    `).join('');
+                        <div style="padding: 6px 12px; color: #666; font-size: 12px; text-align: center;">
+                            El costo se tomará del campo "Costo ($)"
+                        </div>
+                    `;
                     sugerencias.style.display = 'block';
                     
-                    sugerencias.querySelectorAll('.sugerencia-item').forEach(el => {
-                        el.addEventListener('click', function() {
-                            const nombre = this.dataset.nombre;
-                            const costo = this.dataset.costo;
-                            input.value = nombre;
-                            const fila = input.closest('.fila-repuesto');
-                            const costoInput = fila.querySelector('.costo-repuesto');
-                            if (costoInput) {
-                                costoInput.value = costo;
-                                actualizarTotalRepuestos();
+                    // Evento para crear nuevo repuesto
+                    const crearBtn = sugerencias.querySelector('.sugerencia-crear');
+                    if (crearBtn) {
+                        crearBtn.addEventListener('click', function() {
+                            const nombre = query;
+                            const costo = parseFloat(costoInput.value) || 0;
+                            
+                            if (!nombre) {
+                                alert('⚠️ Escribe un nombre para el repuesto');
+                                return;
                             }
-                            sugerencias.style.display = 'none';
+                            if (costo <= 0) {
+                                alert('⚠️ Ingresa un costo válido');
+                                return;
+                            }
+                            
+                            // Guardar el repuesto
+                            guardarRepuesto(nombre, costo).then(resp => {
+                                if (resp && resp.success) {
+                                    input.value = nombre;
+                                    costoInput.value = costo;
+                                    actualizarTotalRepuestos();
+                                    sugerencias.style.display = 'none';
+                                    alert('✅ Repuesto guardado correctamente');
+                                } else {
+                                    alert('❌ Error al guardar el repuesto');
+                                }
+                            });
                         });
-                    });
-                })
-                .catch(() => {
-                    sugerencias.style.display = 'none';
-                });
-        }, 300);
-    }
-
-    // Agregar evento a los inputs existentes
-    document.querySelectorAll('.repuesto-nombre').forEach(input => {
-        input.addEventListener('input', manejarAutocompletado);
-    });
-
-    // Observer para nuevos inputs
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            mutation.addedNodes.forEach(function(node) {
-                if (node.nodeType === 1 && node.classList && node.classList.contains('fila-repuesto')) {
-                    const input = node.querySelector('.repuesto-nombre');
-                    if (input) {
-                        input.addEventListener('input', manejarAutocompletado);
                     }
+                    return;
                 }
+                
+                // Mostrar lista de repuestos existentes
+                sugerencias.innerHTML = data.map(item => `
+                    <div class="sugerencia-item" 
+                         data-nombre="${item.nombre}" 
+                         data-costo="${item.costo}"
+                         style="padding: 8px 12px; cursor: pointer; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                        <span>${item.nombre}</span>
+                        <span style="color: #ffcc00; font-weight: 600;">$${item.costo}</span>
+                    </div>
+                `).join('');
+                sugerencias.style.display = 'block';
+                
+                // Evento para seleccionar repuesto existente
+                sugerencias.querySelectorAll('.sugerencia-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const nombre = this.dataset.nombre;
+                        const costo = this.dataset.costo;
+                        input.value = nombre;
+                        costoInput.value = costo;
+                        actualizarTotalRepuestos();
+                        sugerencias.style.display = 'none';
+                    });
+                });
+            })
+            .catch(() => {
+                sugerencias.innerHTML = '<div style="padding:8px 12px;color:#ff6b6b;text-align:center;">❌ Error al cargar</div>';
+                sugerencias.style.display = 'block';
             });
-        });
-    });
-    observer.observe(tablaBody, { childList: true });
+    }, 400);
+}
 
-    // Cerrar sugerencias al hacer clic fuera
-    document.addEventListener('click', function(e) {
-        if (!e.target.classList.contains('repuesto-nombre')) {
-            document.querySelectorAll('.repuesto-sugerencias').forEach(el => {
-                el.style.display = 'none';
-            });
+// 🔥 GUARDADO CON TECLA ENTER (cuando no hay sugerencias visibles)
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === 'Tab') {
+        const input = document.activeElement;
+        if (input && input.classList.contains('repuesto-nombre')) {
+            const fila = input.closest('.fila-repuesto');
+            const costoInput = fila.querySelector('.costo-repuesto');
+            const sugerencias = input.parentElement.querySelector('.repuesto-sugerencias');
+            
+            // Si el menú está visible, no hacer nada (deja que el click maneje la selección)
+            if (sugerencias && sugerencias.style.display === 'block') {
+                // Si hay elementos en el menú, no guardar automáticamente
+                const items = sugerencias.querySelectorAll('.sugerencia-item');
+                if (items.length > 0) {
+                    return;
+                }
+            }
+            
+            // Si no hay menú visible o está vacío, guardar el nuevo repuesto
+            const nombre = input.value.trim();
+            const costo = parseFloat(costoInput.value) || 0;
+            
+            if (nombre && costo > 0) {
+                // Verificar si ya existe (solo guardar si es nuevo)
+                fetch(`https://ea-dixon-production.up.railway.app/api/repuestos?q=${encodeURIComponent(nombre)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        const existe = data.some(item => item.nombre.toLowerCase() === nombre.toLowerCase());
+                        if (!existe) {
+                            guardarRepuesto(nombre, costo).then(resp => {
+                                if (resp && resp.success) {
+                                    console.log('✅ Repuesto guardado con Enter:', nombre);
+                                }
+                            });
+                        }
+                    })
+                    .catch(() => {});
+            }
         }
-    });
-
+    }
+});
     // ============================
     // 4. INICIALIZAR
     // ============================
