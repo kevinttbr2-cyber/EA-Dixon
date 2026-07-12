@@ -4,9 +4,6 @@ from flask_cors import CORS
 from config import Config
 from routes import auth_bp, pago_bp, catalogo_bp, flota_bp, pdf_bp, auditoria_bp
 from services.auth_service import AuthService
-from models import Pago  # Importa tu modelo
-import pandas as pd
-from io import BytesIO
 
 # ============================
 # CREAR APP
@@ -56,7 +53,7 @@ def health():
     })
 
 # ============================
-# RUTA 1: EXPORTAR DB (SIN BORRAR)
+# RUTA 1: EXPORTAR DB (SIN BORRAR) - SIN PANDAS
 # ============================
 @app.route('/exportar_datos', methods=['GET'])
 def exportar_datos():
@@ -64,7 +61,7 @@ def exportar_datos():
     try:
         from database import db
         from models import Pago
-        import pandas as pd
+        from openpyxl import Workbook
         from io import BytesIO
         
         # Obtener todos los registros
@@ -73,51 +70,57 @@ def exportar_datos():
         if not registros:
             return jsonify({'error': 'No hay registros para exportar'}), 400
         
-        # Crear DataFrame
-        datos = []
+        # Crear libro de Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Exportacion"
+        
+        # Encabezados
+        headers = [
+            'ID', 'Cliente', 'Teléfono', 'Monto', 'Fecha', 'Hora',
+            'Patente', 'Marca', 'Modelo', 'Año', 'Flota',
+            'Atendido por', 'Estado', 'Observaciones Cliente',
+            'Observaciones Pago', 'Diagnóstico', 'Reparación',
+            'Resultado', 'Tiempo Estimado', 'Costo Repuestos',
+            'Costo Mano Obra', 'Costo Diagnóstico', 'Ganancia Neta',
+            'Validado', 'Validado por', 'Firma'
+        ]
+        ws.append(headers)
+        
+        # Datos
         for r in registros:
-            datos.append({
-                'ID': r.id,
-                'Cliente': r.nombre,
-                'Teléfono': getattr(r, 'telefono', ''),
-                'Monto': r.monto,
-                'Fecha': r.fecha,
-                'Hora': r.hora,
-                'Patente': r.patente,
-                'Marca': r.marca,
-                'Modelo': r.modelo,
-                'Año': getattr(r, 'anio', ''),
-                'Flota': getattr(r, 'flota', ''),
-                'Atendido por': r.atendido_por or r.usuario,
-                'Estado': r.estado,
-                'Observaciones Cliente': getattr(r, 'observaciones_cliente', ''),
-                'Observaciones Pago': getattr(r, 'observaciones_pago', ''),
-                'Diagnóstico': getattr(r, 'diagnostico', ''),
-                'Reparación': getattr(r, 'reparacion', ''),
-                'Resultado': getattr(r, 'resultado', ''),
-                'Tiempo Estimado': getattr(r, 'tiempo_estimado', ''),
-                'Costo Repuestos': getattr(r, 'costo_repuestos_real', 0),
-                'Costo Mano Obra': getattr(r, 'costo_mano_obra_real', 0),
-                'Costo Diagnóstico': getattr(r, 'costo_diagnostico_real', 0),
-                'Ganancia Neta': getattr(r, 'ganancia_neta', 0),
-                'Validado': getattr(r, 'validado', False),
-                'Validado por': getattr(r, 'validado_por', ''),
-                'Firma': getattr(r, 'firma', ''),
-            })
+            ws.append([
+                r.id,
+                r.nombre,
+                getattr(r, 'telefono', ''),
+                r.monto,
+                r.fecha,
+                r.hora,
+                r.patente,
+                r.marca,
+                r.modelo,
+                getattr(r, 'anio', ''),
+                getattr(r, 'flota', ''),
+                r.atendido_por or r.usuario,
+                r.estado,
+                getattr(r, 'observaciones_cliente', ''),
+                getattr(r, 'observaciones_pago', ''),
+                getattr(r, 'diagnostico', ''),
+                getattr(r, 'reparacion', ''),
+                getattr(r, 'resultado', ''),
+                getattr(r, 'tiempo_estimado', ''),
+                getattr(r, 'costo_repuestos_real', 0),
+                getattr(r, 'costo_mano_obra_real', 0),
+                getattr(r, 'costo_diagnostico_real', 0),
+                getattr(r, 'ganancia_neta', 0),
+                getattr(r, 'validado', False),
+                getattr(r, 'validado_por', ''),
+                getattr(r, 'firma', ''),
+            ])
         
-        df = pd.DataFrame(datos)
+        # Guardar en memoria
         output = BytesIO()
-        
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, sheet_name='Exportacion', index=False)
-            
-            # Formatear columnas
-            workbook = writer.book
-            worksheet = writer.sheets['Exportacion']
-            for i, col in enumerate(df.columns):
-                column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
-                worksheet.set_column(i, i, min(column_width, 50))
-        
+        wb.save(output)
         output.seek(0)
         
         # Crear respuesta con el archivo
@@ -133,7 +136,7 @@ def exportar_datos():
 
 
 # ============================
-# RUTA 2: EXPORTAR Y BORRAR DB
+# RUTA 2: EXPORTAR Y BORRAR DB - SIN PANDAS
 # ============================
 @app.route('/exportar_y_borrar', methods=['POST'])
 def exportar_y_borrar():
@@ -141,7 +144,7 @@ def exportar_y_borrar():
     try:
         from database import db
         from models import Pago
-        import pandas as pd
+        from openpyxl import Workbook
         from io import BytesIO
         
         # Obtener todos los registros
@@ -150,50 +153,57 @@ def exportar_y_borrar():
         if not registros:
             return jsonify({'error': 'No hay registros para exportar'}), 400
         
-        # Crear DataFrame
-        datos = []
+        # Crear libro de Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Backup"
+        
+        # Encabezados
+        headers = [
+            'ID', 'Cliente', 'Teléfono', 'Monto', 'Fecha', 'Hora',
+            'Patente', 'Marca', 'Modelo', 'Año', 'Flota',
+            'Atendido por', 'Estado', 'Observaciones Cliente',
+            'Observaciones Pago', 'Diagnóstico', 'Reparación',
+            'Resultado', 'Tiempo Estimado', 'Costo Repuestos',
+            'Costo Mano Obra', 'Costo Diagnóstico', 'Ganancia Neta',
+            'Validado', 'Validado por', 'Firma'
+        ]
+        ws.append(headers)
+        
+        # Datos
         for r in registros:
-            datos.append({
-                'ID': r.id,
-                'Cliente': r.nombre,
-                'Teléfono': getattr(r, 'telefono', ''),
-                'Monto': r.monto,
-                'Fecha': r.fecha,
-                'Hora': r.hora,
-                'Patente': r.patente,
-                'Marca': r.marca,
-                'Modelo': r.modelo,
-                'Año': getattr(r, 'anio', ''),
-                'Flota': getattr(r, 'flota', ''),
-                'Atendido por': r.atendido_por or r.usuario,
-                'Estado': r.estado,
-                'Observaciones Cliente': getattr(r, 'observaciones_cliente', ''),
-                'Observaciones Pago': getattr(r, 'observaciones_pago', ''),
-                'Diagnóstico': getattr(r, 'diagnostico', ''),
-                'Reparación': getattr(r, 'reparacion', ''),
-                'Resultado': getattr(r, 'resultado', ''),
-                'Tiempo Estimado': getattr(r, 'tiempo_estimado', ''),
-                'Costo Repuestos': getattr(r, 'costo_repuestos_real', 0),
-                'Costo Mano Obra': getattr(r, 'costo_mano_obra_real', 0),
-                'Costo Diagnóstico': getattr(r, 'costo_diagnostico_real', 0),
-                'Ganancia Neta': getattr(r, 'ganancia_neta', 0),
-                'Validado': getattr(r, 'validado', False),
-                'Validado por': getattr(r, 'validado_por', ''),
-                'Firma': getattr(r, 'firma', ''),
-            })
+            ws.append([
+                r.id,
+                r.nombre,
+                getattr(r, 'telefono', ''),
+                r.monto,
+                r.fecha,
+                r.hora,
+                r.patente,
+                r.marca,
+                r.modelo,
+                getattr(r, 'anio', ''),
+                getattr(r, 'flota', ''),
+                r.atendido_por or r.usuario,
+                r.estado,
+                getattr(r, 'observaciones_cliente', ''),
+                getattr(r, 'observaciones_pago', ''),
+                getattr(r, 'diagnostico', ''),
+                getattr(r, 'reparacion', ''),
+                getattr(r, 'resultado', ''),
+                getattr(r, 'tiempo_estimado', ''),
+                getattr(r, 'costo_repuestos_real', 0),
+                getattr(r, 'costo_mano_obra_real', 0),
+                getattr(r, 'costo_diagnostico_real', 0),
+                getattr(r, 'ganancia_neta', 0),
+                getattr(r, 'validado', False),
+                getattr(r, 'validado_por', ''),
+                getattr(r, 'firma', ''),
+            ])
         
-        df = pd.DataFrame(datos)
+        # Guardar en memoria
         output = BytesIO()
-        
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, sheet_name='Backup', index=False)
-            
-            workbook = writer.book
-            worksheet = writer.sheets['Backup']
-            for i, col in enumerate(df.columns):
-                column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
-                worksheet.set_column(i, i, min(column_width, 50))
-        
+        wb.save(output)
         output.seek(0)
         
         # Crear respuesta con el archivo
@@ -215,6 +225,7 @@ def exportar_y_borrar():
     except Exception as e:
         print(f"❌ Error en exportar_y_borrar: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 # ============================
 # CREAR ADMIN AL INICIAR
