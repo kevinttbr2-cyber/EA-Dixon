@@ -338,26 +338,42 @@
             filtrarTabla();
         });
 
-        // ============================
-        // 3. MENÚ DE 3 PUNTITOS (⋮)
-        // ============================
-        document.querySelectorAll('.btn-acciones, .btn-acciones-movil').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const menu = this.closest('td')?.querySelector('.menu-acciones') || 
-                             this.closest('.card-android')?.querySelector('.menu-acciones');
-                if (menu) {
-                    document.querySelectorAll('.menu-acciones').forEach(m => {
-                        if (m !== menu) m.style.display = 'none';
-                    });
-                    // Posicionar el menú
-                    const rect = this.getBoundingClientRect();
-                    menu.style.left = (rect.left - 100) + 'px';
-                    menu.style.top = (rect.bottom + 4) + 'px';
-                    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-                }
+       // ============================
+// 3. MENÚ DE 3 PUNTITOS (⋮) - VERSIÓN CORREGIDA PARA MÓVIL
+// ============================
+document.querySelectorAll('.btn-acciones, .btn-acciones-movil').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const menu = this.closest('td')?.querySelector('.menu-acciones') || 
+                     this.closest('.card-android')?.querySelector('.menu-acciones');
+        if (menu) {
+            // Cerrar otros menús
+            document.querySelectorAll('.menu-acciones').forEach(m => {
+                if (m !== menu) m.style.display = 'none';
             });
-        });
+            
+            // 🔥 POSICIONAR EL MENÚ CORRECTAMENTE
+            const rect = this.getBoundingClientRect();
+            const isMobile = window.innerWidth < 768;
+            
+            if (isMobile) {
+                // En móvil: centrar el menú
+                menu.style.left = '50%';
+                menu.style.transform = 'translateX(-50%)';
+                menu.style.top = (rect.bottom + 8) + 'px';
+                menu.style.right = 'auto';
+            } else {
+                // En escritorio: a la derecha del botón
+                menu.style.left = (rect.left - 100) + 'px';
+                menu.style.top = (rect.bottom + 4) + 'px';
+                menu.style.right = 'auto';
+                menu.style.transform = 'none';
+            }
+            
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+    });
+});
 
         document.addEventListener('click', function() {
             document.querySelectorAll('.menu-acciones').forEach(m => m.style.display = 'none');
