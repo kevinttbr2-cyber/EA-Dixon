@@ -95,20 +95,21 @@
                     <td style="padding:6px 8px;text-align:center;">{{ r.marca }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.modelo }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
-    <button class="btn-acciones" style="
-        background:transparent;
-        border:none;
-        color:#4fc3f7;
-        cursor:pointer;
-        padding:6px 10px;
-        font-size:20px;
-        border-radius:6px;
-        transition: background 0.2s;
-        line-height:1;
-    " data-id="{{ r.id }}" data-nombre="{{ r.nombre }}">
-        ⋮
-    </button>
-</td>
+                    <td style="padding:6px 8px;text-align:center;">
+                        <button class="btn-acciones" style="
+                            background:transparent;
+                            border:none;
+                            color:#4fc3f7;
+                            cursor:pointer;
+                            padding:6px 10px;
+                            font-size:20px;
+                            border-radius:6px;
+                            transition: background 0.2s;
+                            line-height:1;
+                        " data-id="{{ r.id }}" data-nombre="{{ r.nombre }}">
+                            ⋮
+                        </button>
+                    </td>
                 </tr>
                 {% else %}
                 <tr>
@@ -134,18 +135,18 @@
                 <div style="display:flex;align-items:center;gap:6px;">
                     <span style="color:#00ff66;font-weight:700;font-size:16px;">${{ "{:,.0f}".format(r.monto) }}</span>
                     <button class="btn-acciones-movil" style="
-    background:transparent;
-    border:none;
-    color:#4fc3f7;
-    cursor:pointer;
-    padding:4px 8px;
-    font-size:22px;
-    border-radius:6px;
-    transition: background 0.2s;
-    line-height:1;
-" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}">
-    ⋮
-</button>
+                        background:transparent;
+                        border:none;
+                        color:#4fc3f7;
+                        cursor:pointer;
+                        padding:4px 8px;
+                        font-size:22px;
+                        border-radius:6px;
+                        transition: background 0.2s;
+                        line-height:1;
+                    " data-id="{{ r.id }}" data-nombre="{{ r.nombre }}">
+                        ⋮
+                    </button>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin-top:6px;font-size:13px;">
@@ -255,7 +256,6 @@
             <span style="font-size:16px;">❌</span> Cancelar
         </button>
     </div>
-</div>
 </div>
 
 <!-- ============================
@@ -496,7 +496,7 @@
             currentBoton = null;
             menuAbierto = false;
             if (scrollTimeout) {
-                clearTimeout(scrollTimeout);
+                cancelAnimationFrame(scrollTimeout);
                 scrollTimeout = null;
             }
         }
