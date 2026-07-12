@@ -1,6 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    /* Fix para dropdowns móviles */
+    .dropdown-menu {
+        transform: none !important;
+    }
+    .dropdown-menu.show {
+        display: block !important;
+    }
+    .btn-acciones-movil {
+        display: none !important;
+    }
+    /* Asegurar que los dropdowns en móvil se vean correctamente */
+    @media (max-width: 768px) {
+        .dropdown-menu {
+            position: absolute !important;
+            inset: auto !important;
+            transform: none !important;
+        }
+    }
+</style>
 
 <div class="base-container">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
@@ -134,19 +154,47 @@
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;">
                     <span style="color:#00ff66;font-weight:700;font-size:16px;">${{ "{:,.0f}".format(r.monto) }}</span>
-                    <button class="btn-acciones-movil" style="
-                        background:transparent;
-                        border:none;
-                        color:#4fc3f7;
-                        cursor:pointer;
-                        padding:4px 8px;
-                        font-size:22px;
-                        border-radius:6px;
-                        transition: background 0.2s;
-                        line-height:1;
-                    " data-id="{{ r.id }}" data-nombre="{{ r.nombre }}">
-                        ⋮
-                    </button>
+                    <div class="dropdown" style="flex-shrink: 0; position: relative; z-index: 999999;">
+    <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+            style="background: transparent; border: none; color: rgba(255,255,255,0.3); font-size: 18px; padding: 4px 8px; cursor: pointer;">
+        <i class="fa-solid fa-ellipsis-vertical"></i>
+    </button>
+    <ul class="dropdown-menu" style="
+        z-index: 9999999; 
+        position: absolute; 
+        right: 0; 
+        left: auto; 
+        bottom: 100%; 
+        margin-bottom: 8px;
+        background: #1a1a1a; 
+        border: 1px solid #00ff66; 
+        border-radius: 12px; 
+        padding: 8px; 
+        min-width: 170px; 
+        box-shadow: 0 8px 32px rgba(0,0,0,0.9);
+    ">
+        {% if session.get("rol") == "admin" and r["estado"] == 'pagado' %}
+        <li>
+            <a class="dropdown-item" href="/editar_pago/{{ r['id'] }}" 
+               style="color: #4fc3f7; padding: 8px 14px; border-radius: 6px; font-size: 13px; transition: all 0.2s ease; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-pen-to-square" style="width: 20px;"></i> Editar Pago
+            </a>
+        </li>
+        {% endif %}
+        {% if session.get("rol") in ["admin", "operador"] %}
+        <li>
+            <a class="dropdown-item" href="/eliminar/{{ r['id'] }}" 
+               onclick="return confirm('⚠️ ¿Estás seguro de eliminar este registro?\n\nEsta acción NO se puede deshacer.');"
+               style="color: #ff6b6b; padding: 8px 14px; border-radius: 6px; font-size: 13px; transition: all 0.2s ease; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-trash-can" style="width: 20px;"></i> Eliminar
+            </a>
+        </li>
+        {% endif %}
+        {% if not (session.get("rol") == "admin" and r["estado"] == 'pagado') and session.get("rol") not in ["admin", "operador"] %}
+        <li style="padding: 10px 16px; color: #666; font-size: 13px; text-align: center;">Sin acciones</li>
+        {% endif %}
+    </ul>
+</div>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin-top:6px;font-size:13px;">
@@ -610,6 +658,75 @@
 
         console.log('🚀 Script listo - Abre la consola para ver los logs');
 
+        // ============================
+// EXPORTAR Y BORRAR DB (con scroll suave)
+// ============================
+window.confirmarExportarYBorrar = function() {
+    if (confirm('⚠️ ¿Estás seguro de que quieres EXPORTAR y BORRAR TODOS los registros?\n\nSe descargará un archivo Excel de respaldo y luego se eliminarán todos los datos.')) {
+        if (confirm('⚠️ Confirmación final: ¿Realmente deseas EXPORTAR y BORRAR TODA la base de datos?\n\nEsta acción NO se puede deshacer.')) {
+            const btn = document.querySelector('button[onclick="confirmarExportarYBorrar()"]');
+            
+            fetch('/exportar_y_borrar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'backup_antes_borrar.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                
+                alert('✅ Backup descargado. Los datos han sido eliminados.');
+                setTimeout(() => {
+                    window.location.href = '/registros';
+                }, 1500);
+            })
+            .catch(error => {
+                alert('❌ Error: ' + error.message);
+                if (btn) {
+                    btn.textContent = '⚠️ Borrar DB';
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+        }
+    }
+};
+
+// ============================
+// EXPORTAR EXCEL (mejorado)
+// ============================
+document.getElementById('exportExcel')?.addEventListener('click', function() {
+    const table = document.getElementById('tablaRegistros');
+    if (!table) return;
+    const rows = Array.from(table.querySelectorAll('tr'));
+    let csv = rows.map(row => {
+        const cols = Array.from(row.querySelectorAll('th, td'));
+        return cols.map(col => `"${col.innerText.trim().replace(/"/g, '""')}"`).join(',');
+    }).join('\n');
+    
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'registros_exportados.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+});
+        
         // ============================
         // 4. VER DETALLE
         // ============================
