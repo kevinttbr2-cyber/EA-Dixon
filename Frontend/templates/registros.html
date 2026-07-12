@@ -97,26 +97,11 @@
                     <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
                     <td style="padding:6px 8px;text-align:center;position:relative;">
                         <button class="btn-acciones" style="background:transparent;border:none;color:#4fc3f7;cursor:pointer;padding:4px 8px;font-size:18px;" data-id="{{ r.id }}">⋮</button>
-                        <div class="menu-acciones" style="
-                            display: none;
-                            position: fixed;
-                            background: rgba(15,15,15,0.98);
-                            border: 1px solid rgba(0,255,102,0.30);
-                            border-radius: 10px;
-                            padding: 6px 0;
-                            min-width: 170px;
-                            z-index: 999999;
-                            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-                        ">
-                            <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="background:transparent;border:none;color:#fff;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">📄 Ver detalle</button>
-                            <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#4fc3f7;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">✏️ Editar</button>
-                            <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#ff6b6b;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">🗑️ Eliminar</button>
-                        </div>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="10" style="text-align:center;color:#666;padding:40px 0;">
+                    <td colspan="9" style="text-align:center;color:#666;padding:40px 0;">
                         <i class="fa-solid fa-inbox" style="font-size:48px;color:#00ff66;opacity:0.2;display:block;margin-bottom:10px;"></i>
                         <p style="font-size:16px;">No hay registros de pagos</p>
                     </td>
@@ -138,21 +123,6 @@
                 <div style="display:flex;align-items:center;gap:6px;">
                     <span style="color:#00ff66;font-weight:700;font-size:16px;">${{ "{:,.0f}".format(r.monto) }}</span>
                     <button class="btn-acciones-movil" style="background:transparent;border:none;color:#4fc3f7;cursor:pointer;padding:0 4px;font-size:20px;" data-id="{{ r.id }}">⋮</button>
-                    <div class="menu-acciones" style="
-                        display: none;
-                        position: fixed;
-                        background: rgba(15,15,15,0.98);
-                        border: 1px solid rgba(0,255,102,0.30);
-                        border-radius: 10px;
-                        padding: 6px 0;
-                        min-width: 170px;
-                        z-index: 999999;
-                        box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-                    ">
-                        <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="background:transparent;border:none;color:#fff;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">📄 Ver detalle</button>
-                        <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#4fc3f7;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">✏️ Editar</button>
-                        <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#ff6b6b;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">🗑️ Eliminar</button>
-                    </div>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin-top:6px;font-size:13px;">
@@ -161,8 +131,6 @@
                 <div><span style="color:#888;">Patente:</span> <span style="color:#fff;">{{ r.patente }}</span></div>
                 <div><span style="color:#888;">Atendido:</span> <span style="color:#fff;">{{ r.atendido_por or r.usuario or '-' }}</span></div>
                 <div style="grid-column:1/3;"><span style="color:#888;">Vehículo:</span> <span style="color:#fff;">{{ r.marca }} {{ r.modelo }}</span></div>
-                <div style="grid-column:1/3;margin-top:4px;">
-                </div>
             </div>
             <div style="margin-top:4px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.05);padding-top:4px;">
                 {{ (r.observaciones_pago or r.observaciones_cliente or '')[:60] }}{% if (r.observaciones_pago or r.observaciones_cliente or '')|length > 60 %}...{% endif %}
@@ -174,6 +142,91 @@
             <p style="font-size:16px;">No hay registros de pagos</p>
         </div>
         {% endfor %}
+    </div>
+</div>
+
+<!-- ============================
+     MODAL DE ACCIONES FLOTANTE (PARA MÓVIL Y ESCRITORIO)
+     ============================ -->
+<div id="modalAcciones" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.65);
+    z-index: 9999999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+">
+    <div style="
+        background: rgba(15,15,15,0.98);
+        border: 2px solid #00ff66;
+        border-radius: 16px;
+        padding: 20px 24px;
+        max-width: 280px;
+        width: 90%;
+        box-shadow: 0 8px 48px rgba(0,0,0,0.8);
+    ">
+        <div style="text-align:center;margin-bottom:12px;color:#888;font-size:13px;">
+            <span id="accionClienteNombre" style="color:#fff;font-weight:600;"></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+            <button class="accion-modal-btn" data-accion="detalle" style="
+                background: rgba(255,255,255,0.04);
+                border: none;
+                color: #fff;
+                padding: 10px 16px;
+                border-radius: 8px;
+                text-align: left;
+                font-size: 15px;
+                cursor: pointer;
+                width: 100%;
+            ">
+                📄 Ver detalle
+            </button>
+            <button class="accion-modal-btn" data-accion="editar" style="
+                background: rgba(79,195,247,0.08);
+                border: none;
+                color: #4fc3f7;
+                padding: 10px 16px;
+                border-radius: 8px;
+                text-align: left;
+                font-size: 15px;
+                cursor: pointer;
+                width: 100%;
+            ">
+                ✏️ Editar
+            </button>
+            <button class="accion-modal-btn" data-accion="eliminar" style="
+                background: rgba(255,107,107,0.08);
+                border: none;
+                color: #ff6b6b;
+                padding: 10px 16px;
+                border-radius: 8px;
+                text-align: left;
+                font-size: 15px;
+                cursor: pointer;
+                width: 100%;
+            ">
+                🗑️ Eliminar
+            </button>
+            <button id="cerrarAccionesModal" style="
+                background: transparent;
+                border: none;
+                color: #888;
+                padding: 8px 16px;
+                border-radius: 8px;
+                text-align: center;
+                font-size: 13px;
+                cursor: pointer;
+                margin-top: 4px;
+            ">
+                Cancelar
+            </button>
+        </div>
     </div>
 </div>
 
@@ -359,62 +412,62 @@
         });
 
         // ============================
-        // 3. MENÚ DE 3 PUNTITOS (⋮) - CORREGIDO
+        // 3. MENÚ DE ACCIONES FLOTANTE (MODAL)
         // ============================
+        const modalAcciones = document.getElementById('modalAcciones');
+        let currentAccionId = null;
+
+        function mostrarModalAcciones(id, nombre) {
+            currentAccionId = id;
+            document.getElementById('accionClienteNombre').textContent = 'OT #' + id + ' - ' + nombre;
+            modalAcciones.style.display = 'flex';
+        }
+
+        function cerrarModalAcciones() {
+            modalAcciones.style.display = 'none';
+            currentAccionId = null;
+        }
+
+        // Evento para abrir el modal desde los botones
         document.querySelectorAll('.btn-acciones, .btn-acciones-movil').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                const menu = this.closest('td')?.querySelector('.menu-acciones') || 
-                             this.closest('.card-android')?.querySelector('.menu-acciones');
-                if (menu) {
-                    document.querySelectorAll('.menu-acciones').forEach(m => {
-                        if (m !== menu) m.style.display = 'none';
-                    });
-                    
-                    const rect = this.getBoundingClientRect();
-                    const isMobile = window.innerWidth < 768;
-                    
-                    if (isMobile) {
-                        menu.style.left = '50%';
-                        menu.style.transform = 'translateX(-50%)';
-                        menu.style.top = Math.max(10, rect.top - 30) + 'px';
-                        menu.style.right = 'auto';
-                        menu.style.bottom = 'auto';
-                    } else {
-                        menu.style.left = (rect.left - 100) + 'px';
-                        menu.style.top = (rect.bottom + 4) + 'px';
-                        menu.style.right = 'auto';
-                        menu.style.transform = 'none';
+                const id = this.dataset.id;
+                let nombre = '';
+                const fila = this.closest('tr') || this.closest('.card-android');
+                if (fila) {
+                    const nombreCelda = fila.querySelector('td:nth-child(2)') || fila.querySelector('.card-android div span');
+                    if (nombreCelda) {
+                        nombre = nombreCelda.textContent.trim();
                     }
-                    
-                    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
                 }
+                mostrarModalAcciones(id, nombre || 'Cliente');
             });
         });
 
-        document.addEventListener('click', function() {
-            document.querySelectorAll('.menu-acciones').forEach(m => m.style.display = 'none');
-        });
-
-        // ============================
-        // 4. ACCIONES: DETALLE, EDITAR, ELIMINAR
-        // ============================
-        document.querySelectorAll('.accion-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.stopPropagation();
+        // Eventos para los botones del modal
+        document.querySelectorAll('.accion-modal-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
                 const accion = this.dataset.accion;
-                const id = this.dataset.id;
-                const menu = this.closest('.menu-acciones');
-                if (menu) menu.style.display = 'none';
-
+                const id = currentAccionId;
+                cerrarModalAcciones();
+                
                 if (accion === 'detalle') verDetalle(id);
                 else if (accion === 'editar') editarRegistro(id);
                 else if (accion === 'eliminar') eliminarRegistro(id);
             });
         });
 
+        // Cerrar modal con el botón cancelar
+        document.getElementById('cerrarAccionesModal').addEventListener('click', cerrarModalAcciones);
+
+        // Cerrar modal al hacer clic fuera
+        modalAcciones.addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalAcciones();
+        });
+
         // ============================
-        // 5. VER DETALLE
+        // 4. VER DETALLE
         // ============================
         async function verDetalle(id) {
             const modal = document.getElementById('modalDetalle');
@@ -463,7 +516,7 @@
         };
 
         // ============================
-        // 6. EDITAR REGISTRO (MODAL COMPLETO)
+        // 5. EDITAR REGISTRO (MODAL COMPLETO)
         // ============================
         async function editarRegistro(id) {
             const modal = document.getElementById('modalEditarCompleto');
@@ -515,7 +568,7 @@
         };
 
         // ============================
-        // 7. GUARDAR EDICIÓN COMPLETA
+        // 6. GUARDAR EDICIÓN COMPLETA
         // ============================
         document.getElementById('formEditarCompleto').onsubmit = async function(e) {
             e.preventDefault();
@@ -567,7 +620,7 @@
         };
 
         // ============================
-        // 8. ELIMINAR REGISTRO
+        // 7. ELIMINAR REGISTRO
         // ============================
         function eliminarRegistro(id) {
             if (!confirm(`¿Eliminar el registro #${id} permanentemente?`)) return;
@@ -584,7 +637,7 @@
         }
 
         // ============================
-        // 9. ORDENAR TABLA
+        // 8. ORDENAR TABLA
         // ============================
         window.ordenarTabla = function(columna) {
             const tbody = document.querySelector('#tablaRegistros tbody');
