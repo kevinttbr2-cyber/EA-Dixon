@@ -97,10 +97,20 @@
                     <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
                     <td style="padding:6px 8px;text-align:center;position:relative;">
                         <button class="btn-acciones" style="background:transparent;border:none;color:#4fc3f7;cursor:pointer;padding:4px 8px;font-size:18px;" data-id="{{ r.id }}">⋮</button>
-                        <div class="menu-acciones" style="display:none;position:fixed;background:rgba(15,15,15,0.98);border:1px solid rgba(0,255,102,0.20);border-radius:10px;padding:6px 0;min-width:160px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.8);">
-                            <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="background:transparent;border:none;color:#fff;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">📄 Ver detalle</button>
-                            <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#4fc3f7;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">✏️ Editar</button>
-                            <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#ff6b6b;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">🗑️ Eliminar</button>
+                        <div class="menu-acciones" style="
+                            display: none;
+                            position: fixed;
+                            background: rgba(15,15,15,0.98);
+                            border: 1px solid rgba(0,255,102,0.30);
+                            border-radius: 10px;
+                            padding: 6px 0;
+                            min-width: 170px;
+                            z-index: 999999;
+                            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+                        ">
+                            <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="background:transparent;border:none;color:#fff;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">📄 Ver detalle</button>
+                            <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#4fc3f7;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">✏️ Editar</button>
+                            <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#ff6b6b;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">🗑️ Eliminar</button>
                         </div>
                     </td>
                 </tr>
@@ -128,10 +138,20 @@
                 <div style="display:flex;align-items:center;gap:6px;">
                     <span style="color:#00ff66;font-weight:700;font-size:16px;">${{ "{:,.0f}".format(r.monto) }}</span>
                     <button class="btn-acciones-movil" style="background:transparent;border:none;color:#4fc3f7;cursor:pointer;padding:0 4px;font-size:20px;" data-id="{{ r.id }}">⋮</button>
-                    <div class="menu-acciones" style="display:none;position:fixed;background:rgba(15,15,15,0.98);border:1px solid rgba(0,255,102,0.20);border-radius:10px;padding:6px 0;min-width:160px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.8);">
-                        <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="background:transparent;border:none;color:#fff;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">📄 Ver detalle</button>
-                        <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#4fc3f7;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">✏️ Editar</button>
-                        <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#ff6b6b;padding:6px 16px;width:100%;text-align:left;cursor:pointer;font-size:13px;">🗑️ Eliminar</button>
+                    <div class="menu-acciones" style="
+                        display: none;
+                        position: fixed;
+                        background: rgba(15,15,15,0.98);
+                        border: 1px solid rgba(0,255,102,0.30);
+                        border-radius: 10px;
+                        padding: 6px 0;
+                        min-width: 170px;
+                        z-index: 999999;
+                        box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+                    ">
+                        <button class="accion-item" data-accion="detalle" data-id="{{ r.id }}" style="background:transparent;border:none;color:#fff;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">📄 Ver detalle</button>
+                        <button class="accion-item" data-accion="editar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#4fc3f7;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">✏️ Editar</button>
+                        <button class="accion-item" data-accion="eliminar" data-id="{{ r.id }}" style="background:transparent;border:none;color:#ff6b6b;padding:8px 16px;width:100%;text-align:left;cursor:pointer;font-size:14px;">🗑️ Eliminar</button>
                     </div>
                 </div>
             </div>
@@ -338,42 +358,39 @@
             filtrarTabla();
         });
 
-       // ============================
-// 3. MENÚ DE 3 PUNTITOS (⋮) - VERSIÓN CORREGIDA PARA MÓVIL
-// ============================
-document.querySelectorAll('.btn-acciones, .btn-acciones-movil').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const menu = this.closest('td')?.querySelector('.menu-acciones') || 
-                     this.closest('.card-android')?.querySelector('.menu-acciones');
-        if (menu) {
-            // Cerrar otros menús
-            document.querySelectorAll('.menu-acciones').forEach(m => {
-                if (m !== menu) m.style.display = 'none';
+        // ============================
+        // 3. MENÚ DE 3 PUNTITOS (⋮) - CORREGIDO
+        // ============================
+        document.querySelectorAll('.btn-acciones, .btn-acciones-movil').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const menu = this.closest('td')?.querySelector('.menu-acciones') || 
+                             this.closest('.card-android')?.querySelector('.menu-acciones');
+                if (menu) {
+                    document.querySelectorAll('.menu-acciones').forEach(m => {
+                        if (m !== menu) m.style.display = 'none';
+                    });
+                    
+                    const rect = this.getBoundingClientRect();
+                    const isMobile = window.innerWidth < 768;
+                    
+                    if (isMobile) {
+                        menu.style.left = '50%';
+                        menu.style.transform = 'translateX(-50%)';
+                        menu.style.top = Math.max(10, rect.top - 30) + 'px';
+                        menu.style.right = 'auto';
+                        menu.style.bottom = 'auto';
+                    } else {
+                        menu.style.left = (rect.left - 100) + 'px';
+                        menu.style.top = (rect.bottom + 4) + 'px';
+                        menu.style.right = 'auto';
+                        menu.style.transform = 'none';
+                    }
+                    
+                    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                }
             });
-            
-            // 🔥 POSICIONAR EL MENÚ CORRECTAMENTE
-            const rect = this.getBoundingClientRect();
-            const isMobile = window.innerWidth < 768;
-            
-            if (isMobile) {
-                // En móvil: centrar el menú
-                menu.style.left = '50%';
-                menu.style.transform = 'translateX(-50%)';
-                menu.style.top = (rect.bottom + 8) + 'px';
-                menu.style.right = 'auto';
-            } else {
-                // En escritorio: a la derecha del botón
-                menu.style.left = (rect.left - 100) + 'px';
-                menu.style.top = (rect.bottom + 4) + 'px';
-                menu.style.right = 'auto';
-                menu.style.transform = 'none';
-            }
-            
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-    });
-});
+        });
 
         document.addEventListener('click', function() {
             document.querySelectorAll('.menu-acciones').forEach(m => m.style.display = 'none');
@@ -399,44 +416,45 @@ document.querySelectorAll('.btn-acciones, .btn-acciones-movil').forEach(btn => {
         // ============================
         // 5. VER DETALLE
         // ============================
-       async function verDetalle(id) {
-    const modal = document.getElementById('modalDetalle');
-    const contenido = document.getElementById('contenidoDetalle');
-    modal.style.display = 'flex';
-    contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
+        async function verDetalle(id) {
+            const modal = document.getElementById('modalDetalle');
+            const contenido = document.getElementById('contenidoDetalle');
+            modal.style.display = 'flex';
+            contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
 
-    try {
-        const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
-        contenido.innerHTML = `
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:14px;">
-                <div><strong style="color:#90e0a0;">ID:</strong> ${data.id}</div>
-                <div><strong style="color:#90e0a0;">Cliente:</strong> ${data.nombre}</div>
-                <div><strong style="color:#90e0a0;">Monto:</strong> <span style="color:#00ff66;">$${Number(data.monto).toLocaleString()}</span></div>
-                <div><strong style="color:#90e0a0;">Fecha:</strong> ${data.fecha}</div>
-                <div><strong style="color:#90e0a0;">Hora:</strong> ${data.hora}</div>
-                <div><strong style="color:#90e0a0;">Patente:</strong> ${data.patente}</div>
-                <div><strong style="color:#90e0a0;">Marca:</strong> ${data.marca}</div>
-                <div><strong style="color:#90e0a0;">Modelo:</strong> ${data.modelo}</div>
-                <div><strong style="color:#90e0a0;">Atendido por:</strong> ${data.atendido_por || data.usuario || '-'}</div>
-                <div><strong style="color:#90e0a0;">Estado:</strong> ${data.estado}</div>
-                <div><strong style="color:#90e0a0;">Resultado:</strong> ${data.resultado || 'pendiente'}</div>
-                <div style="grid-column:1/3;"><strong style="color:#90e0a0;">Observaciones:</strong> ${data.observaciones_pago || data.observaciones_cliente || '-'}</div>
-                <div style="grid-column:1/3;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:6px;">
-                    <strong style="color:#90e0a0;">📊 Costos:</strong>
-                    <div>Repuestos: $${Number(data.costo_repuestos_real || 0).toLocaleString()}</div>
-                    <div>Mano de obra: $${Number(data.costo_mano_obra_real || 0).toLocaleString()}</div>
-                    <div>Diagnóstico: $${Number(data.costo_diagnostico_real || 0).toLocaleString()}</div>
-                    <div style="color:#00ff66;font-size:18px;font-weight:700;">Ganancia Neta: $${Number(data.ganancia_neta || 0).toLocaleString()}</div>
-                </div>
-                ${data.validado ? `<div style="grid-column:1/3;color:#4fc3f7;">✅ Validado por: ${data.validado_por || 'Sistema'}</div>` : ''}
-            </div>
-        `;
-    } catch(e) {
-        contenido.innerHTML = `<div style="color:#ff6b6b;">❌ Error al cargar los datos: ${e.message}</div>`;
-    }
-}
+            try {
+                const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                contenido.innerHTML = `
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:14px;">
+                        <div><strong style="color:#90e0a0;">ID:</strong> ${data.id}</div>
+                        <div><strong style="color:#90e0a0;">Cliente:</strong> ${data.nombre}</div>
+                        <div><strong style="color:#90e0a0;">Monto:</strong> <span style="color:#00ff66;">$${Number(data.monto).toLocaleString()}</span></div>
+                        <div><strong style="color:#90e0a0;">Fecha:</strong> ${data.fecha}</div>
+                        <div><strong style="color:#90e0a0;">Hora:</strong> ${data.hora}</div>
+                        <div><strong style="color:#90e0a0;">Patente:</strong> ${data.patente}</div>
+                        <div><strong style="color:#90e0a0;">Marca:</strong> ${data.marca}</div>
+                        <div><strong style="color:#90e0a0;">Modelo:</strong> ${data.modelo}</div>
+                        <div><strong style="color:#90e0a0;">Atendido por:</strong> ${data.atendido_por || data.usuario || '-'}</div>
+                        <div><strong style="color:#90e0a0;">Estado:</strong> ${data.estado}</div>
+                        <div><strong style="color:#90e0a0;">Resultado:</strong> ${data.resultado || 'pendiente'}</div>
+                        <div style="grid-column:1/3;"><strong style="color:#90e0a0;">Observaciones:</strong> ${data.observaciones_pago || data.observaciones_cliente || '-'}</div>
+                        <div style="grid-column:1/3;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:6px;">
+                            <strong style="color:#90e0a0;">📊 Costos:</strong>
+                            <div>Repuestos: $${Number(data.costo_repuestos_real || 0).toLocaleString()}</div>
+                            <div>Mano de obra: $${Number(data.costo_mano_obra_real || 0).toLocaleString()}</div>
+                            <div>Diagnóstico: $${Number(data.costo_diagnostico_real || 0).toLocaleString()}</div>
+                            <div style="color:#00ff66;font-size:18px;font-weight:700;">Ganancia Neta: $${Number(data.ganancia_neta || 0).toLocaleString()}</div>
+                        </div>
+                        ${data.validado ? `<div style="grid-column:1/3;color:#4fc3f7;">✅ Validado por: ${data.validado_por || 'Sistema'}</div>` : ''}
+                    </div>
+                `;
+            } catch(e) {
+                contenido.innerHTML = `<div style="color:#ff6b6b;">❌ Error al cargar los datos: ${e.message}</div>`;
+            }
+        }
+
         document.getElementById('cerrarModalDetalle').onclick = function() {
             document.getElementById('modalDetalle').style.display = 'none';
         };
@@ -456,7 +474,6 @@ document.querySelectorAll('.btn-acciones, .btn-acciones-movil').forEach(btn => {
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
                 
-                // Llenar todos los campos
                 document.getElementById('edit_completo_id').value = data.id;
                 document.getElementById('edit_nombre').value = data.nombre || '';
                 document.getElementById('edit_telefono').value = data.telefono || '';
