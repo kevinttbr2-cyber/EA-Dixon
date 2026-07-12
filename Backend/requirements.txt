@@ -8,3 +8,4 @@ pytz==2024.1
 gunicorn==21.2.0
 twilio>=8.0.0
 qrcode[pil]==7.4.2
+openpyxl>=3.0.0 
