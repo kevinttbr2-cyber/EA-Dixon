@@ -83,21 +83,6 @@
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-                    📋 Estado de la Orden de Trabajo
-                </label>
-                <select name="estado_ot" class="form-control">
-                    <option value="Pendiente" {% if registro.estado_ot == 'Pendiente' %}selected{% endif %}>⏳ Pendiente</option>
-                    <option value="Diagnosticado" {% if registro.estado_ot == 'Diagnosticado' %}selected{% endif %}>🩺 Diagnosticado</option>
-                    <option value="Aprobado" {% if registro.estado_ot == 'Aprobado' %}selected{% endif %}>✅ Aprobado</option>
-                    <option value="Terminado" {% if registro.estado_ot == 'Terminado' %}selected{% endif %}>🔧 Terminado</option>
-                    <option value="Entregado" {% if registro.estado_ot == 'Entregado' %}selected{% endif %}>🚗 Entregado</option>
-                </select>
-                <small style="color: #666; font-size: 11px;">Estado actual del vehículo en el taller</small>
-            </div>
-        </div>
-
         <!-- SECCIÓN 2: COSTOS REALES -->
         <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 18px 20px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.06);">
             <h5 style="color: #4fc3f7; font-weight: 600; margin-bottom: 15px;">
