@@ -95,7 +95,6 @@
                     <td style="padding:6px 8px;text-align:center;">{{ r.marca }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.modelo }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
-                    <td style="padding:6px 8px;text-align:center;">
     <button class="btn-acciones" style="
         background:transparent;
         border:none;
@@ -441,62 +440,78 @@
         });
 
         // ============================
-        // 3. MENÚ FLOTANTE DE 3 PUNTOS (CORREGIDO)
+        // 3. MENÚ FLOTANTE DE 3 PUNTOS - VERSIÓN DEFINITIVA
         // ============================
         const menuFlotante = document.getElementById('menuFlotante');
         let currentMenuId = null;
+        let currentBoton = null;
         let menuAbierto = false;
+        let scrollTimeout = null;
 
-        // Función para mostrar el menú en la posición del botón
-        function mostrarMenuFlotante(id, nombre, boton) {
-            currentMenuId = id;
-            document.getElementById('menuClienteNombre').textContent = 'OT #' + id + ' - ' + nombre;
+        // Función para posicionar el menú correctamente
+        function posicionarMenu() {
+            if (!currentBoton || !menuAbierto) return;
             
-            // Obtener posición del botón
-            const rect = boton.getBoundingClientRect();
+            const rect = currentBoton.getBoundingClientRect();
+            const menuWidth = 180;
+            const menuHeight = 220; // Altura aproximada del menú
             
-            // Posicionar el menú justo debajo del botón
-            let left = rect.left;
-            let top = rect.bottom + 6;
+            // Posición horizontal: centrado debajo del botón
+            let left = rect.left + (rect.width / 2) - (menuWidth / 2);
             
             // Ajustar para que no se salga de la pantalla
-            const menuWidth = 180;
-            const menuHeight = menuFlotante.scrollHeight || 200;
-            
+            if (left < 10) left = 10;
             if (left + menuWidth > window.innerWidth - 10) {
                 left = window.innerWidth - menuWidth - 10;
             }
-            if (left < 10) left = 10;
+            
+            // Posición vertical: debajo del botón, o arriba si no hay espacio
+            let top = rect.bottom + 6;
             
             // Si no hay espacio abajo, mostrar arriba
             if (top + menuHeight > window.innerHeight - 10) {
                 top = rect.top - menuHeight - 6;
             }
             
+            // Asegurar que no se salga arriba
+            if (top < 10) top = 10;
+            
             menuFlotante.style.left = left + 'px';
             menuFlotante.style.top = top + 'px';
             menuFlotante.style.display = 'block';
+        }
+
+        function mostrarMenuFlotante(id, nombre, boton) {
+            currentMenuId = id;
+            currentBoton = boton;
+            document.getElementById('menuClienteNombre').textContent = 'OT #' + id + ' - ' + nombre;
+            
             menuAbierto = true;
+            posicionarMenu();
         }
 
         function cerrarMenuFlotante() {
             menuFlotante.style.display = 'none';
             currentMenuId = null;
+            currentBoton = null;
             menuAbierto = false;
+            if (scrollTimeout) {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = null;
+            }
         }
 
-        // Función para toggle del menú
         function toggleMenu(id, nombre, boton) {
             // Si el menú está abierto y es el mismo ID, cerrar
             if (menuAbierto && currentMenuId === id) {
                 cerrarMenuFlotante();
                 return;
             }
-            // Si el menú está abierto pero es otro ID, cerrar y abrir el nuevo
+            // Cerrar cualquier menú abierto
             if (menuAbierto) {
                 cerrarMenuFlotante();
             }
-            // Abrir el menú
+            // Abrir el nuevo menú
             mostrarMenuFlotante(id, nombre, boton);
         }
 
@@ -546,7 +561,29 @@
             });
         });
 
-        // Cerrar menú al hacer clic fuera (con delay para evitar cierre inmediato)
+        // ============================================
+        // REPOSICIONAR MENÚ AL HACER SCROLL O RESIZE
+        // ============================================
+        function handleScroll() {
+            if (menuAbierto && currentBoton) {
+                // Usar requestAnimationFrame para mejor performance
+                if (scrollTimeout) {
+                    cancelAnimationFrame(scrollTimeout);
+                }
+                scrollTimeout = requestAnimationFrame(function() {
+                    posicionarMenu();
+                    scrollTimeout = null;
+                });
+            }
+        }
+
+        // Escuchar eventos de scroll y resize
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        window.addEventListener('resize', handleScroll, { passive: true });
+
+        // ============================================
+        // CERRAR MENÚ AL HACER CLICK FUERA
+        // ============================================
         document.addEventListener('click', function(e) {
             // Verificar si el clic fue fuera del menú y fuera de los botones
             const esBotonAccion = e.target.classList.contains('btn-acciones') || 
@@ -564,13 +601,6 @@
         // Cerrar con ESC
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && menuAbierto) {
-                cerrarMenuFlotante();
-            }
-        });
-
-        // Cerrar al hacer scroll
-        document.addEventListener('scroll', function() {
-            if (menuAbierto) {
                 cerrarMenuFlotante();
             }
         });
