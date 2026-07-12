@@ -3,37 +3,58 @@
 {% block content %}
 
 <style>
-    /* Estilos para el dropdown personalizado */
-    .dropdown-custom {
+    /* ============================================
+       ESTILOS PARA DROPDOWNS DE 3 PUNTOS
+       ============================================ */
+    .dropdown-3p {
         position: relative;
         display: inline-block;
     }
-    .dropdown-custom .dropdown-menu-custom {
+    
+    .dropdown-3p .btn-3p {
+        background: transparent;
+        border: none;
+        color: rgba(255,255,255,0.4);
+        font-size: 20px;
+        padding: 4px 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 6px;
+        line-height: 1;
+    }
+    
+    .dropdown-3p .btn-3p:hover {
+        color: rgba(255,255,255,0.8);
+        background: rgba(255,255,255,0.05);
+    }
+    
+    .dropdown-3p .menu-3p {
         display: none;
         position: absolute;
         right: 0;
-        bottom: 100%;
-        margin-bottom: 8px;
+        top: 100%;
+        margin-top: 4px;
         background: #1a1a1a;
         border: 1px solid #00ff66;
         border-radius: 12px;
-        padding: 8px;
+        padding: 6px 0;
         min-width: 170px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.9);
         z-index: 9999999;
     }
-    .dropdown-custom .dropdown-menu-custom.show {
+    
+    .dropdown-3p .menu-3p.show {
         display: block;
     }
-    .dropdown-custom .dropdown-menu-custom a,
-    .dropdown-custom .dropdown-menu-custom button {
-        color: #e0e0e0;
-        padding: 8px 14px;
-        border-radius: 6px;
-        font-size: 13px;
+    
+    .dropdown-3p .menu-3p a,
+    .dropdown-3p .menu-3p button {
         display: flex;
         align-items: center;
         gap: 10px;
+        padding: 8px 16px;
+        color: #e0e0e0;
+        font-size: 13px;
         text-decoration: none;
         background: transparent;
         border: none;
@@ -41,39 +62,44 @@
         text-align: left;
         cursor: pointer;
         transition: all 0.2s ease;
+        border-radius: 0;
     }
-    .dropdown-custom .dropdown-menu-custom a:hover,
-    .dropdown-custom .dropdown-menu-custom button:hover {
+    
+    .dropdown-3p .menu-3p a:hover,
+    .dropdown-3p .menu-3p button:hover {
         background: rgba(255,255,255,0.05);
     }
-    .dropdown-custom .dropdown-menu-custom .text-danger {
+    
+    .dropdown-3p .menu-3p .text-danger {
         color: #ff6b6b !important;
     }
-    .dropdown-custom .dropdown-menu-custom .text-danger:hover {
+    .dropdown-3p .menu-3p .text-danger:hover {
         background: rgba(255,107,107,0.1) !important;
     }
-    .dropdown-custom .dropdown-menu-custom .text-primary {
+    .dropdown-3p .menu-3p .text-primary {
         color: #4fc3f7 !important;
     }
-    .dropdown-custom .dropdown-menu-custom .text-success {
+    .dropdown-3p .menu-3p .text-success {
         color: #00ff66 !important;
     }
-    .dropdown-custom .dropdown-toggle-custom {
-        background: transparent;
-        border: none;
-        color: rgba(255,255,255,0.3);
-        font-size: 18px;
-        padding: 4px 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    .dropdown-custom .dropdown-toggle-custom:hover {
-        color: rgba(255,255,255,0.6);
-    }
-    .dropdown-divider-custom {
+    .dropdown-3p .menu-3p .divider {
         border: none;
         border-top: 1px solid rgba(255,255,255,0.06);
         margin: 4px 0;
+    }
+    
+    /* Dropdown hacia arriba en móvil */
+    .dropdown-3p.dropup .menu-3p {
+        top: auto;
+        bottom: 100%;
+        margin-top: 0;
+        margin-bottom: 4px;
+    }
+    
+    /* Iconos en el menú */
+    .dropdown-3p .menu-3p i {
+        width: 20px;
+        text-align: center;
     }
 </style>
 
@@ -131,20 +157,22 @@
         <input type="text" id="buscadorInput" placeholder="Buscar..." style="flex:1;min-width:120px;background:rgba(0,0,0,0.40);color:#fff;border:1px solid rgba(0,255,102,0.20);border-radius:8px;padding:6px 12px;font-size:13px;">
         <button id="btnBuscar" style="background:rgba(0,255,102,0.12);color:#00ff66;border:1px solid rgba(0,255,102,0.20);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;"><i class="fa-solid fa-magnifying-glass"></i></button>
         <button id="btnLimpiar" style="background:rgba(255,255,255,0.04);color:#888;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-    
-        <!-- DROPDOWN GLOBAL CON 3 PUNTITOS (SOLO Dashboard, Exportar DB, Borrar DB) -->
-<div class="dropdown-custom" style="margin-left: auto;">
-    <button class="dropdown-toggle-custom" type="button" onclick="toggleDropdown(this)">
-        <i class="fa-solid fa-ellipsis-vertical"></i>
-    </button>
-    <div class="dropdown-menu-custom">
-        <a href="/dashboard"><i class="fa-solid fa-chart-line" style="color: #4fc3f7; width: 20px;"></i> Dashboard</a>
-        <hr class="dropdown-divider-custom">
-        <a href="/exportar_datos"><i class="fa-solid fa-database" style="color: #00c8ff; width: 20px;"></i> Exportar DB</a>
-        <hr class="dropdown-divider-custom">
-        <button onclick="confirmarExportarYBorrar()" class="text-danger"><i class="fa-solid fa-trash-can" style="color: #ff6b6b; width: 20px;"></i> ⚠️ Borrar DB</button>
-    </div>
-</div>
+        
+        <!-- ============================================
+             DROPDOWN GLOBAL (3 PUNTITOS)
+             ============================================ -->
+        <div class="dropdown-3p" style="margin-left: auto;">
+            <button class="btn-3p" onclick="toggleMenu3p(this)">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
+            <div class="menu-3p">
+                <a href="/dashboard"><i class="fa-solid fa-chart-line" style="color: #4fc3f7;"></i> Dashboard</a>
+                <hr class="divider">
+                <a href="/exportar_datos"><i class="fa-solid fa-database" style="color: #00c8ff;"></i> Exportar DB</a>
+                <hr class="divider">
+                <button onclick="confirmarExportarYBorrar()" class="text-danger"><i class="fa-solid fa-trash-can" style="color: #ff6b6b;"></i> ⚠️ Borrar DB</button>
+            </div>
+        </div>
     </div>
 
     <!-- TOTAL GENERAL -->
@@ -153,7 +181,9 @@
         <span style="color:#00ff66;font-weight:700;font-size:20px;">${{ "{:,.0f}".format(total_general) }}</span>
     </div>
 
-    <!-- VISTA ESCRITORIO: TABLA -->
+    <!-- ============================================
+         VISTA ESCRITORIO: TABLA
+         ============================================ -->
     <div class="vista-escritorio" style="overflow-x:auto;border-radius:12px;border:1px solid rgba(0,255,102,0.15);background:#141414;">
         <table class="table table-dark table-hover table-bordered mb-0" id="tablaRegistros" style="font-size:13px;min-width:1100px;width:100%;">
             <thead style="background:#2a6d44 !important;color:#ffffff !important;">
@@ -185,19 +215,20 @@
                     <td style="padding:6px 8px;text-align:center;">{{ r.modelo }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
                     <td style="padding:6px 8px;text-align:center;">
-                        <button class="btn-acciones" style="
-                            background:transparent;
-                            border:none;
-                            color:#4fc3f7;
-                            cursor:pointer;
-                            padding:6px 10px;
-                            font-size:20px;
-                            border-radius:6px;
-                            transition: background 0.2s;
-                            line-height:1;
-                        " data-id="{{ r.id }}" data-nombre="{{ r.nombre }}">
-                            ⋮
-                        </button>
+                        <!-- ============================================
+                             DROPDOWN DE 3 PUNTOS EN CADA FILA
+                             ============================================ -->
+                        <div class="dropdown-3p">
+                            <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <div class="menu-3p" data-id="{{ r.id }}">
+                                <button onclick="verDetalle({{ r.id }})"><i class="fa-solid fa-eye" style="color: #fff;"></i> Detalle</button>
+                                <button onclick="editarRegistro({{ r.id }})" class="text-primary"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
+                                <hr class="divider">
+                                <button onclick="eliminarRegistro({{ r.id }})" class="text-danger"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
+                            </div>
+                        </div>
                     </td>
                 </tr>
                 {% else %}
@@ -212,7 +243,9 @@
         </table>
     </div>
 
-    <!-- VISTA MÓVIL: TARJETAS -->
+    <!-- ============================================
+         VISTA MÓVIL: TARJETAS
+         ============================================ -->
     <div class="vista-movil" style="display:none;flex-direction:column;gap:12px;">
         {% for r in registros %}
         <div class="card-android" style="background:rgba(20,20,20,0.80);border:1px solid rgba(0,255,102,0.20);border-radius:14px;padding:14px 16px;position:relative;">
@@ -224,21 +257,19 @@
                 <div style="display:flex;align-items:center;gap:6px;">
                     <span style="color:#00ff66;font-weight:700;font-size:16px;">${{ "{:,.0f}".format(r.monto) }}</span>
                     
-                    <!-- DROPDOWN MÓVIL CORREGIDO -->
-                    <div class="dropdown-custom">
-                        <button class="dropdown-toggle-custom" type="button" onclick="toggleDropdown(this)" style="font-size:22px;">
+                    <!-- ============================================
+                         DROPDOWN DE 3 PUNTOS EN TARJETA MÓVIL
+                         ============================================ -->
+                    <div class="dropdown-3p dropup">
+                        <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}" style="font-size:22px;">
                             <i class="fa-solid fa-ellipsis-vertical"></i>
                         </button>
-                        <div class="dropdown-menu-custom">
+                        <div class="menu-3p" data-id="{{ r.id }}">
                             {% if session.get("rol") == "admin" and r["estado"] == 'pagado' %}
-                            <a href="/editar_pago/{{ r['id'] }}" class="text-primary">
-                                <i class="fa-solid fa-pen-to-square" style="width: 20px;"></i> Editar Pago
-                            </a>
+                            <a href="/editar_pago/{{ r['id'] }}" class="text-primary"><i class="fa-solid fa-pen-to-square"></i> Editar Pago</a>
                             {% endif %}
                             {% if session.get("rol") in ["admin", "operador"] %}
-                            <a href="/eliminar/{{ r['id'] }}" class="text-danger" onclick="return confirm('⚠️ ¿Estás seguro de eliminar este registro?\n\nEsta acción NO se puede deshacer.');">
-                                <i class="fa-solid fa-trash-can" style="width: 20px;"></i> Eliminar
-                            </a>
+                            <a href="/eliminar/{{ r['id'] }}" class="text-danger" onclick="return confirm('⚠️ ¿Estás seguro de eliminar este registro?\n\nEsta acción NO se puede deshacer.');"><i class="fa-solid fa-trash-can"></i> Eliminar</a>
                             {% endif %}
                             {% if not (session.get("rol") == "admin" and r["estado"] == 'pagado') and session.get("rol") not in ["admin", "operador"] %}
                             <div style="padding: 10px 16px; color: #666; font-size: 13px; text-align: center;">Sin acciones</div>
@@ -267,98 +298,9 @@
     </div>
 </div>
 
-<!-- ============================
-     MENÚ FLOTANTE DE 3 PUNTOS (superpuesto)
-     ============================ -->
-<div id="menuFlotante" style="
-    display: none;
-    position: fixed;
-    background: rgba(20,20,20,0.98);
-    border: 1px solid #00ff66;
-    border-radius: 12px;
-    padding: 6px 0;
-    min-width: 160px;
-    z-index: 9999999;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.9);
-    backdrop-filter: blur(10px);
-">
-    <div style="padding: 6px 16px 8px 16px; border-bottom: 1px solid rgba(255,255,255,0.06);">
-        <span id="menuClienteNombre" style="color:#aaa;font-size:12px;font-weight:500;"></span>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:2px;padding:4px 0;">
-        <button class="menu-opcion" data-accion="detalle" style="
-            background: transparent;
-            border: none;
-            color: #fff;
-            padding: 8px 16px;
-            text-align: left;
-            font-size: 13px;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        ">
-            <span style="font-size:16px;">📄</span> Detalle
-        </button>
-        <button class="menu-opcion" data-accion="editar" style="
-            background: transparent;
-            border: none;
-            color: #4fc3f7;
-            padding: 8px 16px;
-            text-align: left;
-            font-size: 13px;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        ">
-            <span style="font-size:16px;">✏️</span> Editar
-        </button>
-        <button class="menu-opcion" data-accion="eliminar" style="
-            background: transparent;
-            border: none;
-            color: #ff6b6b;
-            padding: 8px 16px;
-            text-align: left;
-            font-size: 13px;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        ">
-            <span style="font-size:16px;">🗑️</span> Eliminar
-        </button>
-        <button class="menu-opcion" data-accion="cancelar" style="
-            background: transparent;
-            border: none;
-            color: #ff6b6b;
-            padding: 8px 16px;
-            text-align: left;
-            font-size: 13px;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-top: 1px solid rgba(255,255,255,0.06);
-            margin-top: 4px;
-            padding-top: 10px;
-        ">
-            <span style="font-size:16px;">❌</span> Cancelar
-        </button>
-    </div>
-</div>
-
-<!-- ============================
+<!-- ============================================
      MODAL DETALLE
-     ============================ -->
+     ============================================ -->
 <div id="modalDetalle" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
     <div style="background:rgba(15,15,15,0.98);border:1px solid #00ff66;border-radius:16px;padding:20px 25px;max-width:600px;width:95%;max-height:90vh;overflow-y:auto;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -369,9 +311,9 @@
     </div>
 </div>
 
-<!-- ============================
+<!-- ============================================
      MODAL EDITAR COMPLETO
-     ============================ -->
+     ============================================ -->
 <div id="modalEditarCompleto" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0;">
     <div style="background:rgba(15,15,15,0.98);border:2px solid #4fc3f7;border-radius:16px;padding:25px 30px;max-width:750px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
@@ -476,452 +418,369 @@
     </div>
 </div>
 
-<!-- ============================
+<!-- ============================================
      SCRIPTS
-     ============================ -->
+     ============================================ -->
 <script>
-    // ============================
-    // TOGGLE DROPDOWN (FUNCIÓN GLOBAL)
-    // ============================
-    function toggleDropdown(button) {
-        const menu = button.nextElementSibling;
-        const isOpen = menu.classList.contains('show');
-        
-        // Cerrar todos los dropdowns abiertos
-        document.querySelectorAll('.dropdown-menu-custom.show').forEach(m => {
+// ============================================
+// TOGGLE DROPDOWN DE 3 PUNTOS (FUNCIÓN GLOBAL)
+// ============================================
+function toggleMenu3p(button, id) {
+    event.stopPropagation();
+    
+    // Obtener el menú (el div siguiente al botón)
+    const menu = button.nextElementSibling;
+    
+    // Si ya está abierto, lo cerramos
+    if (menu.classList.contains('show')) {
+        menu.classList.remove('show');
+        return;
+    }
+    
+    // Cerrar todos los menús abiertos
+    document.querySelectorAll('.menu-3p.show').forEach(m => {
+        if (m !== menu) m.classList.remove('show');
+    });
+    
+    // Abrir el menú actual
+    menu.classList.add('show');
+    
+    // Si hay ID, guardarlo para las acciones
+    if (id) {
+        menu.setAttribute('data-id', id);
+        // Guardar el nombre también si existe
+        const nombre = button.getAttribute('data-nombre') || '';
+        menu.setAttribute('data-nombre', nombre);
+    }
+}
+
+// Cerrar dropdowns al hacer clic fuera
+document.addEventListener('click', function(e) {
+    // Si el clic NO fue dentro de un dropdown-3p
+    if (!e.target.closest('.dropdown-3p')) {
+        document.querySelectorAll('.menu-3p.show').forEach(m => {
             m.classList.remove('show');
         });
-        
-        if (!isOpen) {
-            menu.classList.add('show');
-        }
     }
+});
 
-    // Cerrar dropdowns al hacer clic fuera
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.dropdown-custom')) {
-            document.querySelectorAll('.dropdown-menu-custom.show').forEach(m => {
-                m.classList.remove('show');
-            });
-        }
-    });
-
-    // ============================
-    // EXPORTAR EXCEL
-    // ============================
-    function exportarExcel() {
-        const table = document.getElementById('tablaRegistros');
-        if (!table) return;
-        const rows = Array.from(table.querySelectorAll('tr'));
-        let csv = rows.map(row => {
-            const cols = Array.from(row.querySelectorAll('th, td'));
-            return cols.map(col => `"${col.innerText.trim().replace(/"/g, '""')}"`).join(',');
-        }).join('\n');
-        
-        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'registros_exportados.csv';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
+// Cerrar con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.menu-3p.show').forEach(m => {
+            m.classList.remove('show');
+        });
     }
+});
 
-    // ============================
-    // EXPORTAR Y BORRAR DB
-    // ============================
-    function confirmarExportarYBorrar() {
-        if (confirm('⚠️ ¿Estás seguro de que quieres EXPORTAR y BORRAR TODOS los registros?\n\nSe descargará un archivo Excel de respaldo y luego se eliminarán todos los datos.')) {
-            if (confirm('⚠️ Confirmación final: ¿Realmente deseas EXPORTAR y BORRAR TODA la base de datos?\n\nEsta acción NO se puede deshacer.')) {
-                fetch('/exportar_y_borrar', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => { throw new Error(text) });
-                    }
-                    return response.blob();
-                })
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'backup_antes_borrar.xlsx';
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    a.remove();
-                    
-                    alert('✅ Backup descargado. Los datos han sido eliminados.');
-                    setTimeout(() => {
-                        window.location.href = '/registros';
-                    }, 1500);
-                })
-                .catch(error => {
-                    alert('❌ Error: ' + error.message);
-                });
-            }
-        }
-    }
-
-    // ============================
-    // RESTO DEL SCRIPT (TU CÓDIGO ORIGINAL)
-    // ============================
-    document.addEventListener('DOMContentLoaded', function() {
-
-        console.log('✅ Script cargado correctamente');
-
-        // ============================
-        // 1. TOGGLE VISTA MÓVIL / ESCRITORIO
-        // ============================
-        function toggleVista() {
-            const isMobile = window.innerWidth < 768;
-            const escritorio = document.querySelector('.vista-escritorio');
-            const movil = document.querySelector('.vista-movil');
-            if (escritorio) escritorio.style.display = isMobile ? 'none' : 'block';
-            if (movil) movil.style.display = isMobile ? 'flex' : 'none';
-        }
-        window.addEventListener('resize', toggleVista);
-        toggleVista();
-
-        // ============================
-        // 2. BUSCADOR
-        // ============================
-        const campoBusqueda = document.getElementById('campoBusqueda');
-        const buscadorInput = document.getElementById('buscadorInput');
-        const btnBuscar = document.getElementById('btnBuscar');
-        const btnLimpiar = document.getElementById('btnLimpiar');
-
-        function filtrarTabla() {
-            const campo = campoBusqueda.value;
-            const texto = buscadorInput.value.toLowerCase().trim();
-            document.querySelectorAll('.fila-registro').forEach(fila => {
-                let valor = '';
-                const celdas = fila.querySelectorAll('td');
-                switch(campo) {
-                    case 'nombre': valor = celdas[1]?.textContent || ''; break;
-                    case 'patente': valor = celdas[4]?.textContent || ''; break;
-                    case 'marca': valor = celdas[5]?.textContent || ''; break;
-                    case 'modelo': valor = celdas[6]?.textContent || ''; break;
-                    case 'atendido_por': valor = celdas[7]?.textContent || ''; break;
-                    case 'id': valor = fila.dataset.id || ''; break;
-                    default: valor = '';
+// ============================================
+// EXPORTAR Y BORRAR DB
+// ============================================
+function confirmarExportarYBorrar() {
+    if (confirm('⚠️ ¿Estás seguro de que quieres EXPORTAR y BORRAR TODOS los registros?\n\nSe descargará un archivo de respaldo y luego se eliminarán todos los datos.')) {
+        if (confirm('⚠️ Confirmación final: ¿Realmente deseas EXPORTAR y BORRAR TODA la base de datos?\n\nEsta acción NO se puede deshacer.')) {
+            fetch('/exportar_y_borrar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 }
-                fila.style.display = valor.toLowerCase().includes(texto) ? '' : 'none';
-            });
-            document.querySelectorAll('.card-android').forEach(card => {
-                const texto = card.textContent.toLowerCase();
-                card.style.display = texto.includes(buscadorInput.value.toLowerCase().trim()) ? '' : 'none';
-            });
-        }
-
-        btnBuscar.addEventListener('click', filtrarTabla);
-        buscadorInput.addEventListener('keyup', function(e) {
-            if (e.key === 'Enter') filtrarTabla();
-            filtrarTabla();
-        });
-        btnLimpiar.addEventListener('click', function() {
-            buscadorInput.value = '';
-            campoBusqueda.value = 'nombre';
-            filtrarTabla();
-        });
-
-        // ============================
-        // 3. MENÚ FLOTANTE DE 3 PUNTOS (PARA DETALLE/EDITAR/ELIMINAR)
-        // ============================
-        const menuFlotante = document.getElementById('menuFlotante');
-        console.log('📦 menuFlotante:', menuFlotante);
-        
-        let currentMenuId = null;
-        let currentBoton = null;
-
-        function posicionarMenu() {
-            if (!currentBoton) return;
-            const rect = currentBoton.getBoundingClientRect();
-            const menuWidth = 180;
-            const menuHeight = 200;
-            let left = rect.left + (rect.width / 2) - (menuWidth / 2);
-            left = Math.max(10, Math.min(left, window.innerWidth - menuWidth - 10));
-            let top = rect.bottom + 5;
-            if (top + menuHeight > window.innerHeight - 10) {
-                top = rect.top - menuHeight - 5;
-            }
-            top = Math.max(10, top);
-            menuFlotante.style.left = left + 'px';
-            menuFlotante.style.top = top + 'px';
-        }
-
-        function mostrarMenu(id, nombre, boton) {
-            currentMenuId = id;
-            currentBoton = boton;
-            document.getElementById('menuClienteNombre').textContent = 'OT #' + id + ' - ' + nombre;
-            posicionarMenu();
-            menuFlotante.style.display = 'block';
-        }
-
-        function cerrarMenu() {
-            menuFlotante.style.display = 'none';
-            currentMenuId = null;
-            currentBoton = null;
-        }
-
-        document.querySelectorAll('.btn-acciones').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                e.preventDefault();
-                const id = this.dataset.id;
-                const nombre = this.dataset.nombre || 'Cliente';
-                if (menuFlotante.style.display === 'block' && currentMenuId === id) {
-                    cerrarMenu();
-                    return;
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text) });
                 }
-                cerrarMenu();
-                mostrarMenu(id, nombre, this);
-            });
-        });
-
-        document.querySelectorAll('.menu-opcion').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const accion = this.dataset.accion;
-                const id = currentMenuId;
-                cerrarMenu();
-                if (accion === 'detalle') verDetalle(id);
-                else if (accion === 'editar') editarRegistro(id);
-                else if (accion === 'eliminar') eliminarRegistro(id);
-            });
-        });
-
-        let scrollTimer = null;
-        window.addEventListener('scroll', function() {
-            if (menuFlotante.style.display === 'block' && currentBoton) {
-                if (scrollTimer) cancelAnimationFrame(scrollTimer);
-                scrollTimer = requestAnimationFrame(function() {
-                    posicionarMenu();
-                    scrollTimer = null;
-                });
-            }
-        }, { passive: true });
-
-        window.addEventListener('resize', function() {
-            if (menuFlotante.style.display === 'block' && currentBoton) {
-                posicionarMenu();
-            }
-        }, { passive: true });
-
-        document.addEventListener('click', function(e) {
-            if (menuFlotante.style.display !== 'block') return;
-            const esBoton = e.target.closest('.btn-acciones');
-            const esMenu = menuFlotante.contains(e.target);
-            if (!esBoton && !esMenu) {
-                cerrarMenu();
-            }
-        });
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && menuFlotante.style.display === 'block') {
-                cerrarMenu();
-            }
-        });
-
-        // ============================
-        // 4. VER DETALLE
-        // ============================
-        async function verDetalle(id) {
-            const modal = document.getElementById('modalDetalle');
-            const contenido = document.getElementById('contenidoDetalle');
-            modal.style.display = 'flex';
-            contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
-
-            try {
-                const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`);
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                const data = await resp.json();
-                contenido.innerHTML = `
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:14px;">
-                        <div><strong style="color:#90e0a0;">ID:</strong> ${data.id}</div>
-                        <div><strong style="color:#90e0a0;">Cliente:</strong> ${data.nombre}</div>
-                        <div><strong style="color:#90e0a0;">Monto:</strong> <span style="color:#00ff66;">$${Number(data.monto).toLocaleString()}</span></div>
-                        <div><strong style="color:#90e0a0;">Fecha:</strong> ${data.fecha}</div>
-                        <div><strong style="color:#90e0a0;">Hora:</strong> ${data.hora}</div>
-                        <div><strong style="color:#90e0a0;">Patente:</strong> ${data.patente}</div>
-                        <div><strong style="color:#90e0a0;">Marca:</strong> ${data.marca}</div>
-                        <div><strong style="color:#90e0a0;">Modelo:</strong> ${data.modelo}</div>
-                        <div><strong style="color:#90e0a0;">Atendido por:</strong> ${data.atendido_por || data.usuario || '-'}</div>
-                        <div><strong style="color:#90e0a0;">Estado:</strong> ${data.estado}</div>
-                        <div><strong style="color:#90e0a0;">Resultado:</strong> ${data.resultado || 'pendiente'}</div>
-                        <div style="grid-column:1/3;"><strong style="color:#90e0a0;">Observaciones:</strong> ${data.observaciones_pago || data.observaciones_cliente || '-'}</div>
-                        <div style="grid-column:1/3;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:6px;">
-                            <strong style="color:#90e0a0;">📊 Costos:</strong>
-                            <div>Repuestos: $${Number(data.costo_repuestos_real || 0).toLocaleString()}</div>
-                            <div>Mano de obra: $${Number(data.costo_mano_obra_real || 0).toLocaleString()}</div>
-                            <div>Diagnóstico: $${Number(data.costo_diagnostico_real || 0).toLocaleString()}</div>
-                            <div style="color:#00ff66;font-size:18px;font-weight:700;">Ganancia Neta: $${Number(data.ganancia_neta || 0).toLocaleString()}</div>
-                        </div>
-                        ${data.validado ? `<div style="grid-column:1/3;color:#4fc3f7;">✅ Validado por: ${data.validado_por || 'Sistema'}</div>` : ''}
-                    </div>
-                `;
-            } catch(e) {
-                contenido.innerHTML = `<div style="color:#ff6b6b;">❌ Error al cargar los datos: ${e.message}</div>`;
-            }
-        }
-
-        document.getElementById('cerrarModalDetalle').onclick = function() {
-            document.getElementById('modalDetalle').style.display = 'none';
-        };
-        document.getElementById('modalDetalle').onclick = function(e) {
-            if (e.target === this) this.style.display = 'none';
-        };
-
-        // ============================
-        // 5. EDITAR REGISTRO
-        // ============================
-        async function editarRegistro(id) {
-            const modal = document.getElementById('modalEditarCompleto');
-            modal.style.display = 'flex';
-
-            try {
-                const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`);
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                const data = await resp.json();
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'backup_completo.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
                 
-                document.getElementById('edit_completo_id').value = data.id;
-                document.getElementById('edit_nombre').value = data.nombre || '';
-                document.getElementById('edit_telefono').value = data.telefono || '';
-                document.getElementById('edit_patente').value = data.patente || '';
-                document.getElementById('edit_marca').value = data.marca || '';
-                document.getElementById('edit_modelo').value = data.modelo || '';
-                document.getElementById('edit_anio').value = data.anio || '';
-                document.getElementById('edit_flota').value = data.flota || '';
-                document.getElementById('edit_fecha').value = data.fecha || '';
-                document.getElementById('edit_hora').value = data.hora || '';
-                document.getElementById('edit_observaciones_cliente').value = data.observaciones_cliente || '';
-                document.getElementById('edit_diagnostico').value = data.diagnostico || '';
-                document.getElementById('edit_reparacion').value = data.reparacion || '';
-                document.getElementById('edit_resultado').value = data.resultado || 'reparado';
-                document.getElementById('edit_tiempo_estimado').value = data.tiempo_estimado || '00:00:00';
-                document.getElementById('edit_costo_repuestos').value = data.costo_repuestos_real || 0;
-                document.getElementById('edit_costo_mano_obra').value = data.costo_mano_obra_real || 0;
-                document.getElementById('edit_costo_diagnostico').value = data.costo_diagnostico_real || 0;
-                document.getElementById('edit_ganancia_neta').value = data.ganancia_neta || 0;
-                document.getElementById('edit_observaciones_pago').value = data.observaciones_pago || '';
-                document.getElementById('edit_validado_por').value = data.validado_por || '';
-                document.getElementById('edit_atendido_por').value = data.atendido_por || '';
-                document.getElementById('edit_validado').checked = data.validado || false;
-            } catch(e) {
-                console.error('Error cargando datos para editar:', e);
-                alert('❌ Error al cargar los datos para editar');
-            }
-        }
-
-        document.getElementById('cerrarModalEditarCompleto').onclick = function() {
-            document.getElementById('modalEditarCompleto').style.display = 'none';
-        };
-        document.getElementById('modalEditarCompleto').onclick = function(e) {
-            if (e.target === this) this.style.display = 'none';
-        };
-        document.getElementById('btnCancelarEditarCompleto').onclick = function() {
-            document.getElementById('modalEditarCompleto').style.display = 'none';
-        };
-
-        // ============================
-        // 6. GUARDAR EDICIÓN
-        // ============================
-        document.getElementById('formEditarCompleto').onsubmit = async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit_completo_id').value;
-            
-            const data = {
-                nombre: document.getElementById('edit_nombre').value,
-                telefono: document.getElementById('edit_telefono').value,
-                patente: document.getElementById('edit_patente').value,
-                marca: document.getElementById('edit_marca').value,
-                modelo: document.getElementById('edit_modelo').value,
-                anio: parseInt(document.getElementById('edit_anio').value) || 0,
-                flota: document.getElementById('edit_flota').value,
-                fecha: document.getElementById('edit_fecha').value,
-                hora: document.getElementById('edit_hora').value,
-                observaciones_cliente: document.getElementById('edit_observaciones_cliente').value,
-                diagnostico: document.getElementById('edit_diagnostico').value,
-                reparacion: document.getElementById('edit_reparacion').value,
-                resultado: document.getElementById('edit_resultado').value,
-                tiempo_estimado: document.getElementById('edit_tiempo_estimado').value || '00:00:00',
-                costo_repuestos_real: parseFloat(document.getElementById('edit_costo_repuestos').value) || 0,
-                costo_mano_obra_real: parseFloat(document.getElementById('edit_costo_mano_obra').value) || 0,
-                costo_diagnostico_real: parseFloat(document.getElementById('edit_costo_diagnostico').value) || 0,
-                ganancia_neta: parseFloat(document.getElementById('edit_ganancia_neta').value) || 0,
-                observaciones_pago: document.getElementById('edit_observaciones_pago').value,
-                validado_por: document.getElementById('edit_validado_por').value,
-                atendido_por: document.getElementById('edit_atendido_por').value,
-                validado: document.getElementById('edit_validado').checked
-            };
-
-            try {
-                const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/editar_completo/${id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                if (resp.ok) {
-                    alert('✅ Registro actualizado correctamente');
-                    document.getElementById('modalEditarCompleto').style.display = 'none';
-                    location.reload();
-                } else {
-                    const error = await resp.json();
-                    alert('❌ Error al actualizar: ' + (error.error || ''));
-                }
-            } catch(e) {
-                console.error('Error en submit edición completa:', e);
-                alert('❌ Error de conexión');
-            }
-        };
-
-        // ============================
-        // 7. ELIMINAR REGISTRO
-        // ============================
-        function eliminarRegistro(id) {
-            if (!confirm(`¿Eliminar el registro #${id} permanentemente?`)) return;
-            fetch(`https://ea-dixon-production.up.railway.app/api/eliminar_registro/${id}`, {
-                method: 'DELETE'
-            }).then(resp => {
-                if (resp.ok) {
-                    alert('✅ Registro eliminado');
-                    location.reload();
-                } else {
-                    alert('❌ Error al eliminar');
-                }
-            }).catch(() => alert('❌ Error de conexión'));
-        }
-
-        // ============================
-        // 8. ORDENAR TABLA
-        // ============================
-        window.ordenarTabla = function(columna) {
-            const tbody = document.querySelector('#tablaRegistros tbody');
-            const filasArray = Array.from(tbody.querySelectorAll('.fila-registro'));
-            filasArray.sort((a, b) => {
-                const celdasA = a.querySelectorAll('td');
-                const celdasB = b.querySelectorAll('td');
-                let valA = celdasA[columna]?.textContent.trim() || '';
-                let valB = celdasB[columna]?.textContent.trim() || '';
-                if (columna === 2) {
-                    valA = parseFloat(valA.replace(/[$,]/g, '')) || 0;
-                    valB = parseFloat(valB.replace(/[$,]/g, '')) || 0;
-                }
-                if (columna === 0) {
-                    valA = parseInt(valA) || 0;
-                    valB = parseInt(valB) || 0;
-                }
-                if (valA < valB) return -1;
-                if (valA > valB) return 1;
-                return 0;
+                alert('✅ Backup descargado. Los datos han sido eliminados.');
+                setTimeout(() => {
+                    window.location.href = '/registros';
+                }, 1500);
+            })
+            .catch(error => {
+                alert('❌ Error: ' + error.message);
             });
-            filasArray.forEach(fila => tbody.appendChild(fila));
-        };
+        }
+    }
+}
+
+// ============================================
+// VER DETALLE
+// ============================================
+function verDetalle(id) {
+    // Cerrar menú
+    document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
+    
+    const modal = document.getElementById('modalDetalle');
+    const contenido = document.getElementById('contenidoDetalle');
+    modal.style.display = 'flex';
+    contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
+
+    fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`)
+        .then(resp => {
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            return resp.json();
+        })
+        .then(data => {
+            contenido.innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:14px;">
+                    <div><strong style="color:#90e0a0;">ID:</strong> ${data.id}</div>
+                    <div><strong style="color:#90e0a0;">Cliente:</strong> ${data.nombre}</div>
+                    <div><strong style="color:#90e0a0;">Monto:</strong> <span style="color:#00ff66;">$${Number(data.monto).toLocaleString()}</span></div>
+                    <div><strong style="color:#90e0a0;">Fecha:</strong> ${data.fecha}</div>
+                    <div><strong style="color:#90e0a0;">Hora:</strong> ${data.hora}</div>
+                    <div><strong style="color:#90e0a0;">Patente:</strong> ${data.patente}</div>
+                    <div><strong style="color:#90e0a0;">Marca:</strong> ${data.marca}</div>
+                    <div><strong style="color:#90e0a0;">Modelo:</strong> ${data.modelo}</div>
+                    <div><strong style="color:#90e0a0;">Atendido por:</strong> ${data.atendido_por || data.usuario || '-'}</div>
+                    <div><strong style="color:#90e0a0;">Estado:</strong> ${data.estado}</div>
+                    <div><strong style="color:#90e0a0;">Resultado:</strong> ${data.resultado || 'pendiente'}</div>
+                    <div style="grid-column:1/3;"><strong style="color:#90e0a0;">Observaciones:</strong> ${data.observaciones_pago || data.observaciones_cliente || '-'}</div>
+                    <div style="grid-column:1/3;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:6px;">
+                        <strong style="color:#90e0a0;">📊 Costos:</strong>
+                        <div>Repuestos: $${Number(data.costo_repuestos_real || 0).toLocaleString()}</div>
+                        <div>Mano de obra: $${Number(data.costo_mano_obra_real || 0).toLocaleString()}</div>
+                        <div>Diagnóstico: $${Number(data.costo_diagnostico_real || 0).toLocaleString()}</div>
+                        <div style="color:#00ff66;font-size:18px;font-weight:700;">Ganancia Neta: $${Number(data.ganancia_neta || 0).toLocaleString()}</div>
+                    </div>
+                    ${data.validado ? `<div style="grid-column:1/3;color:#4fc3f7;">✅ Validado por: ${data.validado_por || 'Sistema'}</div>` : ''}
+                </div>
+            `;
+        })
+        .catch(e => {
+            contenido.innerHTML = `<div style="color:#ff6b6b;">❌ Error al cargar los datos: ${e.message}</div>`;
+        });
+}
+
+document.getElementById('cerrarModalDetalle').onclick = function() {
+    document.getElementById('modalDetalle').style.display = 'none';
+};
+document.getElementById('modalDetalle').onclick = function(e) {
+    if (e.target === this) this.style.display = 'none';
+};
+
+// ============================================
+// EDITAR REGISTRO
+// ============================================
+function editarRegistro(id) {
+    // Cerrar menú
+    document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
+    
+    const modal = document.getElementById('modalEditarCompleto');
+    modal.style.display = 'flex';
+
+    fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`)
+        .then(resp => {
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            return resp.json();
+        })
+        .then(data => {
+            document.getElementById('edit_completo_id').value = data.id;
+            document.getElementById('edit_nombre').value = data.nombre || '';
+            document.getElementById('edit_telefono').value = data.telefono || '';
+            document.getElementById('edit_patente').value = data.patente || '';
+            document.getElementById('edit_marca').value = data.marca || '';
+            document.getElementById('edit_modelo').value = data.modelo || '';
+            document.getElementById('edit_anio').value = data.anio || '';
+            document.getElementById('edit_flota').value = data.flota || '';
+            document.getElementById('edit_fecha').value = data.fecha || '';
+            document.getElementById('edit_hora').value = data.hora || '';
+            document.getElementById('edit_observaciones_cliente').value = data.observaciones_cliente || '';
+            document.getElementById('edit_diagnostico').value = data.diagnostico || '';
+            document.getElementById('edit_reparacion').value = data.reparacion || '';
+            document.getElementById('edit_resultado').value = data.resultado || 'reparado';
+            document.getElementById('edit_tiempo_estimado').value = data.tiempo_estimado || '00:00:00';
+            document.getElementById('edit_costo_repuestos').value = data.costo_repuestos_real || 0;
+            document.getElementById('edit_costo_mano_obra').value = data.costo_mano_obra_real || 0;
+            document.getElementById('edit_costo_diagnostico').value = data.costo_diagnostico_real || 0;
+            document.getElementById('edit_ganancia_neta').value = data.ganancia_neta || 0;
+            document.getElementById('edit_observaciones_pago').value = data.observaciones_pago || '';
+            document.getElementById('edit_validado_por').value = data.validado_por || '';
+            document.getElementById('edit_atendido_por').value = data.atendido_por || '';
+            document.getElementById('edit_validado').checked = data.validado || false;
+        })
+        .catch(e => {
+            console.error('Error cargando datos para editar:', e);
+            alert('❌ Error al cargar los datos para editar');
+        });
+}
+
+document.getElementById('cerrarModalEditarCompleto').onclick = function() {
+    document.getElementById('modalEditarCompleto').style.display = 'none';
+};
+document.getElementById('modalEditarCompleto').onclick = function(e) {
+    if (e.target === this) this.style.display = 'none';
+};
+document.getElementById('btnCancelarEditarCompleto').onclick = function() {
+    document.getElementById('modalEditarCompleto').style.display = 'none';
+};
+
+// ============================================
+// GUARDAR EDICIÓN
+// ============================================
+document.getElementById('formEditarCompleto').onsubmit = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit_completo_id').value;
+    
+    const data = {
+        nombre: document.getElementById('edit_nombre').value,
+        telefono: document.getElementById('edit_telefono').value,
+        patente: document.getElementById('edit_patente').value,
+        marca: document.getElementById('edit_marca').value,
+        modelo: document.getElementById('edit_modelo').value,
+        anio: parseInt(document.getElementById('edit_anio').value) || 0,
+        flota: document.getElementById('edit_flota').value,
+        fecha: document.getElementById('edit_fecha').value,
+        hora: document.getElementById('edit_hora').value,
+        observaciones_cliente: document.getElementById('edit_observaciones_cliente').value,
+        diagnostico: document.getElementById('edit_diagnostico').value,
+        reparacion: document.getElementById('edit_reparacion').value,
+        resultado: document.getElementById('edit_resultado').value,
+        tiempo_estimado: document.getElementById('edit_tiempo_estimado').value || '00:00:00',
+        costo_repuestos_real: parseFloat(document.getElementById('edit_costo_repuestos').value) || 0,
+        costo_mano_obra_real: parseFloat(document.getElementById('edit_costo_mano_obra').value) || 0,
+        costo_diagnostico_real: parseFloat(document.getElementById('edit_costo_diagnostico').value) || 0,
+        ganancia_neta: parseFloat(document.getElementById('edit_ganancia_neta').value) || 0,
+        observaciones_pago: document.getElementById('edit_observaciones_pago').value,
+        validado_por: document.getElementById('edit_validado_por').value,
+        atendido_por: document.getElementById('edit_atendido_por').value,
+        validado: document.getElementById('edit_validado').checked
+    };
+
+    try {
+        const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/editar_completo/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (resp.ok) {
+            alert('✅ Registro actualizado correctamente');
+            document.getElementById('modalEditarCompleto').style.display = 'none';
+            location.reload();
+        } else {
+            const error = await resp.json();
+            alert('❌ Error al actualizar: ' + (error.error || ''));
+        }
+    } catch(e) {
+        console.error('Error en submit edición completa:', e);
+        alert('❌ Error de conexión');
+    }
+};
+
+// ============================================
+// ELIMINAR REGISTRO
+// ============================================
+function eliminarRegistro(id) {
+    // Cerrar menú
+    document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
+    
+    if (!confirm(`¿Eliminar el registro #${id} permanentemente?`)) return;
+    fetch(`https://ea-dixon-production.up.railway.app/api/eliminar_registro/${id}`, {
+        method: 'DELETE'
+    }).then(resp => {
+        if (resp.ok) {
+            alert('✅ Registro eliminado');
+            location.reload();
+        } else {
+            alert('❌ Error al eliminar');
+        }
+    }).catch(() => alert('❌ Error de conexión'));
+}
+
+// ============================================
+// RESTO DEL CÓDIGO (Buscador, Ordenar, etc.)
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ============================
+    // TOGGLE VISTA MÓVIL / ESCRITORIO
+    // ============================
+    function toggleVista() {
+        const isMobile = window.innerWidth < 768;
+        const escritorio = document.querySelector('.vista-escritorio');
+        const movil = document.querySelector('.vista-movil');
+        if (escritorio) escritorio.style.display = isMobile ? 'none' : 'block';
+        if (movil) movil.style.display = isMobile ? 'flex' : 'none';
+    }
+    window.addEventListener('resize', toggleVista);
+    toggleVista();
+
+    // ============================
+    // BUSCADOR
+    // ============================
+    const campoBusqueda = document.getElementById('campoBusqueda');
+    const buscadorInput = document.getElementById('buscadorInput');
+    const btnBuscar = document.getElementById('btnBuscar');
+    const btnLimpiar = document.getElementById('btnLimpiar');
+
+    function filtrarTabla() {
+        const campo = campoBusqueda.value;
+        const texto = buscadorInput.value.toLowerCase().trim();
+        document.querySelectorAll('.fila-registro').forEach(fila => {
+            let valor = '';
+            const celdas = fila.querySelectorAll('td');
+            switch(campo) {
+                case 'nombre': valor = celdas[1]?.textContent || ''; break;
+                case 'patente': valor = celdas[4]?.textContent || ''; break;
+                case 'marca': valor = celdas[5]?.textContent || ''; break;
+                case 'modelo': valor = celdas[6]?.textContent || ''; break;
+                case 'atendido_por': valor = celdas[7]?.textContent || ''; break;
+                case 'id': valor = fila.dataset.id || ''; break;
+                default: valor = '';
+            }
+            fila.style.display = valor.toLowerCase().includes(texto) ? '' : 'none';
+        });
+        document.querySelectorAll('.card-android').forEach(card => {
+            const texto = card.textContent.toLowerCase();
+            card.style.display = texto.includes(buscadorInput.value.toLowerCase().trim()) ? '' : 'none';
+        });
+    }
+
+    btnBuscar.addEventListener('click', filtrarTabla);
+    buscadorInput.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') filtrarTabla();
+        filtrarTabla();
     });
+    btnLimpiar.addEventListener('click', function() {
+        buscadorInput.value = '';
+        campoBusqueda.value = 'nombre';
+        filtrarTabla();
+    });
+
+    // ============================
+    // ORDENAR TABLA
+    // ============================
+    window.ordenarTabla = function(columna) {
+        const tbody = document.querySelector('#tablaRegistros tbody');
+        const filasArray = Array.from(tbody.querySelectorAll('.fila-registro'));
+        filasArray.sort((a, b) => {
+            const celdasA = a.querySelectorAll('td');
+            const celdasB = b.querySelectorAll('td');
+            let valA = celdasA[columna]?.textContent.trim() || '';
+            let valB = celdasB[columna]?.textContent.trim() || '';
+            if (columna === 2) {
+                valA = parseFloat(valA.replace(/[$,]/g, '')) || 0;
+                valB = parseFloat(valB.replace(/[$,]/g, '')) || 0;
+            }
+            if (columna === 0) {
+                valA = parseInt(valA) || 0;
+                valB = parseInt(valB) || 0;
+            }
+            if (valA < valB) return -1;
+            if (valA > valB) return 1;
+            return 0;
+        });
+        filasArray.forEach(fila => tbody.appendChild(fila));
+    };
+});
 </script>
 {% endblock %}
