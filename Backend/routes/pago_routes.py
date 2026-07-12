@@ -354,7 +354,6 @@ def validar_pago(id_reg):
             data.get('resultado', 'reparado'),
             data.get('tiempo_estimado', '00:00:00'),
             detalles_json,
-            data.get('estado_ot', 'Pendiente'),
             id_reg
         ))
         
