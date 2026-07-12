@@ -419,49 +419,44 @@
         // ============================
         // 5. VER DETALLE
         // ============================
-        async function verDetalle(id) {
-            const modal = document.getElementById('modalDetalle');
-            const contenido = document.getElementById('contenidoDetalle');
-            modal.style.display = 'flex';
-            contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
+       async function verDetalle(id) {
+    const modal = document.getElementById('modalDetalle');
+    const contenido = document.getElementById('contenidoDetalle');
+    modal.style.display = 'flex';
+    contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
 
-            try {
-                const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`);
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                const data = await resp.json();
-                contenido.innerHTML = `
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:14px;">
-                        <div><strong style="color:#90e0a0;">ID:</strong> ${data.id}</div>
-                        <div><strong style="color:#90e0a0;">Cliente:</strong> ${data.nombre}</div>
-                        <div><strong style="color:#90e0a0;">Monto:</strong> <span style="color:#00ff66;">$${Number(data.monto).toLocaleString()}</span></div>
-                        <div><strong style="color:#90e0a0;">Fecha:</strong> ${data.fecha}</div>
-                        <div><strong style="color:#90e0a0;">Hora:</strong> ${data.hora}</div>
-                        <div><strong style="color:#90e0a0;">Patente:</strong> ${data.patente}</div>
-                        <div><strong style="color:#90e0a0;">Marca:</strong> ${data.marca}</div>
-                        <div><strong style="color:#90e0a0;">Modelo:</strong> ${data.modelo}</div>
-                        <div><strong style="color:#90e0a0;">Atendido por:</strong> ${data.atendido_por || data.usuario || '-'}</div>
-                        <div><strong style="color:#90e0a0;">Estado:</strong> ${data.estado}</div>
-                        <div><strong style="color:#90e0a0;">Estado OT:</strong>
-                            <span style="color: {% if r.estado_ot == 'Entregado' %}#00ff66{% elif data.estado_ot == 'Terminado' %}#4fc3f7{% elif data.estado_ot == 'Aprobado' %}#ffcc00{% elif data.estado_ot == 'Diagnosticado' %}#4fc3f7{% else %}#ff6b6b{% endif %}; font-weight: 600;">
-                                {{ data.estado_ot or 'Pendiente' }}
-                            </span>
-                        </div>
-                        <div style="grid-column:1/3;"><strong style="color:#90e0a0;">Observaciones:</strong> ${data.observaciones_pago || data.observaciones_cliente || '-'}</div>
-                        <div style="grid-column:1/3;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:6px;">
-                            <strong style="color:#90e0a0;">📊 Costos:</strong>
-                            <div>Repuestos: $${Number(data.costo_repuestos_real || 0).toLocaleString()}</div>
-                            <div>Mano de obra: $${Number(data.costo_mano_obra_real || 0).toLocaleString()}</div>
-                            <div>Diagnóstico: $${Number(data.costo_diagnostico_real || 0).toLocaleString()}</div>
-                            <div style="color:#00ff66;font-size:18px;font-weight:700;">Ganancia Neta: $${Number(data.ganancia_neta || 0).toLocaleString()}</div>
-                        </div>
-                        ${data.validado ? `<div style="grid-column:1/3;color:#4fc3f7;">✅ Validado por: ${data.validado_por || 'Sistema'}</div>` : ''}
-                    </div>
-                `;
-            } catch(e) {
-                contenido.innerHTML = `<div style="color:#ff6b6b;">❌ Error al cargar los datos: ${e.message}</div>`;
-            }
-        }
-
+    try {
+        const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        contenido.innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:14px;">
+                <div><strong style="color:#90e0a0;">ID:</strong> ${data.id}</div>
+                <div><strong style="color:#90e0a0;">Cliente:</strong> ${data.nombre}</div>
+                <div><strong style="color:#90e0a0;">Monto:</strong> <span style="color:#00ff66;">$${Number(data.monto).toLocaleString()}</span></div>
+                <div><strong style="color:#90e0a0;">Fecha:</strong> ${data.fecha}</div>
+                <div><strong style="color:#90e0a0;">Hora:</strong> ${data.hora}</div>
+                <div><strong style="color:#90e0a0;">Patente:</strong> ${data.patente}</div>
+                <div><strong style="color:#90e0a0;">Marca:</strong> ${data.marca}</div>
+                <div><strong style="color:#90e0a0;">Modelo:</strong> ${data.modelo}</div>
+                <div><strong style="color:#90e0a0;">Atendido por:</strong> ${data.atendido_por || data.usuario || '-'}</div>
+                <div><strong style="color:#90e0a0;">Estado:</strong> ${data.estado}</div>
+                <div><strong style="color:#90e0a0;">Resultado:</strong> ${data.resultado || 'pendiente'}</div>
+                <div style="grid-column:1/3;"><strong style="color:#90e0a0;">Observaciones:</strong> ${data.observaciones_pago || data.observaciones_cliente || '-'}</div>
+                <div style="grid-column:1/3;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:6px;">
+                    <strong style="color:#90e0a0;">📊 Costos:</strong>
+                    <div>Repuestos: $${Number(data.costo_repuestos_real || 0).toLocaleString()}</div>
+                    <div>Mano de obra: $${Number(data.costo_mano_obra_real || 0).toLocaleString()}</div>
+                    <div>Diagnóstico: $${Number(data.costo_diagnostico_real || 0).toLocaleString()}</div>
+                    <div style="color:#00ff66;font-size:18px;font-weight:700;">Ganancia Neta: $${Number(data.ganancia_neta || 0).toLocaleString()}</div>
+                </div>
+                ${data.validado ? `<div style="grid-column:1/3;color:#4fc3f7;">✅ Validado por: ${data.validado_por || 'Sistema'}</div>` : ''}
+            </div>
+        `;
+    } catch(e) {
+        contenido.innerHTML = `<div style="color:#ff6b6b;">❌ Error al cargar los datos: ${e.message}</div>`;
+    }
+}
         document.getElementById('cerrarModalDetalle').onclick = function() {
             document.getElementById('modalDetalle').style.display = 'none';
         };
