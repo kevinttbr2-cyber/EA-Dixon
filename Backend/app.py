@@ -56,82 +56,165 @@ def health():
     })
 
 # ============================
-# NUEVA RUTA: EXPORTAR Y BORRAR DB
+# RUTA 1: EXPORTAR DB (SIN BORRAR)
 # ============================
-@app.route('/exportar_y_borrar', methods=['POST'])
-def exportar_y_borrar():
-    """Exporta todos los registros a Excel y luego los elimina"""
+@app.route('/exportar_datos', methods=['GET'])
+def exportar_datos():
+    """Exporta todos los registros a Excel SIN borrar nada"""
     try:
-        from services.pago_service import PagoService
         from database import db
+        from models import Pago
+        import pandas as pd
+        from io import BytesIO
         
-        # 1. Obtener todos los registros
-        registros = PagoService.obtener_todos()  # Tu función
+        # Obtener todos los registros
+        registros = Pago.query.all()
         
         if not registros:
             return jsonify({'error': 'No hay registros para exportar'}), 400
         
-        # 2. Crear DataFrame para Excel
+        # Crear DataFrame
         datos = []
         for r in registros:
             datos.append({
                 'ID': r.id,
                 'Cliente': r.nombre,
+                'Teléfono': getattr(r, 'telefono', ''),
                 'Monto': r.monto,
                 'Fecha': r.fecha,
                 'Hora': r.hora,
                 'Patente': r.patente,
                 'Marca': r.marca,
                 'Modelo': r.modelo,
+                'Año': getattr(r, 'anio', ''),
+                'Flota': getattr(r, 'flota', ''),
                 'Atendido por': r.atendido_por or r.usuario,
                 'Estado': r.estado,
-                'Observaciones Cliente': r.observaciones_cliente,
-                'Observaciones Pago': r.observaciones_pago,
-                'Diagnóstico': r.diagnostico,
-                'Reparación': r.reparacion,
-                'Resultado': r.resultado,
-                'Costo Repuestos': r.costo_repuestos_real,
-                'Costo Mano Obra': r.costo_mano_obra_real,
-                'Costo Diagnóstico': r.costo_diagnostico_real,
-                'Ganancia Neta': r.ganancia_neta,
+                'Observaciones Cliente': getattr(r, 'observaciones_cliente', ''),
+                'Observaciones Pago': getattr(r, 'observaciones_pago', ''),
+                'Diagnóstico': getattr(r, 'diagnostico', ''),
+                'Reparación': getattr(r, 'reparacion', ''),
+                'Resultado': getattr(r, 'resultado', ''),
+                'Tiempo Estimado': getattr(r, 'tiempo_estimado', ''),
+                'Costo Repuestos': getattr(r, 'costo_repuestos_real', 0),
+                'Costo Mano Obra': getattr(r, 'costo_mano_obra_real', 0),
+                'Costo Diagnóstico': getattr(r, 'costo_diagnostico_real', 0),
+                'Ganancia Neta': getattr(r, 'ganancia_neta', 0),
+                'Validado': getattr(r, 'validado', False),
+                'Validado por': getattr(r, 'validado_por', ''),
+                'Firma': getattr(r, 'firma', ''),
             })
         
         df = pd.DataFrame(datos)
-        
-        # 3. Crear archivo Excel en memoria
         output = BytesIO()
+        
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, sheet_name='Backup', index=False)
+            df.to_excel(writer, sheet_name='Exportacion', index=False)
             
             # Formatear columnas
             workbook = writer.book
-            worksheet = writer.sheets['Backup']
-            
-            # Autoajustar ancho de columnas
+            worksheet = writer.sheets['Exportacion']
             for i, col in enumerate(df.columns):
                 column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
                 worksheet.set_column(i, i, min(column_width, 50))
         
         output.seek(0)
         
-        # 4. Crear respuesta con el archivo
+        # Crear respuesta con el archivo
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = 'attachment; filename=exportacion_db.xlsx'
+        
+        return response
+        
+    except Exception as e:
+        print(f"❌ Error en exportar_datos: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================
+# RUTA 2: EXPORTAR Y BORRAR DB
+# ============================
+@app.route('/exportar_y_borrar', methods=['POST'])
+def exportar_y_borrar():
+    """Exporta todos los registros a Excel y luego los elimina"""
+    try:
+        from database import db
+        from models import Pago
+        import pandas as pd
+        from io import BytesIO
+        
+        # Obtener todos los registros
+        registros = Pago.query.all()
+        
+        if not registros:
+            return jsonify({'error': 'No hay registros para exportar'}), 400
+        
+        # Crear DataFrame
+        datos = []
+        for r in registros:
+            datos.append({
+                'ID': r.id,
+                'Cliente': r.nombre,
+                'Teléfono': getattr(r, 'telefono', ''),
+                'Monto': r.monto,
+                'Fecha': r.fecha,
+                'Hora': r.hora,
+                'Patente': r.patente,
+                'Marca': r.marca,
+                'Modelo': r.modelo,
+                'Año': getattr(r, 'anio', ''),
+                'Flota': getattr(r, 'flota', ''),
+                'Atendido por': r.atendido_por or r.usuario,
+                'Estado': r.estado,
+                'Observaciones Cliente': getattr(r, 'observaciones_cliente', ''),
+                'Observaciones Pago': getattr(r, 'observaciones_pago', ''),
+                'Diagnóstico': getattr(r, 'diagnostico', ''),
+                'Reparación': getattr(r, 'reparacion', ''),
+                'Resultado': getattr(r, 'resultado', ''),
+                'Tiempo Estimado': getattr(r, 'tiempo_estimado', ''),
+                'Costo Repuestos': getattr(r, 'costo_repuestos_real', 0),
+                'Costo Mano Obra': getattr(r, 'costo_mano_obra_real', 0),
+                'Costo Diagnóstico': getattr(r, 'costo_diagnostico_real', 0),
+                'Ganancia Neta': getattr(r, 'ganancia_neta', 0),
+                'Validado': getattr(r, 'validado', False),
+                'Validado por': getattr(r, 'validado_por', ''),
+                'Firma': getattr(r, 'firma', ''),
+            })
+        
+        df = pd.DataFrame(datos)
+        output = BytesIO()
+        
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, sheet_name='Backup', index=False)
+            
+            workbook = writer.book
+            worksheet = writer.sheets['Backup']
+            for i, col in enumerate(df.columns):
+                column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
+                worksheet.set_column(i, i, min(column_width, 50))
+        
+        output.seek(0)
+        
+        # Crear respuesta con el archivo
         response = make_response(output.getvalue())
         response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         response.headers['Content-Disposition'] = 'attachment; filename=backup_antes_borrar.xlsx'
         
-        # 5. BORRAR TODOS LOS REGISTROS (después de generar el archivo)
+        # BORRAR TODOS LOS REGISTROS
         try:
-            PagoService.eliminar_todos()  # Tu función
+            Pago.query.delete()
+            db.session.commit()
+            print(f"✅ {len(registros)} registros eliminados correctamente")
         except Exception as e:
+            db.session.rollback()
             print(f"⚠️ Error al borrar registros: {e}")
-            # No fallamos la exportación si el borrado falla
         
         return response
         
     except Exception as e:
         print(f"❌ Error en exportar_y_borrar: {e}")
         return jsonify({'error': str(e)}), 500
-
 
 # ============================
 # CREAR ADMIN AL INICIAR
