@@ -339,11 +339,10 @@ def validar_pago(id_reg):
                 reparacion = %s,
                 resultado = %s,
                 tiempo_estimado = %s,
-                detalles_repuestos = %s::jsonb,
-                estado_ot = %s
+                detalles_repuestos = %s::jsonb
             WHERE id = %s
         """, (
-            costo_repuestos,  # ← ESTE ES EL CAMPO QUE DEBE GUARDARSE
+            costo_repuestos,
             data.get('costo_mano_obra_real', 0),
             data.get('costo_diagnostico_real', 0),
             data.get('ganancia_neta', 0),
