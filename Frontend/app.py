@@ -290,19 +290,19 @@ def validar_pago(id_reg):
                 })
         
         data = {
-            'costo_repuestos_real': float(request.form.get('costo_repuestos', 0)),
-            'costo_mano_obra_real': float(request.form.get('costo_mano_obra', 0)),
-            'costo_diagnostico_real': float(request.form.get('costo_diagnostico', 0)),
-            'ganancia_neta': float(request.form.get('ganancia_neta', 0)),
-            'observaciones_pago': request.form.get('observaciones_costos', ''),
-            'validado_por': validado_por,
-            'diagnostico': request.form.get('diagnostico', ''),
-            'reparacion': request.form.get('reparacion', 'Reparación realizada'),
-            'resultado': request.form.get('resultado', 'reparado'),
-            'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
-            'detalles_repuestos': detalles_repuestos
-            'costo_repuestos': float(request.form.get('costo_repuestos', 0)) 
-        }
+        'costo_repuestos': float(request.form.get('costo_repuestos', 0)),  # ← NOMBRE CORRECTO
+        'costo_mano_obra_real': float(request.form.get('costo_mano_obra', 0)),
+        'costo_diagnostico_real': float(request.form.get('costo_diagnostico', 0)),
+        'ganancia_neta': float(request.form.get('ganancia_neta', 0)),
+        'observaciones_pago': request.form.get('observaciones_costos', ''),
+        'validado_por': validado_por,
+        'diagnostico': request.form.get('diagnostico', ''),
+        'reparacion': request.form.get('reparacion', 'Reparación realizada'),
+        'resultado': request.form.get('resultado', 'reparado'),
+        'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
+        'detalles_repuestos': detalles_repuestos,
+        'estado_ot': request.form.get('estado_ot', 'Pendiente')
+    }
         
         try:
             resp = requests.post(f"{BACKEND_URL}/api/validar_pago/{id_reg}", json=data, timeout=10)
