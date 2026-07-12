@@ -95,7 +95,7 @@
                     <td style="padding:6px 8px;text-align:center;">{{ r.marca }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.modelo }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
-                    <td style="padding:6px 8px;text-align:center;position:relative;">
+                    <td style="padding:6px 8px;text-align:center;">
     <button class="btn-acciones" style="
         background:transparent;
         border:none;
@@ -441,57 +441,75 @@
         });
 
         // ============================
-        // 3. MENÚ FLOTANTE DE 3 PUNTOS
+        // 3. MENÚ FLOTANTE DE 3 PUNTOS (CORREGIDO)
         // ============================
         const menuFlotante = document.getElementById('menuFlotante');
         let currentMenuId = null;
+        let menuAbierto = false;
 
         // Función para mostrar el menú en la posición del botón
         function mostrarMenuFlotante(id, nombre, boton) {
             currentMenuId = id;
             document.getElementById('menuClienteNombre').textContent = 'OT #' + id + ' - ' + nombre;
             
-            // Posicionar el menú justo debajo del botón
+            // Obtener posición del botón
             const rect = boton.getBoundingClientRect();
-            const menuWidth = 180;
-            let left = rect.left + (rect.width / 2) - (menuWidth / 2);
             
-            // Asegurar que no se salga de la pantalla
+            // Posicionar el menú justo debajo del botón
+            let left = rect.left;
+            let top = rect.bottom + 6;
+            
+            // Ajustar para que no se salga de la pantalla
+            const menuWidth = 180;
+            const menuHeight = menuFlotante.scrollHeight || 200;
+            
+            if (left + menuWidth > window.innerWidth - 10) {
+                left = window.innerWidth - menuWidth - 10;
+            }
             if (left < 10) left = 10;
-            if (left + menuWidth > window.innerWidth - 10) left = window.innerWidth - menuWidth - 10;
+            
+            // Si no hay espacio abajo, mostrar arriba
+            if (top + menuHeight > window.innerHeight - 10) {
+                top = rect.top - menuHeight - 6;
+            }
             
             menuFlotante.style.left = left + 'px';
-            menuFlotante.style.top = (rect.bottom + 6) + 'px';
+            menuFlotante.style.top = top + 'px';
             menuFlotante.style.display = 'block';
+            menuAbierto = true;
         }
 
         function cerrarMenuFlotante() {
             menuFlotante.style.display = 'none';
             currentMenuId = null;
+            menuAbierto = false;
+        }
+
+        // Función para toggle del menú
+        function toggleMenu(id, nombre, boton) {
+            // Si el menú está abierto y es el mismo ID, cerrar
+            if (menuAbierto && currentMenuId === id) {
+                cerrarMenuFlotante();
+                return;
+            }
+            // Si el menú está abierto pero es otro ID, cerrar y abrir el nuevo
+            if (menuAbierto) {
+                cerrarMenuFlotante();
+            }
+            // Abrir el menú
+            mostrarMenuFlotante(id, nombre, boton);
         }
 
         // Evento para abrir el menú desde los botones (escritorio)
         document.querySelectorAll('.btn-acciones').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
+                e.preventDefault();
+                
                 const id = this.dataset.id;
                 const nombre = this.dataset.nombre || 'Cliente';
                 
-                // Si el menú ya está abierto para este botón, lo cerramos
-                if (menuFlotante.style.display === 'block' && currentMenuId === id) {
-                    cerrarMenuFlotante();
-                    return;
-                }
-                
-                mostrarMenuFlotante(id, nombre, this);
-            });
-            
-            // Hover effect
-            btn.addEventListener('mouseenter', function() {
-                this.style.background = 'rgba(79,195,247,0.15)';
-            });
-            btn.addEventListener('mouseleave', function() {
-                this.style.background = 'transparent';
+                toggleMenu(id, nombre, this);
             });
         });
 
@@ -499,15 +517,12 @@
         document.querySelectorAll('.btn-acciones-movil').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
+                e.preventDefault();
+                
                 const id = this.dataset.id;
                 const nombre = this.dataset.nombre || 'Cliente';
                 
-                if (menuFlotante.style.display === 'block' && currentMenuId === id) {
-                    cerrarMenuFlotante();
-                    return;
-                }
-                
-                mostrarMenuFlotante(id, nombre, this);
+                toggleMenu(id, nombre, this);
             });
         });
 
@@ -517,37 +532,47 @@
                 e.stopPropagation();
                 const accion = this.dataset.accion;
                 const id = currentMenuId;
+                
+                // Cerrar menú
                 cerrarMenuFlotante();
                 
+                // Ejecutar acción
                 if (accion === 'detalle') verDetalle(id);
                 else if (accion === 'editar') editarRegistro(id);
                 else if (accion === 'eliminar') eliminarRegistro(id);
                 else if (accion === 'cancelar') {
-                    // Solo cerrar el menú
+                    // Solo cerrar el menú (ya está cerrado)
                 }
-            });
-            
-            // Hover effect para opciones
-            btn.addEventListener('mouseenter', function() {
-                if (!this.dataset.accion === 'cancelar') {
-                    this.style.background = 'rgba(255,255,255,0.05)';
-                }
-            });
-            btn.addEventListener('mouseleave', function() {
-                this.style.background = 'transparent';
             });
         });
 
-        // Cerrar menú al hacer clic fuera
+        // Cerrar menú al hacer clic fuera (con delay para evitar cierre inmediato)
         document.addEventListener('click', function(e) {
-            if (!menuFlotante.contains(e.target) && !e.target.classList.contains('btn-acciones') && !e.target.classList.contains('btn-acciones-movil')) {
+            // Verificar si el clic fue fuera del menú y fuera de los botones
+            const esBotonAccion = e.target.classList.contains('btn-acciones') || 
+                                 e.target.classList.contains('btn-acciones-movil') ||
+                                 e.target.closest('.btn-acciones') ||
+                                 e.target.closest('.btn-acciones-movil');
+            
+            const esMenu = menuFlotante.contains(e.target);
+            
+            if (!esMenu && !esBotonAccion && menuAbierto) {
                 cerrarMenuFlotante();
             }
         });
 
         // Cerrar con ESC
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') cerrarMenuFlotante();
+            if (e.key === 'Escape' && menuAbierto) {
+                cerrarMenuFlotante();
+            }
+        });
+
+        // Cerrar al hacer scroll
+        document.addEventListener('scroll', function() {
+            if (menuAbierto) {
+                cerrarMenuFlotante();
+            }
         });
 
         // ============================
