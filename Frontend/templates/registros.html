@@ -96,19 +96,6 @@
                     <td style="padding:6px 8px;text-align:center;">{{ r.marca }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.modelo }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
-                    <td style="padding:6px 8px;text-align:center;">
-                        <span style="
-                            background: {% if r.estado_ot == 'Entregado' %}rgba(0,255,102,0.15){% elif r.estado_ot == 'Terminado' %}rgba(79,195,247,0.15){% elif r.estado_ot == 'Aprobado' %}rgba(255,200,0,0.15){% elif r.estado_ot == 'Diagnosticado' %}rgba(79,195,247,0.15){% else %}rgba(255,107,107,0.15){% endif %};
-                            color: {% if r.estado_ot == 'Entregado' %}#00ff66{% elif r.estado_ot == 'Terminado' %}#4fc3f7{% elif r.estado_ot == 'Aprobado' %}#ffcc00{% elif r.estado_ot == 'Diagnosticado' %}#4fc3f7{% else %}#ff6b6b{% endif %};
-                            padding: 2px 10px;
-                            border-radius: 12px;
-                            font-size: 11px;
-                            font-weight: 600;
-                            white-space: nowrap;
-                        ">
-                            {{ r.estado_ot or 'Pendiente' }}
-                        </span>
-                    </td>
                     <td style="padding:6px 8px;text-align:center;position:relative;">
                         <button class="btn-acciones" style="background:transparent;border:none;color:#4fc3f7;cursor:pointer;padding:4px 8px;font-size:18px;" data-id="{{ r.id }}">⋮</button>
                         <div class="menu-acciones" style="display:none;position:fixed;background:rgba(15,15,15,0.98);border:1px solid rgba(0,255,102,0.20);border-radius:10px;padding:6px 0;min-width:160px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.8);">
@@ -156,17 +143,6 @@
                 <div><span style="color:#888;">Atendido:</span> <span style="color:#fff;">{{ r.atendido_por or r.usuario or '-' }}</span></div>
                 <div style="grid-column:1/3;"><span style="color:#888;">Vehículo:</span> <span style="color:#fff;">{{ r.marca }} {{ r.modelo }}</span></div>
                 <div style="grid-column:1/3;margin-top:4px;">
-                    <span style="color:#888;">Estado OT:</span>
-                    <span style="
-                        background: {% if r.estado_ot == 'Entregado' %}rgba(0,255,102,0.15){% elif r.estado_ot == 'Terminado' %}rgba(79,195,247,0.15){% elif r.estado_ot == 'Aprobado' %}rgba(255,200,0,0.15){% elif r.estado_ot == 'Diagnosticado' %}rgba(79,195,247,0.15){% else %}rgba(255,107,107,0.15){% endif %};
-                        color: {% if r.estado_ot == 'Entregado' %}#00ff66{% elif r.estado_ot == 'Terminado' %}#4fc3f7{% elif r.estado_ot == 'Aprobado' %}#ffcc00{% elif r.estado_ot == 'Diagnosticado' %}#4fc3f7{% else %}#ff6b6b{% endif %};
-                        padding: 2px 10px;
-                        border-radius: 12px;
-                        font-size: 11px;
-                        font-weight: 600;
-                    ">
-                        {{ r.estado_ot or 'Pendiente' }}
-                    </span>
                 </div>
             </div>
             <div style="margin-top:4px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.05);padding-top:4px;">
@@ -267,17 +243,6 @@
                     </div>
                     <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Observaciones de pago</label>
                         <textarea name="observaciones_pago" id="edit_observaciones_pago" class="form-control form-control-sm" rows="2"></textarea>
-                    </div>
-                    <!-- ESTADO OT -->
-                    <div style="grid-column:1/3;">
-                        <label style="color:#90e0a0;font-size:12px;">📋 Estado OT</label>
-                        <select name="estado_ot" id="edit_estado_ot" class="form-control form-control-sm">
-                            <option value="Pendiente">⏳ Pendiente</option>
-                            <option value="Diagnosticado">🩺 Diagnosticado</option>
-                            <option value="Aprobado">✅ Aprobado</option>
-                            <option value="Terminado">🔧 Terminado</option>
-                            <option value="Entregado">🚗 Entregado</option>
-                        </select>
                     </div>
                 </div>
             </div>
@@ -500,7 +465,6 @@
                 document.getElementById('edit_validado_por').value = data.validado_por || '';
                 document.getElementById('edit_atendido_por').value = data.atendido_por || '';
                 document.getElementById('edit_validado').checked = data.validado || false;
-                document.getElementById('edit_estado_ot').value = data.estado_ot || 'Pendiente';
                 
             } catch(e) {
                 console.error('Error cargando datos para editar:', e);
@@ -547,8 +511,7 @@
                 observaciones_pago: document.getElementById('edit_observaciones_pago').value,
                 validado_por: document.getElementById('edit_validado_por').value,
                 atendido_por: document.getElementById('edit_atendido_por').value,
-                validado: document.getElementById('edit_validado').checked,
-                estado_ot: document.getElementById('edit_estado_ot').value
+                validado: document.getElementById('edit_validado').checked
             };
 
             try {
