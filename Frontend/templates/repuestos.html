@@ -254,6 +254,8 @@
 </div>
 
 <script>
+    const API_URL = 'https://ea-dixon-production.up.railway.app';
+
     document.addEventListener('DOMContentLoaded', function() {
 
         // ============================
@@ -314,65 +316,131 @@
         };
 
         // ============================
-        // 3. PREVIEW COSTO VENTA (AGREGAR)
+        // 3. CALCULAR COSTO VENTA Y MARGEN
         // ============================
-        function calcularPreview(modal) {
-            const isEdit = modal === 'edit';
-            const costoInput = document.getElementById(isEdit ? 'editCostoProveedor' : 'inputCostoProveedor');
-            const margenInput = document.getElementById(isEdit ? 'editMargenGanancia' : 'inputMargenGanancia');
-            const previewSpan = document.getElementById(isEdit ? 'editPreviewCostoVenta' : 'previewCostoVenta');
+        function calcularCostoVenta() {
+            const costoProveedor = parseFloat(document.getElementById('inputCostoProveedor').value) || 0;
+            const margen = parseFloat(document.getElementById('inputMargenGanancia').value) || 0;
+            const metodo = document.getElementById('metodoCalculo').value;
+            const costoVentaFinalInput = document.getElementById('inputCostoVentaFinal');
             
-            const costo = parseFloat(costoInput.value) || 0;
-            const margen = parseFloat(margenInput.value) || 0;
+            const iva = 1.19;
+            const costoConIva = costoProveedor * iva;
             
-            // Fórmula: (Costo × 1.19) + (Costo × 1.19 × Margen/100)
+            if (metodo === 'margen') {
+                const costoFinal = costoConIva * (1 + (margen / 100));
+                document.getElementById('previewCostoVenta').textContent = '$' + Math.round(costoFinal).toLocaleString('es-CL');
+                document.getElementById('previewMargen').textContent = margen + '%';
+                costoVentaFinalInput.value = Math.round(costoFinal);
+            } else {
+                const costoVenta = parseFloat(costoVentaFinalInput.value) || 0;
+                if (costoVenta > 0 && costoConIva > 0) {
+                    const margenCalculado = ((costoVenta / costoConIva) - 1) * 100;
+                    const margenFinal = Math.round(margenCalculado * 10) / 10;
+                    document.getElementById('previewMargen').textContent = margenFinal + '%';
+                    document.getElementById('previewCostoVenta').textContent = '$' + costoVenta.toLocaleString('es-CL');
+                    document.getElementById('inputMargenGanancia').value = margenFinal;
+                } else {
+                    document.getElementById('previewMargen').textContent = '0%';
+                }
+            }
+        }
+
+        // Eventos para calcular en tiempo real
+        document.getElementById('inputCostoProveedor').addEventListener('input', calcularCostoVenta);
+        document.getElementById('inputMargenGanancia').addEventListener('input', calcularCostoVenta);
+        document.getElementById('inputCostoVentaFinal').addEventListener('input', calcularCostoVenta);
+
+        document.getElementById('metodoCalculo').addEventListener('change', function() {
+            if (this.value === 'venta') {
+                document.getElementById('inputMargenGanancia').disabled = true;
+                document.getElementById('inputCostoVentaFinal').disabled = false;
+                document.getElementById('inputMargenGanancia').style.opacity = '0.5';
+                document.getElementById('inputCostoVentaFinal').style.opacity = '1';
+            } else {
+                document.getElementById('inputMargenGanancia').disabled = false;
+                document.getElementById('inputCostoVentaFinal').disabled = true;
+                document.getElementById('inputMargenGanancia').style.opacity = '1';
+                document.getElementById('inputCostoVentaFinal').style.opacity = '0.5';
+            }
+            calcularCostoVenta();
+        });
+
+        // ============================
+        // 4. PREVIEW EN EDICIÓN
+        // ============================
+        function calcularPreviewEdit() {
+            const costo = parseFloat(document.getElementById('editCostoProveedor').value) || 0;
+            const margen = parseFloat(document.getElementById('editMargenGanancia').value) || 0;
             const iva = 1.19;
             const costoConIva = costo * iva;
             const costoFinal = costoConIva * (1 + (margen / 100));
-            
-            previewSpan.textContent = '$' + Math.round(costoFinal).toLocaleString('es-CL');
+            document.getElementById('editPreviewCostoVenta').textContent = '$' + Math.round(costoFinal).toLocaleString('es-CL');
         }
 
-        // Eventos para preview en agregar
-        document.getElementById('inputCostoProveedor').addEventListener('input', function() {
-            calcularPreview('agregar');
-        });
-        document.getElementById('inputMargenGanancia').addEventListener('input', function() {
-            calcularPreview('agregar');
-        });
-
-        // Eventos para preview en editar
-        document.getElementById('editCostoProveedor').addEventListener('input', function() {
-            calcularPreview('edit');
-        });
-        document.getElementById('editMargenGanancia').addEventListener('input', function() {
-            calcularPreview('edit');
-        });
+        document.getElementById('editCostoProveedor').addEventListener('input', calcularPreviewEdit);
+        document.getElementById('editMargenGanancia').addEventListener('input', calcularPreviewEdit);
 
         // ============================
-        // 4. AGREGAR REPUESTO
+        // 5. AGREGAR REPUESTO
         // ============================
         window.abrirModalAgregar = function() {
             document.getElementById('modalAgregarRepuesto').style.display = 'flex';
             document.getElementById('inputNombreRepuesto').focus();
-            calcularPreview('agregar');
+            calcularCostoVenta();
         };
 
         window.cerrarModalAgregar = function() {
             document.getElementById('modalAgregarRepuesto').style.display = 'none';
             document.getElementById('formAgregarRepuesto').reset();
+            // Resetear previews
+            document.getElementById('previewCostoVenta').textContent = '$0';
+            document.getElementById('previewMargen').textContent = '0%';
         };
 
         document.getElementById('formAgregarRepuesto').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            const nombre = document.getElementById('inputNombreRepuesto').value.trim();
+            const costoProveedor = parseFloat(document.getElementById('inputCostoProveedor').value) || 0;
+            const margen = parseFloat(document.getElementById('inputMargenGanancia').value) || 0;
+            const proveedor = document.getElementById('inputProveedorRepuesto').value.trim();
+            
+            if (!nombre) {
+                alert('⚠️ El nombre del repuesto es obligatorio');
+                return;
+            }
+            
+            if (costoProveedor <= 0) {
+                alert('⚠️ El costo proveedor debe ser mayor a 0');
+                return;
+            }
+            
             const data = {
-                nombre: document.getElementById('inputNombreRepuesto').value.trim(),
-                costo_proveedor: parseFloat(document.getElementById('inputCostoProveedor').value) || 0,
-                margen_ganancia: parseFloat(document.getElementById('inputMargenGanancia').value) || 30,
-                proveedor: document.getElementById('inputProveedorRepuesto').value.trim()
+                nombre: nombre,
+                costo_proveedor: costoProveedor,
+                margen_ganancia: margen,
+                proveedor: proveedor
             };
-
-            fetch('https://ea-dixon-production.up.railway.app/api/repuestos', {
+            
+            // Mostrar resumen antes de guardar
+            const iva = 1.19;
+            const costoConIva = costoProveedor * iva;
+            const costoFinal = costoConIva * (1 + (margen / 100));
+            
+            const confirmar = confirm(
+                `📊 Resumen del repuesto:\n\n` +
+                `🔧 Nombre: ${nombre}\n` +
+                `💰 Costo Proveedor: $${costoProveedor}\n` +
+                `💵 Costo Venta Final: $${Math.round(costoFinal)}\n` +
+                `📈 Margen: ${margen}%\n` +
+                `🏢 Proveedor: ${proveedor || 'No especificado'}\n\n` +
+                `¿Guardar este repuesto?`
+            );
+            
+            if (!confirmar) return;
+            
+            fetch(`${API_URL}/api/repuestos`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -391,7 +459,7 @@
         });
 
         // ============================
-        // 5. EDITAR REPUESTO
+        // 6. EDITAR REPUESTO
         // ============================
         document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -409,7 +477,7 @@
                 document.getElementById('editProveedorRepuesto').value = proveedor === '-' ? '' : proveedor;
                 
                 document.getElementById('modalEditarRepuesto').style.display = 'flex';
-                calcularPreview('edit');
+                calcularPreviewEdit();
             });
         });
 
@@ -428,7 +496,7 @@
                 proveedor: document.getElementById('editProveedorRepuesto').value.trim()
             };
 
-            fetch(`https://ea-dixon-production.up.railway.app/api/repuestos/${id}`, {
+            fetch(`${API_URL}/api/repuestos/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -447,13 +515,13 @@
         });
 
         // ============================
-        // 6. ELIMINAR REPUESTO
+        // 7. ELIMINAR REPUESTO
         // ============================
         document.querySelectorAll('.btn-eliminar-repuesto-lista').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
                 if (!confirm(`¿Eliminar el repuesto #${id} permanentemente?`)) return;
-                fetch(`https://ea-dixon-production.up.railway.app/api/repuestos/${id}`, {
+                fetch(`${API_URL}/api/repuestos/${id}`, {
                     method: 'DELETE'
                 })
                 .then(resp => {
@@ -479,131 +547,5 @@
         });
     });
 </script>
-// ============================
-// CALCULAR MARGEN Y COSTO VENTA
-// ============================
-function calcularCostoVenta() {
-    const costoProveedor = parseFloat(document.getElementById('inputCostoProveedor').value) || 0;
-    const margen = parseFloat(document.getElementById('inputMargenGanancia').value) || 0;
-    const metodo = document.getElementById('metodoCalculo').value;
-    const costoVentaFinalInput = document.getElementById('inputCostoVentaFinal');
-    
-    const iva = 1.19;
-    const costoConIva = costoProveedor * iva;
-    
-    if (metodo === 'margen') {
-        // ✅ Calcular por Margen: Costo Venta = (Costo Proveedor × 1.19) × (1 + Margen/100)
-        const costoFinal = costoConIva * (1 + (margen / 100));
-        document.getElementById('previewCostoVenta').textContent = '$' + Math.round(costoFinal).toLocaleString('es-CL');
-        document.getElementById('previewMargen').textContent = margen + '%';
-        costoVentaFinalInput.value = Math.round(costoFinal);
-    } else {
-        // ✅ Calcular por Costo Venta: Margen = ((Costo Venta / (Costo Proveedor × 1.19)) - 1) × 100
-        const costoVenta = parseFloat(costoVentaFinalInput.value) || 0;
-        if (costoVenta > 0 && costoConIva > 0) {
-            const margenCalculado = ((costoVenta / costoConIva) - 1) * 100;
-            const margenFinal = Math.round(margenCalculado * 10) / 10;
-            document.getElementById('previewMargen').textContent = margenFinal + '%';
-            document.getElementById('previewCostoVenta').textContent = '$' + costoVenta.toLocaleString('es-CL');
-            document.getElementById('inputMargenGanancia').value = margenFinal;
-        } else {
-            document.getElementById('previewMargen').textContent = '0%';
-        }
-    }
-}
-
-// ============================
-// EVENTOS PARA CALCULAR EN TIEMPO REAL
-// ============================
-document.getElementById('inputCostoProveedor').addEventListener('input', calcularCostoVenta);
-document.getElementById('inputMargenGanancia').addEventListener('input', calcularCostoVenta);
-document.getElementById('inputCostoVentaFinal').addEventListener('input', calcularCostoVenta);
-
-document.getElementById('metodoCalculo').addEventListener('change', function() {
-    if (this.value === 'venta') {
-        document.getElementById('inputMargenGanancia').disabled = true;
-        document.getElementById('inputCostoVentaFinal').disabled = false;
-        document.getElementById('inputMargenGanancia').style.opacity = '0.5';
-        document.getElementById('inputCostoVentaFinal').style.opacity = '1';
-    } else {
-        document.getElementById('inputMargenGanancia').disabled = false;
-        document.getElementById('inputCostoVentaFinal').disabled = true;
-        document.getElementById('inputMargenGanancia').style.opacity = '1';
-        document.getElementById('inputCostoVentaFinal').style.opacity = '0.5';
-    }
-    calcularCostoVenta();
-});
-
-// ============================
-// INICIALIZAR
-// ============================
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar disabled
-    document.getElementById('inputCostoVentaFinal').disabled = true;
-    document.getElementById('inputCostoVentaFinal').style.opacity = '0.5';
-    calcularCostoVenta();
-});
-
-// ============================
-// GUARDAR REPUESTO
-// ============================
-document.getElementById('formAgregarRepuesto').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const nombre = document.getElementById('inputNombreRepuesto').value.trim();
-    const costoProveedor = parseFloat(document.getElementById('inputCostoProveedor').value) || 0;
-    const margen = parseFloat(document.getElementById('inputMargenGanancia').value) || 0;
-    const proveedor = document.getElementById('inputProveedorRepuesto').value.trim();
-    const costoVentaFinal = parseFloat(document.getElementById('inputCostoVentaFinal').value) || 0;
-    const metodo = document.getElementById('metodoCalculo').value;
-    
-    if (!nombre) {
-        alert('⚠️ El nombre del repuesto es obligatorio');
-        return;
-    }
-    
-    if (costoProveedor <= 0) {
-        alert('⚠️ El costo proveedor debe ser mayor a 0');
-        return;
-    }
-    
-    // Si se calculó por venta final, el margen ya se actualizó
-    const data = {
-        nombre: nombre,
-        costo_proveedor: costoProveedor,
-        margen_ganancia: margen,
-        proveedor: proveedor
-    };
-    
-    // Mostrar resumen antes de guardar
-    const confirmar = confirm(
-        `📊 Resumen del repuesto:\n\n` +
-        `🔧 Nombre: ${nombre}\n` +
-        `💰 Costo Proveedor: $${costoProveedor}\n` +
-        `💵 Costo Venta Final: $${costoVentaFinal || Math.round((costoProveedor * 1.19) * (1 + (margen / 100)))}\n` +
-        `📈 Margen: ${margen}%\n` +
-        `🏢 Proveedor: ${proveedor || 'No especificado'}\n\n` +
-        `¿Guardar este repuesto?`
-    );
-    
-    if (!confirmar) return;
-    
-    fetch('https://ea-dixon-production.up.railway.app/api/repuestos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(r => r.json())
-    .then(resp => {
-        if (resp.success) {
-            alert('✅ Repuesto agregado correctamente');
-            cerrarModalAgregar();
-            location.reload();
-        } else {
-            alert('❌ Error: ' + (resp.error || 'Desconocido'));
-        }
-    })
-    .catch(() => alert('❌ Error de conexión'));
-});
 
 {% endblock %}
