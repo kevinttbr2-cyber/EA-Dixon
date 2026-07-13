@@ -525,7 +525,8 @@ function verDetalle(id) {
     modal.style.display = 'flex';
     contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
 
-    fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`)
+    // ✅ URL RELATIVA (sin hardcode)
+    fetch(`/api/registro/${id}`)
         .then(resp => {
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             return resp.json();
@@ -578,7 +579,8 @@ function editarRegistro(id) {
     const modal = document.getElementById('modalEditarCompleto');
     modal.style.display = 'flex';
 
-    fetch(`https://ea-dixon-production.up.railway.app/api/registro/${id}`)
+    // ✅ URL RELATIVA (sin hardcode)
+    fetch(`/api/registro/${id}`)
         .then(resp => {
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             return resp.json();
@@ -625,7 +627,7 @@ document.getElementById('btnCancelarEditarCompleto').onclick = function() {
 };
 
 // ============================================
-// GUARDAR EDICIÓN
+// GUARDAR EDICIÓN COMPLETA
 // ============================================
 document.getElementById('formEditarCompleto').onsubmit = async function(e) {
     e.preventDefault();
@@ -657,11 +659,13 @@ document.getElementById('formEditarCompleto').onsubmit = async function(e) {
     };
 
     try {
-        const resp = await fetch(`https://ea-dixon-production.up.railway.app/api/editar_completo/${id}`, {
+        // ✅ URL CORREGIDA: sin /api/ (coincide con tu ruta en pago_routes.py)
+        const resp = await fetch(`/editar_completo/${id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        
         if (resp.ok) {
             alert('✅ Registro actualizado correctamente');
             document.getElementById('modalEditarCompleto').style.display = 'none';
@@ -684,7 +688,9 @@ function eliminarRegistro(id) {
     document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
     
     if (!confirm(`¿Eliminar el registro #${id} permanentemente?`)) return;
-    fetch(`https://ea-dixon-production.up.railway.app/api/eliminar_registro/${id}`, {
+    
+    // ✅ URL RELATIVA
+    fetch(`/api/eliminar_registro/${id}`, {
         method: 'DELETE'
     }).then(resp => {
         if (resp.ok) {
