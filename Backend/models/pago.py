@@ -7,7 +7,7 @@ class Pago:
                  tiempo_estimado='00:00:00', anio=None, costo_repuestos_real=0,
                  costo_mano_obra_real=0, costo_diagnostico_real=0, ganancia_neta=0,
                  validado=False, validado_por=None, fecha_validacion=None,
-                 detalles_repuestos=None):
+                 detalles_repuestos=None,self.forma_pago = None):
         self.id = id
         self.nombre = nombre
         self.monto = monto
