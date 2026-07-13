@@ -33,6 +33,27 @@ def get_estado():
         "total_pendientes": len(pendientes),
         "total_pagados_hoy": len(pagados)
     })
+# ============================
+# 1.5 OBTENER REGISTRO POR ID (para editar/detalle) 
+# ============================
+@pago_bp.route('/registro/<int:id>', methods=['GET'])
+def get_registro_por_id(id):
+    """Obtiene un registro completo por su ID para editar/detalle"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("SELECT * FROM pagos WHERE id = %s", (id,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if not row:
+            return jsonify({"error": "Registro no encontrado"}), 404
+        
+        return jsonify(dict(row))
+    except Exception as e:
+        print(f"❌ Error en get_registro_por_id: {e}")
+        return jsonify({"error": str(e)}), 500
 
 # ============================
 # 2. OBTENER REGISTRO POR ID
