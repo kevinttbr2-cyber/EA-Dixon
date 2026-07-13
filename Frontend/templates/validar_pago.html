@@ -2,27 +2,326 @@
 
 {% block content %}
 
-<div class="base-container" style="max-width: 800px; margin: 0 auto;">
-    <h2 style="color: #4fc3f7; font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 5px;">
-        📊 Validación de Costos
-    </h2>
-    <p style="color: #888; text-align: center; margin-bottom: 20px;">
-        OT #{{ registro.id }} - {{ registro.nombre }}
-    </p>
+<style>
+    /* ============================================
+       ESTILOS ANDROID PARA VALIDACIÓN (IGUAL QUE REGISTROS)
+       ============================================ */
+    .validacion-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 15px;
+    }
+    
+    .validacion-container .form-control {
+        background: rgba(0,0,0,0.40) !important;
+        color: #fff !important;
+        border: 1px solid rgba(0, 255, 102, 0.20) !important;
+        border-radius: 8px !important;
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+        transition: all 0.3s ease;
+    }
+    
+    .validacion-container .form-control:focus {
+        border-color: #00ff66 !important;
+        box-shadow: 0 0 0 3px rgba(0, 255, 102, 0.10) !important;
+        outline: none !important;
+    }
+    
+    .validacion-container .form-control-sm {
+        font-size: 12px !important;
+        padding: 4px 10px !important;
+    }
+    
+    .validacion-container select.form-control {
+        appearance: auto;
+        -webkit-appearance: auto;
+    }
+    
+    .validacion-container select.form-control option {
+        background: #1a1a1a;
+        color: #fff;
+    }
+    
+    .validacion-container .btn-primary {
+        background: #4fc3f7 !important;
+        color: #000 !important;
+        font-weight: 700 !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 14px !important;
+        font-size: 18px !important;
+        transition: all 0.3s ease;
+    }
+    
+    .validacion-container .btn-primary:hover {
+        background: #00ff66 !important;
+        transform: scale(1.01);
+        box-shadow: 0 0 30px rgba(0, 255, 102, 0.15);
+    }
+    
+    .validacion-container .btn-secondary {
+        background: rgba(255,255,255,0.06) !important;
+        color: #888 !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        border-radius: 10px !important;
+        padding: 14px 24px !important;
+        text-decoration: none !important;
+        text-align: center !important;
+        transition: all 0.3s ease;
+    }
+    
+    .validacion-container .btn-secondary:hover {
+        background: rgba(255,255,255,0.10) !important;
+        color: #fff !important;
+    }
+    
+    .validacion-container .section-card {
+        background: rgba(20,20,20,0.80) !important;
+        border-radius: 14px !important;
+        padding: 16px 18px !important;
+        margin-bottom: 12px !important;
+        border: 1px solid rgba(0, 255, 102, 0.15) !important;
+        backdrop-filter: blur(8px);
+        transition: all 0.3s ease;
+    }
+    
+    .validacion-container .section-card:hover {
+        border-color: rgba(0, 255, 102, 0.30);
+    }
+    
+    .validacion-container .section-title {
+        color: #00ff66 !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+        margin-bottom: 12px !important;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .validacion-container .resumen-card {
+        background: rgba(0, 255, 102, 0.04) !important;
+        border-radius: 14px !important;
+        padding: 16px 20px !important;
+        margin-bottom: 16px !important;
+        border: 1px solid rgba(0, 255, 102, 0.15) !important;
+    }
+    
+    /* Radio buttons estilo Android */
+    .validacion-container .radio-group {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+    }
+    
+    .validacion-container .radio-group label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+        transition: all 0.3s ease;
+    }
+    
+    .validacion-container .radio-group label:hover {
+        background: rgba(255,255,255,0.06);
+    }
+    
+    .validacion-container .radio-group input[type="radio"] {
+        accent-color: #00ff66;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+    
+    /* Tabla de repuestos */
+    .validacion-container .repuestos-table {
+        background: rgba(0,0,0,0.20);
+        border-radius: 10px;
+        padding: 10px;
+        border: 1px solid rgba(0,255,102,0.08);
+    }
+    
+    .validacion-container .repuestos-table th {
+        color: #90e0a0;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 8px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    
+    .validacion-container .repuestos-table td {
+        padding: 4px 8px;
+    }
+    
+    /* Sugerencias de repuestos */
+    .validacion-container .repuesto-sugerencias {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(15,15,15,0.98);
+        border: 1px solid rgba(0,255,102,0.30);
+        border-radius: 8px;
+        max-height: 180px;
+        overflow-y: auto;
+        z-index: 9999;
+        margin-top: 2px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+    
+    .validacion-container .repuesto-sugerencias .sugerencia-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        color: #fff;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+    
+    .validacion-container .repuesto-sugerencias .sugerencia-item:hover {
+        background: rgba(0,255,102,0.08);
+    }
+    
+    .validacion-container .repuesto-sugerencias .sugerencia-item .costo {
+        color: #ffcc00;
+        font-weight: 600;
+    }
+    
+    /* Botón agregar repuesto */
+    .validacion-container .btn-add-repuesto {
+        background: rgba(0,255,102,0.08) !important;
+        color: #00ff66 !important;
+        border: 1px solid rgba(0,255,102,0.15) !important;
+        border-radius: 8px !important;
+        padding: 4px 14px !important;
+        font-size: 12px !important;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .validacion-container .btn-add-repuesto:hover {
+        background: rgba(0,255,102,0.15) !important;
+        border-color: #00ff66 !important;
+    }
+    
+    /* Resumen financiero */
+    .validacion-container .resumen-financiero {
+        background: rgba(0, 255, 102, 0.04) !important;
+        border-radius: 14px !important;
+        padding: 18px 20px !important;
+        margin-bottom: 20px !important;
+        border: 1px solid rgba(0, 255, 102, 0.20) !important;
+    }
+    
+    .validacion-container .resumen-financiero .row-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    
+    .validacion-container .resumen-financiero .row-item:last-child {
+        border-bottom: none;
+    }
+    
+    .validacion-container .resumen-financiero .label {
+        color: #90e0a0;
+        font-size: 14px;
+    }
+    
+    .validacion-container .resumen-financiero .value {
+        font-weight: 600;
+    }
+    
+    .validacion-container .resumen-financiero .total-label {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 18px;
+    }
+    
+    .validacion-container .resumen-financiero .total-value {
+        color: #00ff66;
+        font-weight: 700;
+        font-size: 24px;
+    }
+    
+    /* Scrollbar para sugerencias */
+    .validacion-container .repuesto-sugerencias::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .validacion-container .repuesto-sugerencias::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.02);
+    }
+    
+    .validacion-container .repuesto-sugerencias::-webkit-scrollbar-thumb {
+        background: rgba(0,255,102,0.30);
+        border-radius: 4px;
+    }
+    
+    /* Input de número quitar flechas */
+    .validacion-container input[type=number]::-webkit-inner-spin-button,
+    .validacion-container input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    .validacion-container input[type=number] {
+        -moz-appearance: textfield;
+    }
+    
+    /* Responsive */
+    @media (max-width: 600px) {
+        .validacion-container .grid-2 {
+            grid-template-columns: 1fr !important;
+        }
+        .validacion-container .radio-group {
+            flex-direction: column;
+            gap: 6px;
+        }
+        .validacion-container .btn-primary {
+            font-size: 16px !important;
+            padding: 12px !important;
+        }
+    }
+</style>
 
-    <!-- RESUMEN DEL CLIENTE -->
-    <div style="background: rgba(79, 195, 247, 0.06); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; border: 1px solid rgba(79, 195, 247, 0.15);">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; font-size: 14px;">
-            <div><span style="color: #888;">🔢 OT:</span> <span style="color: #fff; font-weight: 600;">#{{ registro.id }}</span></div>
-            <div><span style="color: #888;">📅 Fecha:</span> <span style="color: #fff;">{{ registro.fecha }}</span></div>
+<div class="validacion-container">
+    <!-- HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+        <h2 style="color: #00ff66; font-weight: 700; margin: 0; font-size: 22px;">
+            📊 Validación de Costos
+        </h2>
+        <span style="color: #888; font-size: 14px; background: rgba(255,255,255,0.04); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.06);">
+            OT #{{ registro.id }}
+        </span>
+    </div>
+
+    <!-- RESUMEN DEL CLIENTE (estilo Android) -->
+    <div class="section-card">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 13px;">
             <div><span style="color: #888;">👤 Cliente:</span> <span style="color: #fff; font-weight: 600;">{{ registro.nombre }}</span></div>
             <div><span style="color: #888;">📞 Teléfono:</span> <span style="color: #fff;">{{ registro.telefono or 'No registrado' }}</span></div>
             <div><span style="color: #888;">🚗 Vehículo:</span> <span style="color: #fff;">{{ registro.marca }} {{ registro.modelo }}</span></div>
             <div><span style="color: #888;">🔢 Patente:</span> <span style="color: #fff; font-weight: 600;">{{ registro.patente }}</span></div>
-            <div><span style="color: #888;">💰 Cliente pagó:</span> <span style="color: #00ff66; font-weight: 700; font-size: 18px;">${{ "{:,.0f}".format(registro.monto) }}</span></div>
-            <div>
-                <span style="color: #888;">⏱️ Tiempo de reparación:</span>
-                <span id="tiempoReparacion" style="color: #4fc3f7; font-weight: 600;">
+            <div style="grid-column: 1/3; margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #888;">💰 Cliente pagó:</span>
+                <span style="color: #00ff66; font-weight: 700; font-size: 20px;">${{ "{:,.0f}".format(registro.monto) }}</span>
+            </div>
+            <div style="grid-column: 1/3; display: flex; justify-content: space-between; align-items: center; padding-top: 4px;">
+                <span style="color: #888;">⏱️ Tiempo en taller:</span>
+                <span id="tiempoReparacion" style="color: #4fc3f7; font-weight: 600; font-size: 16px;">
                     {% if registro.tiempo_estimado %}
                         {{ registro.tiempo_estimado }}
                     {% else %}
@@ -34,7 +333,7 @@
     </div>
 
     {% if error %}
-    <div style="background: rgba(255, 68, 68, 0.10); border: 1px solid rgba(255, 68, 68, 0.20); border-radius: 10px; padding: 10px 14px; color: #ff6b6b; font-size: 14px; text-align: center; margin-bottom: 16px;">
+    <div style="background: rgba(255, 68, 68, 0.10); border: 1px solid rgba(255, 68, 68, 0.20); border-radius: 12px; padding: 10px 14px; color: #ff6b6b; font-size: 14px; text-align: center; margin-bottom: 12px;">
         <i class="fas fa-exclamation-circle"></i> {{ error }}
     </div>
     {% endif %}
@@ -44,150 +343,127 @@
         <input type="hidden" name="tiempo_estimado" id="tiempoEstimadoHidden" value="{{ registro.tiempo_estimado or '00:00:00' }}">
 
         <!-- SECCIÓN 1: DETALLES DE REPARACIÓN -->
-        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 18px 20px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.06);">
-            <h5 style="color: #4fc3f7; font-weight: 600; margin-bottom: 15px;">
-                🔧 Detalles de la Reparación
-            </h5>
+        <div class="section-card">
+            <div class="section-title">🔧 Detalles de la Reparación</div>
 
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+            <div style="margin-bottom: 10px;">
+                <label style="color: #90e0a0; font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">
                     🩺 Diagnóstico
                 </label>
-                <textarea name="diagnostico" class="form-control" rows="2">{{ registro.diagnostico or '' }}</textarea>
+                <textarea name="diagnostico" class="form-control" rows="2" style="min-height: 60px;">{{ registro.diagnostico or '' }}</textarea>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+            <div style="margin-bottom: 10px;">
+                <label style="color: #90e0a0; font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">
                     🔧 Reparación realizada
                 </label>
-                <textarea name="reparacion" class="form-control" rows="2">{{ registro.reparacion or 'Reparación realizada' }}</textarea>
+                <textarea name="reparacion" class="form-control" rows="2" style="min-height: 60px;">{{ registro.reparacion or 'Reparación realizada' }}</textarea>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+            <div>
+                <label style="color: #90e0a0; font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">
                     ✅ Resultado
                 </label>
-                <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 6px;">
-                    <label style="display: flex; align-items: center; gap: 6px; color: #00ff66; cursor: pointer;">
+                <div class="radio-group">
+                    <label style="color: #00ff66;">
                         <input type="radio" name="resultado" value="reparado" {% if registro.resultado == 'reparado' %}checked{% endif %}>
                         Reparado
                     </label>
-                    <label style="display: flex; align-items: center; gap: 6px; color: #ffcc00; cursor: pointer;">
+                    <label style="color: #ffcc00;">
                         <input type="radio" name="resultado" value="pendiente" {% if registro.resultado == 'pendiente' %}checked{% endif %}>
                         Pendiente
                     </label>
-                    <label style="display: flex; align-items: center; gap: 6px; color: #ff6b6b; cursor: pointer;">
+                    <label style="color: #ff6b6b;">
                         <input type="radio" name="resultado" value="derivado" {% if registro.resultado == 'derivado' %}checked{% endif %}>
                         Derivado
                     </label>
                 </div>
             </div>
+        </div>
 
         <!-- SECCIÓN 2: COSTOS REALES -->
-        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 18px 20px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.06);">
-            <h5 style="color: #4fc3f7; font-weight: 600; margin-bottom: 15px;">
-                📊 Costos Reales
-            </h5>
+        <div class="section-card">
+            <div class="section-title">📊 Costos Reales</div>
 
-            <!-- TABLA DE REPUESTOS CON AUTOCOMPLETADO -->
-<!-- TABLA DE REPUESTOS CON AUTOCOMPLETADO -->
-<div class="mb-3">
-    <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-        🔧 Lista de repuestos
-    </label>
-    <div style="background: rgba(0,0,0,0.20); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.06);">
-        <table id="tablaRepuestos" style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.10);">
-                    <th style="text-align: left; padding: 6px 8px; color: #90e0a0; font-size: 12px;">Repuesto</th>
-                    <th style="text-align: right; padding: 6px 8px; color: #90e0a0; font-size: 12px;">Costo ($)</th>
-                    <th style="width: 30px;"></th>
-                </tr>
-            </thead>
-            <tbody id="cuerpoRepuestos">
-                <tr class="fila-repuesto">
-                    <td style="padding: 4px 8px; position: relative;">
-                        <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm repuesto-nombre" 
-                               placeholder="Escribe para buscar o crea uno nuevo..." autocomplete="off"
-                               style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; width: 100%;">
-                        <!-- MENÚ DESPLEGABLE -->
-                        <div class="repuesto-sugerencias" style="
-                            display: none;
-                            position: absolute;
-                            top: 100%;
-                            left: 0;
-                            right: 0;
-                            background: rgba(15,15,15,0.98);
-                            border: 1px solid rgba(0,255,102,0.30);
-                            border-radius: 6px;
-                            max-height: 180px;
-                            overflow-y: auto;
-                            z-index: 9999;
-                            margin-top: 2px;
-                            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-                        "></div>
-                    </td>
-                    <td style="padding: 4px 8px;">
-                        <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
-                               step="0.01" placeholder="0" 
-                               style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right; width: 100%;">
-                    </td>
-                    <td style="padding: 4px 8px; text-align: center;">
-                        <button type="button" class="btn-eliminar-repuesto" 
-                                style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px; opacity: 0.3;">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <button type="button" id="agregarRepuestoBtn" class="btn btn-sm" style="margin-top: 8px; background: rgba(0,255,102,0.10); color: #00ff66; border: 1px solid rgba(0,255,102,0.20); border-radius: 8px; padding: 4px 12px; font-size: 12px;">
-            <i class="fa-solid fa-plus"></i> Agregar repuesto
-        </button>
-        <div style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: #888; font-size: 11px;">Total repuestos:</span>
-            <span id="totalRepuestos" style="color: #ffcc00; font-weight: 700; font-size: 16px;">$0</span>
-        </div>
-        <input type="hidden" name="costo_repuestos" id="costoRepuestosHidden" value="0">
-    </div>
-    <small style="color: #666; font-size: 11px;">Escribe el nombre del repuesto para buscar. Si es nuevo, presiona Enter para guardarlo.</small>
-</div>
+            <!-- REPUESTOS -->
+            <div style="margin-bottom: 12px;">
+                <label style="color: #90e0a0; font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">
+                    🔧 Lista de repuestos
+                </label>
+                <div class="repuestos-table">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding: 6px 8px;">Repuesto</th>
+                                <th style="text-align: right; padding: 6px 8px;">Costo ($)</th>
+                                <th style="width: 30px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoRepuestos">
+                            <tr class="fila-repuesto">
+                                <td style="padding: 4px 8px; position: relative;">
+                                    <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm repuesto-nombre" 
+                                           placeholder="Escribe para buscar..." autocomplete="off">
+                                    <div class="repuesto-sugerencias"></div>
+                                </td>
+                                <td style="padding: 4px 8px;">
+                                    <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
+                                           step="0.01" placeholder="0" style="text-align: right;">
+                                </td>
+                                <td style="padding: 4px 8px; text-align: center;">
+                                    <button type="button" class="btn-eliminar-repuesto" 
+                                            style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 14px; opacity: 0.3;">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" id="agregarRepuestoBtn" class="btn-add-repuesto">
+                        <i class="fa-solid fa-plus"></i> Agregar repuesto
+                    </button>
+                    <div style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #888; font-size: 12px;">Total repuestos:</span>
+                        <span id="totalRepuestos" style="color: #ffcc00; font-weight: 700; font-size: 18px;">$0</span>
+                    </div>
+                    <input type="hidden" name="costo_repuestos" id="costoRepuestosHidden" value="0">
+                </div>
+                <small style="color: #666; font-size: 11px;">💡 Escribe el nombre y presiona Enter para guardar el repuesto</small>
+            </div>
 
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+            <div style="margin-bottom: 10px;">
+                <label style="color: #90e0a0; font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">
                     👨‍🔧 Costo de mano de obra
                 </label>
                 <input type="number" name="costo_mano_obra" class="form-control" step="0.01" 
                        value="{{ registro.costo_mano_obra_real or 0 }}" placeholder="Ej: 8000" min="0">
             </div>
 
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+            <div style="margin-bottom: 10px;">
+                <label style="color: #90e0a0; font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">
                     🩺 Costo de diagnóstico
                 </label>
                 <input type="number" name="costo_diagnostico" class="form-control" step="0.01" 
                        value="{{ registro.costo_diagnostico_real or 0 }}" placeholder="Ej: 2000" min="0">
             </div>
 
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
+            <div>
+                <label style="color: #90e0a0; font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">
                     📝 Observaciones de costos
                 </label>
-                <textarea name="observaciones_costos" class="form-control" rows="3" placeholder="Detalla los costos...">{{ registro.observaciones_pago or '' }}</textarea>
+                <textarea name="observaciones_costos" class="form-control" rows="2" style="min-height: 50px;">{{ registro.observaciones_pago or '' }}</textarea>
             </div>
         </div>
 
         <!-- SECCIÓN 3: VALIDADOR -->
-        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 18px 20px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.06);">
-            <h5 style="color: #4fc3f7; font-weight: 600; margin-bottom: 15px;">
-                👤 Validación
-            </h5>
+        <div class="section-card">
+            <div class="section-title">👤 Validación</div>
 
-            <div class="mb-3">
-                <label class="form-label" style="color: #90e0a0; font-weight: 500;">
-                    👤 Validado por (nombre del técnico)
+            <div>
+                <label style="color: #90e0a0; font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">
+                    👤 Validado por (técnico)
                 </label>
-                <select name="validado_por" class="form-control" required>
+                <select name="validado_por" class="form-control" required style="appearance: auto; -webkit-appearance: auto;">
                     <option value="">-- Seleccionar técnico --</option>
                     {% for usuario in usuarios %}
                         <option value="{{ usuario.nombre_completo }}" 
@@ -200,52 +476,55 @@
             </div>
         </div>
 
-        <!-- RESUMEN Y GANANCIA -->
-        <div style="background: rgba(0, 255, 102, 0.06); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; border: 2px solid rgba(0, 255, 102, 0.20);">
-            <h5 style="color: #00ff66; font-weight: 700; margin-bottom: 15px; text-align: center;">
+        <!-- RESUMEN FINANCIERO -->
+        <div class="resumen-financiero">
+            <div style="text-align: center; color: #00ff66; font-weight: 700; font-size: 16px; margin-bottom: 12px;">
                 📈 RESUMEN FINANCIERO
-            </h5>
+            </div>
             
-            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <span style="color: #90e0a0;">💰 Cliente pagó:</span>
-                <span style="color: #00ff66; font-weight: 700; font-size: 18px;">${{ "{:,.0f}".format(registro.monto) }}</span>
+            <div class="row-item">
+                <span class="label">💰 Cliente pagó:</span>
+                <span class="value" style="color: #00ff66; font-size: 18px;">${{ "{:,.0f}".format(registro.monto) }}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <span style="color: #90e0a0;">📦 Costo repuestos:</span>
-                <span style="color: #ffcc00; font-weight: 600;" id="costoRepuestos">$0</span>
+            <div class="row-item">
+                <span class="label">📦 Costo repuestos:</span>
+                <span class="value" style="color: #ffcc00;" id="costoRepuestos">$0</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <span style="color: #90e0a0;">👨‍🔧 Costo mano de obra:</span>
-                <span style="color: #ffcc00; font-weight: 600;" id="costoManoObra">$0</span>
+            <div class="row-item">
+                <span class="label">👨‍🔧 Costo mano de obra:</span>
+                <span class="value" style="color: #ffcc00;" id="costoManoObra">$0</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <span style="color: #90e0a0;">🩺 Costo diagnóstico:</span>
-                <span style="color: #ffcc00; font-weight: 600;" id="costoDiagnostico">$0</span>
+            <div class="row-item">
+                <span class="label">🩺 Costo diagnóstico:</span>
+                <span class="value" style="color: #ffcc00;" id="costoDiagnostico">$0</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <span style="color: #90e0a0;">📊 Costos Totales:</span>
-                <span style="color: #ff6b6b; font-weight: 600;" id="costosTotales">$0</span>
+            <div class="row-item" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <span class="label">📊 Costos Totales:</span>
+                <span class="value" style="color: #ff6b6b;" id="costosTotales">$0</span>
             </div>
-            <div style="display: flex; justify-content: space-between; padding: 12px 0; margin-top: 6px; border-top: 2px solid #00ff66;">
-                <span style="color: #ffffff; font-weight: 700; font-size: 18px;">📊 GANANCIA NETA:</span>
-                <span style="color: #00ff66; font-weight: 700; font-size: 24px;" id="gananciaNeta">$0</span>
+            <div class="row-item" style="padding-top: 10px; margin-top: 4px; border-top: 2px solid #00ff66;">
+                <span class="total-label">📊 GANANCIA NETA:</span>
+                <span class="total-value" id="gananciaNeta">$0</span>
             </div>
             <input type="hidden" name="ganancia_neta" id="gananciaNetaHidden" value="0">
         </div>
 
         <!-- BOTONES -->
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button type="submit" class="btn" style="flex: 1; background: #4fc3f7; color: #000; font-weight: 700; border-radius: 10px; padding: 14px; font-size: 18px; border: none; min-width: 150px;">
+            <button type="submit" class="btn-primary" style="flex: 1; min-width: 150px; cursor: pointer;">
                 ✅ Validar y Guardar
             </button>
-            <a href="/pendientes_validacion" class="btn" style="background: rgba(255,255,255,0.06); color: #888; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 24px; text-decoration: none; text-align: center;">
+            <a href="/pendientes_validacion" class="btn-secondary">
                 ← Volver
             </a>
         </div>
     </form>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const API_URL = 'https://ea-dixon-production.up.railway.app';
+
     // ============================
     // 1. TIEMPO DE REPARACIÓN
     // ============================
@@ -278,7 +557,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(calcularTiempo, 5000);
 
     // ============================
-    // 2. REPUESTOS - TABLA Y TOTAL
+    // 2. REPUESTOS
     // ============================
     const tablaBody = document.getElementById('cuerpoRepuestos');
     const btnAgregar = document.getElementById('agregarRepuestoBtn');
@@ -313,41 +592,22 @@ document.addEventListener('DOMContentLoaded', function() {
         recalcularResumen();
     }
 
-    // ============================
-    // 3. FUNCIÓN PARA AGREGAR FILA
-    // ============================
     function agregarFilaRepuesto(nombre = '', costo = '') {
         const fila = document.createElement('tr');
         fila.className = 'fila-repuesto';
         fila.innerHTML = `
             <td style="padding: 4px 8px; position: relative;">
                 <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm repuesto-nombre" 
-                       placeholder="Escribe para buscar..." value="${nombre}" autocomplete="off"
-                       style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; width: 100%;">
-                <div class="repuesto-sugerencias" style="
-                    display: none;
-                    position: absolute;
-                    top: 100%;
-                    left: 0;
-                    right: 0;
-                    background: rgba(15,15,15,0.98);
-                    border: 1px solid rgba(0,255,102,0.30);
-                    border-radius: 6px;
-                    max-height: 180px;
-                    overflow-y: auto;
-                    z-index: 9999;
-                    margin-top: 2px;
-                    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-                "></div>
+                       placeholder="Escribe para buscar..." value="${nombre}" autocomplete="off">
+                <div class="repuesto-sugerencias"></div>
             </td>
             <td style="padding: 4px 8px;">
                 <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
-                       step="0.01" placeholder="0" value="${costo}"
-                       style="background: rgba(0,0,0,0.40); color: white; border: 1px solid rgba(0,255,102,0.20); border-radius: 6px; font-size: 13px; text-align: right; width: 100%;">
+                       step="0.01" placeholder="0" value="${costo}" style="text-align: right;">
             </td>
             <td style="padding: 4px 8px; text-align: center;">
                 <button type="button" class="btn-eliminar-repuesto" 
-                        style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 16px; opacity: 0.3;">
+                        style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 14px; opacity: 0.3;">
                     <i class="fa-solid fa-trash-can"></i>
                 </button>
             </td>
@@ -367,6 +627,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const inputNombre = fila.querySelector('.repuesto-nombre');
         if (inputNombre) {
             inputNombre.addEventListener('input', manejarAutocompletado);
+            inputNombre.addEventListener('blur', function() {
+                setTimeout(() => {
+                    const sugerencias = this.parentElement.querySelector('.repuesto-sugerencias');
+                    if (sugerencias) sugerencias.style.display = 'none';
+                }, 300);
+            });
         }
     }
 
@@ -375,7 +641,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================
-    // 4. AUTOCOMPLETADO DE REPUESTOS
+    // 3. AUTOCOMPLETADO
     // ============================
     let timeoutId = null;
 
@@ -397,7 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
         sugerencias.style.display = 'block';
         
         timeoutId = setTimeout(function() {
-            fetch(`https://ea-dixon-production.up.railway.app/api/repuestos?q=${encodeURIComponent(query)}`)
+            fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(query)}`)
                 .then(r => r.json())
                 .then(data => {
                     if (data.length === 0) {
@@ -412,10 +678,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     sugerencias.innerHTML = data.map(item => `
                         <div class="sugerencia-item" 
                              data-nombre="${item.nombre}" 
-                             data-costo="${item.costo}"
-                             style="padding: 8px 12px; cursor: pointer; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                             data-costo="${item.costo}">
                             <span>${item.nombre}</span>
-                            <span style="color: #ffcc00; font-weight: 600;">$${item.costo}</span>
+                            <span class="costo">$${item.costo}</span>
                         </div>
                     `).join('');
                     sugerencias.style.display = 'block';
@@ -439,11 +704,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================
-    // 5. AGREGAR EVENTOS A LOS INPUTS EXISTENTES
+    // 4. EVENTOS INICIALES
     // ============================
     document.querySelectorAll('.repuesto-nombre').forEach(input => {
         input.addEventListener('input', manejarAutocompletado);
-        // Ocultar sugerencias al perder el foco
         input.addEventListener('blur', function() {
             setTimeout(() => {
                 const sugerencias = this.parentElement.querySelector('.repuesto-sugerencias');
@@ -453,7 +717,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================
-    // 6. OBSERVER PARA NUEVOS INPUTS
+    // 5. OBSERVER
     // ============================
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
@@ -476,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function() {
     observer.observe(tablaBody, { childList: true });
 
     // ============================
-    // 7. CERRAR SUGERENCIAS AL HACER CLIC FUERA
+    // 6. CERRAR SUGERENCIAS
     // ============================
     document.addEventListener('click', function(e) {
         if (!e.target.classList.contains('repuesto-nombre')) {
@@ -487,7 +751,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================
-    // 8. GUARDADO CON TECLA ENTER
+    // 7. GUARDAR CON ENTER
     // ============================
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -499,13 +763,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const costo = parseFloat(costoInput.value) || 0;
                 
                 if (nombre && costo > 0) {
-                    // Verificar si ya existe
-                    fetch(`https://ea-dixon-production.up.railway.app/api/repuestos?q=${encodeURIComponent(nombre)}`)
+                    fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(nombre)}`)
                         .then(r => r.json())
                         .then(data => {
                             const existe = data.some(item => item.nombre.toLowerCase() === nombre.toLowerCase());
                             if (!existe) {
-                                fetch('https://ea-dixon-production.up.railway.app/api/repuestos', {
+                                fetch(`${API_URL}/api/repuestos`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ nombre: nombre, costo: costo, proveedor: '' })
@@ -527,7 +790,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================
-    // 9. INICIALIZAR
+    // 8. INICIALIZAR
     // ============================
     if (document.querySelectorAll('.fila-repuesto').length === 0) {
         agregarFilaRepuesto();
@@ -538,11 +801,10 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(actualizarTotalRepuestos, 500);
 
     // ============================
-    // 10. EVENTOS PARA MANO DE OBRA Y DIAGNÓSTICO
+    // 9. EVENTOS PARA MANO DE OBRA Y DIAGNÓSTICO
     // ============================
     document.querySelector('input[name="costo_mano_obra"]').addEventListener('input', recalcularResumen);
     document.querySelector('input[name="costo_diagnostico"]').addEventListener('input', recalcularResumen);
 });
 </script>
-    
 {% endblock %}
