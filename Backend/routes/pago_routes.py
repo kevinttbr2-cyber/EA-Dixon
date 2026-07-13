@@ -473,13 +473,24 @@ def get_repuestos_lista():
 # ============================
 @pago_bp.route('/repuestos', methods=['POST'])
 def crear_repuesto():
-    """Crea un nuevo repuesto con costo_proveedor y margen"""
     try:
         data = request.json
         nombre = data.get('nombre', '').strip()
         costo_proveedor = float(data.get('costo_proveedor', 0))
         margen_ganancia = float(data.get('margen_ganancia', 30))
         proveedor = data.get('proveedor', '').strip()
+        costo_venta_final = float(data.get('costo_venta_final', 0))
+        
+        # ✅ Si no hay costo_proveedor, marcamos como pendiente
+        costo_proveedor_pendiente = costo_proveedor == 0
+        
+        # Si hay costo_venta_final pero no costo_proveedor, calculamos el margen inverso
+        if costo_venta_final > 0 and costo_proveedor == 0:
+            iva = 1.19
+            # Estimamos un costo_proveedor temporal para el cálculo
+            # El usuario lo completará después
+            costo_proveedor = costo_venta_final / 1.19 / 1.3  # Estimación con 30% de margen
+            margen_ganancia = 30
         
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
@@ -488,10 +499,10 @@ def crear_repuesto():
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO repuestos 
-            (nombre, costo_proveedor, margen_ganancia, proveedor, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            (nombre, costo_proveedor, margen_ganancia, proveedor, costo_venta_final, costo_proveedor_pendiente, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             RETURNING id
-        """, (nombre, costo_proveedor, margen_ganancia, proveedor))
+        """, (nombre, costo_proveedor, margen_ganancia, proveedor, costo_venta_final, costo_proveedor_pendiente))
         id_repuesto = cur.fetchone()[0]
         conn.commit()
         cur.close()
