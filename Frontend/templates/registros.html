@@ -833,6 +833,20 @@ document.addEventListener('DOMContentLoaded', function() {
         campoBusqueda.value = 'nombre';
         filtrarTabla();
     });
+    document.querySelectorAll('.card-android').forEach(card => {
+    const texto = card.textContent.toLowerCase();
+    const formaPagoEl = card.querySelector('.forma-pago-texto');
+    const formaPago = formaPagoEl ? formaPagoEl.textContent.toLowerCase() : '';
+    let mostrar = true;
+    
+    if (campo === 'forma_pago') {
+        mostrar = formaPago.includes(texto);
+    } else {
+        mostrar = texto === '' || card.textContent.toLowerCase().includes(texto);
+    }
+    
+    card.style.display = mostrar ? '' : 'none';
+});
 
     // ============================
     // ORDENAR TABLA
