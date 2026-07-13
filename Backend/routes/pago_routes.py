@@ -953,7 +953,7 @@ def venta_rapida():
         
         return jsonify({"success": True, "id": id_reg})
     except Exception as e:
-        print(f"Error en venta_rapida: {e}")
+        print(f"❌ Error en venta_rapida: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -1014,7 +1014,7 @@ def balance_ventas():
             "directa_margen": directa_margen
         })
     except Exception as e:
-        print(f"Error en balance_ventas: {e}")
+        print(f"❌ Error en balance_ventas: {e}")
         return jsonify({"error": str(e)}), 500
 
 
