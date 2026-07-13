@@ -289,7 +289,6 @@ def pagar(id_reg):
         return jsonify({"success": True, "pago": pago.to_dict()})
     return jsonify({"success": False, "error": "Error al procesar"}), 500
 
-
 # ============================
 # 9. PENDIENTES DE VALIDACIÓN
 # ============================
