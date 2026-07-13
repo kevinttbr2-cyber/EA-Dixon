@@ -169,6 +169,7 @@ def pagar(id_reg):
             'resultado': request.form.get('resultado', 'reparado'),
             'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
             'atendido_por': session.get('nombre_completo', session.get('usuario'))
+            'forma_pago': request.form.get('forma_pago', 'efectivo')
         }
         try:
             resp = requests.post(f"{BACKEND_URL}/api/pagar/{id_reg}", json=data, timeout=10)
