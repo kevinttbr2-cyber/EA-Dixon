@@ -405,7 +405,7 @@ def validar_pago(id_reg):
 
 @pago_bp.route('/repuestos', methods=['GET'])
 def get_repuestos_lista():
-    """Obtiene todos los repuestos con costo_proveedor y margen"""
+    """Obtiene todos los repuestos con costo_proveedor, margen y costo_venta_final"""
     try:
         conn, cur = get_cursor()
         cur.execute("""
@@ -414,28 +414,34 @@ def get_repuestos_lista():
                 nombre, 
                 costo_proveedor, 
                 margen_ganancia,
+                costo_venta_final,
                 proveedor
             FROM repuestos 
             ORDER BY nombre
         """)
+        rows = cur.fetchall()
         repuestos = []
-        for row in cur.fetchall():
+        for row in rows:
+            # Si la columna costo_venta_final existe y tiene valor, úsala
+            # Si no, calcularla
             costo_proveedor = float(row[2] or 0)
             margen = float(row[3] or 30)
+            costo_venta_final = float(row[4] or 0)
             
-            # ✅ Calcular costo de venta final
-            # IVA = 19% (fijo en Chile)
-            iva = 1.19
-            costo_con_iva = costo_proveedor * iva
-            costo_venta_final = costo_con_iva * (1 + (margen / 100))
+            # Si no está en la BD, calcularla
+            if costo_venta_final == 0 and costo_proveedor > 0:
+                iva = 1.19
+                costo_con_iva = costo_proveedor * iva
+                costo_venta_final = costo_con_iva * (1 + (margen / 100))
+                costo_venta_final = round(costo_venta_final, 0)
             
             repuestos.append({
                 'id': row[0],
                 'nombre': row[1],
                 'costo_proveedor': costo_proveedor,
                 'margen_ganancia': margen,
-                'costo_venta_final': round(costo_venta_final, 0),
-                'proveedor': row[4] or ''
+                'costo_venta_final': costo_venta_final,
+                'proveedor': row[5] or ''
             })
         cur.close()
         conn.close()
