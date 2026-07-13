@@ -264,9 +264,11 @@ def agregar_pago():
     return jsonify({"success": False, "error": "Error al guardar"}), 500
 
 
+# ============================
+# 8. PROCESAR PAGO (PASO 1 - PAGO EXPRESS)
+# ============================
 @pago_bp.route('/pagar/<int:id_reg>', methods=['POST'])
 def pagar(id_reg):
-    # ✅ CAMBIAR: request.form → request.json
     data = request.json
     
     print("=" * 60)
@@ -279,7 +281,6 @@ def pagar(id_reg):
     print(f"  - resultado: {data.get('resultado')}")
     print("=" * 60)
     
-    # ✅ Ya tienes los datos en 'data', no necesitas volver a obtenerlos
     data['estado_ot'] = data.get('estado_ot', 'Pendiente')
     data['forma_pago'] = data.get('forma_pago', 'efectivo')
     data['atendido_por'] = data.get('atendido_por', 'Técnico')
@@ -291,6 +292,7 @@ def pagar(id_reg):
         print(f"✅ Pago procesado - forma_pago: {pago.forma_pago}")
         return jsonify({"success": True, "pago": pago.to_dict()})
     return jsonify({"success": False, "error": "Error al procesar"}), 500
+
 
 # ============================
 # 9. PENDIENTES DE VALIDACIÓN
@@ -342,7 +344,6 @@ def validar_pago(id_reg):
     data = request.json
     print(f"📥 Datos recibidos: {data}")
     
-    # 🔥 Asegurar que costo_repuestos se guarde
     costo_repuestos = float(data.get('costo_repuestos', 0) or 0)
     detalles_repuestos = data.get('detalles_repuestos', [])
     
@@ -403,6 +404,9 @@ def validar_pago(id_reg):
         return jsonify({"error": str(e)}), 500
 
 
+# ============================
+# 11. REPUESTOS - OBTENER LISTA
+# ============================
 @pago_bp.route('/repuestos', methods=['GET'])
 def get_repuestos_lista():
     """Obtiene todos los repuestos o busca por nombre (autocompletado)"""
@@ -417,7 +421,8 @@ def get_repuestos_lista():
                     id, 
                     nombre, 
                     COALESCE(costo_venta_final, 0) as costo,
-                    proveedor
+                    proveedor,
+                    costo_proveedor_pendiente
                 FROM repuestos 
                 WHERE nombre ILIKE %s 
                 ORDER BY nombre 
@@ -433,7 +438,8 @@ def get_repuestos_lista():
                     costo_proveedor, 
                     margen_ganancia,
                     COALESCE(costo_venta_final, 0) as costo_venta_final,
-                    proveedor
+                    proveedor,
+                    costo_proveedor_pendiente
                 FROM repuestos 
                 ORDER BY nombre
             """)
@@ -443,6 +449,7 @@ def get_repuestos_lista():
                 costo_proveedor = float(row[2] or 0)
                 margen = float(row[3] or 30)
                 costo_venta_final = float(row[4] or 0)
+                costo_proveedor_pendiente = row[6] or False
                 
                 # Si no está en la BD, calcularla
                 if costo_venta_final == 0 and costo_proveedor > 0:
@@ -457,7 +464,8 @@ def get_repuestos_lista():
                     'costo_proveedor': costo_proveedor,
                     'margen_ganancia': margen,
                     'costo_venta_final': costo_venta_final,
-                    'proveedor': row[5] or ''
+                    'proveedor': row[5] or '',
+                    'costo_proveedor_pendiente': costo_proveedor_pendiente
                 })
         
         cur.close()
@@ -487,9 +495,7 @@ def crear_repuesto():
         # Si hay costo_venta_final pero no costo_proveedor, calculamos el margen inverso
         if costo_venta_final > 0 and costo_proveedor == 0:
             iva = 1.19
-            # Estimamos un costo_proveedor temporal para el cálculo
-            # El usuario lo completará después
-            costo_proveedor = costo_venta_final / 1.19 / 1.3  # Estimación con 30% de margen
+            costo_proveedor = costo_venta_final / 1.19 / 1.3
             margen_ganancia = 30
         
         if not nombre:
@@ -517,7 +523,7 @@ def crear_repuesto():
 # ============================
 # 13. REPUESTOS - ACTUALIZAR
 # ============================
-@pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
+@pago_bp.route('/repuestos/<int:id_repuesto>', methods(['PUT'])
 def actualizar_repuesto(id_repuesto):
     try:
         data = request.json
@@ -529,6 +535,15 @@ def actualizar_repuesto(id_repuesto):
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
         
+        # ✅ Calcular costo_venta_final
+        iva = 1.19
+        costo_con_iva = costo_proveedor * iva
+        costo_venta_final = costo_con_iva * (1 + (margen_ganancia / 100))
+        costo_venta_final = round(costo_venta_final, 0)
+        
+        # ✅ Si se completó el costo_proveedor, quitar el estado pendiente
+        costo_proveedor_pendiente = costo_proveedor == 0
+        
         conn = get_connection()
         cur = conn.cursor()
         cur.execute("""
@@ -536,10 +551,12 @@ def actualizar_repuesto(id_repuesto):
             SET nombre = %s, 
                 costo_proveedor = %s, 
                 margen_ganancia = %s, 
-                proveedor = %s, 
+                proveedor = %s,
+                costo_venta_final = %s,
+                costo_proveedor_pendiente = %s,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = %s
-        """, (nombre, costo_proveedor, margen_ganancia, proveedor, id_repuesto))
+        """, (nombre, costo_proveedor, margen_ganancia, proveedor, costo_venta_final, costo_proveedor_pendiente, id_repuesto))
         conn.commit()
         cur.close()
         conn.close()
@@ -888,9 +905,6 @@ def get_dashboard():
         from datetime import timedelta
         hoy = datetime.now().date()
         
-        # ============================
-        # 1. DETERMINAR RANGO DE FECHAS
-        # ============================
         fecha_desde = None
         
         if filtro == '7d':
@@ -907,12 +921,8 @@ def get_dashboard():
         else:
             fecha_desde = hoy - timedelta(days=7)
         
-        # ============================
-        # 2. CONEXIÓN Y CONSULTAS
-        # ============================
         conn, cur = get_cursor()
         
-        # Totales generales
         cur.execute("""
             SELECT 
                 COALESCE(SUM(monto), 0) as total_facturado,
@@ -926,7 +936,6 @@ def get_dashboard():
         """, (fecha_desde,))
         totales = cur.fetchone()
         
-        # Ventas diarias
         cur.execute("""
             SELECT 
                 fecha,
@@ -939,7 +948,6 @@ def get_dashboard():
         """, (fecha_desde,))
         ventas = cur.fetchall()
         
-        # Ganancia acumulada
         cur.execute("""
             SELECT 
                 fecha,
@@ -952,7 +960,6 @@ def get_dashboard():
         """, (fecha_desde,))
         ganancias = cur.fetchall()
         
-        # Top 5 clientes
         cur.execute("""
             SELECT 
                 nombre,
@@ -967,7 +974,6 @@ def get_dashboard():
         """, (fecha_desde,))
         clientes = cur.fetchall()
         
-        # Promedio diario
         cur.execute("""
             SELECT 
                 COALESCE(AVG(monto), 0) as promedio_diario
@@ -981,9 +987,6 @@ def get_dashboard():
         cur.close()
         conn.close()
         
-        # ============================
-        # 3. FORMATO DE RESPUESTA
-        # ============================
         labels = []
         ventas_data = []
         
@@ -998,7 +1001,6 @@ def get_dashboard():
             acumulado += float(row[1])
             ganancia_data.append(acumulado)
         
-        # Proyección a 7 días
         proyeccion = []
         proyeccion_labels = []
         for i in range(1, 8):
@@ -1006,7 +1008,6 @@ def get_dashboard():
             proyeccion_labels.append(fecha_futura.strftime('%d/%m'))
             proyeccion.append(round(promedio_diario * 0.85, 0))
         
-        # Obtener meses disponibles (con una nueva conexión)
         conn2, cur2 = get_cursor()
         cur2.execute("""
             SELECT DISTINCT 
