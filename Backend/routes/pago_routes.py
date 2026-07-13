@@ -409,12 +409,10 @@ def validar_pago(id_reg):
 # ============================
 @pago_bp.route('/repuestos', methods=['GET'])
 def get_repuestos_lista():
-    """Obtiene todos los repuestos o busca por nombre (autocompletado)"""
     try:
         query = request.args.get('q', '').strip()
         conn, cur = get_cursor()
         
-        # Si hay query, modo autocompletado
         if query and len(query) >= 2:
             cur.execute("""
                 SELECT 
@@ -430,7 +428,6 @@ def get_repuestos_lista():
             """, (f'%{query}%',))
             repuestos = [dict(row) for row in cur.fetchall()]
         else:
-            # Modo lista completa
             cur.execute("""
                 SELECT 
                     id, 
@@ -446,26 +443,14 @@ def get_repuestos_lista():
             rows = cur.fetchall()
             repuestos = []
             for row in rows:
-                costo_proveedor = float(row[2] or 0)
-                margen = float(row[3] or 30)
-                costo_venta_final = float(row[4] or 0)
-                costo_proveedor_pendiente = row[6] or False
-                
-                # Si no está en la BD, calcularla
-                if costo_venta_final == 0 and costo_proveedor > 0:
-                    iva = 1.19
-                    costo_con_iva = costo_proveedor * iva
-                    costo_venta_final = costo_con_iva * (1 + (margen / 100))
-                    costo_venta_final = round(costo_venta_final, 0)
-                
                 repuestos.append({
                     'id': row[0],
                     'nombre': row[1],
-                    'costo_proveedor': costo_proveedor,
-                    'margen_ganancia': margen,
-                    'costo_venta_final': costo_venta_final,
+                    'costo_proveedor': float(row[2] or 0),
+                    'margen_ganancia': float(row[3] or 30),
+                    'costo_venta_final': float(row[4] or 0),
                     'proveedor': row[5] or '',
-                    'costo_proveedor_pendiente': costo_proveedor_pendiente
+                    'costo_proveedor_pendiente': row[6] or False
                 })
         
         cur.close()
@@ -474,7 +459,6 @@ def get_repuestos_lista():
     except Exception as e:
         print(f"Error en get_repuestos_lista: {e}")
         return jsonify([])
-
 
 # ============================
 # 12. REPUESTOS - CREAR
@@ -489,20 +473,15 @@ def crear_repuesto():
         proveedor = data.get('proveedor', '').strip()
         costo_venta_final = float(data.get('costo_venta_final', 0))
         
-        # ✅ Si no hay costo_proveedor, marcamos como pendiente
-        costo_proveedor_pendiente = costo_proveedor == 0
-        
-        # ✅ Si hay costo_venta_final pero no costo_proveedor
-        if costo_venta_final > 0 and costo_proveedor == 0:
-            # Usar el costo_venta_final proporcionado
-            # El margen se calculará cuando se agregue el costo proveedor
-            pass
-        elif costo_proveedor > 0 and costo_venta_final == 0:
-            # Calcular costo_venta_final desde costo_proveedor y margen
+        # ✅ Si NO se envió costo_venta_final pero hay costo_proveedor, calcularlo
+        if costo_venta_final == 0 and costo_proveedor > 0:
             iva = 1.19
             costo_con_iva = costo_proveedor * iva
             costo_venta_final = costo_con_iva * (1 + (margen_ganancia / 100))
             costo_venta_final = round(costo_venta_final, 0)
+        
+        # ✅ Pendiente si no hay costo_proveedor
+        costo_proveedor_pendiente = costo_proveedor == 0
         
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
@@ -520,7 +499,7 @@ def crear_repuesto():
         cur.close()
         conn.close()
         
-        return jsonify({"success": True, "id": id_repuesto})
+        return jsonify({"success": True, "id": id_repuesto, "costo_venta_final": costo_venta_final})
     except Exception as e:
         print(f"Error en crear_repuesto: {e}")
         return jsonify({"error": str(e)}), 500
