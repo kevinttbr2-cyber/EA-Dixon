@@ -403,16 +403,40 @@ def validar_pago(id_reg):
         return jsonify({"error": str(e)}), 500
 
 
-# ============================
-# 11. REPUESTOS - OBTENER LISTA
-# ============================
 @pago_bp.route('/repuestos', methods=['GET'])
 def get_repuestos_lista():
-    """Obtiene todos los repuestos"""
+    """Obtiene todos los repuestos con costo_proveedor y margen"""
     try:
         conn, cur = get_cursor()
-        cur.execute("SELECT id, nombre, costo, proveedor FROM repuestos ORDER BY nombre")
-        repuestos = [dict(row) for row in cur.fetchall()]
+        cur.execute("""
+            SELECT 
+                id, 
+                nombre, 
+                costo_proveedor, 
+                margen_ganancia,
+                proveedor
+            FROM repuestos 
+            ORDER BY nombre
+        """)
+        repuestos = []
+        for row in cur.fetchall():
+            costo_proveedor = float(row[2] or 0)
+            margen = float(row[3] or 30)
+            
+            # ✅ Calcular costo de venta final
+            # IVA = 19% (fijo en Chile)
+            iva = 1.19
+            costo_con_iva = costo_proveedor * iva
+            costo_venta_final = costo_con_iva * (1 + (margen / 100))
+            
+            repuestos.append({
+                'id': row[0],
+                'nombre': row[1],
+                'costo_proveedor': costo_proveedor,
+                'margen_ganancia': margen,
+                'costo_venta_final': round(costo_venta_final, 0),
+                'proveedor': row[4] or ''
+            })
         cur.close()
         conn.close()
         return jsonify(repuestos)
@@ -426,11 +450,12 @@ def get_repuestos_lista():
 # ============================
 @pago_bp.route('/repuestos', methods=['POST'])
 def crear_repuesto():
-    """Crea un nuevo repuesto"""
+    """Crea un nuevo repuesto con costo_proveedor y margen"""
     try:
         data = request.json
         nombre = data.get('nombre', '').strip()
-        costo = float(data.get('costo', 0))
+        costo_proveedor = float(data.get('costo_proveedor', 0))
+        margen_ganancia = float(data.get('margen_ganancia', 30))
         proveedor = data.get('proveedor', '').strip()
         
         if not nombre:
@@ -439,10 +464,11 @@ def crear_repuesto():
         conn = get_connection()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO repuestos (nombre, costo, proveedor, created_at, updated_at)
-            VALUES (%s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            INSERT INTO repuestos 
+            (nombre, costo_proveedor, margen_ganancia, proveedor, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             RETURNING id
-        """, (nombre, costo, proveedor))
+        """, (nombre, costo_proveedor, margen_ganancia, proveedor))
         id_repuesto = cur.fetchone()[0]
         conn.commit()
         cur.close()
@@ -459,11 +485,11 @@ def crear_repuesto():
 # ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
-    """Actualiza un repuesto existente"""
     try:
         data = request.json
         nombre = data.get('nombre', '').strip()
-        costo = float(data.get('costo', 0))
+        costo_proveedor = float(data.get('costo_proveedor', 0))
+        margen_ganancia = float(data.get('margen_ganancia', 30))
         proveedor = data.get('proveedor', '').strip()
         
         if not nombre:
@@ -473,9 +499,13 @@ def actualizar_repuesto(id_repuesto):
         cur = conn.cursor()
         cur.execute("""
             UPDATE repuestos 
-            SET nombre = %s, costo = %s, proveedor = %s, updated_at = CURRENT_TIMESTAMP
+            SET nombre = %s, 
+                costo_proveedor = %s, 
+                margen_ganancia = %s, 
+                proveedor = %s, 
+                updated_at = CURRENT_TIMESTAMP
             WHERE id = %s
-        """, (nombre, costo, proveedor, id_repuesto))
+        """, (nombre, costo_proveedor, margen_ganancia, proveedor, id_repuesto))
         conn.commit()
         cur.close()
         conn.close()
