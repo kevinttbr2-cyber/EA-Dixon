@@ -168,7 +168,7 @@ def pagar(id_reg):
             'reparacion': request.form.get('reparacion', 'Reparación realizada'),
             'resultado': request.form.get('resultado', 'reparado'),
             'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
-            'atendido_por': session.get('nombre_completo', session.get('usuario'))
+            'atendido_por': session.get('nombre_completo', session.get('usuario')),
             'forma_pago': request.form.get('forma_pago', 'efectivo')
         }
         try:
