@@ -39,7 +39,7 @@ class PagoRepository:
     
     @staticmethod
     def actualizar(id_reg, pago):
-        try:
+       try:
             conn = get_connection()
             cur = conn.cursor()
             cur.execute("""
