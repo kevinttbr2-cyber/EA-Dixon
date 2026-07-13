@@ -264,12 +264,18 @@ def agregar_pago():
     return jsonify({"success": False, "error": "Error al guardar"}), 500
 
 
-# ============================
-# 8. PROCESAR PAGO (PASO 1 - PAGO EXPRESS)
-# ============================
 @pago_bp.route('/pagar/<int:id_reg>', methods=['POST'])
 def pagar(id_reg):
-    # ✅ Leer datos del formulario (form-data)
+    print("=" * 60)
+    print("📥 DATOS RECIBIDOS - REQUEST.FORM:")
+    print(f"  - monto: {request.form.get('monto')}")
+    print(f"  - forma_pago: {request.form.get('forma_pago')}")
+    print(f"  - diagnostico: {request.form.get('diagnostico')}")
+    print(f"  - reparacion: {request.form.get('reparacion')}")
+    print(f"  - observaciones_pago: {request.form.get('observaciones_pago')}")
+    print(f"  - resultado: {request.form.get('resultado')}")
+    print("=" * 60)
+    
     data = {
         'monto': request.form.get('monto', 0),
         'atendido_por': request.form.get('atendido_por', 'Técnico'),
@@ -281,11 +287,11 @@ def pagar(id_reg):
         'resultado': request.form.get('resultado', 'reparado'),
     }
     
-    print(f"📥 forma_pago recibido: {data['forma_pago']}")
-    print(f"📥 monto recibido: {data['monto']}")
+    print(f"✅ DATA final: {data}")
     
     pago = PagoService.procesar_pago(id_reg, data)
     if pago:
+        print(f"✅ Pago procesado - forma_pago: {pago.forma_pago}")
         return jsonify({"success": True, "pago": pago.to_dict()})
     return jsonify({"success": False, "error": "Error al procesar"}), 500
 
