@@ -39,6 +39,7 @@ class PagoService:
         pago.reparacion = data.get('reparacion', 'Reparación realizada')
         pago.resultado = data.get('resultado', 'reparado')
         pago.tiempo_estimado = data.get('tiempo_estimado', '00:00:00')
+        pago.forma_pago = data.get('forma_pago', 'efectivo')  # ✅ AGREGADO
         
         if PagoRepository.actualizar(id_reg, pago):
             return pago
