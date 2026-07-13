@@ -99,8 +99,8 @@
             </thead>
             <tbody>
                 {% for r in repuestos %}
-<tr data-id="{{ r.id }}" class="fila-repuesto-lista {% if r.costo_proveedor_pendiente %}pendiente{% endif %}" style="{% if r.costo_proveedor_pendiente %}background: rgba(255, 0, 0, 0.08); border-left: 3px solid #ff6b6b;{% endif %}">
-    <td style="padding: 6px 8px; text-align: center; {% if r.costo_proveedor_pendiente %}color: #ff6b6b;{% endif %}">
+        <tr data-id="{{ r.id }}" class="fila-repuesto-lista {% if r.costo_proveedor_pendiente %}pendiente{% endif %}" style="{% if r.costo_proveedor_pendiente %}background: rgba(255, 0, 0, 0.08); border-left: 3px solid #ff6b6b;{% endif %}">
+        <td style="padding: 6px 8px; text-align: center; {% if r.costo_proveedor_pendiente %}color: #ff6b6b;{% endif %}">
         {{ r.id }}
         {% if r.costo_proveedor_pendiente %}
             <span style="display: inline-block; font-size: 10px; background: #ff6b6b; color: #000; border-radius: 4px; padding: 0 6px; margin-left: 4px; font-weight: 700;">PENDIENTE</span>
