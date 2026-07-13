@@ -269,10 +269,21 @@ def agregar_pago():
 # ============================
 @pago_bp.route('/pagar/<int:id_reg>', methods=['POST'])
 def pagar(id_reg):
-    data = request.json
-    # 🔥 AGREGAR estado_ot
-    data['estado_ot'] = data.get('estado_ot', 'Pendiente')
-    data['forma_pago'] = data.get('forma_pago', 'efectivo') 
+    # ✅ Leer datos del formulario (form-data)
+    data = {
+        'monto': request.form.get('monto', 0),
+        'atendido_por': request.form.get('atendido_por', 'Técnico'),
+        'estado_ot': request.form.get('estado_ot', 'Pendiente'),
+        'forma_pago': request.form.get('forma_pago', 'efectivo'),
+        'diagnostico': request.form.get('diagnostico', ''),
+        'reparacion': request.form.get('reparacion', 'Reparación realizada'),
+        'observaciones_pago': request.form.get('observaciones_pago', ''),
+        'resultado': request.form.get('resultado', 'reparado'),
+    }
+    
+    print(f"📥 forma_pago recibido: {data['forma_pago']}")
+    print(f"📥 monto recibido: {data['monto']}")
+    
     pago = PagoService.procesar_pago(id_reg, data)
     if pago:
         return jsonify({"success": True, "pago": pago.to_dict()})
