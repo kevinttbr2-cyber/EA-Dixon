@@ -646,64 +646,63 @@ document.addEventListener('DOMContentLoaded', function() {
     let timeoutId = null;
 
     function manejarAutocompletado(e) {
-    const input = e.target;
-    const sugerencias = input.parentElement.querySelector('.repuesto-sugerencias');
-    const query = input.value.trim();
-    const fila = input.closest('.fila-repuesto');
-    const costoInput = fila.querySelector('.costo-repuesto');
-    
-    if (timeoutId) clearTimeout(timeoutId);
-    
-    if (query.length < 2) {
-        sugerencias.style.display = 'none';
-        return;
-    }
-    
-    sugerencias.innerHTML = '<div style="padding:8px 12px;color:#888;text-align:center;">🔍 Buscando...</div>';
-    sugerencias.style.display = 'block';
-    
-    timeoutId = setTimeout(function() {
-        // ✅ Usar la ruta correcta
-        fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(query)}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.length === 0) {
-                    sugerencias.innerHTML = `
-                        <div style="padding:8px 12px;color:#666;text-align:center;">
-                            No hay resultados. Escribe completo y presiona Enter para guardar.
+        const input = e.target;
+        const sugerencias = input.parentElement.querySelector('.repuesto-sugerencias');
+        const query = input.value.trim();
+        const fila = input.closest('.fila-repuesto');
+        const costoInput = fila.querySelector('.costo-repuesto');
+        
+        if (timeoutId) clearTimeout(timeoutId);
+        
+        if (query.length < 2) {
+            sugerencias.style.display = 'none';
+            return;
+        }
+        
+        sugerencias.innerHTML = '<div style="padding:8px 12px;color:#888;text-align:center;">🔍 Buscando...</div>';
+        sugerencias.style.display = 'block';
+        
+        timeoutId = setTimeout(function() {
+            fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        sugerencias.innerHTML = `
+                            <div style="padding:8px 12px;color:#666;text-align:center;">
+                                No hay resultados. Escribe completo y presiona Enter para guardar.
+                            </div>
+                        `;
+                        sugerencias.style.display = 'block';
+                        return;
+                    }
+                    sugerencias.innerHTML = data.map(item => `
+                        <div class="sugerencia-item" 
+                             data-nombre="${item.nombre}" 
+                             data-costo="${item.costo_venta_final || item.costo || 0}">
+                            <span>${item.nombre}</span>
+                            <span class="costo">$${item.costo_venta_final || item.costo || 0}</span>
                         </div>
-                    `;
+                    `).join('');
                     sugerencias.style.display = 'block';
-                    return;
-                }
-                // ✅ USAR costo_venta_final en lugar de costo
-                sugerencias.innerHTML = data.map(item => `
-                    <div class="sugerencia-item" 
-                         data-nombre="${item.nombre}" 
-                         data-costo="${item.costo_venta_final || item.costo || 0}">
-                        <span>${item.nombre}</span>
-                        <span class="costo">$${item.costo_venta_final || item.costo || 0}</span>
-                    </div>
-                `).join('');
-                sugerencias.style.display = 'block';
-                
-                sugerencias.querySelectorAll('.sugerencia-item').forEach(el => {
-                    el.addEventListener('click', function() {
-                        const nombre = this.dataset.nombre;
-                        const costo = this.dataset.costo;
-                        input.value = nombre;
-                        costoInput.value = costo;
-                        actualizarTotalRepuestos();
-                        sugerencias.style.display = 'none';
+                    
+                    sugerencias.querySelectorAll('.sugerencia-item').forEach(el => {
+                        el.addEventListener('click', function() {
+                            const nombre = this.dataset.nombre;
+                            const costo = this.dataset.costo;
+                            input.value = nombre;
+                            costoInput.value = costo;
+                            actualizarTotalRepuestos();
+                            sugerencias.style.display = 'none';
+                        });
                     });
+                })
+                .catch(() => {
+                    sugerencias.innerHTML = '<div style="padding:8px 12px;color:#ff6b6b;text-align:center;">❌ Error al cargar</div>';
+                    sugerencias.style.display = 'block';
                 });
-            })
-            .catch(() => {
-                sugerencias.innerHTML = '<div style="padding:8px 12px;color:#ff6b6b;text-align:center;">❌ Error al cargar</div>';
-                sugerencias.style.display = 'block';
-            });
-    }, 400);
-}
+        }, 400);
+    }
+
     // ============================
     // 4. EVENTOS INICIALES
     // ============================
@@ -751,134 +750,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        const input = document.activeElement;
-        if (input && input.classList.contains('repuesto-nombre')) {
-            const fila = input.closest('.fila-repuesto');
-            const costoInput = fila.querySelector('.costo-repuesto');
-            const nombre = input.value.trim();
-            const costoVentaFinal = parseFloat(costoInput.value) || 0;
-            
-            if (nombre && costoVentaFinal > 0) {
-                // 🔍 Verificar si el repuesto ya existe
-                fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(nombre)}`)
-                    .then(r => r.json())
-                    .then(data => {
-                        const existe = data.some(item => item.nombre.toLowerCase() === nombre.toLowerCase());
-                        if (!existe) {
-                            // 💡 Pedir al usuario el costo de compra para calcular el margen
-                            const costoProveedor = prompt(
-                                `📦 Ingresa el costo de compra para "${nombre}":\n\n` +
-                                `💰 Precio de venta final: $${costoVentaFinal}\n` +
-                                `🏷️ IVA: 19%\n\n` +
-                                `El margen se calculará automáticamente.`,
-                                Math.round(costoVentaFinal / 1.19 / 1.3) // Sugerencia automática
-                            );
-                            
-                            if (costoProveedor === null) {
-                                alert('❌ Operación cancelada');
-                                return;
-                            }
-                            
-                            const costoProv = parseFloat(costoProveedor) || 0;
-                            if (costoProv <= 0) {
-                                alert('❌ El costo de compra debe ser mayor a 0');
-                                return;
-                            }
-                            
-                            // ✅ CALCULAR MARGEN AUTOMÁTICAMENTE
-                            // Fórmula: margen = ((costo_venta_final / (costo_proveedor * 1.19)) - 1) * 100
-                            const iva = 1.19;
-                            const costoConIva = costoProv * iva;
-                            const margenCalculado = ((costoVentaFinal / costoConIva) - 1) * 100;
-                            const margenFinal = Math.round(margenCalculado * 10) / 10; // Redondear a 1 decimal
-                            
-                            console.log(`📊 Cálculo de margen para "${nombre}":`);
-                            console.log(`  - Costo Proveedor: $${costoProv}`);
-                            console.log(`  - Costo con IVA (19%): $${Math.round(costoConIva)}`);
-                            console.log(`  - Costo Venta Final: $${costoVentaFinal}`);
-                            console.log(`  - Margen calculado: ${margenFinal}%`);
-                            
-                            // ❓ Confirmar antes de guardar
-                            const confirmar = confirm(
-                                `📊 Resumen del repuesto:\n\n` +
-                                `🔧 Nombre: ${nombre}\n` +
-                                `💰 Costo Proveedor: $${costoProv}\n` +
-                                `💵 Costo Venta Final: $${costoVentaFinal}\n` +
-                                `📈 Margen: ${margenFinal}%\n` +
-                                `🏷️ IVA incluido: 19%\n\n` +
-                                `¿Guardar este repuesto?`
-                            );
-                            
-                            if (!confirmar) {
-                                alert('❌ Operación cancelada');
-                                return;
-                            }
-                            
-                            // 💾 Guardar repuesto
-                            fetch(`${API_URL}/api/repuestos`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ 
-                                    nombre: nombre, 
-                                    costo_proveedor: costoProv, 
-                                    margen_ganancia: margenFinal,
-                                    proveedor: 'Manual' 
-                                })
-                            })
-                            .then(r => r.json())
-                            .then(resp => {
-                                if (resp.success) {
-                                    alert(`✅ Repuesto "${nombre}" guardado correctamente\n\n📈 Margen calculado: ${margenFinal}%`);
-                                    console.log('✅ Repuesto guardado:', resp);
-                                } else {
-                                    alert('❌ Error al guardar el repuesto: ' + (resp.error || 'Desconocido'));
-                                }
-                            })
-                            .catch(() => {
-                                alert('❌ Error de conexión al guardar el repuesto');
-                            });
-                        } else {
-                            // Si el repuesto ya existe, mostrar el precio y el margen
-                            const existente = data.find(item => item.nombre.toLowerCase() === nombre.toLowerCase());
-                            alert(
-                                `ℹ️ El repuesto "${nombre}" ya existe:\n\n` +
-                                `💰 Costo Venta Final: $${existente.costo_venta_final || existente.costo || 0}\n` +
-                                `📈 Margen: ${existente.margen_ganancia || 0}%`
-                            );
-                        }
-                    })
-                    .catch(() => {
-                        alert('❌ Error al verificar el repuesto');
-                    });
-            } else {
-                if (!nombre) {
-                    alert('⚠️ Debes escribir el nombre del repuesto');
-                } else if (costoVentaFinal <= 0) {
-                    alert('⚠️ El costo de venta debe ser mayor a 0');
-                }
-            }
-        }
-    }
-});
-
     // ============================
-    // 8. INICIALIZAR
-    // ============================
-    if (document.querySelectorAll('.fila-repuesto').length === 0) {
-        agregarFilaRepuesto();
-    } else {
-        actualizarTotalRepuestos();
-    }
-
-    setInterval(actualizarTotalRepuestos, 500);
-
-    // ============================
-    // 9. EVENTOS PARA MANO DE OBRA Y DIAGNÓSTICO
-    // ============================
-    document.querySelector('input[name="costo_mano_obra"]').addEventListener('input', recalcularResumen);
-    document.querySelector('input[name="costo_diagnostico"]').addEventListener('input', recalcularResumen);
-});
-</script>
-{% endblock %}
+    // 7. GUARDAR REPUESTO CON ENTER (CAL
