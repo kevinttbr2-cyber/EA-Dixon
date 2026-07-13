@@ -153,6 +153,7 @@
             <option value="modelo">Modelo</option>
             <option value="atendido_por">Atendido por</option>
             <option value="id">ID</option>
+            <option value="forma_pago">Forma de Pago</option> 
         </select>
         <input type="text" id="buscadorInput" placeholder="Buscar..." style="flex:1;min-width:120px;background:rgba(0,0,0,0.40);color:#fff;border:1px solid rgba(0,255,102,0.20);border-radius:8px;padding:6px 12px;font-size:13px;">
         <button id="btnBuscar" style="background:rgba(0,255,102,0.12);color:#00ff66;border:1px solid rgba(0,255,102,0.20);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;"><i class="fa-solid fa-magnifying-glass"></i></button>
@@ -811,6 +812,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'modelo': valor = celdas[6]?.textContent || ''; break;
                 case 'atendido_por': valor = celdas[7]?.textContent || ''; break;
                 case 'id': valor = fila.dataset.id || ''; break;
+                case 'forma_pago': valor = celdas[8]?.textContent || ''; break; 
                 default: valor = '';
             }
             fila.style.display = valor.toLowerCase().includes(texto) ? '' : 'none';
