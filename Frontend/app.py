@@ -659,6 +659,60 @@ def manifest():
 @app.route('/service-worker.js')
 def service_worker():
     return app.send_static_file('service-worker.js')
+# ============================
+# VENTA RÁPIDA
+# ============================
+@app.route('/venta_rapida')
+@login_required
+@role_required(['admin', 'operador'])
+def venta_rapida():
+    return render_template("venta_rapida.html")
+
+
+# ============================
+# BALANCE DE VENTAS
+# ============================
+@app.route('/balance_ventas')
+@login_required
+@role_required(['admin', 'operador'])
+def balance_ventas():
+    filtro = request.args.get('filtro', 'hoy')
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/balance_ventas?filtro={filtro}", timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            registros = data.get('registros', [])
+            total_ventas = data.get('total_ventas', 0)
+            total_trabajo = data.get('total_trabajo', 0)
+            total_directa = data.get('total_directa', 0)
+            trabajo_margen = data.get('trabajo_margen', 0)
+            directa_margen = data.get('directa_margen', 0)
+        else:
+            registros = []
+            total_ventas = 0
+            total_trabajo = 0
+            total_directa = 0
+            trabajo_margen = 0
+            directa_margen = 0
+    except Exception as e:
+        print(f"Error en /balance_ventas: {e}")
+        registros = []
+        total_ventas = 0
+        total_trabajo = 0
+        total_directa = 0
+        trabajo_margen = 0
+        directa_margen = 0
+    
+    return render_template(
+        "balance_ventas.html",
+        registros=registros,
+        total_ventas=total_ventas,
+        total_trabajo=total_trabajo,
+        total_directa=total_directa,
+        trabajo_margen=trabajo_margen,
+        directa_margen=directa_margen,
+        filtro=filtro
+    )
 
 # ============================
 # INICIO
