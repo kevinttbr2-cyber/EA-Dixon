@@ -143,7 +143,7 @@
      MODAL AGREGAR REPUESTO
      ============================ -->
 <div id="modalAgregarRepuesto" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #00ff66;border-radius:16px;padding:25px 30px;max-width:500px;width:95%;">
+    <div style="background:rgba(15,15,15,0.98);border:2px solid #00ff66;border-radius:16px;padding:25px 30px;max-width:550px;width:95%;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
             <h3 style="color:#00ff66;margin:0;font-size:20px;">➕ Agregar Repuesto</h3>
             <button onclick="cerrarModalAgregar()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
@@ -153,24 +153,59 @@
                 <label style="color:#90e0a0;font-size:13px;">Nombre del repuesto *</label>
                 <input type="text" name="nombre" id="inputNombreRepuesto" class="form-control" required>
             </div>
-            <div class="mb-3">
-                <label style="color:#90e0a0;font-size:13px;">Costo Proveedor ($) *</label>
-                <input type="number" name="costo_proveedor" id="inputCostoProveedor" class="form-control" step="0.01" required>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">💰 Costo Proveedor ($) *</label>
+                    <input type="number" name="costo_proveedor" id="inputCostoProveedor" class="form-control" step="0.01" required>
+                </div>
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">💵 Costo Venta Final ($)</label>
+                    <input type="number" name="costo_venta_final" id="inputCostoVentaFinal" class="form-control" step="0.01" placeholder="Opcional">
+                </div>
             </div>
-            <div class="mb-3">
-                <label style="color:#90e0a0;font-size:13px;">Margen de Ganancia (%)</label>
-                <input type="number" name="margen_ganancia" id="inputMargenGanancia" class="form-control" step="0.1" value="30">
-                <small style="color:#666;font-size:11px;">💡 El IVA (19%) se aplica automáticamente</small>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">📈 Margen de Ganancia (%)</label>
+                    <input type="number" name="margen_ganancia" id="inputMargenGanancia" class="form-control" step="0.1" value="30">
+                    <small style="color:#666;font-size:11px;">💡 Si pones costo final, se calcula automático</small>
+                </div>
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">🔧 Método de cálculo</label>
+                    <select id="metodoCalculo" class="form-control" style="
+                        background: rgba(0,0,0,0.40);
+                        color: #fff;
+                        border: 1px solid rgba(0,255,102,0.20);
+                        border-radius: 8px;
+                        padding: 8px 12px;
+                        font-size: 13px;
+                        width: 100%;
+                    ">
+                        <option value="margen">Calcular por Margen (%)</option>
+                        <option value="venta">Calcular por Costo Venta Final ($)</option>
+                    </select>
+                </div>
             </div>
+            
+            <!-- Preview del Costo Venta Final -->
             <div style="background:rgba(0,255,102,0.06);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(0,255,102,0.10);">
-                <span style="color:#888;font-size:12px;">📊 Costo Venta Final estimado:</span>
-                <span id="previewCostoVenta" style="color:#00ff66;font-weight:700;font-size:18px;display:block;text-align:center;">$0</span>
-                <small style="color:#666;font-size:10px;">Fórmula: (Costo Proveedor × 1.19) + Margen</small>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="color:#888;font-size:12px;">📊 Costo Venta Final:</span>
+                    <span id="previewCostoVenta" style="color:#00ff66;font-weight:700;font-size:20px;">$0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                    <span style="color:#888;font-size:11px;">📈 Margen calculado:</span>
+                    <span id="previewMargen" style="color:#4fc3f7;font-weight:600;font-size:14px;">0%</span>
+                </div>
+                <small style="color:#666;font-size:10px;">Fórmula: (Costo Proveedor × 1.19) × (1 + Margen/100)</small>
             </div>
+
             <div class="mb-3">
-                <label style="color:#90e0a0;font-size:13px;">Proveedor</label>
+                <label style="color:#90e0a0;font-size:13px;">🏢 Proveedor</label>
                 <input type="text" name="proveedor" id="inputProveedorRepuesto" class="form-control" placeholder="Opcional">
             </div>
+            
             <button type="submit" class="btn btn-primary w-100" style="background:#00ff66 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;">
                 💾 Guardar repuesto
             </button>
