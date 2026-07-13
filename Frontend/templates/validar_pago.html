@@ -646,62 +646,63 @@ document.addEventListener('DOMContentLoaded', function() {
     let timeoutId = null;
 
     function manejarAutocompletado(e) {
-        const input = e.target;
-        const sugerencias = input.parentElement.querySelector('.repuesto-sugerencias');
-        const query = input.value.trim();
-        const fila = input.closest('.fila-repuesto');
-        const costoInput = fila.querySelector('.costo-repuesto');
-        
-        if (timeoutId) clearTimeout(timeoutId);
-        
-        if (query.length < 2) {
-            sugerencias.style.display = 'none';
-            return;
-        }
-        
-        sugerencias.innerHTML = '<div style="padding:8px 12px;color:#888;text-align:center;">🔍 Buscando...</div>';
-        sugerencias.style.display = 'block';
-        
-        timeoutId = setTimeout(function() {
-            fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(query)}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        sugerencias.innerHTML = `
-                            <div style="padding:8px 12px;color:#666;text-align:center;">
-                                No hay resultados. Escribe completo y presiona Enter para guardar.
-                            </div>
-                        `;
-                        sugerencias.style.display = 'block';
-                        return;
-                    }
-                    sugerencias.innerHTML = data.map(item => `
-                        <div class="sugerencia-item" 
-                             data-nombre="${item.nombre}" 
-                             data-costo="${item.costo}">
-                            <span>${item.nombre}</span>
-                            <span class="costo">$${item.costo}</span>
-                        </div>
-                    `).join('');
-                    sugerencias.style.display = 'block';
-                    
-                    sugerencias.querySelectorAll('.sugerencia-item').forEach(el => {
-                        el.addEventListener('click', function() {
-                            const nombre = this.dataset.nombre;
-                            const costo = this.dataset.costo;
-                            input.value = nombre;
-                            costoInput.value = costo;
-                            actualizarTotalRepuestos();
-                            sugerencias.style.display = 'none';
-                        });
-                    });
-                })
-                .catch(() => {
-                    sugerencias.innerHTML = '<div style="padding:8px 12px;color:#ff6b6b;text-align:center;">❌ Error al cargar</div>';
-                    sugerencias.style.display = 'block';
-                });
-        }, 400);
+    const input = e.target;
+    const sugerencias = input.parentElement.querySelector('.repuesto-sugerencias');
+    const query = input.value.trim();
+    const fila = input.closest('.fila-repuesto');
+    const costoInput = fila.querySelector('.costo-repuesto');
+    
+    if (timeoutId) clearTimeout(timeoutId);
+    
+    if (query.length < 2) {
+        sugerencias.style.display = 'none';
+        return;
     }
+    
+    sugerencias.innerHTML = '<div style="padding:8px 12px;color:#888;text-align:center;">🔍 Buscando...</div>';
+    sugerencias.style.display = 'block';
+    
+    timeoutId = setTimeout(function() {
+        // ✅ Usar la ruta correcta
+        fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(query)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) {
+                    sugerencias.innerHTML = `
+                        <div style="padding:8px 12px;color:#666;text-align:center;">
+                            No hay resultados. Escribe completo y presiona Enter para guardar.
+                        </div>
+                    `;
+                    sugerencias.style.display = 'block';
+                    return;
+                }
+                sugerencias.innerHTML = data.map(item => `
+                    <div class="sugerencia-item" 
+                         data-nombre="${item.nombre}" 
+                         data-costo="${item.costo || 0}">
+                        <span>${item.nombre}</span>
+                        <span class="costo">$${item.costo || 0}</span>
+                    </div>
+                `).join('');
+                sugerencias.style.display = 'block';
+                
+                sugerencias.querySelectorAll('.sugerencia-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const nombre = this.dataset.nombre;
+                        const costo = this.dataset.costo;
+                        input.value = nombre;
+                        costoInput.value = costo;
+                        actualizarTotalRepuestos();
+                        sugerencias.style.display = 'none';
+                    });
+                });
+            })
+            .catch(() => {
+                sugerencias.innerHTML = '<div style="padding:8px 12px;color:#ff6b6b;text-align:center;">❌ Error al cargar</div>';
+                sugerencias.style.display = 'block';
+            });
+    }, 400);
+}
 
     // ============================
     // 4. EVENTOS INICIALES
