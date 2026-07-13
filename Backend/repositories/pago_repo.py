@@ -38,28 +38,28 @@ class PagoRepository:
             return None
     
     @staticmethod
-    def actualizar(id_reg, pago):
-        try:
-            conn = get_connection()
-            cur = conn.cursor()
-            cur.execute("""
-                UPDATE pagos 
-                SET monto=%s, estado=%s, observaciones_pago=%s, hora_pago=%s,
-                    atendido_por=%s, diagnostico=%s, reparacion=%s, resultado=%s,
-                    tiempo_estimado=%s, forma_pago = %s 
-                WHERE id=%s
-            """, (
-                pago.monto, pago.estado, pago.observaciones_pago, pago.hora_pago,
-                pago.atendido_por, pago.diagnostico, pago.reparacion, pago.resultado,
-                pago.tiempo_estimado, pago.forma_pago, id_reg
-            ))
-            conn.commit()
-            cur.close()
-            conn.close()
-            return True
-        except Exception as e:
-            print(f"Error actualizar pago: {e}")
-            return False
+def actualizar(id_reg, pago):
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE pagos 
+            SET monto=%s, estado=%s, observaciones_pago=%s, hora_pago=%s,
+                atendido_por=%s, diagnostico=%s, reparacion=%s, resultado=%s,
+                tiempo_estimado=%s, forma_pago=%s  -- ✅ ESTO DEBE ESTAR
+            WHERE id=%s
+        """, (
+            pago.monto, pago.estado, pago.observaciones_pago, pago.hora_pago,
+            pago.atendido_por, pago.diagnostico, pago.reparacion, pago.resultado,
+            pago.tiempo_estimado, pago.forma_pago, id_reg  -- ✅ ESTO DEBE ESTAR
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error actualizar pago: {e}")
+        return False
     
     @staticmethod
     def obtener_por_id(id_reg):
