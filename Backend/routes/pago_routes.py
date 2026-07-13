@@ -405,44 +405,61 @@ def validar_pago(id_reg):
 
 @pago_bp.route('/repuestos', methods=['GET'])
 def get_repuestos_lista():
-    """Obtiene todos los repuestos con costo_proveedor, margen y costo_venta_final"""
+    """Obtiene todos los repuestos o busca por nombre (autocompletado)"""
     try:
+        query = request.args.get('q', '').strip()
         conn, cur = get_cursor()
-        cur.execute("""
-            SELECT 
-                id, 
-                nombre, 
-                costo_proveedor, 
-                margen_ganancia,
-                costo_venta_final,
-                proveedor
-            FROM repuestos 
-            ORDER BY nombre
-        """)
-        rows = cur.fetchall()
-        repuestos = []
-        for row in rows:
-            # Si la columna costo_venta_final existe y tiene valor, úsala
-            # Si no, calcularla
-            costo_proveedor = float(row[2] or 0)
-            margen = float(row[3] or 30)
-            costo_venta_final = float(row[4] or 0)
-            
-            # Si no está en la BD, calcularla
-            if costo_venta_final == 0 and costo_proveedor > 0:
-                iva = 1.19
-                costo_con_iva = costo_proveedor * iva
-                costo_venta_final = costo_con_iva * (1 + (margen / 100))
-                costo_venta_final = round(costo_venta_final, 0)
-            
-            repuestos.append({
-                'id': row[0],
-                'nombre': row[1],
-                'costo_proveedor': costo_proveedor,
-                'margen_ganancia': margen,
-                'costo_venta_final': costo_venta_final,
-                'proveedor': row[5] or ''
-            })
+        
+        # Si hay query, modo autocompletado
+        if query and len(query) >= 2:
+            cur.execute("""
+                SELECT 
+                    id, 
+                    nombre, 
+                    COALESCE(costo_venta_final, 0) as costo,
+                    proveedor
+                FROM repuestos 
+                WHERE nombre ILIKE %s 
+                ORDER BY nombre 
+                LIMIT 10
+            """, (f'%{query}%',))
+            repuestos = [dict(row) for row in cur.fetchall()]
+        else:
+            # Modo lista completa
+            cur.execute("""
+                SELECT 
+                    id, 
+                    nombre, 
+                    costo_proveedor, 
+                    margen_ganancia,
+                    COALESCE(costo_venta_final, 0) as costo_venta_final,
+                    proveedor
+                FROM repuestos 
+                ORDER BY nombre
+            """)
+            rows = cur.fetchall()
+            repuestos = []
+            for row in rows:
+                costo_proveedor = float(row[2] or 0)
+                margen = float(row[3] or 30)
+                costo_venta_final = float(row[4] or 0)
+                
+                # Si no está en la BD, calcularla
+                if costo_venta_final == 0 and costo_proveedor > 0:
+                    iva = 1.19
+                    costo_con_iva = costo_proveedor * iva
+                    costo_venta_final = costo_con_iva * (1 + (margen / 100))
+                    costo_venta_final = round(costo_venta_final, 0)
+                
+                repuestos.append({
+                    'id': row[0],
+                    'nombre': row[1],
+                    'costo_proveedor': costo_proveedor,
+                    'margen_ganancia': margen,
+                    'costo_venta_final': costo_venta_final,
+                    'proveedor': row[5] or ''
+                })
+        
         cur.close()
         conn.close()
         return jsonify(repuestos)
