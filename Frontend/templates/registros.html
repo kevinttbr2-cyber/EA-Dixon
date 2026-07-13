@@ -252,7 +252,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <div style="display:flex;align-items:center;gap:8px;">
                     <span style="color:#00ff66;font-weight:700;font-size:14px;">#{{ r.id }}</span>
-                    <a href="/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" style="color:#00ff66;text-decoration:none;font-size:12px;"><i class="fa-solid fa-file-pdf"></i></a>
+                    <a href="https://ea-dixon-production.up.railway.app/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" style="color:#00ff66;text-decoration:none;font-size:12px;"><i class="fa-solid fa-file-pdf"></i></a>
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;">
                     <span style="color:#00ff66;font-weight:700;font-size:16px;">${{ "{:,.0f}".format(r.monto) }}</span>
