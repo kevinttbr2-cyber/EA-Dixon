@@ -676,12 +676,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     sugerencias.style.display = 'block';
                     return;
                 }
+                // ✅ USAR costo_venta_final en lugar de costo
                 sugerencias.innerHTML = data.map(item => `
                     <div class="sugerencia-item" 
                          data-nombre="${item.nombre}" 
-                         data-costo="${item.costo || 0}">
+                         data-costo="${item.costo_venta_final || item.costo || 0}">
                         <span>${item.nombre}</span>
-                        <span class="costo">$${item.costo || 0}</span>
+                        <span class="costo">$${item.costo_venta_final || item.costo || 0}</span>
                     </div>
                 `).join('');
                 sugerencias.style.display = 'block';
@@ -703,7 +704,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }, 400);
 }
-
     // ============================
     // 4. EVENTOS INICIALES
     // ============================
