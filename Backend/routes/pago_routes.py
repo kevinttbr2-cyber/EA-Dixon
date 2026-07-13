@@ -492,11 +492,17 @@ def crear_repuesto():
         # ✅ Si no hay costo_proveedor, marcamos como pendiente
         costo_proveedor_pendiente = costo_proveedor == 0
         
-        # Si hay costo_venta_final pero no costo_proveedor, calculamos el margen inverso
+        # ✅ Si hay costo_venta_final pero no costo_proveedor
         if costo_venta_final > 0 and costo_proveedor == 0:
+            # Usar el costo_venta_final proporcionado
+            # El margen se calculará cuando se agregue el costo proveedor
+            pass
+        elif costo_proveedor > 0 and costo_venta_final == 0:
+            # Calcular costo_venta_final desde costo_proveedor y margen
             iva = 1.19
-            costo_proveedor = costo_venta_final / 1.19 / 1.3
-            margen_ganancia = 30
+            costo_con_iva = costo_proveedor * iva
+            costo_venta_final = costo_con_iva * (1 + (margen_ganancia / 100))
+            costo_venta_final = round(costo_venta_final, 0)
         
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
