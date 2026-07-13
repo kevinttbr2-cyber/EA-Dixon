@@ -67,5 +67,12 @@
         ">Confirmar Pago</button>
     </form>
 </div>
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const formaPago = document.getElementById('formaPago').value;
+    console.log('📤 forma_pago seleccionado:', formaPago);
+    alert('forma_pago: ' + formaPago);  // 👈 MUESTRA QUÉ VALOR TIENE
+});
+</script>
 
 {% endblock %}
