@@ -75,5 +75,38 @@ document.querySelector('form').addEventListener('submit', function(e) {
     console.log('📤 forma_pago seleccionado:', formaPago);
 });
 </script>
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    e.preventDefault();  // ❌ Esto evita el envío normal del formulario
+    
+    const data = {
+        monto: document.querySelector('input[name="monto"]').value,
+        forma_pago: document.getElementById('formaPago').value,
+        diagnostico: document.querySelector('textarea[name="diagnostico"]').value,
+        reparacion: document.querySelector('textarea[name="reparacion"]').value,
+        observaciones_pago: document.querySelector('textarea[name="observaciones_pago"]').value,
+        resultado: document.querySelector('input[name="resultado"]:checked').value,
+        atendido_por: '{{ session.get("nombre_completo", "Técnico") }}'
+    };
+    
+    fetch('/api/pagar/{{ id }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // ✅ REDIRIGIR AL PDF
+            window.location.href = `/api/pdf/{{ id }}/{{ firma }}`;
+        } else {
+            alert('❌ Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('❌ Error de conexión');
+    });
+});
+</script>
 
 {% endblock %}
