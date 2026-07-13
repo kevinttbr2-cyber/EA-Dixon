@@ -916,6 +916,106 @@ def exportar_flota_pdf(flota):
         error_trace = traceback.format_exc()
         print(f"❌ Error en exportar_flota_pdf: {error_trace}")
         return jsonify({"error": str(e)}), 500
+# ============================
+# VENTA RÁPIDA (SIN TRABAJO)
+# ============================
+@pago_bp.route('/venta_rapida', methods=['POST'])
+def venta_rapida():
+    try:
+        data = request.json
+        
+        if not data.get('nombre') or not data.get('monto'):
+            return jsonify({"error": "Nombre y monto son obligatorios"}), 400
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO pagos 
+            (nombre, monto, fecha, hora, estado, tipo_venta, producto_vendido, 
+             atendido_por, observaciones_pago, telefono, forma_pago)
+            VALUES (%s, %s, CURRENT_DATE, CURRENT_TIME, 'pagado', 'directa', %s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
+            data.get('nombre'),
+            data.get('monto'),
+            data.get('producto_vendido', ''),
+            data.get('atendido_por', 'Técnico'),
+            data.get('observaciones', ''),
+            data.get('telefono', ''),
+            data.get('forma_pago', 'efectivo')
+        ))
+        
+        id_reg = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True, "id": id_reg})
+    except Exception as e:
+        print(f"Error en venta_rapida: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================
+# BALANCE DE VENTAS
+# ============================
+@pago_bp.route('/balance_ventas', methods=['GET'])
+def balance_ventas():
+    try:
+        filtro = request.args.get('filtro', 'hoy')
+        hoy = datetime.now().date()
+        
+        conn, cur = get_cursor()
+        
+        query = "SELECT * FROM pagos WHERE estado = 'pagado'"
+        params = []
+        
+        if filtro == 'hoy':
+            query += " AND fecha = %s"
+            params.append(hoy.strftime('%Y-%m-%d'))
+        elif filtro == '7d':
+            query += " AND fecha >= %s"
+            params.append((hoy - timedelta(days=7)).strftime('%Y-%m-%d'))
+        elif filtro == 'mes':
+            query += " AND fecha >= %s"
+            params.append((hoy - timedelta(days=30)).strftime('%Y-%m-%d'))
+        
+        query += " ORDER BY fecha DESC, hora DESC"
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        registros = [dict(row) for row in rows]
+        
+        trabajo = [r for r in registros if r.get('tipo_venta') != 'directa']
+        directa = [r for r in registros if r.get('tipo_venta') == 'directa']
+        
+        total_ventas = float(sum(r.get('monto', 0) or 0 for r in registros))
+        total_trabajo = float(sum(r.get('monto', 0) or 0 for r in trabajo))
+        total_directa = float(sum(r.get('monto', 0) or 0 for r in directa))
+        
+        # Margen trabajo
+        repuestos = float(sum(r.get('costo_repuestos_real', 0) or 0 for r in trabajo))
+        mano_obra = float(sum(r.get('costo_mano_obra_real', 0) or 0 for r in trabajo))
+        diagnostico = float(sum(r.get('costo_diagnostico_real', 0) or 0 for r in trabajo))
+        ganancia_trabajo = total_trabajo - (repuestos + mano_obra + diagnostico)
+        trabajo_margen = (ganancia_trabajo / total_trabajo * 100) if total_trabajo > 0 else 0
+        
+        directa_margen = 100 if total_directa > 0 else 0
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "registros": registros,
+            "total_ventas": total_ventas,
+            "total_trabajo": total_trabajo,
+            "total_directa": total_directa,
+            "trabajo_margen": round(trabajo_margen, 1),
+            "directa_margen": directa_margen
+        })
+    except Exception as e:
+        print(f"Error en balance_ventas: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # ============================
