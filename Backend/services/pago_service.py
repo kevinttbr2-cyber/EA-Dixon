@@ -24,26 +24,28 @@ class PagoService:
         return PagoRepository.insertar(pago)
     
     @staticmethod
-    def procesar_pago(id_reg, data):
-        pago = PagoRepository.obtener_por_id(id_reg)
-        if not pago:
-            return None
-        
-        pago.monto = data.get('monto', 0)
-        pago.estado = 'pagado'
-        pago.estado_ot = data.get('estado_ot', 'Pendiente') 
-        pago.observaciones_pago = data.get('observaciones_pago', '')
-        pago.hora_pago = datetime.now().strftime("%H:%M:%S")
-        pago.atendido_por = data.get('atendido_por', 'Técnico')
-        pago.diagnostico = data.get('diagnostico', '')
-        pago.reparacion = data.get('reparacion', 'Reparación realizada')
-        pago.resultado = data.get('resultado', 'reparado')
-        pago.tiempo_estimado = data.get('tiempo_estimado', '00:00:00')
-        pago.forma_pago = data.get('forma_pago', 'efectivo')  # ✅ AGREGADO
-        
-        if PagoRepository.actualizar(id_reg, pago):
-            return pago
+def procesar_pago(id_reg, data):
+    pago = PagoRepository.obtener_por_id(id_reg)
+    if not pago:
         return None
+    
+    pago.monto = data.get('monto', 0)
+    pago.estado = 'pagado'
+    pago.estado_ot = data.get('estado_ot', 'Pendiente')
+    pago.observaciones_pago = data.get('observaciones_pago', '')
+    pago.hora_pago = datetime.now().strftime("%H:%M:%S")
+    pago.atendido_por = data.get('atendido_por', 'Técnico')
+    pago.diagnostico = data.get('diagnostico', '')
+    pago.reparacion = data.get('reparacion', 'Reparación realizada')
+    pago.resultado = data.get('resultado', 'reparado')
+    pago.tiempo_estimado = data.get('tiempo_estimado', '00:00:00')
+    pago.forma_pago = data.get('forma_pago', 'efectivo')  # ✅ ESTO DEBE ESTAR
+    
+    print(f"✅ PagoService - forma_pago asignado: {pago.forma_pago}")  # 👈 LOG
+    
+    if PagoRepository.actualizar(id_reg, pago):
+        return pago
+    return None
     
     @staticmethod
     def obtener_pendientes():
