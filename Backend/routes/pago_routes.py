@@ -272,6 +272,7 @@ def pagar(id_reg):
     data = request.json
     # 🔥 AGREGAR estado_ot
     data['estado_ot'] = data.get('estado_ot', 'Pendiente')
+    data['forma_pago'] = data.get('forma_pago', 'efectivo') 
     pago = PagoService.procesar_pago(id_reg, data)
     if pago:
         return jsonify({"success": True, "pago": pago.to_dict()})
