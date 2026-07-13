@@ -7,7 +7,8 @@
         💰 Registrar Pago
     </h2>
 
-    <form method="POST">
+    <!-- ✅ AGREGAR action -->
+    <form method="POST" action="/api/pagar/{{ id }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
         <div class="mb-3">
@@ -67,11 +68,12 @@
         ">Confirmar Pago</button>
     </form>
 </div>
+
 <script>
 document.querySelector('form').addEventListener('submit', function(e) {
     const formaPago = document.getElementById('formaPago').value;
     console.log('📤 forma_pago seleccionado:', formaPago);
-    alert('forma_pago: ' + formaPago);  // 👈 MUESTRA QUÉ VALOR TIENE
+    // ✅ AHORA VERÁS EN LA CONSOLA EL VALOR SELECCIONADO
 });
 </script>
 
