@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+    .venta-rapida-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 10px 15px;
+    }
+    .venta-rapida-container .form-control {
+        background: rgba(0,0,0,0.40) !important;
+        color: #fff !important;
+        border: 1px solid rgba(0, 255, 102, 0.20) !important;
+        border-radius: 8px !important;
+        padding: 6px 10px !important;
+        font-size: 13px !important;
+        height: 36px;
+    }
+    .venta-rapida-container textarea.form-control {
+        height: 50px;
+        min-height: 50px;
+    }
+    .venta-rapida-container .form-label {
+        color: #90e0a0;
+        font-size: 12px;
+        font-weight: 500;
+        margin-bottom: 2px;
+        display: block;
+    }
+    .venta-rapida-container .btn-primary {
+        background: #00ff66 !important;
+        color: #000 !important;
+        font-weight: 700 !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 10px !important;
+        font-size: 16px !important;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 10px;
+    }
+    .venta-rapida-container .btn-primary:hover {
+        background: #00cc52 !important;
+        transform: scale(1.01);
+    }
+    .venta-rapida-container .section-card {
+        background: rgba(20,20,20,0.80) !important;
+        border-radius: 14px !important;
+        padding: 12px 16px !important;
+        margin-bottom: 10px !important;
+        border: 1px solid rgba(0, 255, 102, 0.15) !important;
+        backdrop-filter: blur(8px);
+    }
+    .venta-rapida-container .section-title {
+        color: #00ff66 !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        margin-bottom: 8px !important;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .venta-rapida-container .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 12px;
+    }
+    @media (max-width: 600px) {
+        .venta-rapida-container .grid-2 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="venta-rapida-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+        <h2 style="color: #00ff66; font-weight: 700; margin: 0; font-size: 20px;">
+            ⚡ Venta Rápida
+        </h2>
+        <a href="/balance_ventas" class="btn btn-sm" style="
+            background: rgba(255,255,255,0.06);
+            color: #888;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 4px 14px;
+            text-decoration: none;
+            font-size: 12px;
+        ">
+            📊 Ver Balance
+        </a>
+    </div>
+
+    <form id="formVentaRapida">
+        <div class="section-card">
+            <div class="section-title">👤 Datos del Cliente</div>
+            <div class="grid-2">
+                <div>
+                    <label class="form-label">Nombre *</label>
+                    <input type="text" name="nombre" id="nombreCliente" class="form-control" required placeholder="Cliente">
+                </div>
+                <div>
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" name="telefono" id="telefonoCliente" class="form-control" placeholder="Opcional">
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-title">💰 Datos de la Venta</div>
+            <div class="grid-2">
+                <div>
+                    <label class="form-label">Monto *</label>
+                    <input type="number" name="monto" id="montoVenta" class="form-control" required step="0.01" placeholder="0">
+                </div>
+                <div>
+                    <label class="form-label">Forma de Pago</label>
+                    <select name="forma_pago" id="formaPago" class="form-control">
+                        <option value="efectivo">💵 Efectivo</option>
+                        <option value="tarjeta">💳 Tarjeta</option>
+                        <option value="transferencia">🏦 Transferencia</option>
+                    </select>
+                </div>
+                <div style="grid-column: 1/3;">
+                    <label class="form-label">Producto/Servicio</label>
+                    <input type="text" name="producto_vendido" id="productoVendido" class="form-control" placeholder="Ej: Batería, Kit de arrastre...">
+                </div>
+                <div style="grid-column: 1/3;">
+                    <label class="form-label">Observaciones</label>
+                    <textarea name="observaciones" id="observacionesVenta" class="form-control" rows="2" placeholder="Detalles adicionales..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-primary">
+            💰 Registrar Venta
+        </button>
+    </form>
+</div>
+
+<script>
+document.getElementById('formVentaRapida').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const data = {
+        nombre: document.getElementById('nombreCliente').value.trim(),
+        telefono: document.getElementById('telefonoCliente').value.trim(),
+        monto: parseFloat(document.getElementById('montoVenta').value) || 0,
+        producto_vendido: document.getElementById('productoVendido').value.trim(),
+        forma_pago: document.getElementById('formaPago').value,
+        observaciones: document.getElementById('observacionesVenta').value.trim(),
+        atendido_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
+    };
+    
+    if (!data.nombre || data.monto <= 0) {
+        alert('⚠️ Ingresa el nombre del cliente y un monto válido');
+        return;
+    }
+    
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = '⏳ Procesando...';
+    
+    fetch('/api/venta_rapida', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (resp.success) {
+            alert('✅ Venta registrada correctamente');
+            document.getElementById('formVentaRapida').reset();
+            window.location.href = '/balance_ventas';
+        } else {
+            alert('❌ Error: ' + (resp.error || 'Desconocido'));
+            btn.disabled = false;
+            btn.textContent = '💰 Registrar Venta';
+        }
+    })
+    .catch(() => {
+        alert('❌ Error de conexión');
+        btn.disabled = false;
+        btn.textContent = '💰 Registrar Venta';
+    });
+});
+</script>
+
+{% endblock %}
