@@ -337,6 +337,17 @@
                 <div><span style="color:#888;">Atendido:</span> <span style="color:#fff;">{{ r.atendido_por or r.usuario or '-' }}</span></div>
                 <div style="grid-column:1/3;"><span style="color:#888;">Vehículo:</span> <span style="color:#fff;">{{ r.marca }} {{ r.modelo }}</span></div>
             </div>
+                <div style="grid-column:1/3; margin-top:4px; padding-top:4px; border-top:1px solid rgba(255,255,255,0.05);">
+        <span style="color:#888;">💳 Forma de Pago:</span>
+        <span style="color:#fff;">
+            {% if r.forma_pago %}
+                {% if r.forma_pago == 'efectivo' %}💵 Efectivo
+                {% elif r.forma_pago == 'tarjeta' %}💳 Tarjeta
+                {% elif r.forma_pago == 'transferencia' %}🏦 Transferencia
+                {% elif r.forma_pago == 'cheque' %}📄 Cheque
+                {% else %}🔄 {{ r.forma_pago }}
+                {% endif %}
+            {% else %}
             <div style="margin-top:4px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.05);padding-top:4px;">
                 {{ (r.observaciones_pago or r.observaciones_cliente or '')[:60] }}{% if (r.observaciones_pago or r.observaciones_cliente or '')|length > 60 %}...{% endif %}
             </div>
