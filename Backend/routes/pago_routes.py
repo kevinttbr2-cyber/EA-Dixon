@@ -33,12 +33,14 @@ def get_estado():
         "total_pendientes": len(pendientes),
         "total_pagados_hoy": len(pagados)
     })
+
+
 # ============================
-# 1.5 OBTENER REGISTRO POR ID (para editar/detalle) 
+# 1.5 OBTENER REGISTRO POR ID (RUTA EXACTA QUE USA JAVASCRIPT)
 # ============================
 @pago_bp.route('/registro/<int:id>', methods=['GET'])
-def get_registro_por_id(id):
-    """Obtiene un registro completo por su ID para editar/detalle"""
+def get_registro_js(id):
+    """Ruta exacta que usa el JavaScript para editar/detalle"""
     try:
         conn = get_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -52,11 +54,12 @@ def get_registro_por_id(id):
         
         return jsonify(dict(row))
     except Exception as e:
-        print(f"❌ Error en get_registro_por_id: {e}")
+        print(f"❌ Error en get_registro_js: {e}")
         return jsonify({"error": str(e)}), 500
 
+
 # ============================
-# 2. OBTENER REGISTRO POR ID
+# 2. OBTENER REGISTRO POR ID (VERSIÓN CON PAGOSERVICE)
 # ============================
 @pago_bp.route('/registro/<int:id_reg>', methods=['GET'])
 def get_registro(id_reg):
@@ -384,107 +387,11 @@ def validar_pago(id_reg):
     except Exception as e:
         print(f"Error en validar_pago: {e}")
         return jsonify({"error": str(e)}), 500
-        
-        # ============================
-        # 2. ACTUALIZAR EL PAGO
-        # ============================
-        detalles_json = json.dumps(detalles_repuestos)
-        
-        cur.execute("""
-            UPDATE pagos 
-            SET costo_repuestos_real = %s,
-                costo_mano_obra_real = %s,
-                costo_diagnostico_real = %s,
-                ganancia_neta = %s,
-                observaciones_pago = %s,
-                validado = TRUE,
-                validado_por = %s,
-                fecha_validacion = CURRENT_TIMESTAMP,
-                diagnostico = %s,
-                reparacion = %s,
-                resultado = %s,
-                tiempo_estimado = %s,
-                detalles_repuestos = %s::jsonb,
-                estado_ot = %s
-            WHERE id = %s
-        """, (
-            costo_repuestos,
-            data.get('costo_mano_obra_real', 0),
-            data.get('costo_diagnostico_real', 0),
-            data.get('ganancia_neta', 0),
-            data.get('observaciones_pago', ''),
-            data.get('validado_por', 'Sistema'),
-            data.get('diagnostico', ''),
-            data.get('reparacion', 'Reparación realizada'),
-            data.get('resultado', 'reparado'),
-            data.get('tiempo_estimado', '00:00:00'),
-            detalles_json,
-            data.get('estado_ot', 'Pendiente'),
-            id_reg
-        ))
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        return jsonify({"success": True})
-    except Exception as e:
-        print(f"Error en validar_pago: {e}")
-        return jsonify({"error": str(e)}), 500
-
-@pago_bp.route('/repuestos', methods=['GET'])
-def get_repuestos():
-    """Obtiene lista de repuestos para autocompletar"""
-    try:
-        search = request.args.get('q', '')
-        conn, cur = get_cursor()
-        if search:
-            cur.execute("""
-                SELECT id, nombre, costo 
-                FROM repuestos 
-                WHERE nombre ILIKE %s 
-                ORDER BY nombre 
-                LIMIT 10
-            """, (f'%{search}%',))
-        else:
-            cur.execute("""
-                SELECT id, nombre, costo 
-                FROM repuestos 
-                ORDER BY nombre 
-                LIMIT 20
-            """)
-        repuestos = [dict(row) for row in cur.fetchall()]
-        cur.close()
-        conn.close()
-        return jsonify(repuestos)
-    except Exception as e:
-        print(f"Error en get_repuestos: {e}")
-        return jsonify([])
 
 
 # ============================
-# 11. FLOTAS DISPONIBLES
+# 11. REPUESTOS - OBTENER LISTA
 # ============================
-@pago_bp.route('/flotas_disponibles', methods=['GET'])
-def get_flotas_disponibles():
-    """Obtiene todas las flotas registradas (nombres únicos)"""
-    try:
-        conn, cur = get_cursor()
-        cur.execute("""
-            SELECT DISTINCT flota FROM pagos 
-            WHERE flota IS NOT NULL AND flota != '' 
-            ORDER BY flota
-        """)
-        flotas = [row[0] for row in cur.fetchall()]
-        cur.close()
-        conn.close()
-        return jsonify(flotas)
-    except Exception as e:
-        print(f"Error en get_flotas_disponibles: {e}")
-        return jsonify([])
-# ============================
-# REPUESTOS - CRUD COMPLETO
-# ============================
-
 @pago_bp.route('/repuestos', methods=['GET'])
 def get_repuestos_lista():
     """Obtiene todos los repuestos"""
@@ -499,6 +406,10 @@ def get_repuestos_lista():
         print(f"Error en get_repuestos_lista: {e}")
         return jsonify([])
 
+
+# ============================
+# 12. REPUESTOS - CREAR
+# ============================
 @pago_bp.route('/repuestos', methods=['POST'])
 def crear_repuesto():
     """Crea un nuevo repuesto"""
@@ -528,6 +439,10 @@ def crear_repuesto():
         print(f"Error en crear_repuesto: {e}")
         return jsonify({"error": str(e)}), 500
 
+
+# ============================
+# 13. REPUESTOS - ACTUALIZAR
+# ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
     """Actualiza un repuesto existente"""
@@ -556,6 +471,10 @@ def actualizar_repuesto(id_repuesto):
         print(f"Error en actualizar_repuesto: {e}")
         return jsonify({"error": str(e)}), 500
 
+
+# ============================
+# 14. REPUESTOS - ELIMINAR
+# ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['DELETE'])
 def eliminar_repuesto(id_repuesto):
     """Elimina un repuesto por ID"""
@@ -571,6 +490,10 @@ def eliminar_repuesto(id_repuesto):
         print(f"Error en eliminar_repuesto: {e}")
         return jsonify({"error": str(e)}), 500
 
+
+# ============================
+# 15. REPUESTOS - BUSCAR (AUTOCOMPLETADO)
+# ============================
 @pago_bp.route('/repuestos/buscar', methods=['GET'])
 def buscar_repuestos():
     """Busca repuestos por nombre (autocompletado)"""
@@ -597,7 +520,29 @@ def buscar_repuestos():
 
 
 # ============================
-# 12. EXPORTAR FLOTA A PDF
+# 16. FLOTAS DISPONIBLES
+# ============================
+@pago_bp.route('/flotas_disponibles', methods=['GET'])
+def get_flotas_disponibles():
+    """Obtiene todas las flotas registradas (nombres únicos)"""
+    try:
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT DISTINCT flota FROM pagos 
+            WHERE flota IS NOT NULL AND flota != '' 
+            ORDER BY flota
+        """)
+        flotas = [row[0] for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(flotas)
+    except Exception as e:
+        print(f"Error en get_flotas_disponibles: {e}")
+        return jsonify([])
+
+
+# ============================
+# 17. EXPORTAR FLOTA A PDF
 # ============================
 @pago_bp.route('/exportar_flota_pdf/<flota>', methods=['POST'])
 def exportar_flota_pdf(flota):
@@ -845,7 +790,11 @@ def exportar_flota_pdf(flota):
         error_trace = traceback.format_exc()
         print(f"❌ Error en exportar_flota_pdf: {error_trace}")
         return jsonify({"error": str(e)}), 500
-        
+
+
+# ============================
+# 18. DASHBOARD
+# ============================
 @pago_bp.route('/dashboard', methods=['GET'])
 def get_dashboard():
     """Devuelve datos agregados para el dashboard con filtros"""
@@ -879,7 +828,7 @@ def get_dashboard():
         # ============================
         # 2. CONEXIÓN Y CONSULTAS
         # ============================
-        conn, cur = get_cursor()  # ← CORRECTO: desempacar tupla
+        conn, cur = get_cursor()
         
         # Totales generales
         cur.execute("""
