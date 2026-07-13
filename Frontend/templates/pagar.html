@@ -14,23 +14,24 @@
             <label style="color: #90e0a0;">💰 Monto pagado</label>
             <input type="number" name="monto" class="form-control" required step="0.01">
         </div>
-        <!-- Forma de Pago -->
-<div style="margin-bottom: 10px;">
-    <label style="color: #90e0a0; font-size: 13px; display: block; margin-bottom: 4px;">💳 Forma de Pago</label>
-    <select id="formaPago" style="
-        width: 100%;
-        background: rgba(0,0,0,0.40);
-        color: #fff;
-        border: 1px solid rgba(0,255,102,0.20);
-        border-radius: 8px;
-        padding: 8px 12px;
-        font-size: 14px;
-    ">
-        <option value="efectivo">💵 Efectivo</option>
-        <option value="tarjeta">💳 Tarjeta</option>
-        <option value="transferencia">🏦 Transferencia</option>
-    </select>
-</div>
+
+        <!-- ✅ Forma de Pago (con name) -->
+        <div class="mb-3">
+            <label style="color: #90e0a0;">💳 Forma de Pago</label>
+            <select name="forma_pago" id="formaPago" class="form-control" style="
+                background: rgba(0,0,0,0.40);
+                color: #fff;
+                border: 1px solid rgba(0,255,102,0.20);
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 14px;
+                width: 100%;
+            ">
+                <option value="efectivo">💵 Efectivo</option>
+                <option value="tarjeta">💳 Tarjeta</option>
+                <option value="transferencia">🏦 Transferencia</option>
+            </select>
+        </div>
 
         <div class="mb-3">
             <label style="color: #90e0a0;">🩺 Diagnóstico</label>
@@ -56,9 +57,14 @@
             </div>
         </div>
 
-      
-
-        <button class="btn btn-primary w-100">Confirmar Pago</button>
+        <button class="btn btn-primary w-100" style="
+            background: #00ff66 !important;
+            color: #000 !important;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+        ">Confirmar Pago</button>
     </form>
 </div>
 
