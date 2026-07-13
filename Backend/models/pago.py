@@ -7,7 +7,7 @@ class Pago:
                  tiempo_estimado='00:00:00', anio=None, costo_repuestos_real=0,
                  costo_mano_obra_real=0, costo_diagnostico_real=0, ganancia_neta=0,
                  validado=False, validado_por=None, fecha_validacion=None,
-                 detalles_repuestos=None,self.forma_pago = None):
+                 detalles_repuestos=None, forma_pago=None):  # ✅ CORREGIDO
         self.id = id
         self.nombre = nombre
         self.monto = monto
@@ -39,6 +39,7 @@ class Pago:
         self.validado_por = validado_por
         self.fecha_validacion = fecha_validacion
         self.detalles_repuestos = detalles_repuestos or []
+        self.forma_pago = forma_pago  # ✅ AGREGADO
 
     def to_dict(self):
         return {
@@ -72,7 +73,8 @@ class Pago:
             "validado": self.validado,
             "validado_por": self.validado_por,
             "fecha_validacion": self.fecha_validacion.strftime('%Y-%m-%d %H:%M') if self.fecha_validacion else None,
-            "detalles_repuestos": self.detalles_repuestos
+            "detalles_repuestos": self.detalles_repuestos,
+            "forma_pago": self.forma_pago  # ✅ AGREGADO
         }
 
     @staticmethod
@@ -108,5 +110,6 @@ class Pago:
             validado=row.get('validado', False),
             validado_por=row.get('validado_por'),
             fecha_validacion=row.get('fecha_validacion'),
-            detalles_repuestos=row.get('detalles_repuestos', [])
+            detalles_repuestos=row.get('detalles_repuestos', []),
+            forma_pago=row.get('forma_pago')  # ✅ AGREGADO
         )
