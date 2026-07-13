@@ -21,7 +21,14 @@
 
 {% for r in registros %}
 <div class="card-android" style="border-left: 4px solid {% if r.estado == 'pagado' %}#00ff66{% else %}#ff6b6b{% endif %};">
-    <div style="font-size:20px; font-weight:700; color:#00ff66;">{{ r.nombre }}</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;">
+        <div style="font-size:20px; font-weight:700; color:#00ff66;">{{ r.nombre }}</div>
+        {% if r.telefono %}
+        <div style="color:#90e0a0; font-size:14px;">
+            📞 {{ r.telefono }}
+        </div>
+        {% endif %}
+    </div>
     <div><strong style="color:#90e0a0;">Marca:</strong> {{ r.marca }}</div>
     <div><strong style="color:#90e0a0;">Modelo:</strong> {{ r.modelo }}</div>
     <div><strong style="color:#90e0a0;">Patente:</strong> {{ r.patente }}</div>
