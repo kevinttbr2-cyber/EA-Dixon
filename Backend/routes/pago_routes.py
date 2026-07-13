@@ -540,7 +540,7 @@ def eliminar_repuesto(id_repuesto):
 # ============================
 @pago_bp.route('/repuestos/buscar', methods=['GET'])
 def buscar_repuestos():
-    """Busca repuestos por nombre (autocompletado)"""
+    """Busca repuestos por nombre (autocompletado) con costo_venta_final"""
     try:
         query = request.args.get('q', '').strip()
         if len(query) < 2:
@@ -548,7 +548,11 @@ def buscar_repuestos():
         
         conn, cur = get_cursor()
         cur.execute("""
-            SELECT id, nombre, costo 
+            SELECT 
+                id, 
+                nombre, 
+                costo_venta_final as costo,
+                proveedor
             FROM repuestos 
             WHERE nombre ILIKE %s 
             ORDER BY nombre 
