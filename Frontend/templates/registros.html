@@ -216,26 +216,23 @@
                     <td style="padding:6px 8px;text-align:center;">{{ r.modelo }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
                     <td style="padding:6px 8px;text-align:center;font-size:12px;">
-    {% if r.forma_pago %}
-        {% if r.forma_pago == 'efectivo' %}
-            <span style="color:#00ff66;">💵 Efectivo</span>
-        {% elif r.forma_pago == 'tarjeta' %}
-            <span style="color:#4fc3f7;">💳 Tarjeta</span>
-        {% elif r.forma_pago == 'transferencia' %}
-            <span style="color:#ffcc00;">🏦 Transferencia</span>
-        {% elif r.forma_pago == 'cheque' %}
-            <span style="color:#ff6b6b;">📄 Cheque</span>
-        {% else %}
-            <span style="color:#888;">🔄 {{ r.forma_pago }}</span>
-        {% endif %}
-    {% else %}
-        <span style="color:#666;">—</span>
-    {% endif %}
-</td>
+                        {% if r.forma_pago %}
+                            {% if r.forma_pago == 'efectivo' %}
+                                <span style="color:#00ff66;">💵 Efectivo</span>
+                            {% elif r.forma_pago == 'tarjeta' %}
+                                <span style="color:#4fc3f7;">💳 Tarjeta</span>
+                            {% elif r.forma_pago == 'transferencia' %}
+                                <span style="color:#ffcc00;">🏦 Transferencia</span>
+                            {% elif r.forma_pago == 'cheque' %}
+                                <span style="color:#ff6b6b;">📄 Cheque</span>
+                            {% else %}
+                                <span style="color:#888;">🔄 {{ r.forma_pago }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color:#666;">—</span>
+                        {% endif %}
+                    </td>
                     <td style="padding:6px 8px;text-align:center;">
-                        <!-- ============================================
-                             DROPDOWN DE 3 PUNTOS EN CADA FILA
-                             ============================================ -->
                         <div class="dropdown-3p">
                             <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -251,7 +248,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="9" style="text-align:center;color:#666;padding:40px 0;">
+                    <td colspan="10" style="text-align:center;color:#666;padding:40px 0;">
                         <i class="fa-solid fa-inbox" style="font-size:48px;color:#00ff66;opacity:0.2;display:block;margin-bottom:10px;"></i>
                         <p style="font-size:16px;">No hay registros de pagos</p>
                     </td>
@@ -262,7 +259,7 @@
     </div>
 
     <!-- ============================================
-         VISTA MÓVIL: TARJETAS
+         VISTA MÓVIL: TARJETAS (CORREGIDA)
          ============================================ -->
     <div class="vista-movil" style="display:none;flex-direction:column;gap:12px;">
         {% for r in registros %}
@@ -274,81 +271,85 @@
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;">
                     <span style="color:#00ff66;font-weight:700;font-size:16px;">${{ "{:,.0f}".format(r.monto) }}</span>
-                   <!-- ============================================
-     DROPDOWN DE 3 PUNTOS EN TARJETA MÓVIL
-     ============================================ -->
-<div class="dropdown-3p dropup">
-    <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}" style="font-size:22px;">
-        <i class="fa-solid fa-ellipsis-vertical"></i>
-    </button>
-    <div class="menu-3p" data-id="{{ r.id }}">
-        {% if session.get("rol") == "admin" and r["estado"] == 'pagado' %}
-        <button onclick="editarRegistro({{ r.id }})" class="text-primary" style="
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 16px;
-            color: #4fc3f7;
-            font-size: 13px;
-            background: transparent;
-            border: none;
-            width: 100%;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border-radius: 0;
-        ">
-            <i class="fa-solid fa-pen-to-square" style="width: 20px;"></i> Editar Pago
-        </button>
-        {% endif %}
-        
-        {% if session.get("rol") in ["admin", "operador"] %}
-        <a href="/eliminar/{{ r['id'] }}" class="text-danger" onclick="return confirm('⚠️ ¿Estás seguro de eliminar este registro?\n\nEsta acción NO se puede deshacer.');" style="
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 16px;
-            color: #ff6b6b;
-            font-size: 13px;
-            text-decoration: none;
-            background: transparent;
-            border: none;
-            width: 100%;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border-radius: 0;
-        ">
-            <i class="fa-solid fa-trash-can" style="width: 20px;"></i> Eliminar
-        </a>
-        {% endif %}
-        
-        {% if not (session.get("rol") == "admin" and r["estado"] == 'pagado') and session.get("rol") not in ["admin", "operador"] %}
-        <div style="padding: 10px 16px; color: #666; font-size: 13px; text-align: center;">Sin acciones</div>
-        {% endif %}
-    </div>
-    </div> 
-                   
+                    
+                    <!-- DROPDOWN DE 3 PUNTOS EN TARJETA MÓVIL -->
+                    <div class="dropdown-3p dropup">
+                        <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}" style="font-size:22px;">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <div class="menu-3p" data-id="{{ r.id }}">
+                            {% if session.get("rol") == "admin" and r["estado"] == 'pagado' %}
+                            <button onclick="editarRegistro({{ r.id }})" class="text-primary" style="
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                                padding: 8px 16px;
+                                color: #4fc3f7;
+                                font-size: 13px;
+                                background: transparent;
+                                border: none;
+                                width: 100%;
+                                text-align: left;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                                border-radius: 0;
+                            ">
+                                <i class="fa-solid fa-pen-to-square" style="width: 20px;"></i> Editar Pago
+                            </button>
+                            {% endif %}
+                            
+                            {% if session.get("rol") in ["admin", "operador"] %}
+                            <a href="/eliminar/{{ r['id'] }}" class="text-danger" onclick="return confirm('⚠️ ¿Estás seguro de eliminar este registro?\n\nEsta acción NO se puede deshacer.');" style="
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                                padding: 8px 16px;
+                                color: #ff6b6b;
+                                font-size: 13px;
+                                text-decoration: none;
+                                background: transparent;
+                                border: none;
+                                width: 100%;
+                                text-align: left;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                                border-radius: 0;
+                            ">
+                                <i class="fa-solid fa-trash-can" style="width: 20px;"></i> Eliminar
+                            </a>
+                            {% endif %}
+                            
+                            {% if not (session.get("rol") == "admin" and r["estado"] == 'pagado') and session.get("rol") not in ["admin", "operador"] %}
+                            <div style="padding: 10px 16px; color: #666; font-size: 13px; text-align: center;">Sin acciones</div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
+            
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin-top:6px;font-size:13px;">
                 <div><span style="color:#888;">Cliente:</span> <span style="color:#fff;">{{ r.nombre }}</span></div>
                 <div><span style="color:#888;">Fecha:</span> <span style="color:#fff;">{{ r.fecha[:10] if r.fecha else '' }}</span></div>
                 <div><span style="color:#888;">Patente:</span> <span style="color:#fff;">{{ r.patente }}</span></div>
                 <div><span style="color:#888;">Atendido:</span> <span style="color:#fff;">{{ r.atendido_por or r.usuario or '-' }}</span></div>
                 <div style="grid-column:1/3;"><span style="color:#888;">Vehículo:</span> <span style="color:#fff;">{{ r.marca }} {{ r.modelo }}</span></div>
-            </div>
                 <div style="grid-column:1/3; margin-top:4px; padding-top:4px; border-top:1px solid rgba(255,255,255,0.05);">
-        <span style="color:#888;">💳 Forma de Pago:</span>
-        <span style="color:#fff;">
-            {% if r.forma_pago %}
-                {% if r.forma_pago == 'efectivo' %}💵 Efectivo
-                {% elif r.forma_pago == 'tarjeta' %}💳 Tarjeta
-                {% elif r.forma_pago == 'transferencia' %}🏦 Transferencia
-                {% elif r.forma_pago == 'cheque' %}📄 Cheque
-                {% else %}🔄 {{ r.forma_pago }}
-                {% endif %}
-            {% else %}
+                    <span style="color:#888;">💳 Forma de Pago:</span>
+                    <span style="color:#fff;">
+                        {% if r.forma_pago %}
+                            {% if r.forma_pago == 'efectivo' %}💵 Efectivo
+                            {% elif r.forma_pago == 'tarjeta' %}💳 Tarjeta
+                            {% elif r.forma_pago == 'transferencia' %}🏦 Transferencia
+                            {% elif r.forma_pago == 'cheque' %}📄 Cheque
+                            {% else %}🔄 {{ r.forma_pago }}
+                            {% endif %}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            
             <div style="margin-top:4px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.05);padding-top:4px;">
                 {{ (r.observaciones_pago or r.observaciones_cliente or '')[:60] }}{% if (r.observaciones_pago or r.observaciones_cliente or '')|length > 60 %}...{% endif %}
             </div>
