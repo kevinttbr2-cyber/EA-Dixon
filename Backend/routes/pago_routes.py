@@ -523,7 +523,7 @@ def crear_repuesto():
 # ============================
 # 13. REPUESTOS - ACTUALIZAR
 # ============================
-@pago_bp.route('/repuestos/<int:id_repuesto>', methods(['PUT'])
+@pago_bp.route('/repuestos/<int:id_repuesto>', methods['PUT'])
 def actualizar_repuesto(id_repuesto):
     try:
         data = request.json
