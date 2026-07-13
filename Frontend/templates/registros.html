@@ -276,58 +276,59 @@
                     <span style="color:#00ff66;font-weight:700;font-size:16px;">${{ "{:,.0f}".format(r.monto) }}</span>
                     
                     <!-- ============================================
-                         DROPDOWN DE 3 PUNTOS EN TARJETA MÓVIL
-                         ============================================ -->
-                    <div class="dropdown-3p dropup">
-                        <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}" style="font-size:22px;">
-                            <i class="fa-solid fa-ellipsis-vertical"></i>
-                        </button>
-                        <div class="menu-3p" data-id="{{ r.id }}">
-                            {% if session.get("rol") == "admin" and r["estado"] == 'pagado' %}
-                            <!-- ✅ CAMBIADO: De <a> a <button> para usar el modal -->
-                            <button onclick="editarRegistro({{ r.id }})" class="text-primary" style="
-                                display: flex;
-                                align-items: center;
-                                gap: 10px;
-                                padding: 8px 16px;
-                                color: #4fc3f7;
-                                font-size: 13px;
-                                background: transparent;
-                                border: none;
-                                width: 100%;
-                                text-align: left;
-                                cursor: pointer;
-                                transition: all 0.2s ease;
-                                border-radius: 0;
-                            ">
-                                <i class="fa-solid fa-pen-to-square" style="width: 20px;"></i> Editar Pago
-                            </button>
-                            {% endif %}
-                            {% if session.get("rol") in ["admin", "operador"] %}
-                            <a href="/eliminar/{{ r['id'] }}" class="text-danger" onclick="return confirm('⚠️ ¿Estás seguro de eliminar este registro?\n\nEsta acción NO se puede deshacer.');" style="
-                                display: flex;
-                                align-items: center;
-                                gap: 10px;
-                                padding: 8px 16px;
-                                color: #ff6b6b;
-                                font-size: 13px;
-                                text-decoration: none;
-                                background: transparent;
-                                border: none;
-                                width: 100%;
-                                text-align: left;
-                                cursor: pointer;
-                                transition: all 0.2s ease;
-                                border-radius: 0;
-                            ">
-                                <i class="fa-solid fa-trash-can" style="width: 20px;"></i> Eliminar
-                            </a>
-                            {% endif %}
-                            {% if not (session.get("rol") == "admin" and r["estado"] == 'pagado') and session.get("rol") not in ["admin", "operador"] %}
-                            <div style="padding: 10px 16px; color: #666; font-size: 13px; text-align: center;">Sin acciones</div>
-                            {% endif %}
-                        </div>
-                    </div>
+     DROPDOWN DE 3 PUNTOS EN TARJETA MÓVIL
+     ============================================ -->
+<div class="dropdown-3p dropup">
+    <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}" style="font-size:22px;">
+        <i class="fa-solid fa-ellipsis-vertical"></i>
+    </button>
+    <div class="menu-3p" data-id="{{ r.id }}">
+        {% if session.get("rol") == "admin" and r["estado"] == 'pagado' %}
+        <button onclick="editarRegistro({{ r.id }})" class="text-primary" style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            color: #4fc3f7;
+            font-size: 13px;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 0;
+        ">
+            <i class="fa-solid fa-pen-to-square" style="width: 20px;"></i> Editar Pago
+        </button>
+        {% endif %}
+        
+        {% if session.get("rol") in ["admin", "operador"] %}
+        <a href="/eliminar/{{ r['id'] }}" class="text-danger" onclick="return confirm('⚠️ ¿Estás seguro de eliminar este registro?\n\nEsta acción NO se puede deshacer.');" style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            color: #ff6b6b;
+            font-size: 13px;
+            text-decoration: none;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 0;
+        ">
+            <i class="fa-solid fa-trash-can" style="width: 20px;"></i> Eliminar
+        </a>
+        {% endif %}
+        
+        {% if not (session.get("rol") == "admin" and r["estado"] == 'pagado') and session.get("rol") not in ["admin", "operador"] %}
+        <div style="padding: 10px 16px; color: #666; font-size: 13px; text-align: center;">Sin acciones</div>
+        {% endif %}
+    </div>
+</div>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin-top:6px;font-size:13px;">
