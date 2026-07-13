@@ -196,6 +196,7 @@
                     <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(5)">Marca ↕</th>
                     <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(6)">Modelo ↕</th>
                     <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(7)">Atendido por ↕</th>
+                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(8)">Forma Pago ↕</th> 
                     <th style="padding:8px 10px;text-align:center;">Acciones</th>
                 </tr>
             </thead>
@@ -214,6 +215,23 @@
                     <td style="padding:6px 8px;text-align:center;">{{ r.marca }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.modelo }}</td>
                     <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
+                    <td style="padding:6px 8px;text-align:center;font-size:12px;">
+    {% if r.forma_pago %}
+        {% if r.forma_pago == 'efectivo' %}
+            <span style="color:#00ff66;">💵 Efectivo</span>
+        {% elif r.forma_pago == 'tarjeta' %}
+            <span style="color:#4fc3f7;">💳 Tarjeta</span>
+        {% elif r.forma_pago == 'transferencia' %}
+            <span style="color:#ffcc00;">🏦 Transferencia</span>
+        {% elif r.forma_pago == 'cheque' %}
+            <span style="color:#ff6b6b;">📄 Cheque</span>
+        {% else %}
+            <span style="color:#888;">🔄 {{ r.forma_pago }}</span>
+        {% endif %}
+    {% else %}
+        <span style="color:#666;">—</span>
+    {% endif %}
+</td>
                     <td style="padding:6px 8px;text-align:center;">
                         <!-- ============================================
                              DROPDOWN DE 3 PUNTOS EN CADA FILA
