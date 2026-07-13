@@ -351,17 +351,51 @@ def validar_pago(id_reg):
         conn = get_connection()
         cur = conn.cursor()
         
-        # Guardar repuestos en tabla separada
+        # ✅ GUARDAR REPUESTOS EN LA TABLA repuestos
         for item in detalles_repuestos:
             nombre = item.get('nombre', '').strip()
-            costo = float(item.get('costo', 0) or 0)
+            costo_venta = float(item.get('costo', 0) or 0)  # Este es el costo que puso el usuario
+            
             if nombre:
-                cur.execute("SELECT id FROM repuestos WHERE nombre = %s", (nombre,))
-                if cur.fetchone():
-                    cur.execute("UPDATE repuestos SET costo = %s, updated_at = CURRENT_TIMESTAMP WHERE nombre = %s", (costo, nombre))
+                # Verificar si el repuesto ya existe en la tabla repuestos
+                cur.execute("SELECT id, costo_proveedor, costo_venta_final FROM repuestos WHERE nombre = %s", (nombre,))
+                existente = cur.fetchone()
+                
+                if existente:
+                    # ✅ Si ya existe, actualizar solo si el costo_venta_final es 0 o diferente
+                    id_existente, costo_prov, costo_venta_existente = existente
+                    if costo_venta_existente == 0 and costo_venta > 0:
+                        # ✅ Actualizar el costo_venta_final si estaba en 0
+                        cur.execute("""
+                            UPDATE repuestos 
+                            SET costo_venta_final = %s, 
+                                updated_at = CURRENT_TIMESTAMP
+                            WHERE id = %s
+                        """, (costo_venta, id_existente))
+                        print(f"✅ Repuesto '{nombre}' actualizado con costo_venta_final: ${costo_venta}")
                 else:
-                    cur.execute("INSERT INTO repuestos (nombre, costo, created_at, updated_at) VALUES (%s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", (nombre, costo))
+                    # ✅ Si NO existe, crearlo
+                    # Calcular costo_proveedor estimado (para no dejarlo en 0)
+                    iva = 1.19
+                    costo_proveedor_estimado = round(costo_venta / 1.19 / 1.3, 0) if costo_venta > 0 else 0
+                    
+                    cur.execute("""
+                        INSERT INTO repuestos 
+                        (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, costo_proveedor_pendiente, created_at, updated_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        RETURNING id
+                    """, (
+                        nombre,
+                        costo_proveedor_estimado,
+                        30,
+                        costo_venta,
+                        'Desde Validación',
+                        costo_proveedor_estimado == 0
+                    ))
+                    id_nuevo = cur.fetchone()[0]
+                    print(f"✅ Repuesto '{nombre}' creado con costo_venta_final: ${costo_venta} (ID: {id_nuevo})")
         
+        # ✅ Continuar con la validación del pago
         detalles_json = json.dumps(detalles_repuestos)
         
         cur.execute("""
@@ -401,6 +435,8 @@ def validar_pago(id_reg):
         return jsonify({"success": True})
     except Exception as e:
         print(f"Error en validar_pago: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
