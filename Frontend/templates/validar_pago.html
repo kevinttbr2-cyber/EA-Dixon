@@ -758,12 +758,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const costoVentaFinal = parseFloat(costoInput.value) || 0;
             
             if (nombre && costoVentaFinal > 0) {
+                // 🔍 Verificar si el repuesto ya existe
                 fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(nombre)}`)
                     .then(r => r.json())
                     .then(data => {
+                        // Verificar si existe exactamente el mismo nombre (case insensitive)
                         const existe = data.some(item => item.nombre.toLowerCase() === nombre.toLowerCase());
+                        
                         if (!existe) {
-                            // ✅ Preguntar costo proveedor
+                            // 💡 Preguntar al usuario el costo de compra
                             const costoProveedor = prompt(
                                 `📦 Ingresa el costo de compra para "${nombre}":\n\n` +
                                 `💰 Precio de venta final: $${costoVentaFinal}\n` +
@@ -772,11 +775,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 Math.round(costoVentaFinal / 1.19 / 1.3)
                             );
                             
-                            if (costoProveedor === null) return;
+                            if (costoProveedor === null) {
+                                alert('❌ Operación cancelada');
+                                return;
+                            }
                             
                             const costoProv = parseFloat(costoProveedor) || 0;
                             
-                            // ✅ Calcular margen
+                            // ✅ Calcular margen automáticamente
                             let margenFinal = 30;
                             let pendiente = costoProv === 0;
                             
@@ -787,19 +793,25 @@ document.addEventListener('DOMContentLoaded', function() {
                                 margenFinal = Math.round(margenCalculado * 10) / 10;
                             }
                             
-                            // ✅ GUARDAR con costo_venta_final
+                            // ✅ CALCULAR costo_venta_final exacto (usar el que ingresó el usuario)
+                            // ✅ IMPORTANTE: El costo_venta_final ES el valor que el usuario ingresó
+                            const costoVentaFinalGuardar = costoVentaFinal;
+                            
+                            // ❓ Confirmar antes de guardar
                             const confirmar = confirm(
-                                `📊 Resumen:\n\n` +
-                                `🔧 ${nombre}\n` +
+                                `📊 Resumen del repuesto:\n\n` +
+                                `🔧 Nombre: ${nombre}\n` +
                                 `💰 Costo Proveedor: $${costoProv}\n` +
-                                `💵 Costo Venta Final: $${costoVentaFinal}\n` +
+                                `💵 Costo Venta Final: $${costoVentaFinalGuardar}\n` +
                                 `📈 Margen: ${margenFinal}%\n` +
-                                `📌 Estado: ${pendiente ? 'PENDIENTE' : 'COMPLETO'}`
+                                `📌 Estado: ${pendiente ? 'PENDIENTE (falta costo)' : 'COMPLETO'}\n` +
+                                `🏷️ IVA incluido: 19%\n\n` +
+                                `¿Guardar este repuesto?`
                             );
                             
                             if (!confirmar) return;
                             
-                            // ✅ ENVIAR costo_venta_final
+                            // 💾 Guardar repuesto CON el costo_venta_final
                             fetch(`${API_URL}/api/repuestos`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -807,7 +819,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     nombre: nombre, 
                                     costo_proveedor: costoProv,
                                     margen_ganancia: margenFinal,
-                                    costo_venta_final: costoVentaFinal,  // ✅ CLAVE
+                                    costo_venta_final: costoVentaFinalGuardar,  // ✅ CLAVE
                                     proveedor: 'Manual',
                                     costo_proveedor_pendiente: pendiente
                                 })
@@ -815,23 +827,43 @@ document.addEventListener('DOMContentLoaded', function() {
                             .then(r => r.json())
                             .then(resp => {
                                 if (resp.success) {
-                                    alert(`✅ Repuesto "${nombre}" guardado con costo $${costoVentaFinal}`);
+                                    alert(`✅ Repuesto "${nombre}" guardado correctamente\n\n` +
+                                          `💰 Costo Venta Final: $${costoVentaFinalGuardar}\n` +
+                                          `📈 Margen: ${margenFinal}%\n` +
+                                          `${pendiente ? '⚠️ Pendiente: falta costo de proveedor' : '✅ Repuesto completo'}`);
+                                    // Recargar para actualizar
                                     location.reload();
+                                } else {
+                                    alert('❌ Error al guardar el repuesto: ' + (resp.error || 'Desconocido'));
                                 }
                             })
-                            .catch(() => alert('❌ Error de conexión'));
+                            .catch(() => {
+                                alert('❌ Error de conexión al guardar el repuesto');
+                            });
                         } else {
-                            // ✅ Repuesto ya existe, mostrar su costo_venta_final
+                            // ✅ Repuesto ya existe, mostrar su información
                             const existente = data.find(item => item.nombre.toLowerCase() === nombre.toLowerCase());
+                            alert(
+                                `ℹ️ El repuesto "${nombre}" ya existe:\n\n` +
+                                `💰 Costo Proveedor: $${existente.costo_proveedor || 0}\n` +
+                                `💵 Costo Venta Final: $${existente.costo_venta_final || 0}\n` +
+                                `📈 Margen: ${existente.margen_ganancia || 0}%\n` +
+                                `📌 Estado: ${existente.costo_proveedor_pendiente ? 'PENDIENTE' : 'COMPLETO'}`
+                            );
+                            // Actualizar el costo en el campo
                             costoInput.value = existente.costo_venta_final || 0;
-                            alert(`ℹ️ "${nombre}" ya existe\n💰 Costo Venta: $${existente.costo_venta_final || 0}`);
                             actualizarTotalRepuestos();
                         }
                     })
-                    .catch(() => alert('❌ Error de conexión'));
+                    .catch(() => {
+                        alert('❌ Error al verificar el repuesto');
+                    });
             } else {
-                if (!nombre) alert('⚠️ Escribe el nombre del repuesto');
-                else if (costoVentaFinal <= 0) alert('⚠️ El costo debe ser mayor a 0');
+                if (!nombre) {
+                    alert('⚠️ Debes escribir el nombre del repuesto');
+                } else if (costoVentaFinal <= 0) {
+                    alert('⚠️ El costo de venta debe ser mayor a 0');
+                }
             }
         }
     }
