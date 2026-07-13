@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=3">
     
     <style>
-        /* ... tus estilos ... */
         body { background: #0a0a0a; color: #ffffff; font-family: 'Roboto', sans-serif; min-height: 100vh; padding-top: 70px; }
         .base-container { background: rgba(15, 15, 15, 0.85); border: 1px solid #00ff66; border-radius: 16px; padding: 25px 30px; backdrop-filter: blur(8px); max-width: 1200px; margin: 0 auto; }
         .card-android { background: rgba(20, 20, 20, 0.70); border: 1px solid rgba(0, 255, 102, 0.30); border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; backdrop-filter: blur(4px); }
@@ -31,38 +30,88 @@
         .navbar { background: rgba(10, 10, 10, 0.95) !important; border-bottom: 2px solid #00ff66 !important; padding: 8px 15px !important; position: fixed !important; top: 0 !important; width: 100% !important; z-index: 1000 !important; }
         .navbar-brand { position: absolute; left: 50%; transform: translateX(-50%); }
         .navbar-logo { height: 45px; width: auto; }
-        #botonFlotante { position: fixed; bottom: 30px; right: 30px; background: #00ff66; color: #000; padding: 14px 24px; border-radius: 50px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 15px rgba(0,255,102,0.4); z-index: 1000; display: flex; align-items: center; gap: 10px; }
+        
+        /* BOTÓN FLOTANTE +CLIENTE */
+        #botonFlotante { 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            background: #00ff66; 
+            color: #000; 
+            padding: 14px 24px; 
+            border-radius: 50px; 
+            font-weight: 700; 
+            text-decoration: none; 
+            box-shadow: 0 4px 15px rgba(0,255,102,0.4); 
+            z-index: 1000; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            transition: all 0.3s ease;
+        }
+        #botonFlotante:hover {
+            transform: scale(1.05);
+            color: #000;
+            text-decoration: none;
+        }
+        
+        /* BOTÓN FLOTANTE VENTA RÁPIDA */
+        #botonVentaRapida {
+            position: fixed;
+            bottom: 30px;
+            right: 190px;
+            background: #4fc3f7;
+            color: #000;
+            padding: 14px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(79,195,247,0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        #botonVentaRapida:hover {
+            transform: scale(1.05);
+            color: #000;
+            text-decoration: none;
+        }
+        
         .dropdown-menu { background: rgba(15, 15, 15, 0.95) !important; border: 1px solid #00ff66 !important; backdrop-filter: blur(10px) !important; border-radius: 12px !important; padding: 8px !important; min-width: 220px !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important; }
         .dropdown-item { color: #e0e0e0 !important; padding: 8px 16px !important; border-radius: 8px !important; transition: all 0.2s ease !important; font-size: 14px !important; }
         .dropdown-item:hover { background: rgba(0, 255, 102, 0.10) !important; color: #00ff66 !important; }
         .dropdown-divider { border-color: rgba(255, 255, 255, 0.06) !important; margin: 6px 0 !important; }
-        @media (max-width: 768px) { .base-container { padding: 15px !important; } .navbar-brand { position: static; transform: none; } #botonFlotante { padding: 10px 16px; font-size: 14px; bottom: 20px; right: 20px; } .dropdown-menu { text-align: center; background: rgba(10, 10, 10, 0.98) !important; } }
+        
+        @media (max-width: 768px) { 
+            .base-container { padding: 15px !important; } 
+            .navbar-brand { position: static; transform: none; } 
+            #botonFlotante { padding: 10px 16px; font-size: 14px; bottom: 20px; right: 20px; }
+            #botonVentaRapida { right: 20px; bottom: 80px; padding: 10px 16px; font-size: 14px; }
+            .dropdown-menu { text-align: center; background: rgba(10, 10, 10, 0.98) !important; } 
+        }
     </style>
 </head>
 <body>
 
-    <!-- ============================
-         NAVBAR INCLUIDO DESDE ARCHIVO SEPARADO
-         ============================ -->
+    <!-- NAVBAR -->
     {% include 'navbar.html' %}
 
-    <!-- ============================
-         CONTENIDO PRINCIPAL
-         ============================ -->
+    <!-- CONTENIDO PRINCIPAL -->
     <div class="base-container mt-4 mb-5">
         {% block content %}{% endblock %}
     </div>
 
-    <!-- ============================
-         BOTÓN FLOTANTE
-         ============================ -->
+    <!-- BOTONES FLOTANTES -->
     <a href="/agregar_cliente" id="botonFlotante">
         <i class="fas fa-car"></i> + CLIENTE
     </a>
+    <a href="/venta_rapida" id="botonVentaRapida">
+        <i class="fas fa-bolt"></i> VENTA
+    </a>
 
-    <!-- ============================
-         SCRIPTS DE BOOTSTRAP
-         ============================ -->
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
