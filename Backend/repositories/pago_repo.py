@@ -46,12 +46,12 @@ class PagoRepository:
                 UPDATE pagos 
                 SET monto=%s, estado=%s, observaciones_pago=%s, hora_pago=%s,
                     atendido_por=%s, diagnostico=%s, reparacion=%s, resultado=%s,
-                    tiempo_estimado=%s
+                    tiempo_estimado=%s, forma_pago = %s 
                 WHERE id=%s
             """, (
                 pago.monto, pago.estado, pago.observaciones_pago, pago.hora_pago,
                 pago.atendido_por, pago.diagnostico, pago.reparacion, pago.resultado,
-                pago.tiempo_estimado, id_reg
+                pago.tiempo_estimado, pago.forma_pago, id_reg
             ))
             conn.commit()
             cur.close()
