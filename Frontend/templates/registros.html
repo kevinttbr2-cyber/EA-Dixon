@@ -203,7 +203,7 @@
                 {% for r in registros %}
                 <tr data-id="{{ r.id }}" class="fila-registro">
                     <td style="padding:6px 8px;text-align:center;font-weight:600;">
-                        <a href="/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" style="color:#00ff66;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                        <a href="https://ea-dixon-production.up.railway.app/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" style="color:#00ff66;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
                             <i class="fa-solid fa-file-pdf" style="font-size:11px;"></i> {{ r.id }}
                         </a>
                     </td>
