@@ -471,7 +471,12 @@ def crear_repuesto():
         costo_proveedor = float(data.get('costo_proveedor', 0))
         margen_ganancia = float(data.get('margen_ganancia', 30))
         proveedor = data.get('proveedor', '').strip()
-        costo_venta_final = float(data.get('costo_venta_final', 0))
+        costo_venta_final = float(data.get('costo_venta_final', 0))  # ✅ RECIBIR
+        
+        print(f"📥 Recibido en POST repuestos:")
+        print(f"  - nombre: {nombre}")
+        print(f"  - costo_proveedor: {costo_proveedor}")
+        print(f"  - costo_venta_final: {costo_venta_final}")  # ✅ LOG
         
         # ✅ Si NO se envió costo_venta_final pero hay costo_proveedor, calcularlo
         if costo_venta_final == 0 and costo_proveedor > 0:
@@ -479,6 +484,7 @@ def crear_repuesto():
             costo_con_iva = costo_proveedor * iva
             costo_venta_final = costo_con_iva * (1 + (margen_ganancia / 100))
             costo_venta_final = round(costo_venta_final, 0)
+            print(f"  - costo_venta_final calculado: {costo_venta_final}")
         
         # ✅ Pendiente si no hay costo_proveedor
         costo_proveedor_pendiente = costo_proveedor == 0
