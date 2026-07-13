@@ -172,10 +172,16 @@ def pagar(id_reg):
         }
         try:
             resp = requests.post(f"{BACKEND_URL}/api/pagar/{id_reg}", json=data, timeout=10)
+            print(f"📥 Respuesta pago: {resp.status_code} - {resp.text}")
             if resp.status_code == 200:
+                # 🔥 REDIRIGIR A PÁGINA DE ÉXITO
                 return redirect(f"/pago_exitoso/{id_reg}")
-        except:
-            pass
+            else:
+                return f"Error al procesar el pago: {resp.text}", 500
+        except Exception as e:
+            print(f"❌ Error en POST pago: {e}")
+            return "Error de conexión al procesar el pago", 500
+    
     return render_template("pagar.html", id=id_reg, registro=registro)
 
 @app.route('/pago_exitoso/<int:id_reg>')
