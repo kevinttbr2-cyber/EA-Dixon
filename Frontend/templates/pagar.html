@@ -7,16 +7,15 @@
         💰 Registrar Pago
     </h2>
 
-    <!-- ✅ AGREGAR action -->
-    <form method="POST" action="/api/pagar/{{ id }}">
+    <!-- ✅ URL COMPLETA DE RAILWAY -->
+    <form method="POST" action="https://ea-dixon-production.up.railway.app/api/pagar/{{ id }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
         <div class="mb-3">
             <label style="color: #90e0a0;">💰 Monto pagado</label>
-            <input type="number" name="monto" class="form-control" required step="0.01">
+            <input type="number" name="monto" class="form-control" required step="0.01" value="0">
         </div>
 
-        <!-- ✅ Forma de Pago (con name) -->
         <div class="mb-3">
             <label style="color: #90e0a0;">💳 Forma de Pago</label>
             <select name="forma_pago" id="formaPago" class="form-control" style="
@@ -58,13 +57,14 @@
             </div>
         </div>
 
-        <button class="btn btn-primary w-100" style="
+        <button type="submit" class="btn btn-primary w-100" style="
             background: #00ff66 !important;
             color: #000 !important;
             font-weight: 700;
             border: none;
             border-radius: 10px;
             padding: 12px;
+            cursor: pointer;
         ">Confirmar Pago</button>
     </form>
 </div>
@@ -73,7 +73,6 @@
 document.querySelector('form').addEventListener('submit', function(e) {
     const formaPago = document.getElementById('formaPago').value;
     console.log('📤 forma_pago seleccionado:', formaPago);
-    // ✅ AHORA VERÁS EN LA CONSOLA EL VALOR SELECCIONADO
 });
 </script>
 
