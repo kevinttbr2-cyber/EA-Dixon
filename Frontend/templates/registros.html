@@ -457,6 +457,11 @@
      ============================================ -->
 <script>
 // ============================================
+// CONFIGURACIÓN - URL DEL BACKEND
+// ============================================
+const API_URL = 'https://ea-dixon-production.up.railway.app';
+
+// ============================================
 // TOGGLE DROPDOWN DE 3 PUNTOS (FUNCIÓN GLOBAL)
 // ============================================
 function toggleMenu3p(button, id) {
@@ -513,7 +518,7 @@ document.addEventListener('keydown', function(e) {
 function confirmarExportarYBorrar() {
     if (confirm('⚠️ ¿Estás seguro de que quieres EXPORTAR y BORRAR TODOS los registros?\n\nSe descargará un archivo de respaldo y luego se eliminarán todos los datos.')) {
         if (confirm('⚠️ Confirmación final: ¿Realmente deseas EXPORTAR y BORRAR TODA la base de datos?\n\nEsta acción NO se puede deshacer.')) {
-            fetch('/exportar_y_borrar', {
+            fetch(`${API_URL}/exportar_y_borrar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -559,8 +564,8 @@ function verDetalle(id) {
     modal.style.display = 'flex';
     contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
 
-    // ✅ URL RELATIVA (sin hardcode)
-    fetch(`/api/registro/${id}`)
+    // ✅ URL COMPLETA DE RAILWAY
+    fetch(`${API_URL}/api/registro/${id}`)
         .then(resp => {
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             return resp.json();
@@ -613,8 +618,8 @@ function editarRegistro(id) {
     const modal = document.getElementById('modalEditarCompleto');
     modal.style.display = 'flex';
 
-    // ✅ URL RELATIVA (sin hardcode)
-    fetch(`/api/registro/${id}`)
+    // ✅ URL COMPLETA DE RAILWAY
+    fetch(`${API_URL}/api/registro/${id}`)
         .then(resp => {
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             return resp.json();
@@ -693,8 +698,8 @@ document.getElementById('formEditarCompleto').onsubmit = async function(e) {
     };
 
     try {
-        // ✅ URL CORREGIDA: sin /api/ (coincide con tu ruta en pago_routes.py)
-        const resp = await fetch(`/editar_completo/${id}`, {
+        // ✅ URL COMPLETA DE RAILWAY
+        const resp = await fetch(`${API_URL}/editar_completo/${id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -723,8 +728,8 @@ function eliminarRegistro(id) {
     
     if (!confirm(`¿Eliminar el registro #${id} permanentemente?`)) return;
     
-    // ✅ URL RELATIVA
-    fetch(`/api/eliminar_registro/${id}`, {
+    // ✅ URL COMPLETA DE RAILWAY
+    fetch(`${API_URL}/api/eliminar_registro/${id}`, {
         method: 'DELETE'
     }).then(resp => {
         if (resp.ok) {
