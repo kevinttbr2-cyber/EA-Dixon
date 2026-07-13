@@ -7,13 +7,12 @@
         💰 Registrar Pago
     </h2>
 
-    <!-- ✅ URL COMPLETA DE RAILWAY -->
     <form method="POST" action="https://ea-dixon-production.up.railway.app/api/pagar/{{ id }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
         <div class="mb-3">
             <label style="color: #90e0a0;">💰 Monto pagado</label>
-            <input type="number" name="monto" class="form-control" required step="0.01" value="0">
+            <input type="number" name="monto" id="montoInput" class="form-control" required step="0.01" value="0">
         </div>
 
         <div class="mb-3">
@@ -30,22 +29,23 @@
                 <option value="efectivo">💵 Efectivo</option>
                 <option value="tarjeta">💳 Tarjeta</option>
                 <option value="transferencia">🏦 Transferencia</option>
+                <option value="debito">💳 Débito</option>
             </select>
         </div>
 
         <div class="mb-3">
             <label style="color: #90e0a0;">🩺 Diagnóstico</label>
-            <textarea name="diagnostico" class="form-control" rows="2"></textarea>
+            <textarea name="diagnostico" id="diagnosticoInput" class="form-control" rows="2"></textarea>
         </div>
 
         <div class="mb-3">
             <label style="color: #90e0a0;">🔧 Reparación realizada</label>
-            <textarea name="reparacion" class="form-control" rows="2">Reparación realizada</textarea>
+            <textarea name="reparacion" id="reparacionInput" class="form-control" rows="2">Reparación realizada</textarea>
         </div>
 
         <div class="mb-3">
             <label style="color: #90e0a0;">📝 Observaciones</label>
-            <textarea name="observaciones_pago" class="form-control" rows="2"></textarea>
+            <textarea name="observaciones_pago" id="observacionesInput" class="form-control" rows="2"></textarea>
         </div>
 
         <div class="mb-3">
@@ -70,25 +70,28 @@
 </div>
 
 <script>
-// ✅ UN SOLO SCRIPT - CON URL COMPLETA
+// ✅ UN SOLO SCRIPT
 document.querySelector('form').addEventListener('submit', function(e) {
-    e.preventDefault();  // Evita el envío normal del formulario
+    e.preventDefault();
     
-    // ✅ Obtener valores del formulario
-    const monto = document.querySelector('input[name="monto"]').value;
-    const formaPago = document.getElementById('formaPago').value;
-    const diagnostico = document.querySelector('textarea[name="diagnostico"]').value;
-    const reparacion = document.querySelector('textarea[name="reparacion"]').value;
-    const observaciones_pago = document.querySelector('textarea[name="observaciones_pago"]').value;
+    // ✅ OBTENER VALORES
+    const monto = document.getElementById('montoInput').value;
+    const formaPago = document.getElementById('formaPago').value;  // 👈 ESTO DEBE FUNCIONAR
+    const diagnostico = document.getElementById('diagnosticoInput').value;
+    const reparacion = document.getElementById('reparacionInput').value;
+    const observaciones_pago = document.getElementById('observacionesInput').value;
     const resultado = document.querySelector('input[name="resultado"]:checked').value;
     
-    console.log('📤 Enviando pago:');
-    console.log('  - monto:', monto);
-    console.log('  - forma_pago:', formaPago);
+    // ✅ LOG PARA VERIFICAR (MUY IMPORTANTE)
+    console.log('📤 forma_pago SELECCIONADO:', formaPago);
+    console.log('📤 monto:', monto);
+    
+    // ✅ SI EL LOG MUESTRA "efectivo" SIEMPRE, EL PROBLEMA ES EL SELECT
+    // SI EL LOG MUESTRA "transferencia" O "tarjeta", EL PROBLEMA ES EL BACKEND
     
     const data = {
-        monto: monto,
-        forma_pago: formaPago,
+        monto: monto || 0,
+        forma_pago: formaPago,  // 👈 ENVIAR EL VALOR CAPTURADO
         diagnostico: diagnostico,
         reparacion: reparacion,
         observaciones_pago: observaciones_pago,
@@ -96,32 +99,25 @@ document.querySelector('form').addEventListener('submit', function(e) {
         atendido_por: '{{ session.get("nombre_completo", "Técnico") }}'
     };
     
-    // ✅ URL COMPLETA DE RAILWAY
+    console.log('📦 Data enviada:', data);  // 👈 VERIFICAR AQUÍ
+    
     const url = 'https://ea-dixon-production.up.railway.app/api/pagar/{{ id }}';
-    console.log('📡 Enviando a:', url);
     
     fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(response => {
-        console.log('📥 Respuesta status:', response.status);
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log('📥 Respuesta data:', data);
         if (data.success) {
-            // ✅ REDIRIGIR AL PDF
-            const id = {{ id }};
-            const firma = '{{ firma }}';
-            window.location.href = `/pago_exitoso/${id}`;
+            window.location.href = `/pago_exitoso/{{ id }}`;
         } else {
             alert('❌ Error: ' + (data.error || 'Error desconocido'));
         }
     })
     .catch(error => {
-        console.error('❌ Error de conexión:', error);
+        console.error('❌ Error:', error);
         alert('❌ Error de conexión: ' + error.message);
     });
 });
