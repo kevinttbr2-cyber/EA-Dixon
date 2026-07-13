@@ -73,13 +73,15 @@
 
     <!-- TABLA DE REPUESTOS -->
     <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(0, 255, 102, 0.15); background: #141414;">
-        <table class="table table-dark table-hover table-bordered mb-0" id="tablaRepuestos" style="font-size: 13px; min-width: 700px; width: 100%;">
+        <table class="table table-dark table-hover table-bordered mb-0" id="tablaRepuestos" style="font-size: 13px; min-width: 900px; width: 100%;">
             <thead style="background: #2a6d44 !important; color: #ffffff !important;">
                 <tr>
                     <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(0)">ID ↕</th>
                     <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(1)">Nombre ↕</th>
-                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(2)">Costo ($) ↕</th>
-                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(3)">Proveedor</th>
+                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(2)">Costo Proveedor ($) ↕</th>
+                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(3)">Margen (%)</th>
+                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(4)">💰 Costo Venta Final ↕</th>
+                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(5)">Proveedor</th>
                     <th style="padding: 8px 10px; text-align: center;">Acciones</th>
                 </tr>
             </thead>
@@ -88,8 +90,14 @@
                 <tr data-id="{{ r.id }}" class="fila-repuesto-lista">
                     <td style="padding: 6px 8px; text-align: center;">{{ r.id }}</td>
                     <td style="padding: 6px 8px; text-align: center;">{{ r.nombre }}</td>
-                    <td style="padding: 6px 8px; text-align: center; color: #ffcc00; font-weight: 600;">
-                        ${{ "{:,.0f}".format(r.costo|float) }}
+                    <td style="padding: 6px 8px; text-align: center; color: #ffcc00;">
+                        ${{ "{:,.0f}".format(r.costo_proveedor|float) }}
+                    </td>
+                    <td style="padding: 6px 8px; text-align: center; color: #4fc3f7;">
+                        {{ r.margen_ganancia|float|round(0) }}%
+                    </td>
+                    <td style="padding: 6px 8px; text-align: center; color: #00ff66; font-weight: 700; font-size: 15px;">
+                        ${{ "{:,.0f}".format(r.costo_venta_final|float) }}
                     </td>
                     <td style="padding: 6px 8px; text-align: center;">{{ r.proveedor or '-' }}</td>
                     <td style="padding: 6px 8px; text-align: center; display: flex; gap: 4px; justify-content: center;">
@@ -119,7 +127,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5" style="text-align: center; color: #666; padding: 40px 0;">
+                    <td colspan="7" style="text-align: center; color: #666; padding: 40px 0;">
                         <i class="fa-solid fa-box-open" style="font-size: 48px; color: #00ff66; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
                         <p style="font-size: 16px;">No hay repuestos registrados</p>
                         <p style="color: #888; font-size: 13px;">Haz clic en "Agregar repuesto" para crear uno</p>
@@ -135,7 +143,7 @@
      MODAL AGREGAR REPUESTO
      ============================ -->
 <div id="modalAgregarRepuesto" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #00ff66;border-radius:16px;padding:25px 30px;max-width:450px;width:95%;">
+    <div style="background:rgba(15,15,15,0.98);border:2px solid #00ff66;border-radius:16px;padding:25px 30px;max-width:500px;width:95%;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
             <h3 style="color:#00ff66;margin:0;font-size:20px;">➕ Agregar Repuesto</h3>
             <button onclick="cerrarModalAgregar()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
@@ -146,8 +154,18 @@
                 <input type="text" name="nombre" id="inputNombreRepuesto" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label style="color:#90e0a0;font-size:13px;">Costo ($) *</label>
-                <input type="number" name="costo" id="inputCostoRepuesto" class="form-control" step="0.01" required>
+                <label style="color:#90e0a0;font-size:13px;">Costo Proveedor ($) *</label>
+                <input type="number" name="costo_proveedor" id="inputCostoProveedor" class="form-control" step="0.01" required>
+            </div>
+            <div class="mb-3">
+                <label style="color:#90e0a0;font-size:13px;">Margen de Ganancia (%)</label>
+                <input type="number" name="margen_ganancia" id="inputMargenGanancia" class="form-control" step="0.1" value="30">
+                <small style="color:#666;font-size:11px;">💡 El IVA (19%) se aplica automáticamente</small>
+            </div>
+            <div style="background:rgba(0,255,102,0.06);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(0,255,102,0.10);">
+                <span style="color:#888;font-size:12px;">📊 Costo Venta Final estimado:</span>
+                <span id="previewCostoVenta" style="color:#00ff66;font-weight:700;font-size:18px;display:block;text-align:center;">$0</span>
+                <small style="color:#666;font-size:10px;">Fórmula: (Costo Proveedor × 1.19) + Margen</small>
             </div>
             <div class="mb-3">
                 <label style="color:#90e0a0;font-size:13px;">Proveedor</label>
@@ -164,7 +182,7 @@
      MODAL EDITAR REPUESTO
      ============================ -->
 <div id="modalEditarRepuesto" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #4fc3f7;border-radius:16px;padding:25px 30px;max-width:450px;width:95%;">
+    <div style="background:rgba(15,15,15,0.98);border:2px solid #4fc3f7;border-radius:16px;padding:25px 30px;max-width:500px;width:95%;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
             <h3 style="color:#4fc3f7;margin:0;font-size:20px;">✏️ Editar Repuesto</h3>
             <button onclick="cerrarModalEditar()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
@@ -176,8 +194,18 @@
                 <input type="text" name="nombre" id="editNombreRepuesto" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label style="color:#90e0a0;font-size:13px;">Costo ($) *</label>
-                <input type="number" name="costo" id="editCostoRepuesto" class="form-control" step="0.01" required>
+                <label style="color:#90e0a0;font-size:13px;">Costo Proveedor ($) *</label>
+                <input type="number" name="costo_proveedor" id="editCostoProveedor" class="form-control" step="0.01" required>
+            </div>
+            <div class="mb-3">
+                <label style="color:#90e0a0;font-size:13px;">Margen de Ganancia (%)</label>
+                <input type="number" name="margen_ganancia" id="editMargenGanancia" class="form-control" step="0.1" value="30">
+                <small style="color:#666;font-size:11px;">💡 El IVA (19%) se aplica automáticamente</small>
+            </div>
+            <div style="background:rgba(0,255,102,0.06);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(0,255,102,0.10);">
+                <span style="color:#888;font-size:12px;">📊 Costo Venta Final estimado:</span>
+                <span id="editPreviewCostoVenta" style="color:#00ff66;font-weight:700;font-size:18px;display:block;text-align:center;">$0</span>
+                <small style="color:#666;font-size:10px;">Fórmula: (Costo Proveedor × 1.19) + Margen</small>
             </div>
             <div class="mb-3">
                 <label style="color:#90e0a0;font-size:13px;">Proveedor</label>
@@ -231,9 +259,13 @@
                 const celdasB = b.querySelectorAll('td');
                 valA = celdasA[columna]?.textContent.trim() || '';
                 valB = celdasB[columna]?.textContent.trim() || '';
-                if (columna === 2) {
+                if (columna === 2 || columna === 4) {
                     valA = parseFloat(valA.replace(/[$,]/g, '')) || 0;
                     valB = parseFloat(valB.replace(/[$,]/g, '')) || 0;
+                }
+                if (columna === 3) {
+                    valA = parseFloat(valA) || 0;
+                    valB = parseFloat(valB) || 0;
                 }
                 if (columna === 0) {
                     valA = parseInt(valA) || 0;
@@ -247,11 +279,48 @@
         };
 
         // ============================
-        // 3. AGREGAR REPUESTO
+        // 3. PREVIEW COSTO VENTA (AGREGAR)
+        // ============================
+        function calcularPreview(modal) {
+            const isEdit = modal === 'edit';
+            const costoInput = document.getElementById(isEdit ? 'editCostoProveedor' : 'inputCostoProveedor');
+            const margenInput = document.getElementById(isEdit ? 'editMargenGanancia' : 'inputMargenGanancia');
+            const previewSpan = document.getElementById(isEdit ? 'editPreviewCostoVenta' : 'previewCostoVenta');
+            
+            const costo = parseFloat(costoInput.value) || 0;
+            const margen = parseFloat(margenInput.value) || 0;
+            
+            // Fórmula: (Costo × 1.19) + (Costo × 1.19 × Margen/100)
+            const iva = 1.19;
+            const costoConIva = costo * iva;
+            const costoFinal = costoConIva * (1 + (margen / 100));
+            
+            previewSpan.textContent = '$' + Math.round(costoFinal).toLocaleString('es-CL');
+        }
+
+        // Eventos para preview en agregar
+        document.getElementById('inputCostoProveedor').addEventListener('input', function() {
+            calcularPreview('agregar');
+        });
+        document.getElementById('inputMargenGanancia').addEventListener('input', function() {
+            calcularPreview('agregar');
+        });
+
+        // Eventos para preview en editar
+        document.getElementById('editCostoProveedor').addEventListener('input', function() {
+            calcularPreview('edit');
+        });
+        document.getElementById('editMargenGanancia').addEventListener('input', function() {
+            calcularPreview('edit');
+        });
+
+        // ============================
+        // 4. AGREGAR REPUESTO
         // ============================
         window.abrirModalAgregar = function() {
             document.getElementById('modalAgregarRepuesto').style.display = 'flex';
             document.getElementById('inputNombreRepuesto').focus();
+            calcularPreview('agregar');
         };
 
         window.cerrarModalAgregar = function() {
@@ -263,7 +332,8 @@
             e.preventDefault();
             const data = {
                 nombre: document.getElementById('inputNombreRepuesto').value.trim(),
-                costo: parseFloat(document.getElementById('inputCostoRepuesto').value) || 0,
+                costo_proveedor: parseFloat(document.getElementById('inputCostoProveedor').value) || 0,
+                margen_ganancia: parseFloat(document.getElementById('inputMargenGanancia').value) || 30,
                 proveedor: document.getElementById('inputProveedorRepuesto').value.trim()
             };
 
@@ -286,22 +356,25 @@
         });
 
         // ============================
-        // 4. EDITAR REPUESTO
+        // 5. EDITAR REPUESTO
         // ============================
         document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
                 const fila = this.closest('.fila-repuesto-lista');
                 const nombre = fila.querySelector('td:nth-child(2)').textContent;
-                const costo = fila.querySelector('td:nth-child(3)').textContent.replace(/[$,]/g, '');
-                const proveedor = fila.querySelector('td:nth-child(4)').textContent;
+                const costoProveedor = fila.querySelector('td:nth-child(3)').textContent.replace(/[$,]/g, '');
+                const margen = fila.querySelector('td:nth-child(4)').textContent.replace('%', '');
+                const proveedor = fila.querySelector('td:nth-child(6)').textContent;
                 
                 document.getElementById('editRepuestoId').value = id;
                 document.getElementById('editNombreRepuesto').value = nombre;
-                document.getElementById('editCostoRepuesto').value = costo;
+                document.getElementById('editCostoProveedor').value = costoProveedor;
+                document.getElementById('editMargenGanancia').value = margen;
                 document.getElementById('editProveedorRepuesto').value = proveedor === '-' ? '' : proveedor;
                 
                 document.getElementById('modalEditarRepuesto').style.display = 'flex';
+                calcularPreview('edit');
             });
         });
 
@@ -315,7 +388,8 @@
             const id = document.getElementById('editRepuestoId').value;
             const data = {
                 nombre: document.getElementById('editNombreRepuesto').value.trim(),
-                costo: parseFloat(document.getElementById('editCostoRepuesto').value) || 0,
+                costo_proveedor: parseFloat(document.getElementById('editCostoProveedor').value) || 0,
+                margen_ganancia: parseFloat(document.getElementById('editMargenGanancia').value) || 30,
                 proveedor: document.getElementById('editProveedorRepuesto').value.trim()
             };
 
@@ -338,7 +412,7 @@
         });
 
         // ============================
-        // 5. ELIMINAR REPUESTO
+        // 6. ELIMINAR REPUESTO
         // ============================
         document.querySelectorAll('.btn-eliminar-repuesto-lista').forEach(btn => {
             btn.addEventListener('click', function() {
