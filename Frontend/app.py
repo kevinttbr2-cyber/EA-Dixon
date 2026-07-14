@@ -718,9 +718,18 @@ def balance_ventas():
         trabajo_margen = 0
         directa_margen = 0
     
+    hoy = datetime.now().strftime('%Y-%m-%d')
+    hoy_count = sum(1 for r in registros if r.get('fecha', '') == hoy)
+    registros_7d = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')]
+    registros_mes = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')]
+    
     return render_template(
         "balance_ventas.html",
         registros=registros,
+        registros_7d=registros_7d,
+        registros_mes=registros_mes,
+        hoy_count=hoy_count,
+        hoy_str=hoy,
         total_ventas=total_ventas,
         total_trabajo=total_trabajo,
         total_directa=total_directa,
