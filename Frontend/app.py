@@ -63,7 +63,36 @@ def generar_firma_pdf(id_reg):
     
 @app.context_processor
 def inject_globals():
-    return dict(backend_url=BACKEND_URL)
+    def fecha_espanol(fecha):
+        if not fecha:
+            return ''
+        if isinstance(fecha, str):
+            try:
+                fecha = datetime.strptime(fecha, '%Y-%m-%d')
+            except:
+                return fecha
+        dias = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
+        meses = {1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'}
+        return f"{dias.get(fecha.weekday(), '')} {fecha.day} de {meses.get(fecha.month, '')} {fecha.year}"
+    
+    # ✅ También puedes agregar la versión corta (Lun, Mar, etc.)
+    def fecha_corta_espanol(fecha):
+        if not fecha:
+            return ''
+        if isinstance(fecha, str):
+            try:
+                fecha = datetime.strptime(fecha, '%Y-%m-%d')
+            except:
+                return fecha
+        dias_cortos = {0: 'Lun', 1: 'Mar', 2: 'Mié', 3: 'Jue', 4: 'Vie', 5: 'Sáb', 6: 'Dom'}
+        meses_cortos = {1: 'Ene', 2: 'Feb', 3: 'Mar', 4: 'Abr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dic'}
+        return f"{dias_cortos.get(fecha.weekday(), '')} {fecha.day} {meses_cortos.get(fecha.month, '')}"
+    
+    return dict(
+        backend_url=BACKEND_URL,
+        fecha_espanol=fecha_espanol,
+        fecha_corta_espanol=fecha_corta_espanol
+    )
 
 @app.route('/')
 def index():
