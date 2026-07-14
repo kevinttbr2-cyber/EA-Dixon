@@ -632,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (resp.success) {
                 alert(`✅ Venta registrada correctamente\n\n💰 Total: $${monto.toLocaleString('es-CL')}`);
                 document.getElementById('formVentaRapida').reset();
-                window.location.href = '/balance_ventas';
+                window.location.href = '/venta_rapida';
             } else {
                 alert('❌ Error: ' + (resp.error || 'Desconocido'));
                 btn.disabled = false;
