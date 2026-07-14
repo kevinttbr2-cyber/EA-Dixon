@@ -685,6 +685,9 @@ def balance_ventas():
             total_ventas = data.get('total_ventas', 0)
             total_trabajo = data.get('total_trabajo', 0)
             total_directa = data.get('total_directa', 0)
+            ganancia_neta = data.get('ganancia_neta', 0)
+            ganancia_trabajo = data.get('ganancia_trabajo', 0)
+            ganancia_directa = data.get('ganancia_directa', 0)
             trabajo_margen = data.get('trabajo_margen', 0)
             directa_margen = data.get('directa_margen', 0)
         else:
@@ -692,6 +695,9 @@ def balance_ventas():
             total_ventas = 0
             total_trabajo = 0
             total_directa = 0
+            ganancia_neta = 0
+            ganancia_trabajo = 0
+            ganancia_directa = 0
             trabajo_margen = 0
             directa_margen = 0
     except Exception as e:
@@ -700,8 +706,14 @@ def balance_ventas():
         total_ventas = 0
         total_trabajo = 0
         total_directa = 0
+        ganancia_neta = 0
+        ganancia_trabajo = 0
+        ganancia_directa = 0
         trabajo_margen = 0
         directa_margen = 0
+    
+    # ✅ Calcular total combinado
+    total_combinado = total_trabajo + total_directa
     
     return render_template(
         "balance_ventas.html",
@@ -709,6 +721,10 @@ def balance_ventas():
         total_ventas=total_ventas,
         total_trabajo=total_trabajo,
         total_directa=total_directa,
+        total_combinado=total_combinado,
+        ganancia_neta=ganancia_neta,
+        ganancia_trabajo=ganancia_trabajo,
+        ganancia_directa=ganancia_directa,
         trabajo_margen=trabajo_margen,
         directa_margen=directa_margen,
         filtro=filtro
