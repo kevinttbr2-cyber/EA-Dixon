@@ -973,7 +973,7 @@ def venta_rapida():
 
 
 # ============================
-# BALANCE DE VENTAS (con ganancia neta)
+# BALANCE DE VENTAS
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
@@ -1001,28 +1001,31 @@ def balance_ventas():
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
+        # ✅ SEPARAR POR TIPO DE VENTA
         trabajo = [r for r in registros if r.get('tipo_venta') != 'directa']
         directa = [r for r in registros if r.get('tipo_venta') == 'directa']
         
+        # ✅ TOTALES
         total_ventas = float(sum(r.get('monto', 0) or 0 for r in registros))
         total_trabajo = float(sum(r.get('monto', 0) or 0 for r in trabajo))
         total_directa = float(sum(r.get('monto', 0) or 0 for r in directa))
         
-        # GANANCIA TRABAJO (con costos)
+        # ✅ GANANCIA TRABAJO (con costos reales de repuestos)
         repuestos_trabajo = float(sum(r.get('costo_repuestos_real', 0) or 0 for r in trabajo))
         mano_obra = float(sum(r.get('costo_mano_obra_real', 0) or 0 for r in trabajo))
         diagnostico = float(sum(r.get('costo_diagnostico_real', 0) or 0 for r in trabajo))
         ganancia_trabajo = total_trabajo - (repuestos_trabajo + mano_obra + diagnostico)
         
-        # GANANCIA DIRECTA (100% del monto)
-        ganancia_directa = total_directa
+        # ✅ GANANCIA VENTA DIRECTA (monto - costo repuestos)
+        repuestos_directa = float(sum(r.get('costo_repuestos_real', 0) or 0 for r in directa))
+        ganancia_directa = total_directa - repuestos_directa
         
-        # GANANCIA NETA TOTAL
+        # ✅ GANANCIA NETA TOTAL
         ganancia_neta = ganancia_trabajo + ganancia_directa
         
-        # Margen trabajo
+        # ✅ MÁRGENES
         trabajo_margen = (ganancia_trabajo / total_trabajo * 100) if total_trabajo > 0 else 0
-        directa_margen = 100 if total_directa > 0 else 0
+        directa_margen = (ganancia_directa / total_directa * 100) if total_directa > 0 else 0
         
         cur.close()
         conn.close()
@@ -1036,7 +1039,7 @@ def balance_ventas():
             "ganancia_directa": ganancia_directa,
             "ganancia_neta": ganancia_neta,
             "trabajo_margen": round(trabajo_margen, 1),
-            "directa_margen": directa_margen
+            "directa_margen": round(directa_margen, 1)
         })
     except Exception as e:
         print(f"❌ Error en balance_ventas: {e}")
