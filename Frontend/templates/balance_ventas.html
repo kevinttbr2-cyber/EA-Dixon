@@ -114,24 +114,64 @@
     </div>
 
     <!-- ============================
-         FILTROS
+         FILTROS (Hoy, 7 días, 1 Mes, Todos)
          ============================ -->
-    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
-        <a href="?filtro=hoy" class="filtro-card {% if filtro == 'hoy' %}active{% endif %}">
-            <div class="etiqueta">Hoy</div>
-            <div class="numero">{{ registros|selectattr('fecha', '==', hoy_str)|list|length }}</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px;">
+        <a href="?filtro=hoy" class="filtro-card {% if filtro == 'hoy' %}active{% endif %}" style="
+            background: {% if filtro == 'hoy' %}rgba(0,255,102,0.15){% else %}rgba(255,255,255,0.04){% endif %};
+            border: 1px solid {% if filtro == 'hoy' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        ">
+            <div style="color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Hoy</div>
+            <div style="font-size: 22px; font-weight: 700; color: {% if filtro == 'hoy' %}#00ff66{% else %}#fff{% endif %};">
+                {{ hoy_count|default(registros|selectattr('fecha', '==', hoy_str)|list|length) }}
+            </div>
         </a>
-        <a href="?filtro=7d" class="filtro-card {% if filtro == '7d' %}active{% endif %}">
-            <div class="etiqueta">7 días</div>
-            <div class="numero">{{ registros_7d|length }}</div>
+        <a href="?filtro=7d" class="filtro-card {% if filtro == '7d' %}active{% endif %}" style="
+            background: {% if filtro == '7d' %}rgba(0,255,102,0.15){% else %}rgba(255,255,255,0.04){% endif %};
+            border: 1px solid {% if filtro == '7d' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        ">
+            <div style="color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">7 días</div>
+            <div style="font-size: 22px; font-weight: 700; color: {% if filtro == '7d' %}#00ff66{% else %}#fff{% endif %};">
+                {{ registros_7d|length }}
+            </div>
         </a>
-        <a href="?filtro=mes" class="filtro-card {% if filtro == 'mes' %}active{% endif %}">
-            <div class="etiqueta">1 Mes</div>
-            <div class="numero">{{ registros_mes|length }}</div>
+        <a href="?filtro=mes" class="filtro-card {% if filtro == 'mes' %}active{% endif %}" style="
+            background: {% if filtro == 'mes' %}rgba(0,255,102,0.15){% else %}rgba(255,255,255,0.04){% endif %};
+            border: 1px solid {% if filtro == 'mes' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        ">
+            <div style="color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">1 Mes</div>
+            <div style="font-size: 22px; font-weight: 700; color: {% if filtro == 'mes' %}#00ff66{% else %}#fff{% endif %};">
+                {{ registros_mes|length }}
+            </div>
         </a>
-        <a href="?filtro=todos" class="filtro-card {% if filtro == 'todos' %}active{% endif %}">
-            <div class="etiqueta">Todos</div>
-            <div class="numero">{{ registros|length }}</div>
+        <a href="?filtro=todos" class="filtro-card {% if filtro == 'todos' %}active{% endif %}" style="
+            background: {% if filtro == 'todos' %}rgba(0,255,102,0.15){% else %}rgba(255,255,255,0.04){% endif %};
+            border: 1px solid {% if filtro == 'todos' %}rgba(0,255,102,0.30){% else %}rgba(255,255,255,0.08){% endif %};
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        ">
+            <div style="color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Todos</div>
+            <div style="font-size: 22px; font-weight: 700; color: {% if filtro == 'todos' %}#00ff66{% else %}#fff{% endif %};">
+                {{ registros|length }}
+            </div>
         </a>
     </div>
 
@@ -241,12 +281,7 @@
      SCRIPT PARA FILTROS
      ============================ -->
 <script>
-    // Filtros interactivos
-    document.querySelectorAll('.filtro-card').forEach(card => {
-        card.addEventListener('click', function(e) {
-            // El filtro ya es un enlace, solo se recarga la página
-        });
-    });
+    // Los filtros ya son enlaces, solo se recarga la página
 </script>
 
 {% endblock %}
