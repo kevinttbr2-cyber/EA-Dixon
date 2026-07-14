@@ -672,69 +672,80 @@
         };
 
         // ============================
-        // 9. ENVIAR FORMULARIO EDITAR
-        // ============================
-        document.getElementById('formEditarRepuesto').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = document.getElementById('editRepuestoId').value;
-            const nombre = document.getElementById('editNombreRepuesto').value.trim();
-            const costoProveedor = parseFloat(document.getElementById('editCostoProveedor').value) || 0;
-            const margen = parseFloat(document.getElementById('editMargenGanancia').value) || 0;
-            const proveedor = document.getElementById('editProveedorRepuesto').value.trim();
-            const costoVentaFinal = parseFloat(document.getElementById('editCostoVentaFinal').value) || 0;
-            
-            if (!nombre) {
-                alert('⚠️ El nombre del repuesto es obligatorio');
-                return;
-            }
-            
-            if (costoProveedor <= 0) {
-                alert('⚠️ El costo proveedor debe ser mayor a 0');
-                return;
-            }
-            
-            const data = {
-                nombre: nombre,
-                costo_proveedor: costoProveedor,
-                margen_ganancia: margen,
-                proveedor: proveedor,
-                costo_venta_final: costoVentaFinal > 0 ? costoVentaFinal : 0
-            };
-            
-            const iva = 1.19;
-            const costoConIva = costoProveedor * iva;
-            const costoFinal = costoConIva * (1 + (margen / 100));
-            const costoFinalMostrar = costoVentaFinal > 0 ? costoVentaFinal : Math.round(costoFinal);
-            
-            const confirmar = confirm(
-                `📊 Resumen del repuesto:\n\n` +
-                `🔧 Nombre: ${nombre}\n` +
-                `💰 Costo Proveedor: $${costoProveedor}\n` +
-                `💵 Costo Venta Final: $${costoFinalMostrar}\n` +
-                `📈 Margen: ${margen}%\n` +
-                `🏢 Proveedor: ${proveedor || 'No especificado'}\n\n` +
-                `¿Guardar los cambios?`
-            );
-            
-            if (!confirmar) return;
+// 9. ENVIAR FORMULARIO EDITAR (CORREGIDO)
+// ============================
+document.getElementById('formEditarRepuesto').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = document.getElementById('editRepuestoId').value;
+    const nombre = document.getElementById('editNombreRepuesto').value.trim();
+    const costoProveedor = parseFloat(document.getElementById('editCostoProveedor').value) || 0;
+    const proveedor = document.getElementById('editProveedorRepuesto').value.trim();
+    const metodo = document.getElementById('editMetodoCalculo').value;
+    const costoVentaFinal = parseFloat(document.getElementById('editCostoVentaFinal').value) || 0;
+    
+    // --- CALCULAR EL MARGEN CORRECTO ---
+    let margen = parseFloat(document.getElementById('editMargenGanancia').value) || 0;
+    
+    // Si el método es "venta", recalcular el margen basado en el costo final
+    if (metodo === 'venta' && costoVentaFinal > 0 && costoProveedor > 0) {
+        const iva = 1.19;
+        const costoConIva = costoProveedor * iva;
+        const margenCalculado = ((costoVentaFinal / costoConIva) - 1) * 100;
+        margen = Math.round(margenCalculado * 10) / 10;
+    }
+    
+    if (!nombre) {
+        alert('⚠️ El nombre del repuesto es obligatorio');
+        return;
+    }
+    
+    if (costoProveedor <= 0) {
+        alert('⚠️ El costo proveedor debe ser mayor a 0');
+        return;
+    }
+    
+    const data = {
+        nombre: nombre,
+        costo_proveedor: costoProveedor,
+        margen_ganancia: margen,  // Usar el margen correctamente calculado
+        proveedor: proveedor,
+        costo_venta_final: costoVentaFinal > 0 ? costoVentaFinal : 0
+    };
+    
+    const iva = 1.19;
+    const costoConIva = costoProveedor * iva;
+    const costoFinal = costoConIva * (1 + (margen / 100));
+    const costoFinalMostrar = costoVentaFinal > 0 ? costoVentaFinal : Math.round(costoFinal);
+    
+    const confirmar = confirm(
+        `📊 Resumen del repuesto:\n\n` +
+        `🔧 Nombre: ${nombre}\n` +
+        `💰 Costo Proveedor: $${costoProveedor}\n` +
+        `💵 Costo Venta Final: $${costoFinalMostrar}\n` +
+        `📈 Margen: ${margen}%\n` +
+        `🏢 Proveedor: ${proveedor || 'No especificado'}\n\n` +
+        `¿Guardar los cambios?`
+    );
+    
+    if (!confirmar) return;
 
-            fetch(`${API_URL}/api/repuestos/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(r => r.json())
-            .then(resp => {
-                if (resp.success) {
-                    alert('✅ Repuesto actualizado correctamente');
-                    cerrarModalEditar();
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + (resp.error || 'Desconocido'));
-                }
-            })
-            .catch(() => alert('❌ Error de conexión'));
-        });
+    fetch(`${API_URL}/api/repuestos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (resp.success) {
+            alert('✅ Repuesto actualizado correctamente');
+            cerrarModalEditar();
+            location.reload();
+        } else {
+            alert('❌ Error: ' + (resp.error || 'Desconocido'));
+        }
+    })
+    .catch(() => alert('❌ Error de conexión'));
+});
 
         // ============================
         // 10. ELIMINAR REPUESTO
