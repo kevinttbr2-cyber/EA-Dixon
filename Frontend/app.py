@@ -9,6 +9,18 @@ from datetime import datetime, timedelta
 import io
 import os
 import time
+import locale  # ✅ AGREGAR
+
+# ============================
+# CONFIGURAR IDIOMA A ESPAÑOL
+# ============================
+try:
+    locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+except:
+    try:
+        locale.setlocale(locale.LC_TIME, 'spanish')
+    except:
+        print("⚠️ No se pudo configurar el idioma español, usando inglés por defecto")
 
 os.environ['TZ'] = 'America/Santiago'
 time.tzset()
@@ -17,6 +29,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
 PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
 
+app.jinja_env.filters['strftime'] = lambda date, fmt: date.strftime(fmt) if date else ''
 # URL del backend en Railway
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
 
@@ -753,6 +766,39 @@ def balance_ventas():
         directa_margen=directa_margen,
         filtro=filtro
     )
+# ============================
+# FILTRO PARA FORMATO DE FECHA EN ESPAÑOL
+# ============================
+def formato_fecha_espanol(fecha):
+    """Formatea una fecha en español (ej: Lunes 13 de Julio 2026)"""
+    if not fecha:
+        return ''
+    
+    if isinstance(fecha, str):
+        try:
+            fecha = datetime.strptime(fecha, '%Y-%m-%d')
+        except:
+            return fecha
+    
+    dias = {
+        0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves',
+        4: 'Viernes', 5: 'Sábado', 6: 'Domingo'
+    }
+    meses = {
+        1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+        5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+        9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+    }
+    
+    dia_nombre = dias.get(fecha.weekday(), '')
+    dia = fecha.day
+    mes = meses.get(fecha.month, '')
+    año = fecha.year
+    
+    return f"{dia_nombre} {dia} de {mes} {año}"
+
+# Agregar el filtro a Jinja2
+app.jinja_env.filters['fecha_espanol'] = formato_fecha_espanol
 
 # ============================
 # INICIO
