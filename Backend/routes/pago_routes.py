@@ -975,6 +975,9 @@ def venta_rapida():
 # ============================
 # BALANCE DE VENTAS (usando datos de repuestos)
 # ============================
+# ============================
+# BALANCE DE VENTAS (usando márgenes de repuestos)
+# ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
     try:
@@ -1011,57 +1014,63 @@ def balance_ventas():
         total_directa = float(sum(r.get('monto', 0) or 0 for r in directa))
         
         # ============================
-        # CALCULAR GANANCIA TRABAJO
+        # PROCESAR TRABAJO (tomar márgenes de repuestos)
         # ============================
         total_repuestos_trabajo = 0
-        total_mano_obra_trabajo = 0
-        total_diagnostico_trabajo = 0
         ganancia_trabajo = 0
+        margenes_trabajo = []  # ✅ Lista de márgenes de cada repuesto
         
         for r in trabajo:
-            # Obtener costo de repuestos desde detalles_repuestos
             detalles = r.get('detalles_repuestos', [])
             costo_repuestos = 0
+            
             for item in detalles:
                 nombre = item.get('nombre', '')
                 if nombre:
-                    # ✅ Obtener el costo_proveedor del repuesto desde la tabla repuestos
-                    cur.execute("SELECT costo_proveedor FROM repuestos WHERE nombre = %s", (nombre,))
+                    # ✅ OBTENER costo_proveedor y margen_ganancia DESDE repuestos
+                    cur.execute("SELECT costo_proveedor, margen_ganancia FROM repuestos WHERE nombre = %s", (nombre,))
                     resultado = cur.fetchone()
                     if resultado:
-                        costo_repuestos += float(resultado[0] or 0)
+                        costo_prov = float(resultado[0] or 0)
+                        margen_item = float(resultado[1] or 0)  # ✅ El margen que ya tiene el repuesto
+                        costo_repuestos += costo_prov
+                        margenes_trabajo.append(margen_item)  # ✅ Guardar margen del repuesto
                     else:
-                        # Si no existe, usar el valor guardado en el detalle
                         costo_repuestos += float(item.get('costo', 0) or 0)
             
             if costo_repuestos == 0:
                 costo_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
             
-            mano_obra = float(r.get('costo_mano_obra_real', 0) or 0)
-            diagnostico = float(r.get('costo_diagnostico_real', 0) or 0)
-            
             total_repuestos_trabajo += costo_repuestos
-            total_mano_obra_trabajo += mano_obra
-            total_diagnostico_trabajo += diagnostico
-            ganancia_trabajo += float(r.get('monto', 0) or 0) - (costo_repuestos + mano_obra + diagnostico)
+            ganancia_trabajo += float(r.get('monto', 0) or 0) - costo_repuestos
+        
+        # ✅ MARGEN TRABAJO = PROMEDIO de los márgenes de los repuestos
+        if margenes_trabajo:
+            trabajo_margen = sum(margenes_trabajo) / len(margenes_trabajo)
+        else:
+            trabajo_margen = 0
         
         # ============================
-        # CALCULAR GANANCIA VENTA DIRECTA
+        # PROCESAR VENTA DIRECTA (tomar márgenes de repuestos)
         # ============================
         total_repuestos_directa = 0
         ganancia_directa = 0
+        margenes_directa = []  # ✅ Lista de márgenes de cada repuesto
         
         for r in directa:
-            # ✅ Obtener costo de proveedor de cada repuesto desde la tabla repuestos
             detalles = r.get('detalles_repuestos', [])
             costo_repuestos = 0
+            
             for item in detalles:
                 nombre = item.get('nombre', '')
                 if nombre:
-                    cur.execute("SELECT costo_proveedor FROM repuestos WHERE nombre = %s", (nombre,))
+                    cur.execute("SELECT costo_proveedor, margen_ganancia FROM repuestos WHERE nombre = %s", (nombre,))
                     resultado = cur.fetchone()
                     if resultado:
-                        costo_repuestos += float(resultado[0] or 0)
+                        costo_prov = float(resultado[0] or 0)
+                        margen_item = float(resultado[1] or 0)  # ✅ El margen que ya tiene el repuesto
+                        costo_repuestos += costo_prov
+                        margenes_directa.append(margen_item)  # ✅ Guardar margen del repuesto
                     else:
                         costo_repuestos += float(item.get('costo', 0) or 0)
             
@@ -1071,12 +1080,14 @@ def balance_ventas():
             total_repuestos_directa += costo_repuestos
             ganancia_directa += float(r.get('monto', 0) or 0) - costo_repuestos
         
+        # ✅ MARGEN VENTA DIRECTA = PROMEDIO de los márgenes de los repuestos
+        if margenes_directa:
+            directa_margen = sum(margenes_directa) / len(margenes_directa)
+        else:
+            directa_margen = 0
+        
         # ✅ GANANCIA NETA TOTAL
         ganancia_neta = ganancia_trabajo + ganancia_directa
-        
-        # ✅ MÁRGENES
-        trabajo_margen = (ganancia_trabajo / total_trabajo * 100) if total_trabajo > 0 else 0
-        directa_margen = (ganancia_directa / total_directa * 100) if total_directa > 0 else 0
         
         cur.close()
         conn.close()
@@ -1091,8 +1102,8 @@ def balance_ventas():
             "ganancia_neta": round(ganancia_neta, 2),
             "total_repuestos_trabajo": round(total_repuestos_trabajo, 2),
             "total_repuestos_directa": round(total_repuestos_directa, 2),
-            "trabajo_margen": round(trabajo_margen, 1),
-            "directa_margen": round(directa_margen, 1)
+            "trabajo_margen": round(trabajo_margen, 1),  # ✅ PROMEDIO de márgenes de repuestos
+            "directa_margen": round(directa_margen, 1)   # ✅ PROMEDIO de márgenes de repuestos
         })
     except Exception as e:
         print(f"❌ Error en balance_ventas: {e}")
