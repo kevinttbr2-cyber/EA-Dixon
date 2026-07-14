@@ -4,6 +4,12 @@ from flask_cors import CORS
 from config import Config
 from routes import auth_bp, pago_bp, catalogo_bp, flota_bp, pdf_bp, auditoria_bp
 from services.auth_service import AuthService
+import time
+import os
+
+# Establecer zona horaria a Chile (UTC-3)
+os.environ['TZ'] = 'America/Santiago'
+time.tzset()
 
 # ============================
 # CREAR APP
