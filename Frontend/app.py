@@ -241,8 +241,9 @@ def pendientes_validacion():
         resp = requests.get(f"{BACKEND_URL}/api/pendientes_validacion", timeout=10)
         if resp.status_code == 200:
             data = resp.json()
-            pendientes = data.get('pendientes', [])
-            validados = data.get('validados', [])
+            # ✅ FILTRAR: Solo trabajos (excluir ventas directas)
+            pendientes = [p for p in data.get('pendientes', []) if p.get('tipo_venta') != 'directa']
+            validados = [v for v in data.get('validados', []) if v.get('tipo_venta') != 'directa']
             total_pagado = data.get('total_pagado', 0)
         else:
             pendientes = []
@@ -270,6 +271,11 @@ def validar_pago(id_reg):
     except Exception as e:
         print(f"Error en /validar_pago: {e}")
         return "Error de conexión", 500
+    
+    # ✅ VALIDACIÓN: Venta directa no necesita validación
+    if registro.get('tipo_venta') == 'directa':
+        flash('⚠️ Las ventas directas no requieren validación de costos.', 'warning')
+        return redirect("/estado")
     
     if registro.get('estado') != 'pagado':
         return "Este pago no está pagado", 400
