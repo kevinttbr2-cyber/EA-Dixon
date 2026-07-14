@@ -540,6 +540,90 @@
             })
             .catch(() => alert('❌ Error de conexión'));
         });
+        // ============================
+// CÁLCULO INVERSO DE MARGEN AL EDITAR
+// ============================
+function calcularMargenInverso() {
+    // Obtener valores del formulario de edición
+    const costoVentaFinal = parseFloat(document.getElementById('editCostoVentaFinal').value) || 0;
+    const costoProveedor = parseFloat(document.getElementById('editCostoProveedor').value) || 0;
+    const margenInput = document.getElementById('editMargenGanancia');
+    const previewSpan = document.getElementById('editPreviewCostoVenta');
+    
+    // Si hay costo de venta y costo de proveedor, calcular margen
+    if (costoVentaFinal > 0 && costoProveedor > 0) {
+        // Fórmula: Margen = ((Costo Venta - Costo Proveedor) / Costo Venta) × 100
+        const margenCalculado = ((costoVentaFinal - costoProveedor) / costoVentaFinal) * 100;
+        const margenFinal = Math.round(margenCalculado * 10) / 10; // Redondear a 1 decimal
+        
+        // Actualizar campo de margen
+        margenInput.value = margenFinal;
+        
+        // Actualizar preview (mostrar el mismo costo de venta)
+        previewSpan.textContent = '$' + costoVentaFinal.toLocaleString('es-CL');
+        
+        // Cambiar color del preview para indicar que se calculó
+        previewSpan.style.color = '#00ff66';
+    } else if (costoProveedor > 0 && costoVentaFinal === 0) {
+        // Si solo hay costo proveedor, calcular costo de venta con margen actual
+        const margen = parseFloat(margenInput.value) || 0;
+        const iva = 1.19;
+        const costoConIva = costoProveedor * iva;
+        const costoFinal = costoConIva * (1 + (margen / 100));
+        const costoFinalRedondeado = Math.round(costoFinal);
+        
+        // Actualizar preview
+        previewSpan.textContent = '$' + costoFinalRedondeado.toLocaleString('es-CL');
+        previewSpan.style.color = '#ffcc00';
+    } else {
+        // Si no hay datos, resetear
+        previewSpan.textContent = '$0';
+        previewSpan.style.color = '#00ff66';
+    }
+}
+
+// Eventos en el modal de edición
+document.getElementById('editCostoProveedor').addEventListener('input', calcularMargenInverso);
+document.getElementById('editMargenGanancia').addEventListener('input', function() {
+    // Si el usuario modifica el margen manualmente, calcular el costo de venta
+    const costoProveedor = parseFloat(document.getElementById('editCostoProveedor').value) || 0;
+    const margen = parseFloat(this.value) || 0;
+    const previewSpan = document.getElementById('editPreviewCostoVenta');
+    
+    if (costoProveedor > 0) {
+        const iva = 1.19;
+        const costoConIva = costoProveedor * iva;
+        const costoFinal = costoConIva * (1 + (margen / 100));
+        const costoFinalRedondeado = Math.round(costoFinal);
+        previewSpan.textContent = '$' + costoFinalRedondeado.toLocaleString('es-CL');
+        previewSpan.style.color = '#ffcc00';
+    }
+});
+
+// Al cargar el modal de edición, calcular el margen inverso
+document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const id = this.dataset.id;
+        const fila = this.closest('.fila-repuesto-lista');
+        const nombre = fila.querySelector('td:nth-child(2)').textContent;
+        const costoProveedor = fila.querySelector('td:nth-child(3)').textContent.replace(/[$,]/g, '');
+        const margen = fila.querySelector('td:nth-child(4)').textContent.replace('%', '');
+        const costoVentaFinal = fila.querySelector('td:nth-child(5)').textContent.replace(/[$,]/g, '');
+        const proveedor = fila.querySelector('td:nth-child(6)').textContent;
+        
+        document.getElementById('editRepuestoId').value = id;
+        document.getElementById('editNombreRepuesto').value = nombre;
+        document.getElementById('editCostoProveedor').value = costoProveedor;
+        document.getElementById('editMargenGanancia').value = margen;
+        document.getElementById('editCostoVentaFinal').value = costoVentaFinal;
+        document.getElementById('editProveedorRepuesto').value = proveedor === '-' ? '' : proveedor;
+        
+        document.getElementById('modalEditarRepuesto').style.display = 'flex';
+        
+        // Calcular margen inverso automáticamente
+        calcularMargenInverso();
+    });
+});
 
         // ============================
         // 7. ELIMINAR REPUESTO
