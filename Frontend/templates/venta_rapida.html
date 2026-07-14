@@ -161,7 +161,7 @@ document.getElementById('formVentaRapida').addEventListener('submit', function(e
     btn.disabled = true;
     btn.textContent = '⏳ Procesando...';
     
-    fetch('/api/venta_rapida', {
+    fetch('https://ea-dixon-production.up.railway.app/api/venta_rapida', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
