@@ -385,7 +385,7 @@ def validar_pago(id_reg):
                         cur.execute("""
                             UPDATE repuestos 
                             SET costo_venta_final = %s, 
-                                updated_at = CURRENT_TIMESTAMP
+                                updated_at = NOW() AT TIME ZONE 'America/Santiago'
                             WHERE id = %s
                         """, (costo_venta, id_existente))
                         print(f"✅ Repuesto '{nombre}' actualizado con costo_venta_final: ${costo_venta}")
@@ -396,7 +396,9 @@ def validar_pago(id_reg):
                     cur.execute("""
                         INSERT INTO repuestos 
                         (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, costo_proveedor_pendiente, created_at, updated_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        VALUES (%s, %s, %s, %s, %s, %s, 
+                                NOW() AT TIME ZONE 'America/Santiago', 
+                                NOW() AT TIME ZONE 'America/Santiago')
                         RETURNING id
                     """, (
                         nombre,
@@ -411,6 +413,7 @@ def validar_pago(id_reg):
         
         detalles_json = json.dumps(detalles_repuestos)
         
+        # ✅ CORREGIDO: Usar NOW() AT TIME ZONE 'America/Santiago'
         cur.execute("""
             UPDATE pagos 
             SET costo_repuestos_real = %s,
@@ -420,7 +423,7 @@ def validar_pago(id_reg):
                 observaciones_pago = %s,
                 validado = TRUE,
                 validado_por = %s,
-                fecha_validacion = CURRENT_TIMESTAMP,
+                fecha_validacion = NOW() AT TIME ZONE 'America/Santiago',
                 diagnostico = %s,
                 reparacion = %s,
                 resultado = %s,
@@ -523,17 +526,11 @@ def crear_repuesto():
         proveedor = data.get('proveedor', '').strip()
         costo_venta_final = float(data.get('costo_venta_final', 0))
         
-        print(f"📥 Recibido en POST repuestos:")
-        print(f"  - nombre: {nombre}")
-        print(f"  - costo_proveedor: {costo_proveedor}")
-        print(f"  - costo_venta_final: {costo_venta_final}")
-        
         if costo_venta_final == 0 and costo_proveedor > 0:
             iva = 1.19
             costo_con_iva = costo_proveedor * iva
             costo_venta_final = costo_con_iva * (1 + (margen_ganancia / 100))
             costo_venta_final = round(costo_venta_final, 0)
-            print(f"  - costo_venta_final calculado: {costo_venta_final}")
         
         costo_proveedor_pendiente = costo_proveedor == 0
         
@@ -542,10 +539,14 @@ def crear_repuesto():
         
         conn = get_connection()
         cur = conn.cursor()
+        
+        # ✅ CORREGIDO: Usar NOW() AT TIME ZONE 'America/Santiago'
         cur.execute("""
             INSERT INTO repuestos 
             (nombre, costo_proveedor, margen_ganancia, proveedor, costo_venta_final, costo_proveedor_pendiente, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            VALUES (%s, %s, %s, %s, %s, %s, 
+                    NOW() AT TIME ZONE 'America/Santiago', 
+                    NOW() AT TIME ZONE 'America/Santiago')
             RETURNING id
         """, (nombre, costo_proveedor, margen_ganancia, proveedor, costo_venta_final, costo_proveedor_pendiente))
         id_repuesto = cur.fetchone()[0]
@@ -582,6 +583,8 @@ def actualizar_repuesto(id_repuesto):
         
         conn = get_connection()
         cur = conn.cursor()
+        
+        # ✅ CORREGIDO: Usar NOW() AT TIME ZONE 'America/Santiago'
         cur.execute("""
             UPDATE repuestos 
             SET nombre = %s, 
@@ -590,7 +593,7 @@ def actualizar_repuesto(id_repuesto):
                 proveedor = %s,
                 costo_venta_final = %s,
                 costo_proveedor_pendiente = %s,
-                updated_at = CURRENT_TIMESTAMP
+                updated_at = NOW() AT TIME ZONE 'America/Santiago'
             WHERE id = %s
         """, (nombre, costo_proveedor, margen_ganancia, proveedor, costo_venta_final, costo_proveedor_pendiente, id_repuesto))
         conn.commit()
