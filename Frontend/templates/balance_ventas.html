@@ -67,59 +67,77 @@
 </style>
 
 <div class="base-container">
+    <!-- ============================
+         ENCABEZADO
+         ============================ -->
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
         <h2 style="color: #00ff66; font-weight: 700; margin: 0; font-size: 22px;">
             📊 Balance de Ventas
         </h2>
-        <a href="/venta_rapida" class="btn btn-sm" style="
-            background: rgba(0,255,102,0.15);
-            color: #00ff66;
-            border: 1px solid rgba(0,255,102,0.25);
-            border-radius: 20px;
-            padding: 6px 16px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
-        ">
-            <i class="fa-solid fa-bolt"></i> Venta Rápida
-        </a>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="/balance" class="btn btn-sm" style="
+                background: rgba(79,195,247,0.12);
+                color: #4fc3f7;
+                border: 1px solid rgba(79,195,247,0.20);
+                border-radius: 20px;
+                padding: 6px 16px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 13px;
+            ">
+                📊 Ganancia
+            </a>
+            <a href="/venta_rapida" class="btn btn-sm" style="
+                background: rgba(0,255,102,0.15);
+                color: #00ff66;
+                border: 1px solid rgba(0,255,102,0.25);
+                border-radius: 20px;
+                padding: 6px 16px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 13px;
+            ">
+                <i class="fa-solid fa-bolt"></i> Venta Rápida
+            </a>
+            <a href="/registros" class="btn btn-sm" style="
+                background: rgba(255,255,255,0.06);
+                color: #888;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 20px;
+                padding: 6px 16px;
+                text-decoration: none;
+                font-size: 13px;
+            ">
+                ← Registros
+            </a>
+        </div>
     </div>
-    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-    <a href="/balance" class="btn btn-sm" style="
-        background: rgba(79,195,247,0.12);
-        color: #4fc3f7;
-        border: 1px solid rgba(79,195,247,0.20);
-        border-radius: 20px;
-        padding: 6px 16px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 13px;
-    ">
-        📊 Ver Balance de Ganancia
-    </a>
-    <a href="/venta_rapida" class="btn btn-sm" style="
-        background: rgba(0,255,102,0.15);
-        color: #00ff66;
-        border: 1px solid rgba(0,255,102,0.25);
-        border-radius: 20px;
-        padding: 6px 16px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 13px;
-    ">
-        <i class="fa-solid fa-bolt"></i> Venta Rápida
-    </a>
-</div>
 
-    <!-- FILTROS -->
+    <!-- ============================
+         FILTROS
+         ============================ -->
     <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
-        <a href="?filtro=hoy" class="filtro-card active">
+        <a href="?filtro=hoy" class="filtro-card {% if filtro == 'hoy' %}active{% endif %}">
             <div class="etiqueta">Hoy</div>
+            <div class="numero">{{ registros|selectattr('fecha', '==', hoy_str)|list|length }}</div>
+        </a>
+        <a href="?filtro=7d" class="filtro-card {% if filtro == '7d' %}active{% endif %}">
+            <div class="etiqueta">7 días</div>
+            <div class="numero">{{ registros_7d|length }}</div>
+        </a>
+        <a href="?filtro=mes" class="filtro-card {% if filtro == 'mes' %}active{% endif %}">
+            <div class="etiqueta">1 Mes</div>
+            <div class="numero">{{ registros_mes|length }}</div>
+        </a>
+        <a href="?filtro=todos" class="filtro-card {% if filtro == 'todos' %}active{% endif %}">
+            <div class="etiqueta">Todos</div>
             <div class="numero">{{ registros|length }}</div>
         </a>
     </div>
 
-    <!-- COMPARATIVO -->
+    <!-- ============================
+         COMPARATIVO
+         ============================ -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
         <div class="comparativo-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
             <div style="font-size: 28px;">💰</div>
@@ -128,23 +146,24 @@
             <div style="color: #888; font-size: 12px;">{{ registros|length }} registros</div>
         </div>
         <div class="comparativo-card" style="border-color: rgba(255,200,0,0.30); background: rgba(255,200,0,0.04);">
-    <div style="font-size: 28px;">🔧</div>
-    <div style="color: #888; font-size: 12px;">Trabajo</div>
-    <div class="total" style="color: #ffcc00;">${{ "{:,.0f}".format(total_trabajo|default(0)) }}</div>
-    <div style="color: #888; font-size: 12px;">📦 Costo repuestos: ${{ "{:,.0f}".format(total_repuestos_trabajo|default(0)) }}</div>
-    <div class="margen" style="color: #ffcc00;">📈 {{ trabajo_margen|default(0) }}% margen</div>
-</div>
-
-<div class="comparativo-card" style="border-color: rgba(79,195,247,0.30); background: rgba(79,195,247,0.04);">
-    <div style="font-size: 28px;">⚡</div>
-    <div style="color: #888; font-size: 12px;">Venta Directa</div>
-    <div class="total" style="color: #4fc3f7;">${{ "{:,.0f}".format(total_directa|default(0)) }}</div>
-    <div style="color: #888; font-size: 12px;">📦 Costo productos: ${{ "{:,.0f}".format(total_repuestos_directa|default(0)) }}</div>
-    <div class="margen" style="color: #4fc3f7;">📈 {{ directa_margen|default(0) }}% margen</div>
-</div>
+            <div style="font-size: 28px;">🔧</div>
+            <div style="color: #888; font-size: 12px;">Trabajo</div>
+            <div class="total" style="color: #ffcc00;">${{ "{:,.0f}".format(total_trabajo|default(0)) }}</div>
+            <div style="color: #888; font-size: 12px;">📦 Costo repuestos: ${{ "{:,.0f}".format(total_repuestos_trabajo|default(0)) }}</div>
+            <div class="margen" style="color: #ffcc00;">📈 {{ trabajo_margen|default(0) }}% margen</div>
+        </div>
+        <div class="comparativo-card" style="border-color: rgba(79,195,247,0.30); background: rgba(79,195,247,0.04);">
+            <div style="font-size: 28px;">⚡</div>
+            <div style="color: #888; font-size: 12px;">Venta Directa</div>
+            <div class="total" style="color: #4fc3f7;">${{ "{:,.0f}".format(total_directa|default(0)) }}</div>
+            <div style="color: #888; font-size: 12px;">📦 Costo productos: ${{ "{:,.0f}".format(total_repuestos_directa|default(0)) }}</div>
+            <div class="margen" style="color: #4fc3f7;">📈 {{ directa_margen|default(0) }}% margen</div>
+        </div>
     </div>
 
-    <!-- GANANCIA -->
+    <!-- ============================
+         GANANCIA
+         ============================ -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
         <div class="comparativo-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
             <div style="font-size: 24px;">📊</div>
@@ -163,51 +182,53 @@
         </div>
     </div>
 
-    <!-- TABLA -->
+    <!-- ============================
+         TABLA DE VENTAS
+         ============================ -->
     <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(0, 255, 102, 0.15); background: #141414;">
         <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 700px; width: 100%;">
             <thead style="background: #2a6d44 !important; color: #ffffff !important;">
                 <tr>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Productos</th>
-                    <th>Monto</th>
-                    <th>Fecha</th>
-                    <th>Tipo</th>
+                    <th style="padding: 8px 10px;">ID</th>
+                    <th style="padding: 8px 10px;">Cliente</th>
+                    <th style="padding: 8px 10px;">Productos</th>
+                    <th style="padding: 8px 10px;">Monto</th>
+                    <th style="padding: 8px 10px;">Fecha</th>
+                    <th style="padding: 8px 10px;">Tipo</th>
                 </tr>
             </thead>
             <tbody>
-               {% for r in registros %}
-<tr>
-    <td>{{ r.id }}</td>
-    <td>{{ r.nombre }}</td>
-    <td>
-        {% if r.detalles_repuestos %}
-            {% for item in r.detalles_repuestos %}
-                <span style="display: inline-block; background: rgba(0,255,102,0.06); padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 11px;">
-                    {{ item.nombre }} 
-                    <span style="color: #ffcc00;">(${{ "{:,.0f}".format(item.costo) }})</span>
-                </span>
-            {% endfor %}
-        {% else %}
-            {{ r.producto_vendido or r.marca or '-' }}
-        {% endif %}
-    </td>
-    <td style="color: #00ff66; font-weight: 600;">${{ "{:,.0f}".format(r.monto) }}</td>
-    <td>{{ r.fecha }}</td>
-    <td>
-        {% if r.tipo_venta == 'directa' %}
-            <span class="badge-directa">⚡ Venta Rápida</span>
-        {% else %}
-            <span class="badge-trabajo">🔧 Trabajo</span>
-        {% endif %}
+                {% for r in registros %}
+                <tr>
+                    <td style="padding: 6px 8px;">{{ r.id }}</td>
+                    <td style="padding: 6px 8px;">{{ r.nombre }}</td>
+                    <td style="padding: 6px 8px;">
+                        {% if r.detalles_repuestos %}
+                            {% for item in r.detalles_repuestos %}
+                                <span style="display: inline-block; background: rgba(0,255,102,0.06); padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 11px;">
+                                    {{ item.nombre }} 
+                                    <span style="color: #ffcc00;">(${{ "{:,.0f}".format(item.costo) }})</span>
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            {{ r.producto_vendido or r.marca or '-' }}
+                        {% endif %}
+                    </td>
+                    <td style="padding: 6px 8px; color: #00ff66; font-weight: 600;">${{ "{:,.0f}".format(r.monto) }}</td>
+                    <td style="padding: 6px 8px; font-size: 12px;">{{ r.fecha }}</td>
+                    <td style="padding: 6px 8px;">
+                        {% if r.tipo_venta == 'directa' %}
+                            <span class="badge-directa">⚡ Venta Rápida</span>
+                        {% else %}
+                            <span class="badge-trabajo">🔧 Trabajo</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% else %}
                 <tr>
                     <td colspan="6" style="text-align: center; color: #666; padding: 30px 0;">
                         <i class="fa-solid fa-inbox" style="font-size: 48px; color: #00ff66; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
-                        <p>No hay ventas registradas</p>
+                        <p style="font-size: 16px;">No hay ventas registradas</p>
                     </td>
                 </tr>
                 {% endfor %}
@@ -215,5 +236,17 @@
         </table>
     </div>
 </div>
+
+<!-- ============================
+     SCRIPT PARA FILTROS
+     ============================ -->
+<script>
+    // Filtros interactivos
+    document.querySelectorAll('.filtro-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            // El filtro ya es un enlace, solo se recarga la página
+        });
+    });
+</script>
 
 {% endblock %}
