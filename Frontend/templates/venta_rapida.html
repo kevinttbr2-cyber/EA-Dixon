@@ -4,7 +4,7 @@
 
 <style>
     .venta-rapida-container {
-        max-width: 600px;
+        max-width: 700px;
         margin: 0 auto;
         padding: 10px 15px;
     }
@@ -66,6 +66,102 @@
         grid-template-columns: 1fr 1fr;
         gap: 8px 12px;
     }
+    .venta-rapida-container .repuestos-table {
+        background: rgba(0,0,0,0.20);
+        border-radius: 10px;
+        padding: 10px;
+        border: 1px solid rgba(0,255,102,0.08);
+    }
+    .venta-rapida-container .repuestos-table th {
+        color: #90e0a0;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 8px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .venta-rapida-container .repuestos-table td {
+        padding: 4px 8px;
+    }
+    .venta-rapida-container .repuesto-sugerencias {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(15,15,15,0.98);
+        border: 1px solid rgba(0,255,102,0.30);
+        border-radius: 8px;
+        max-height: 180px;
+        overflow-y: auto;
+        z-index: 9999;
+        margin-top: 2px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+    .venta-rapida-container .repuesto-sugerencias .sugerencia-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        color: #fff;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+    .venta-rapida-container .repuesto-sugerencias .sugerencia-item:hover {
+        background: rgba(0,255,102,0.08);
+    }
+    .venta-rapida-container .repuesto-sugerencias .sugerencia-item .costo {
+        color: #ffcc00;
+        font-weight: 600;
+    }
+    .venta-rapida-container .btn-add-repuesto {
+        background: rgba(0,255,102,0.08) !important;
+        color: #00ff66 !important;
+        border: 1px solid rgba(0,255,102,0.15) !important;
+        border-radius: 8px !important;
+        padding: 4px 14px !important;
+        font-size: 12px !important;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .venta-rapida-container .btn-add-repuesto:hover {
+        background: rgba(0,255,102,0.15) !important;
+        border-color: #00ff66 !important;
+    }
+    .venta-rapida-container .resumen-venta {
+        background: rgba(0, 255, 102, 0.04) !important;
+        border-radius: 14px !important;
+        padding: 14px 18px !important;
+        margin-bottom: 12px !important;
+        border: 1px solid rgba(0, 255, 102, 0.20) !important;
+    }
+    .venta-rapida-container .resumen-venta .row-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .venta-rapida-container .resumen-venta .row-item:last-child {
+        border-bottom: none;
+    }
+    .venta-rapida-container .resumen-venta .label {
+        color: #90e0a0;
+        font-size: 13px;
+    }
+    .venta-rapida-container .resumen-venta .value {
+        font-weight: 600;
+    }
+    .venta-rapida-container .resumen-venta .total-label {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 18px;
+    }
+    .venta-rapida-container .resumen-venta .total-value {
+        color: #00ff66;
+        font-weight: 700;
+        font-size: 24px;
+    }
     @media (max-width: 600px) {
         .venta-rapida-container .grid-2 {
             grid-template-columns: 1fr;
@@ -92,6 +188,7 @@
     </div>
 
     <form id="formVentaRapida">
+        <!-- DATOS DEL CLIENTE -->
         <div class="section-card">
             <div class="section-title">👤 Datos del Cliente</div>
             <div class="grid-2">
@@ -106,13 +203,54 @@
             </div>
         </div>
 
+        <!-- REPUESTOS (igual que validar_pago) -->
+        <div class="section-card">
+            <div class="section-title">🔧 Lista de Repuestos</div>
+            <div class="repuestos-table">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; padding: 6px 8px;">Repuesto</th>
+                            <th style="text-align: right; padding: 6px 8px;">Costo ($)</th>
+                            <th style="width: 30px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoRepuestos">
+                        <tr class="fila-repuesto">
+                            <td style="padding: 4px 8px; position: relative;">
+                                <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm repuesto-nombre" 
+                                       placeholder="Escribe para buscar..." autocomplete="off">
+                                <div class="repuesto-sugerencias"></div>
+                            </td>
+                            <td style="padding: 4px 8px;">
+                                <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
+                                       step="0.01" placeholder="0" style="text-align: right;">
+                            </td>
+                            <td style="padding: 4px 8px; text-align: center;">
+                                <button type="button" class="btn-eliminar-repuesto" 
+                                        style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 14px; opacity: 0.3;">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" id="agregarRepuestoBtn" class="btn-add-repuesto">
+                    <i class="fa-solid fa-plus"></i> Agregar repuesto
+                </button>
+                <div style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #888; font-size: 12px;">Total repuestos:</span>
+                    <span id="totalRepuestos" style="color: #ffcc00; font-weight: 700; font-size: 18px;">$0</span>
+                </div>
+                <input type="hidden" name="costo_repuestos" id="costoRepuestosHidden" value="0">
+            </div>
+            <small style="color: #666; font-size: 11px;">💡 Escribe el nombre y presiona Enter para guardar el repuesto</small>
+        </div>
+
+        <!-- DATOS DE LA VENTA -->
         <div class="section-card">
             <div class="section-title">💰 Datos de la Venta</div>
             <div class="grid-2">
-                <div>
-                    <label class="form-label">Monto *</label>
-                    <input type="number" name="monto" id="montoVenta" class="form-control" required step="0.01" placeholder="0">
-                </div>
                 <div>
                     <label class="form-label">Forma de Pago</label>
                     <select name="forma_pago" id="formaPago" class="form-control">
@@ -121,7 +259,7 @@
                         <option value="transferencia">🏦 Transferencia</option>
                     </select>
                 </div>
-                <div style="grid-column: 1/3;">
+                <div>
                     <label class="form-label">Producto/Servicio</label>
                     <input type="text" name="producto_vendido" id="productoVendido" class="form-control" placeholder="Ej: Batería, Kit de arrastre...">
                 </div>
@@ -130,6 +268,22 @@
                     <textarea name="observaciones" id="observacionesVenta" class="form-control" rows="2" placeholder="Detalles adicionales..."></textarea>
                 </div>
             </div>
+        </div>
+
+        <!-- RESUMEN DE LA VENTA -->
+        <div class="resumen-venta">
+            <div style="text-align: center; color: #00ff66; font-weight: 700; font-size: 16px; margin-bottom: 10px;">
+                📈 RESUMEN DE LA VENTA
+            </div>
+            <div class="row-item">
+                <span class="label">📦 Total repuestos:</span>
+                <span class="value" style="color: #ffcc00;" id="resumenRepuestos">$0</span>
+            </div>
+            <div class="row-item" style="border-top: 2px solid #00ff66; padding-top: 8px; margin-top: 4px;">
+                <span class="total-label">💰 TOTAL VENTA:</span>
+                <span class="total-value" id="totalVenta">$0</span>
+            </div>
+            <input type="hidden" name="monto" id="montoVentaHidden" value="0">
         </div>
 
         <button type="submit" class="btn-primary">
@@ -141,51 +295,362 @@
 <script>
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
-document.getElementById('formVentaRapida').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const data = {
-        nombre: document.getElementById('nombreCliente').value.trim(),
-        telefono: document.getElementById('telefonoCliente').value.trim(),
-        monto: parseFloat(document.getElementById('montoVenta').value) || 0,
-        producto_vendido: document.getElementById('productoVendido').value.trim(),
-        forma_pago: document.getElementById('formaPago').value,
-        observaciones: document.getElementById('observacionesVenta').value.trim(),
-        atendido_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
-    };
-    
-    if (!data.nombre || data.monto <= 0) {
-        alert('⚠️ Ingresa el nombre del cliente y un monto válido');
-        return;
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ============================
+    // 1. REPUESTOS - TABLA Y TOTAL
+    // ============================
+    const tablaBody = document.getElementById('cuerpoRepuestos');
+    const btnAgregar = document.getElementById('agregarRepuestoBtn');
+    const totalRepuestosSpan = document.getElementById('totalRepuestos');
+    const costoRepuestosHidden = document.getElementById('costoRepuestosHidden');
+    const resumenRepuestos = document.getElementById('resumenRepuestos');
+    const totalVenta = document.getElementById('totalVenta');
+    const montoVentaHidden = document.getElementById('montoVentaHidden');
+
+    function actualizarTotalRepuestos() {
+        let total = 0;
+        document.querySelectorAll('.costo-repuesto').forEach(input => {
+            let val = parseFloat(input.value) || 0;
+            total += val;
+        });
+        totalRepuestosSpan.textContent = `$${total.toLocaleString('es-CL')}`;
+        costoRepuestosHidden.value = total.toFixed(2);
+        resumenRepuestos.textContent = `$${total.toLocaleString('es-CL')}`;
+        totalVenta.textContent = `$${total.toLocaleString('es-CL')}`;
+        montoVentaHidden.value = total.toFixed(2);
     }
-    
-    const btn = this.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    btn.textContent = '⏳ Procesando...';
-    
-    // ✅ URL COMPLETA DE RAILWAY
-    fetch(`${API_URL}/api/venta_rapida`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(r => r.json())
-    .then(resp => {
-        if (resp.success) {
-            alert('✅ Venta registrada correctamente');
-            document.getElementById('formVentaRapida').reset();
-            window.location.href = '/balance_ventas';
-        } else {
-            alert('❌ Error: ' + (resp.error || 'Desconocido'));
+
+    function agregarFilaRepuesto(nombre = '', costo = '') {
+        const fila = document.createElement('tr');
+        fila.className = 'fila-repuesto';
+        fila.innerHTML = `
+            <td style="padding: 4px 8px; position: relative;">
+                <input type="text" name="repuesto_nombre[]" class="form-control form-control-sm repuesto-nombre" 
+                       placeholder="Escribe para buscar..." value="${nombre}" autocomplete="off">
+                <div class="repuesto-sugerencias"></div>
+            </td>
+            <td style="padding: 4px 8px;">
+                <input type="number" name="repuesto_costo[]" class="form-control form-control-sm costo-repuesto" 
+                       step="0.01" placeholder="0" value="${costo}" style="text-align: right;">
+            </td>
+            <td style="padding: 4px 8px; text-align: center;">
+                <button type="button" class="btn-eliminar-repuesto" 
+                        style="background: transparent; border: none; color: #ff6b6b; cursor: pointer; font-size: 14px; opacity: 0.3;">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </td>
+        `;
+        const eliminarBtn = fila.querySelector('.btn-eliminar-repuesto');
+        eliminarBtn.addEventListener('click', function() {
+            if (document.querySelectorAll('.fila-repuesto').length > 1) {
+                fila.remove();
+                actualizarTotalRepuestos();
+            } else {
+                alert('Debe haber al menos una fila de repuestos.');
+            }
+        });
+        tablaBody.appendChild(fila);
+        actualizarTotalRepuestos();
+        
+        const inputNombre = fila.querySelector('.repuesto-nombre');
+        if (inputNombre) {
+            inputNombre.addEventListener('input', manejarAutocompletado);
+            inputNombre.addEventListener('blur', function() {
+                setTimeout(() => {
+                    const sugerencias = this.parentElement.querySelector('.repuesto-sugerencias');
+                    if (sugerencias) sugerencias.style.display = 'none';
+                }, 300);
+            });
+        }
+    }
+
+    btnAgregar.addEventListener('click', function() {
+        agregarFilaRepuesto();
+    });
+
+    // ============================
+    // 2. AUTOCOMPLETADO DE REPUESTOS
+    // ============================
+    let timeoutId = null;
+
+    function manejarAutocompletado(e) {
+        const input = e.target;
+        const sugerencias = input.parentElement.querySelector('.repuesto-sugerencias');
+        const query = input.value.trim();
+        const fila = input.closest('.fila-repuesto');
+        const costoInput = fila.querySelector('.costo-repuesto');
+        
+        if (timeoutId) clearTimeout(timeoutId);
+        
+        if (query.length < 2) {
+            sugerencias.style.display = 'none';
+            return;
+        }
+        
+        sugerencias.innerHTML = '<div style="padding:8px 12px;color:#888;text-align:center;">🔍 Buscando...</div>';
+        sugerencias.style.display = 'block';
+        
+        timeoutId = setTimeout(function() {
+            fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        sugerencias.innerHTML = `
+                            <div style="padding:8px 12px;color:#666;text-align:center;">
+                                No hay resultados. Escribe completo y presiona Enter para guardar.
+                            </div>
+                        `;
+                        sugerencias.style.display = 'block';
+                        return;
+                    }
+                    sugerencias.innerHTML = data.map(item => `
+                        <div class="sugerencia-item" 
+                             data-nombre="${item.nombre}" 
+                             data-costo="${item.costo_venta_final || item.costo || 0}">
+                            <span>${item.nombre}</span>
+                            <span class="costo">$${item.costo_venta_final || item.costo || 0}</span>
+                        </div>
+                    `).join('');
+                    sugerencias.style.display = 'block';
+                    
+                    sugerencias.querySelectorAll('.sugerencia-item').forEach(el => {
+                        el.addEventListener('click', function() {
+                            const nombre = this.dataset.nombre;
+                            const costo = this.dataset.costo;
+                            input.value = nombre;
+                            costoInput.value = costo;
+                            actualizarTotalRepuestos();
+                            sugerencias.style.display = 'none';
+                        });
+                    });
+                })
+                .catch(() => {
+                    sugerencias.innerHTML = '<div style="padding:8px 12px;color:#ff6b6b;text-align:center;">❌ Error al cargar</div>';
+                    sugerencias.style.display = 'block';
+                });
+        }, 400);
+    }
+
+    // ============================
+    // 3. EVENTOS INICIALES
+    // ============================
+    document.querySelectorAll('.repuesto-nombre').forEach(input => {
+        input.addEventListener('input', manejarAutocompletado);
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                const sugerencias = this.parentElement.querySelector('.repuesto-sugerencias');
+                if (sugerencias) sugerencias.style.display = 'none';
+            }, 300);
+        });
+    });
+
+    // ============================
+    // 4. OBSERVER
+    // ============================
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1 && node.classList && node.classList.contains('fila-repuesto')) {
+                    const input = node.querySelector('.repuesto-nombre');
+                    if (input) {
+                        input.addEventListener('input', manejarAutocompletado);
+                        input.addEventListener('blur', function() {
+                            setTimeout(() => {
+                                const sugerencias = this.parentElement.querySelector('.repuesto-sugerencias');
+                                if (sugerencias) sugerencias.style.display = 'none';
+                            }, 300);
+                        });
+                    }
+                }
+            });
+        });
+    });
+    observer.observe(tablaBody, { childList: true });
+
+    // ============================
+    // 5. CERRAR SUGERENCIAS
+    // ============================
+    document.addEventListener('click', function(e) {
+        if (!e.target.classList.contains('repuesto-nombre')) {
+            document.querySelectorAll('.repuesto-sugerencias').forEach(el => {
+                el.style.display = 'none';
+            });
+        }
+    });
+
+    // ============================
+    // 6. GUARDAR REPUESTO CON ENTER
+    // ============================
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const input = document.activeElement;
+            if (input && input.classList.contains('repuesto-nombre')) {
+                const fila = input.closest('.fila-repuesto');
+                const costoInput = fila.querySelector('.costo-repuesto');
+                const nombre = input.value.trim();
+                const costoVentaFinal = parseFloat(costoInput.value) || 0;
+                
+                if (nombre && costoVentaFinal > 0) {
+                    fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(nombre)}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            const existe = data.some(item => item.nombre.toLowerCase() === nombre.toLowerCase());
+                            if (!existe) {
+                                const costoProveedor = prompt(
+                                    `📦 Ingresa el costo de compra para "${nombre}":\n\n` +
+                                    `💰 Precio de venta final: $${costoVentaFinal}\n` +
+                                    `🏷️ IVA: 19%\n\n` +
+                                    `El margen se calculará automáticamente.`,
+                                    Math.round(costoVentaFinal / 1.19 / 1.3)
+                                );
+                                
+                                if (costoProveedor === null) return;
+                                
+                                const costoProv = parseFloat(costoProveedor) || 0;
+                                if (costoProv <= 0) {
+                                    alert('❌ El costo de compra debe ser mayor a 0');
+                                    return;
+                                }
+                                
+                                const iva = 1.19;
+                                const costoConIva = costoProv * iva;
+                                const margenCalculado = ((costoVentaFinal / costoConIva) - 1) * 100;
+                                const margenFinal = Math.round(margenCalculado * 10) / 10;
+                                
+                                const confirmar = confirm(
+                                    `📊 Resumen del repuesto:\n\n` +
+                                    `🔧 Nombre: ${nombre}\n` +
+                                    `💰 Costo Proveedor: $${costoProv}\n` +
+                                    `💵 Costo Venta Final: $${costoVentaFinal}\n` +
+                                    `📈 Margen: ${margenFinal}%\n` +
+                                    `🏷️ IVA incluido: 19%\n\n` +
+                                    `¿Guardar este repuesto?`
+                                );
+                                
+                                if (!confirmar) return;
+                                
+                                fetch(`${API_URL}/api/repuestos`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ 
+                                        nombre: nombre, 
+                                        costo_proveedor: costoProv, 
+                                        margen_ganancia: margenFinal,
+                                        proveedor: 'Manual' 
+                                    })
+                                })
+                                .then(r => r.json())
+                                .then(resp => {
+                                    if (resp.success) {
+                                        alert(`✅ Repuesto "${nombre}" guardado correctamente\n\n📈 Margen calculado: ${margenFinal}%`);
+                                        location.reload();
+                                    } else {
+                                        alert('❌ Error al guardar el repuesto: ' + (resp.error || 'Desconocido'));
+                                    }
+                                })
+                                .catch(() => {
+                                    alert('❌ Error de conexión al guardar el repuesto');
+                                });
+                            } else {
+                                const existente = data.find(item => item.nombre.toLowerCase() === nombre.toLowerCase());
+                                alert(
+                                    `ℹ️ El repuesto "${nombre}" ya existe:\n\n` +
+                                    `💰 Costo Venta Final: $${existente.costo_venta_final || existente.costo || 0}\n` +
+                                    `📈 Margen: ${existente.margen_ganancia || 0}%`
+                                );
+                            }
+                        })
+                        .catch(() => {
+                            alert('❌ Error al verificar el repuesto');
+                        });
+                }
+            }
+        }
+    });
+
+    // ============================
+    // 7. INICIALIZAR
+    // ============================
+    if (document.querySelectorAll('.fila-repuesto').length === 0) {
+        agregarFilaRepuesto();
+    } else {
+        actualizarTotalRepuestos();
+    }
+
+    setInterval(actualizarTotalRepuestos, 500);
+
+    // ============================
+    // 8. REGISTRAR VENTA
+    // ============================
+    document.getElementById('formVentaRapida').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const nombre = document.getElementById('nombreCliente').value.trim();
+        const telefono = document.getElementById('telefonoCliente').value.trim();
+        const forma_pago = document.getElementById('formaPago').value;
+        const producto_vendido = document.getElementById('productoVendido').value.trim();
+        const observaciones = document.getElementById('observacionesVenta').value.trim();
+        const monto = parseFloat(document.getElementById('montoVentaHidden').value) || 0;
+        
+        // Obtener detalles de repuestos
+        const detalles_repuestos = [];
+        document.querySelectorAll('.fila-repuesto').forEach(fila => {
+            const nombreRep = fila.querySelector('.repuesto-nombre')?.value || '';
+            const costoRep = parseFloat(fila.querySelector('.costo-repuesto')?.value) || 0;
+            if (nombreRep && costoRep > 0) {
+                detalles_repuestos.push({ nombre: nombreRep, costo: costoRep });
+            }
+        });
+        
+        if (!nombre) {
+            alert('⚠️ Ingresa el nombre del cliente');
+            return;
+        }
+        
+        if (monto <= 0) {
+            alert('⚠️ El monto total debe ser mayor a 0');
+            return;
+        }
+        
+        const data = {
+            nombre: nombre,
+            telefono: telefono,
+            monto: monto,
+            forma_pago: forma_pago,
+            producto_vendido: producto_vendido,
+            observaciones: observaciones,
+            atendido_por: '{{ session.get("nombre_completo", session.get("usuario")) }}',
+            detalles_repuestos: detalles_repuestos
+        };
+        
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = '⏳ Procesando...';
+        
+        fetch(`${API_URL}/api/venta_rapida`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                alert(`✅ Venta registrada correctamente\n\n💰 Total: $${monto.toLocaleString('es-CL')}`);
+                document.getElementById('formVentaRapida').reset();
+                window.location.href = '/balance_ventas';
+            } else {
+                alert('❌ Error: ' + (resp.error || 'Desconocido'));
+                btn.disabled = false;
+                btn.textContent = '💰 Registrar Venta';
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+            alert('❌ Error de conexión');
             btn.disabled = false;
             btn.textContent = '💰 Registrar Venta';
-        }
-    })
-    .catch(error => {
-        console.error('❌ Error:', error);
-        alert('❌ Error de conexión');
-        btn.disabled = false;
-        btn.textContent = '💰 Registrar Venta';
+        });
     });
 });
 </script>
