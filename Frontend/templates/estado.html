@@ -39,10 +39,10 @@
     </div>
     
     <!-- ============================
-         DATOS SEGÚN TIPO DE VENTA (FORZADO)
+         DATOS SEGÚN TIPO DE VENTA (USANDO tipo_venta)
          ============================ -->
     {% if r.tipo_venta == 'directa' %}
-    <!-- ✅ VENTA DIRECTA: SOLO Productos + Forma de Pago -->
+    <!-- ✅ VENTA DIRECTA: Productos + Forma de Pago -->
     <div>
         <strong style="color:#90e0a0;">📦 Productos:</strong> 
         {% if r.detalles_repuestos %}
