@@ -177,19 +177,30 @@
                 </tr>
             </thead>
             <tbody>
-                {% for r in registros %}
-                <tr>
-                    <td>{{ r.id }}</td>
-                    <td>{{ r.nombre }}</td>
-                    <td>{{ r.producto_vendido or r.marca or '-' }}</td>
-                    <td style="color: #00ff66; font-weight: 600;">${{ "{:,.0f}".format(r.monto) }}</td>
-                    <td>{{ r.fecha }}</td>
-                    <td>
-                        {% if r.tipo_venta == 'directa' %}
-                            <span class="badge-directa">⚡ Venta Rápida</span>
-                        {% else %}
-                            <span class="badge-trabajo">🔧 Trabajo</span>
-                        {% endif %}
+               {% for r in registros %}
+<tr>
+    <td>{{ r.id }}</td>
+    <td>{{ r.nombre }}</td>
+    <td>
+        {% if r.detalles_repuestos %}
+            {% for item in r.detalles_repuestos %}
+                <span style="display: inline-block; background: rgba(0,255,102,0.06); padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 11px;">
+                    {{ item.nombre }} 
+                    <span style="color: #ffcc00;">(${{ "{:,.0f}".format(item.costo) }})</span>
+                </span>
+            {% endfor %}
+        {% else %}
+            {{ r.producto_vendido or r.marca or '-' }}
+        {% endif %}
+    </td>
+    <td style="color: #00ff66; font-weight: 600;">${{ "{:,.0f}".format(r.monto) }}</td>
+    <td>{{ r.fecha }}</td>
+    <td>
+        {% if r.tipo_venta == 'directa' %}
+            <span class="badge-directa">⚡ Venta Rápida</span>
+        {% else %}
+            <span class="badge-trabajo">🔧 Trabajo</span>
+        {% endif %}
                     </td>
                 </tr>
                 {% else %}
