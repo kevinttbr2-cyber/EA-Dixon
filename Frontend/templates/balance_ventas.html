@@ -30,6 +30,10 @@
         font-size: 22px;
         font-weight: 700;
     }
+    .comparativo-card .margen {
+        font-size: 14px;
+        font-weight: 600;
+    }
     .filtro-card {
         display: flex;
         flex-direction: column;
@@ -94,23 +98,24 @@
         <div class="comparativo-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
             <div style="font-size: 28px;">💰</div>
             <div style="color: #888; font-size: 12px;">Total Ventas</div>
-            <div class="total" style="color: #00ff66;">${{ "{:,.0f}".format(total_ventas) }}</div>
+            <div class="total" style="color: #00ff66;">${{ "{:,.0f}".format(total_ventas|default(0)) }}</div>
+            <div style="color: #888; font-size: 12px;">{{ registros|length }} registros</div>
         </div>
         <div class="comparativo-card" style="border-color: rgba(255,200,0,0.30); background: rgba(255,200,0,0.04);">
             <div style="font-size: 28px;">🔧</div>
             <div style="color: #888; font-size: 12px;">Trabajo</div>
-            <div class="total" style="color: #ffcc00;">${{ "{:,.0f}".format(total_trabajo) }}</div>
-            <div style="color: #888; font-size: 12px;">📈 {{ trabajo_margen or 0 }}% margen</div>
+            <div class="total" style="color: #ffcc00;">${{ "{:,.0f}".format(total_trabajo|default(0)) }}</div>
+            <div class="margen" style="color: #ffcc00;">📈 {{ trabajo_margen|default(0) }}% margen</div>
         </div>
         <div class="comparativo-card" style="border-color: rgba(79,195,247,0.30); background: rgba(79,195,247,0.04);">
             <div style="font-size: 28px;">⚡</div>
             <div style="color: #888; font-size: 12px;">Venta Directa</div>
-            <div class="total" style="color: #4fc3f7;">${{ "{:,.0f}".format(total_directa) }}</div>
-            <div style="color: #888; font-size: 12px;">📈 {{ directa_margen or 0 }}% margen</div>
+            <div class="total" style="color: #4fc3f7;">${{ "{:,.0f}".format(total_directa|default(0)) }}</div>
+            <div class="margen" style="color: #4fc3f7;">📈 {{ directa_margen|default(0) }}% margen</div>
         </div>
     </div>
 
-    <!-- GANANCIA NETA -->
+    <!-- GANANCIA -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
         <div class="comparativo-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
             <div style="font-size: 24px;">📊</div>
