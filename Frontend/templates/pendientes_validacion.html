@@ -2,139 +2,350 @@
 
 {% block content %}
 
-<div class="base-container">
-    <h2 style="color: #4fc3f7; font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 5px;">
-        📊 Pendientes de Validación
-    </h2>
-    <p style="color: #888; text-align: center; margin-bottom: 20px;">
-        Pagos registrados que necesitan validación de costos y ganancia neta
-    </p>
-
-    <!-- Contador -->
-    <div style="
+<style>
+    /* ============================================
+       ESTILOS PARA TARJETAS ANDROID (IGUAL QUE REGISTROS)
+       ============================================ */
+    .card-android {
+        background: rgba(20,20,20,0.80);
+        border: 1px solid rgba(0,255,102,0.20);
+        border-radius: 14px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        backdrop-filter: blur(8px);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .card-android:hover {
+        border-color: rgba(0,255,102,0.30);
+        transform: translateY(-1px);
+    }
+    
+    .card-android .cliente-header {
         display: flex;
-        gap: 15px;
-        justify-content: center;
+        justify-content: space-between;
+        align-items: center;
         flex-wrap: wrap;
-        margin-bottom: 20px;
-    ">
-        <div style="
-            background: rgba(79, 195, 247, 0.08);
-            border: 1px solid rgba(79, 195, 247, 0.20);
-            border-radius: 12px;
-            padding: 10px 25px;
-            text-align: center;
-        ">
-            <div style="font-size: 11px; color: #4fc3f7; text-transform: uppercase; letter-spacing: 0.5px;">Pendientes</div>
-            <div style="font-size: 28px; font-weight: 700; color: #4fc3f7;">{{ pendientes|length }}</div>
-        </div>
-        <div style="
-            background: rgba(0, 255, 102, 0.08);
-            border: 1px solid rgba(0, 255, 102, 0.20);
-            border-radius: 12px;
-            padding: 10px 25px;
-            text-align: center;
-        ">
-            <div style="font-size: 11px; color: #00ff66; text-transform: uppercase; letter-spacing: 0.5px;">Validados</div>
-            <div style="font-size: 28px; font-weight: 700; color: #00ff66;">{{ validados|length }}</div>
-        </div>
-        <div style="
-            background: rgba(255, 200, 0, 0.08);
-            border: 1px solid rgba(255, 200, 0, 0.20);
-            border-radius: 12px;
-            padding: 10px 25px;
-            text-align: center;
-        ">
-            <div style="font-size: 11px; color: #ffcc00; text-transform: uppercase; letter-spacing: 0.5px;">Total Pagado</div>
-            <div style="font-size: 28px; font-weight: 700; color: #ffcc00;">
-                ${{ "{:,.0f}".format(total_pagado) }}
-            </div>
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .card-android .cliente-nombre {
+        font-size: 18px;
+        font-weight: 700;
+        color: #00ff66;
+    }
+    
+    .card-android .cliente-monto {
+        font-size: 20px;
+        font-weight: 700;
+        color: #00ff66;
+    }
+    
+    .card-android .cliente-detalles {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2px 16px;
+        font-size: 13px;
+        color: #ccc;
+    }
+    
+    .card-android .cliente-detalles strong {
+        color: #90e0a0;
+        font-weight: 500;
+    }
+    
+    .card-android .btn-validar {
+        background: rgba(79,195,247,0.15) !important;
+        color: #4fc3f7 !important;
+        border: 1px solid rgba(79,195,247,0.25) !important;
+        border-radius: 10px !important;
+        padding: 8px 16px !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        text-decoration: none !important;
+        display: inline-block !important;
+        transition: all 0.3s ease !important;
+        cursor: pointer !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+    
+    .card-android .btn-validar:hover {
+        background: rgba(79,195,247,0.25) !important;
+        transform: scale(1.01);
+    }
+    
+    .card-android .badge-pendiente {
+        background: rgba(79,195,247,0.12);
+        color: #4fc3f7;
+        padding: 2px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        border: 1px solid rgba(79,195,247,0.20);
+        font-weight: 600;
+    }
+    
+    .card-android .badge-validado {
+        background: rgba(0,255,102,0.12);
+        color: #00ff66;
+        padding: 2px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        border: 1px solid rgba(0,255,102,0.20);
+        font-weight: 600;
+    }
+    
+    .filtro-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        min-width: 80px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.02);
+    }
+    
+    .filtro-card .etiqueta {
+        font-size: 11px;
+        color: #888;
+        font-weight: 500;
+    }
+    
+    .filtro-card .numero {
+        font-size: 22px;
+        font-weight: 700;
+        color: #fff;
+    }
+    
+    .filtro-card.active-pendientes {
+        border-color: #4fc3f7;
+        background: rgba(79,195,247,0.06);
+    }
+    .filtro-card.active-pendientes .numero {
+        color: #4fc3f7;
+    }
+    
+    .filtro-card.active-validados {
+        border-color: #00ff66;
+        background: rgba(0,255,102,0.06);
+    }
+    .filtro-card.active-validados .numero {
+        color: #00ff66;
+    }
+    
+    .filtro-card.active-total {
+        border-color: #ffcc00;
+        background: rgba(255,200,0,0.06);
+    }
+    .filtro-card.active-total .numero {
+        color: #ffcc00;
+    }
+    
+    @media (max-width: 600px) {
+        .card-android .cliente-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .card-android .cliente-detalles {
+            grid-template-columns: 1fr;
+        }
+        .card-android .cliente-monto {
+            align-self: flex-end;
+        }
+    }
+</style>
+
+<div class="base-container">
+    <!-- ============================
+         ENCABEZADO
+         ============================ -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+        <h2 style="color: #4fc3f7; font-weight: 700; margin: 0; font-size: 22px;">
+            📊 Pendientes de Validación
+        </h2>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="/registros" class="btn btn-sm" style="
+                background: rgba(255,255,255,0.06);
+                color: #888;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 20px;
+                padding: 6px 16px;
+                text-decoration: none;
+                font-size: 13px;
+            ">
+                📋 Registros
+            </a>
+            <a href="/estado" class="btn btn-sm" style="
+                background: rgba(255,255,255,0.06);
+                color: #888;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 20px;
+                padding: 6px 16px;
+                text-decoration: none;
+                font-size: 13px;
+            ">
+                ← Estado
+            </a>
         </div>
     </div>
 
     <!-- ============================
-         TABLA DE PENDIENTES
+         CONTADORES (estilo Android)
          ============================ -->
-    <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(79, 195, 247, 0.20); background: #141414;">
-        <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 700px; width: 100%;">
-            <thead style="background: #4fc3f7 !important; color: #000 !important;">
-                <tr>
-                    <th style="padding: 10px 12px; text-align: center;">OT</th>
-                    <th style="padding: 10px 12px; text-align: center;">Cliente</th>
-                    <th style="padding: 10px 12px; text-align: center;">Monto Pagado</th>
-                    <th style="padding: 10px 12px; text-align: center;">Fecha</th>
-                    <th style="padding: 10px 12px; text-align: center;">Vehículo</th>
-                    <th style="padding: 10px 12px; text-align: center;">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in pendientes %}
-                <tr>
-                    <td style="padding: 8px 10px; text-align: center; font-weight: 600;">#{{ r.id }}</td>
-                    <td style="padding: 8px 10px; text-align: center;">{{ r.nombre }}</td>
-                    <td style="padding: 8px 10px; text-align: center; color: #00ff66; font-weight: 700;">
-                        ${{ "{:,.0f}".format(r.monto) }}
-                    </td>
-                    <td style="padding: 8px 10px; text-align: center; font-size: 12px;">
-                        {{ r.fecha[:10] if r.fecha else '' }}
-                        <br><span style="color: #888; font-size: 10px;">{{ r.hora[:5] if r.hora else '' }}</span>
-                    </td>
-                    <td style="padding: 8px 10px; text-align: center; font-size: 12px;">
-                        {{ r.marca }} {{ r.modelo }}
-                        <br><span style="color: #888; font-size: 10px;">{{ r.patente }}</span>
-                    </td>
-                    <td style="padding: 8px 10px; text-align: center;">
-                        <a href="/validar_pago/{{ r.id }}" class="btn btn-sm" style="
-                            background: rgba(79, 195, 247, 0.15);
-                            color: #4fc3f7;
-                            border: 1px solid rgba(79, 195, 247, 0.25);
-                            border-radius: 16px;
-                            padding: 6px 16px;
-                            text-decoration: none;
-                            font-size: 12px;
-                            font-weight: 600;
-                            transition: all 0.3s ease;
-                        " onmouseover="this.style.background='rgba(79,195,247,0.25)'" onmouseout="this.style.background='rgba(79,195,247,0.15)'">
-                            📊 Validar Costos
-                        </a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" style="text-align: center; color: #666; padding: 40px 0;">
-                        <i class="fa-solid fa-check-circle" style="font-size: 48px; color: #00ff66; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
-                        <p style="font-size: 16px;">✅ No hay pagos pendientes de validación</p>
-                        <p style="color: #888; font-size: 13px;">Todos los pagos ya han sido validados</p>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+        <a href="?estado=pendientes" class="filtro-card active-pendientes">
+            <div class="etiqueta">⏳ Pendientes</div>
+            <div class="numero">{{ pendientes|length }}</div>
+        </a>
+        <a href="?estado=validados" class="filtro-card active-validados">
+            <div class="etiqueta">✅ Validados</div>
+            <div class="numero">{{ validados|length }}</div>
+        </a>
+        <a href="?estado=todos" class="filtro-card active-total">
+            <div class="etiqueta">💰 Total Pagado</div>
+            <div class="numero" style="font-size: 18px;">${{ "{:,.0f}".format(total_pagado) }}</div>
+        </a>
     </div>
 
-    <!-- Botones -->
-    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-        <a href="/registros" class="btn btn-sm" style="
-            background: rgba(255,255,255,0.06);
-            color: #888;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 8px 24px;
-            text-decoration: none;
+    <!-- ============================
+         BUSCADOR (opcional)
+         ============================ -->
+    <div style="margin-bottom: 12px;">
+        <input type="text" id="buscadorPendientes" placeholder="🔍 Buscar cliente o vehículo..." style="
+            width: 100%;
+            background: rgba(0,0,0,0.40);
+            color: #fff;
+            border: 1px solid rgba(0,255,102,0.20);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 13px;
+            transition: all 0.3s ease;
         ">
-            📋 Ver Registros
-        </a>
-        <a href="/estado" class="btn btn-sm" style="
-            background: rgba(255,255,255,0.06);
-            color: #888;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 8px 24px;
-            text-decoration: none;
-        ">
-            ← Volver al Estado
-        </a>
     </div>
+
+    <!-- ============================
+         TARJETAS DE PENDIENTES (estilo Android)
+         ============================ -->
+    <div id="listaPendientes">
+        {% for r in pendientes %}
+        <div class="card-android" data-cliente="{{ r.nombre }}" data-patente="{{ r.patente }}" data-id="{{ r.id }}">
+            <!-- HEADER -->
+            <div class="cliente-header">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span class="cliente-nombre">#{{ r.id }} {{ r.nombre }}</span>
+                    <span class="badge-pendiente">⏳ Pendiente</span>
+                </div>
+                <span class="cliente-monto">${{ "{:,.0f}".format(r.monto) }}</span>
+            </div>
+            
+            <!-- DETALLES -->
+            <div class="cliente-detalles">
+                <div><strong>📅 Fecha:</strong> {{ r.fecha[:10] if r.fecha else '' }}</div>
+                <div><strong>🕐 Hora:</strong> {{ r.hora[:5] if r.hora else '' }}</div>
+                <div><strong>🚗 Vehículo:</strong> {{ r.marca }} {{ r.modelo }}</div>
+                <div><strong>🔢 Patente:</strong> {{ r.patente }}</div>
+                <div><strong>👤 Atendido por:</strong> {{ r.atendido_por or r.usuario or '-' }}</div>
+                <div><strong>💳 Forma Pago:</strong> 
+                    {% if r.forma_pago %}
+                        {% if r.forma_pago == 'efectivo' %}💵 Efectivo
+                        {% elif r.forma_pago == 'tarjeta' %}💳 Tarjeta
+                        {% elif r.forma_pago == 'transferencia' %}🏦 Transferencia
+                        {% else %}🔄 {{ r.forma_pago }}
+                        {% endif %}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- OBSERVACIONES -->
+            {% if r.observaciones_pago or r.observaciones_cliente %}
+            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 12px; color: #666;">
+                📝 {{ (r.observaciones_pago or r.observaciones_cliente or '')[:80] }}
+            </div>
+            {% endif %}
+            
+            <!-- BOTÓN VALIDAR -->
+            <div style="margin-top: 10px;">
+                <a href="/validar_pago/{{ r.id }}" class="btn-validar">
+                    📊 Validar Costos
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div style="text-align:center;color:#666;padding:40px 0;">
+            <i class="fa-solid fa-check-circle" style="font-size:48px;color:#00ff66;opacity:0.2;display:block;margin-bottom:10px;"></i>
+            <p style="font-size:16px;">✅ No hay pagos pendientes de validación</p>
+            <p style="color:#888;font-size:13px;">Todos los pagos ya han sido validados</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ============================
+         VALIDADOS (si quieres mostrarlos)
+         ============================ -->
+    {% if validados and validados|length > 0 %}
+    <div style="margin-top: 25px;">
+        <h4 style="color: #00ff66; font-weight: 700; margin-bottom: 12px; font-size: 16px;">
+            ✅ Registros Validados ({{ validados|length }})
+        </h4>
+        {% for r in validados %}
+        <div class="card-android" style="border-color: rgba(0,255,102,0.15); opacity: 0.8;" data-cliente="{{ r.nombre }}" data-patente="{{ r.patente }}" data-id="{{ r.id }}">
+            <div class="cliente-header">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span class="cliente-nombre" style="color: #888;">#{{ r.id }} {{ r.nombre }}</span>
+                    <span class="badge-validado">✅ Validado</span>
+                </div>
+                <span class="cliente-monto" style="color: #00ff66;">${{ "{:,.0f}".format(r.monto) }}</span>
+            </div>
+            <div class="cliente-detalles">
+                <div><strong>📅 Fecha:</strong> {{ r.fecha[:10] if r.fecha else '' }}</div>
+                <div><strong>🚗 Vehículo:</strong> {{ r.marca }} {{ r.modelo }}</div>
+                <div><strong>🔢 Patente:</strong> {{ r.patente }}</div>
+                <div><strong>👤 Validado por:</strong> {{ r.validado_por or 'Sistema' }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 </div>
+
+<!-- ============================
+     SCRIPTS
+     ============================ -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ============================
+    // BUSCADOR EN TARJETAS
+    // ============================
+    const buscador = document.getElementById('buscadorPendientes');
+    if (buscador) {
+        buscador.addEventListener('input', function() {
+            const texto = this.value.toLowerCase().trim();
+            const tarjetas = document.querySelectorAll('.card-android');
+            
+            tarjetas.forEach(tarjeta => {
+                const cliente = tarjeta.getAttribute('data-cliente') || '';
+                const patente = tarjeta.getAttribute('data-patente') || '';
+                const id = tarjeta.getAttribute('data-id') || '';
+                const contenido = tarjeta.textContent.toLowerCase();
+                
+                const coincide = texto === '' || 
+                    contenido.includes(texto) ||
+                    cliente.toLowerCase().includes(texto) ||
+                    patente.toLowerCase().includes(texto) ||
+                    id.includes(texto);
+                
+                tarjeta.style.display = coincide ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
 
 {% endblock %}
