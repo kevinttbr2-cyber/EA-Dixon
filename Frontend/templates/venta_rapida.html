@@ -139,6 +139,8 @@
 </div>
 
 <script>
+const API_URL = 'https://ea-dixon-production.up.railway.app';
+
 document.getElementById('formVentaRapida').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -161,7 +163,8 @@ document.getElementById('formVentaRapida').addEventListener('submit', function(e
     btn.disabled = true;
     btn.textContent = '⏳ Procesando...';
     
-    fetch('https://ea-dixon-production.up.railway.app/api/venta_rapida', {
+    // ✅ URL COMPLETA DE RAILWAY
+    fetch(`${API_URL}/api/venta_rapida`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -178,7 +181,8 @@ document.getElementById('formVentaRapida').addEventListener('submit', function(e
             btn.textContent = '💰 Registrar Venta';
         }
     })
-    .catch(() => {
+    .catch(error => {
+        console.error('❌ Error:', error);
         alert('❌ Error de conexión');
         btn.disabled = false;
         btn.textContent = '💰 Registrar Venta';
