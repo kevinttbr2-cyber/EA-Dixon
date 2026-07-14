@@ -110,46 +110,18 @@
         </div>
     </div>
 
-    <!-- TABLA -->
-    <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(0, 255, 102, 0.15); background: #141414;">
-        <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 700px; width: 100%;">
-            <thead style="background: #2a6d44 !important; color: #ffffff !important;">
-                <tr>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Producto</th>
-                    <th>Monto</th>
-                    <th>Fecha</th>
-                    <th>Tipo</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in registros %}
-                <tr>
-                    <td>{{ r.id }}</td>
-                    <td>{{ r.nombre }}</td>
-                    <td>{{ r.producto_vendido or r.marca or '-' }}</td>
-                    <td style="color: #00ff66; font-weight: 600;">${{ "{:,.0f}".format(r.monto) }}</td>
-                    <td>{{ r.fecha }}</td>
-                    <td>
-                        {% if r.tipo_venta == 'directa' %}
-                            <span class="badge-directa">⚡ Venta Rápida</span>
-                        {% else %}
-                            <span class="badge-trabajo">🔧 Trabajo</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" style="text-align: center; color: #666; padding: 30px 0;">
-                        <i class="fa-solid fa-inbox" style="font-size: 48px; color: #00ff66; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
-                        <p>No hay ventas registradas</p>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-{% endblock %}
+    <!-- GANANCIA NETA -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <div class="comparativo-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
+            <div style="font-size: 24px;">📊</div>
+            <div style="color: #888; font-size: 12px;">Ganancia Neta</div>
+            <div class="total" style="color: #00ff66;">${{ "{:,.0f}".format(ganancia_neta) }}</div>
+        </div>
+        <div class="comparativo-card" style="border-color: rgba(255,200,0,0.30); background: rgba(255,200,0,0.04);">
+            <div style="font-size: 24px;">📊</div>
+            <div style="color: #888; font-size: 12px;">Ganancia Trabajo</div>
+            <div class="total" style="color: #ffcc00;">${{ "{:,.0f}".format(ganancia_trabajo) }}</div>
+        </div>
+        <div class="comparativo-card" style="border-color: rgba(79,195,247,0.30); background: rgba(79,195,247,0.04);">
+            <div style="font-size: 24px;">📊</div>
+            <div style="color: #888; font-size: 12px;">Ganancia
