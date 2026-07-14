@@ -973,7 +973,7 @@ def venta_rapida():
 
 
 # ============================
-# BALANCE DE VENTAS
+# BALANCE DE VENTAS (con margen de cada repuesto)
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
@@ -1010,20 +1010,41 @@ def balance_ventas():
         total_trabajo = float(sum(r.get('monto', 0) or 0 for r in trabajo))
         total_directa = float(sum(r.get('monto', 0) or 0 for r in directa))
         
-        # ✅ GANANCIA TRABAJO (con costos reales de repuestos)
-        repuestos_trabajo = float(sum(r.get('costo_repuestos_real', 0) or 0 for r in trabajo))
-        mano_obra = float(sum(r.get('costo_mano_obra_real', 0) or 0 for r in trabajo))
-        diagnostico = float(sum(r.get('costo_diagnostico_real', 0) or 0 for r in trabajo))
-        ganancia_trabajo = total_trabajo - (repuestos_trabajo + mano_obra + diagnostico)
+        # ✅ OBTENER COSTOS DE REPUESTOS DESDE LA TABLA repuestos
+        # Para cada registro de trabajo, obtener los repuestos y sus costos
+        ganancia_trabajo = 0
+        ganancia_directa = 0
+        total_repuestos_trabajo = 0
+        total_repuestos_directa = 0
         
-        # ✅ GANANCIA VENTA DIRECTA (monto - costo repuestos)
-        repuestos_directa = float(sum(r.get('costo_repuestos_real', 0) or 0 for r in directa))
-        ganancia_directa = total_directa - repuestos_directa
+        # 🔧 PROCESAR TRABAJO
+        for r in trabajo:
+            detalles = r.get('detalles_repuestos', [])
+            if detalles:
+                # Si tiene detalles_repuestos, calcular con esos costos
+                costo_repuestos = float(sum(item.get('costo', 0) for item in detalles))
+            else:
+                # Si no tiene detalles, usar costo_repuestos_real
+                costo_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
+            
+            total_repuestos_trabajo += costo_repuestos
+            ganancia_trabajo += float(r.get('monto', 0) or 0) - costo_repuestos
+        
+        # 🔧 PROCESAR VENTA DIRECTA
+        for r in directa:
+            detalles = r.get('detalles_repuestos', [])
+            if detalles:
+                costo_repuestos = float(sum(item.get('costo', 0) for item in detalles))
+            else:
+                costo_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
+            
+            total_repuestos_directa += costo_repuestos
+            ganancia_directa += float(r.get('monto', 0) or 0) - costo_repuestos
         
         # ✅ GANANCIA NETA TOTAL
         ganancia_neta = ganancia_trabajo + ganancia_directa
         
-        # ✅ MÁRGENES
+        # ✅ MÁRGENES (usando los costos reales de repuestos)
         trabajo_margen = (ganancia_trabajo / total_trabajo * 100) if total_trabajo > 0 else 0
         directa_margen = (ganancia_directa / total_directa * 100) if total_directa > 0 else 0
         
@@ -1035,9 +1056,11 @@ def balance_ventas():
             "total_ventas": total_ventas,
             "total_trabajo": total_trabajo,
             "total_directa": total_directa,
-            "ganancia_trabajo": ganancia_trabajo,
-            "ganancia_directa": ganancia_directa,
-            "ganancia_neta": ganancia_neta,
+            "ganancia_trabajo": round(ganancia_trabajo, 2),
+            "ganancia_directa": round(ganancia_directa, 2),
+            "ganancia_neta": round(ganancia_neta, 2),
+            "total_repuestos_trabajo": round(total_repuestos_trabajo, 2),
+            "total_repuestos_directa": round(total_repuestos_directa, 2),
             "trabajo_margen": round(trabajo_margen, 1),
             "directa_margen": round(directa_margen, 1)
         })
