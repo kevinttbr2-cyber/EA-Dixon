@@ -7,6 +7,11 @@ import hmac
 import hashlib
 from datetime import datetime, timedelta
 import io
+import os
+import time
+
+os.environ['TZ'] = 'America/Santiago'
+time.tzset()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
