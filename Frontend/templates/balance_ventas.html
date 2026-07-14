@@ -115,17 +115,17 @@
         <div class="comparativo-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
             <div style="font-size: 24px;">📊</div>
             <div style="color: #888; font-size: 12px;">Ganancia Neta</div>
-            <div class="total" style="color: #00ff66;">${{ "{:,.0f}".format(ganancia_neta) }}</div>
+            <div class="total" style="color: #00ff66;">${{ "{:,.0f}".format(ganancia_neta|default(0)) }}</div>
         </div>
         <div class="comparativo-card" style="border-color: rgba(255,200,0,0.30); background: rgba(255,200,0,0.04);">
             <div style="font-size: 24px;">📊</div>
             <div style="color: #888; font-size: 12px;">Ganancia Trabajo</div>
-            <div class="total" style="color: #ffcc00;">${{ "{:,.0f}".format(ganancia_trabajo) }}</div>
+            <div class="total" style="color: #ffcc00;">${{ "{:,.0f}".format(ganancia_trabajo|default(0)) }}</div>
         </div>
         <div class="comparativo-card" style="border-color: rgba(79,195,247,0.30); background: rgba(79,195,247,0.04);">
             <div style="font-size: 24px;">📊</div>
             <div style="color: #888; font-size: 12px;">Ganancia Venta Directa</div>
-            <div class="total" style="color: #4fc3f7;">${{ "{:,.0f}".format(ganancia_directa) }}</div>
+            <div class="total" style="color: #4fc3f7;">${{ "{:,.0f}".format(ganancia_directa|default(0)) }}</div>
         </div>
     </div>
 
