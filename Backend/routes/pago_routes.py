@@ -973,7 +973,7 @@ def venta_rapida():
 
 
 # ============================
-# BALANCE DE VENTAS
+# BALANCE DE VENTAS (con ganancia neta)
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
@@ -1008,13 +1008,20 @@ def balance_ventas():
         total_trabajo = float(sum(r.get('monto', 0) or 0 for r in trabajo))
         total_directa = float(sum(r.get('monto', 0) or 0 for r in directa))
         
-        # Margen trabajo
-        repuestos = float(sum(r.get('costo_repuestos_real', 0) or 0 for r in trabajo))
+        # GANANCIA TRABAJO (con costos)
+        repuestos_trabajo = float(sum(r.get('costo_repuestos_real', 0) or 0 for r in trabajo))
         mano_obra = float(sum(r.get('costo_mano_obra_real', 0) or 0 for r in trabajo))
         diagnostico = float(sum(r.get('costo_diagnostico_real', 0) or 0 for r in trabajo))
-        ganancia_trabajo = total_trabajo - (repuestos + mano_obra + diagnostico)
-        trabajo_margen = (ganancia_trabajo / total_trabajo * 100) if total_trabajo > 0 else 0
+        ganancia_trabajo = total_trabajo - (repuestos_trabajo + mano_obra + diagnostico)
         
+        # GANANCIA DIRECTA (100% del monto)
+        ganancia_directa = total_directa
+        
+        # GANANCIA NETA TOTAL
+        ganancia_neta = ganancia_trabajo + ganancia_directa
+        
+        # Margen trabajo
+        trabajo_margen = (ganancia_trabajo / total_trabajo * 100) if total_trabajo > 0 else 0
         directa_margen = 100 if total_directa > 0 else 0
         
         cur.close()
@@ -1025,13 +1032,15 @@ def balance_ventas():
             "total_ventas": total_ventas,
             "total_trabajo": total_trabajo,
             "total_directa": total_directa,
+            "ganancia_trabajo": ganancia_trabajo,
+            "ganancia_directa": ganancia_directa,
+            "ganancia_neta": ganancia_neta,
             "trabajo_margen": round(trabajo_margen, 1),
             "directa_margen": directa_margen
         })
     except Exception as e:
         print(f"❌ Error en balance_ventas: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 # ============================
 # 18. DASHBOARD
