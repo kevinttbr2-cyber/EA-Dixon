@@ -39,10 +39,10 @@
     </div>
     
     <!-- ============================
-         DATOS SEGÚN TIPO DE VENTA
+         DATOS SEGÚN TIPO DE VENTA (FORZADO)
          ============================ -->
     {% if r.tipo_venta == 'directa' %}
-    <!-- ✅ VENTA DIRECTA: Productos + Forma de Pago -->
+    <!-- ✅ VENTA DIRECTA: SOLO Productos + Forma de Pago -->
     <div>
         <strong style="color:#90e0a0;">📦 Productos:</strong> 
         {% if r.detalles_repuestos %}
@@ -59,14 +59,14 @@
     <div><strong style="color:#90e0a0;">💳 Forma de Pago:</strong> {{ r.forma_pago or 'No especificada' }}</div>
     
     {% else %}
-    <!-- ✅ TRABAJO: Datos del vehículo (SIN MONTO) -->
+    <!-- ✅ TRABAJO: Datos del vehículo -->
     <div><strong style="color:#90e0a0;">🚗 Marca:</strong> {{ r.marca or '-' }}</div>
     <div><strong style="color:#90e0a0;">🚙 Modelo:</strong> {{ r.modelo or '-' }}</div>
     <div><strong style="color:#90e0a0;">🔢 Patente:</strong> {{ r.patente or '-' }}</div>
     {% endif %}
     
     <!-- ============================
-         DATOS COMUNES (SIN MONTO)
+         DATOS COMUNES
          ============================ -->
     <div><strong style="color:#90e0a0;">📅 Fecha:</strong> {{ r.fecha[:10] if r.fecha else '' }}</div>
     <div><strong style="color:#90e0a0;">Estado:</strong>
