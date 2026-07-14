@@ -94,7 +94,7 @@ def get_registro(id_reg):
 @pago_bp.route('/registros', methods=['GET'])
 def get_registros_filtrados():
     filtro = request.args.get('filtro', 'todos')
-    hoy = datetime.now().date()
+    hoy = get_fecha_chile()  # ✅ CORREGIDO
     
     try:
         conn, cur = get_cursor()
@@ -219,7 +219,7 @@ def eliminar_registro(id_reg):
 @pago_bp.route('/balance', methods=['GET'])
 def get_balance():
     filtro = request.args.get('filtro', 'hoy')
-    hoy = datetime.now().date()
+    hoy = get_fecha_chile()  # ✅ CORREGIDO
     
     try:
         conn, cur = get_cursor()
@@ -373,18 +373,15 @@ def validar_pago(id_reg):
         # ✅ GUARDAR REPUESTOS EN LA TABLA repuestos
         for item in detalles_repuestos:
             nombre = item.get('nombre', '').strip()
-            costo_venta = float(item.get('costo', 0) or 0)  # Este es el costo que puso el usuario
+            costo_venta = float(item.get('costo', 0) or 0)
             
             if nombre:
-                # Verificar si el repuesto ya existe en la tabla repuestos
                 cur.execute("SELECT id, costo_proveedor, costo_venta_final FROM repuestos WHERE nombre = %s", (nombre,))
                 existente = cur.fetchone()
                 
                 if existente:
-                    # ✅ Si ya existe, actualizar solo si el costo_venta_final es 0 o diferente
                     id_existente, costo_prov, costo_venta_existente = existente
                     if costo_venta_existente == 0 and costo_venta > 0:
-                        # ✅ Actualizar el costo_venta_final si estaba en 0
                         cur.execute("""
                             UPDATE repuestos 
                             SET costo_venta_final = %s, 
@@ -393,8 +390,6 @@ def validar_pago(id_reg):
                         """, (costo_venta, id_existente))
                         print(f"✅ Repuesto '{nombre}' actualizado con costo_venta_final: ${costo_venta}")
                 else:
-                    # ✅ Si NO existe, crearlo
-                    # Calcular costo_proveedor estimado (para no dejarlo en 0)
                     iva = 1.19
                     costo_proveedor_estimado = round(costo_venta / 1.19 / 1.3, 0) if costo_venta > 0 else 0
                     
@@ -414,7 +409,6 @@ def validar_pago(id_reg):
                     id_nuevo = cur.fetchone()[0]
                     print(f"✅ Repuesto '{nombre}' creado con costo_venta_final: ${costo_venta} (ID: {id_nuevo})")
         
-        # ✅ Continuar con la validación del pago
         detalles_json = json.dumps(detalles_repuestos)
         
         cur.execute("""
@@ -515,6 +509,7 @@ def get_repuestos_lista():
         print(f"Error en get_repuestos_lista: {e}")
         return jsonify([])
 
+
 # ============================
 # 12. REPUESTOS - CREAR
 # ============================
@@ -526,14 +521,13 @@ def crear_repuesto():
         costo_proveedor = float(data.get('costo_proveedor', 0))
         margen_ganancia = float(data.get('margen_ganancia', 30))
         proveedor = data.get('proveedor', '').strip()
-        costo_venta_final = float(data.get('costo_venta_final', 0))  # ✅ RECIBIR
+        costo_venta_final = float(data.get('costo_venta_final', 0))
         
         print(f"📥 Recibido en POST repuestos:")
         print(f"  - nombre: {nombre}")
         print(f"  - costo_proveedor: {costo_proveedor}")
-        print(f"  - costo_venta_final: {costo_venta_final}")  # ✅ LOG
+        print(f"  - costo_venta_final: {costo_venta_final}")
         
-        # ✅ Si NO se envió costo_venta_final pero hay costo_proveedor, calcularlo
         if costo_venta_final == 0 and costo_proveedor > 0:
             iva = 1.19
             costo_con_iva = costo_proveedor * iva
@@ -541,7 +535,6 @@ def crear_repuesto():
             costo_venta_final = round(costo_venta_final, 0)
             print(f"  - costo_venta_final calculado: {costo_venta_final}")
         
-        # ✅ Pendiente si no hay costo_proveedor
         costo_proveedor_pendiente = costo_proveedor == 0
         
         if not nombre:
@@ -581,13 +574,10 @@ def actualizar_repuesto(id_repuesto):
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
         
-        # ✅ Calcular costo_venta_final
         iva = 1.19
         costo_con_iva = costo_proveedor * iva
         costo_venta_final = costo_con_iva * (1 + (margen_ganancia / 100))
         costo_venta_final = round(costo_venta_final, 0)
-        
-        # ✅ Si se completó el costo_proveedor, quitar el estado pendiente
         costo_proveedor_pendiente = costo_proveedor == 0
         
         conn = get_connection()
@@ -904,10 +894,12 @@ def exportar_flota_pdf(flota):
         elementos.append(linea_final)
         elementos.append(Spacer(1, 0.15 * inch))
         
+        # ✅ CORREGIDO: Usar hora de Chile
+        ahora_chile = datetime.now(CHILE_TZ)
         pie_text = f"""
         <b>Dixon Electricidad Automotriz</b><br/>
         +569 9855 0331 · Neptuno 163, Local C, Lo Prado, RM, Chile<br/>
-        Reporte generado automáticamente el {datetime.now().strftime('%d/%m/%Y %H:%M')}
+        Reporte generado automáticamente el {ahora_chile.strftime('%d/%m/%Y %H:%M')}
         """
         pie = Paragraph(pie_text, pie_style)
         elementos.append(pie)
@@ -935,8 +927,10 @@ def exportar_flota_pdf(flota):
         error_trace = traceback.format_exc()
         print(f"❌ Error en exportar_flota_pdf: {error_trace}")
         return jsonify({"error": str(e)}), 500
+
+
 # ============================
-# VENTA RÁPIDA (SIN TRABAJO)
+# VENTA RÁPIDA (SIN TRABAJO) - CORREGIDO
 # ============================
 @pago_bp.route('/venta_rapida', methods=['POST'])
 def venta_rapida():
@@ -949,7 +943,9 @@ def venta_rapida():
         conn = get_connection()
         cur = conn.cursor()
         
-        # ✅ Guardar repuestos en la tabla repuestos (si vienen)
+        # ✅ Obtener fecha y hora de Chile
+        fecha_chile, hora_chile = get_fecha_hora_chile()
+        
         detalles_repuestos = data.get('detalles_repuestos', [])
         for item in detalles_repuestos:
             nombre = item.get('nombre', '').strip()
@@ -962,16 +958,18 @@ def venta_rapida():
                         VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                     """, (nombre, 0, 30, costo_venta, 'Desde Venta Rápida', True))
         
-        # ✅ Guardar la venta
+        # ✅ Guardar la venta con fecha y hora de Chile
         cur.execute("""
             INSERT INTO pagos 
             (nombre, monto, fecha, hora, estado, tipo_venta, producto_vendido, 
              atendido_por, observaciones_pago, telefono, forma_pago, detalles_repuestos)
-            VALUES (%s, %s, CURRENT_DATE, CURRENT_TIME, 'pagado', 'directa', %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, 'pagado', 'directa', %s, %s, %s, %s, %s, %s)
             RETURNING id
         """, (
             data.get('nombre'),
             data.get('monto'),
+            fecha_chile,  # ✅ Fecha de Chile
+            hora_chile,   # ✅ Hora de Chile
             data.get('producto_vendido', ''),
             data.get('atendido_por', 'Técnico'),
             data.get('observaciones', ''),
@@ -992,16 +990,13 @@ def venta_rapida():
 
 
 # ============================
-# BALANCE DE VENTAS (usando datos de repuestos)
-# ============================
-# ============================
 # BALANCE DE VENTAS (usando márgenes de repuestos)
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
     try:
         filtro = request.args.get('filtro', 'hoy')
-        hoy = datetime.now().date()
+        hoy = get_fecha_chile()  # ✅ CORREGIDO
         
         conn, cur = get_cursor()
         
@@ -1023,21 +1018,19 @@ def balance_ventas():
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
-        # ✅ SEPARAR POR TIPO DE VENTA
         trabajo = [r for r in registros if r.get('tipo_venta') != 'directa']
         directa = [r for r in registros if r.get('tipo_venta') == 'directa']
         
-        # ✅ TOTALES
         total_ventas = float(sum(r.get('monto', 0) or 0 for r in registros))
         total_trabajo = float(sum(r.get('monto', 0) or 0 for r in trabajo))
         total_directa = float(sum(r.get('monto', 0) or 0 for r in directa))
         
         # ============================
-        # PROCESAR TRABAJO (tomar márgenes de repuestos)
+        # PROCESAR TRABAJO
         # ============================
         total_repuestos_trabajo = 0
         ganancia_trabajo = 0
-        margenes_trabajo = []  # ✅ Lista de márgenes de cada repuesto
+        margenes_trabajo = []
         
         for r in trabajo:
             detalles = r.get('detalles_repuestos', [])
@@ -1046,14 +1039,13 @@ def balance_ventas():
             for item in detalles:
                 nombre = item.get('nombre', '')
                 if nombre:
-                    # ✅ OBTENER costo_proveedor y margen_ganancia DESDE repuestos
                     cur.execute("SELECT costo_proveedor, margen_ganancia FROM repuestos WHERE nombre = %s", (nombre,))
                     resultado = cur.fetchone()
                     if resultado:
                         costo_prov = float(resultado[0] or 0)
-                        margen_item = float(resultado[1] or 0)  # ✅ El margen que ya tiene el repuesto
+                        margen_item = float(resultado[1] or 0)
                         costo_repuestos += costo_prov
-                        margenes_trabajo.append(margen_item)  # ✅ Guardar margen del repuesto
+                        margenes_trabajo.append(margen_item)
                     else:
                         costo_repuestos += float(item.get('costo', 0) or 0)
             
@@ -1063,18 +1055,17 @@ def balance_ventas():
             total_repuestos_trabajo += costo_repuestos
             ganancia_trabajo += float(r.get('monto', 0) or 0) - costo_repuestos
         
-        # ✅ MARGEN TRABAJO = PROMEDIO de los márgenes de los repuestos
         if margenes_trabajo:
             trabajo_margen = sum(margenes_trabajo) / len(margenes_trabajo)
         else:
             trabajo_margen = 0
         
         # ============================
-        # PROCESAR VENTA DIRECTA (tomar márgenes de repuestos)
+        # PROCESAR VENTA DIRECTA
         # ============================
         total_repuestos_directa = 0
         ganancia_directa = 0
-        margenes_directa = []  # ✅ Lista de márgenes de cada repuesto
+        margenes_directa = []
         
         for r in directa:
             detalles = r.get('detalles_repuestos', [])
@@ -1087,9 +1078,9 @@ def balance_ventas():
                     resultado = cur.fetchone()
                     if resultado:
                         costo_prov = float(resultado[0] or 0)
-                        margen_item = float(resultado[1] or 0)  # ✅ El margen que ya tiene el repuesto
+                        margen_item = float(resultado[1] or 0)
                         costo_repuestos += costo_prov
-                        margenes_directa.append(margen_item)  # ✅ Guardar margen del repuesto
+                        margenes_directa.append(margen_item)
                     else:
                         costo_repuestos += float(item.get('costo', 0) or 0)
             
@@ -1099,13 +1090,11 @@ def balance_ventas():
             total_repuestos_directa += costo_repuestos
             ganancia_directa += float(r.get('monto', 0) or 0) - costo_repuestos
         
-        # ✅ MARGEN VENTA DIRECTA = PROMEDIO de los márgenes de los repuestos
         if margenes_directa:
             directa_margen = sum(margenes_directa) / len(margenes_directa)
         else:
             directa_margen = 0
         
-        # ✅ GANANCIA NETA TOTAL
         ganancia_neta = ganancia_trabajo + ganancia_directa
         
         cur.close()
@@ -1121,15 +1110,16 @@ def balance_ventas():
             "ganancia_neta": round(ganancia_neta, 2),
             "total_repuestos_trabajo": round(total_repuestos_trabajo, 2),
             "total_repuestos_directa": round(total_repuestos_directa, 2),
-            "trabajo_margen": round(trabajo_margen, 1),  # ✅ PROMEDIO de márgenes de repuestos
-            "directa_margen": round(directa_margen, 1)   # ✅ PROMEDIO de márgenes de repuestos
+            "trabajo_margen": round(trabajo_margen, 1),
+            "directa_margen": round(directa_margen, 1)
         })
     except Exception as e:
         print(f"❌ Error en balance_ventas: {e}")
         return jsonify({"error": str(e)}), 500
 
+
 # ============================
-# 18. DASHBOARD
+# 18. DASHBOARD - CORREGIDO
 # ============================
 @pago_bp.route('/dashboard', methods=['GET'])
 def get_dashboard():
@@ -1140,7 +1130,7 @@ def get_dashboard():
         anio = request.args.get('anio')
         
         from datetime import timedelta
-        hoy = datetime.now().date()
+        hoy = get_fecha_chile()  # ✅ CORREGIDO
         
         fecha_desde = None
         
