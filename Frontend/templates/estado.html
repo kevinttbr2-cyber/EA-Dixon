@@ -43,7 +43,8 @@
          ============================ -->
     {% if r.tipo_venta == 'directa' %}
     <!-- ✅ VENTA DIRECTA: Productos + Forma de Pago -->
-    <div><strong style="color:#90e0a0;">📦 Productos:</strong> 
+    <div>
+        <strong style="color:#90e0a0;">📦 Productos:</strong> 
         {% if r.detalles_repuestos %}
             {% for item in r.detalles_repuestos %}
                 <span style="background: rgba(0,255,102,0.06); padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 12px; display: inline-block;">
@@ -56,18 +57,16 @@
         {% endif %}
     </div>
     <div><strong style="color:#90e0a0;">💳 Forma de Pago:</strong> {{ r.forma_pago or 'No especificada' }}</div>
-    <div><strong style="color:#90e0a0;">💰 Monto:</strong> <span style="color:#00ff66; font-weight:600;">${{ "{:,.0f}".format(r.monto) }}</span></div>
     
     {% else %}
-    <!-- ✅ TRABAJO: Datos del vehículo -->
-    <div><strong style="color:#90e0a0;">Marca:</strong> {{ r.marca or '-' }}</div>
-    <div><strong style="color:#90e0a0;">Modelo:</strong> {{ r.modelo or '-' }}</div>
-    <div><strong style="color:#90e0a0;">Patente:</strong> {{ r.patente or '-' }}</div>
-    <div><strong style="color:#90e0a0;">Monto:</strong> <span style="color:#00ff66; font-weight:600;">${{ "{:,.0f}".format(r.monto) }}</span></div>
+    <!-- ✅ TRABAJO: Datos del vehículo (SIN MONTO) -->
+    <div><strong style="color:#90e0a0;">🚗 Marca:</strong> {{ r.marca or '-' }}</div>
+    <div><strong style="color:#90e0a0;">🚙 Modelo:</strong> {{ r.modelo or '-' }}</div>
+    <div><strong style="color:#90e0a0;">🔢 Patente:</strong> {{ r.patente or '-' }}</div>
     {% endif %}
     
     <!-- ============================
-         DATOS COMUNES
+         DATOS COMUNES (SIN MONTO)
          ============================ -->
     <div><strong style="color:#90e0a0;">📅 Fecha:</strong> {{ r.fecha[:10] if r.fecha else '' }}</div>
     <div><strong style="color:#90e0a0;">Estado:</strong>
