@@ -930,11 +930,25 @@ def venta_rapida():
         conn = get_connection()
         cur = conn.cursor()
         
+        # ✅ Guardar repuestos en la tabla repuestos (si vienen)
+        detalles_repuestos = data.get('detalles_repuestos', [])
+        for item in detalles_repuestos:
+            nombre = item.get('nombre', '').strip()
+            costo_venta = float(item.get('costo', 0) or 0)
+            if nombre and costo_venta > 0:
+                cur.execute("SELECT id FROM repuestos WHERE nombre = %s", (nombre,))
+                if not cur.fetchone():
+                    cur.execute("""
+                        INSERT INTO repuestos (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, costo_proveedor_pendiente, created_at, updated_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    """, (nombre, 0, 30, costo_venta, 'Desde Venta Rápida', True))
+        
+        # ✅ Guardar la venta
         cur.execute("""
             INSERT INTO pagos 
             (nombre, monto, fecha, hora, estado, tipo_venta, producto_vendido, 
-             atendido_por, observaciones_pago, telefono, forma_pago)
-            VALUES (%s, %s, CURRENT_DATE, CURRENT_TIME, 'pagado', 'directa', %s, %s, %s, %s, %s)
+             atendido_por, observaciones_pago, telefono, forma_pago, detalles_repuestos)
+            VALUES (%s, %s, CURRENT_DATE, CURRENT_TIME, 'pagado', 'directa', %s, %s, %s, %s, %s, %s)
             RETURNING id
         """, (
             data.get('nombre'),
@@ -943,7 +957,8 @@ def venta_rapida():
             data.get('atendido_por', 'Técnico'),
             data.get('observaciones', ''),
             data.get('telefono', ''),
-            data.get('forma_pago', 'efectivo')
+            data.get('forma_pago', 'efectivo'),
+            json.dumps(detalles_repuestos)
         ))
         
         id_reg = cur.fetchone()[0]
