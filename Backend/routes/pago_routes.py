@@ -13,6 +13,25 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
+import pytz 
+
+# ============================
+# ZONA HORARIA CHILE
+# ============================
+CHILE_TZ = pytz.timezone('America/Santiago')
+
+def get_fecha_hora_chile():
+    """Retorna fecha y hora actual en zona horaria Chile"""
+    ahora = datetime.now(CHILE_TZ)
+    return ahora.date(), ahora.time()
+
+def get_fecha_chile():
+    """Retorna fecha actual en zona horaria Chile"""
+    return datetime.now(CHILE_TZ).date()
+
+def get_hora_chile():
+    """Retorna hora actual en zona horaria Chile"""
+    return datetime.now(CHILE_TZ).time()
 
 # ============================
 # BLUEPRINT
