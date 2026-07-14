@@ -24,8 +24,8 @@
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;">
         <div style="font-size:20px; font-weight:700; color:#00ff66;">
             {{ r.nombre }}
-            <!-- ✅ INDICADOR DE VENTA DIRECTA -->
-            {% if r.tipo_venta == 'directa' %}
+            <!-- ✅ INDICADOR DE VENTA DIRECTA (por marca vacía) -->
+            {% if not r.marca or r.marca == '' %}
             <span style="font-size:12px; background: rgba(79,195,247,0.15); color: #4fc3f7; padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(79,195,247,0.20); margin-left: 6px;">
                 ⚡ Directa
             </span>
@@ -39,9 +39,10 @@
     </div>
     
     <!-- ============================
-         DATOS SEGÚN TIPO DE VENTA (USANDO tipo_venta)
+         DATOS SEGÚN TIPO DE VENTA
+         (DETECCIÓN POR MARCA VACÍA)
          ============================ -->
-    {% if r.tipo_venta == 'directa' %}
+    {% if not r.marca or r.marca == '' %}
     <!-- ✅ VENTA DIRECTA: Productos + Forma de Pago -->
     <div>
         <strong style="color:#90e0a0;">📦 Productos:</strong> 
@@ -81,7 +82,7 @@
          BOTÓN DE ACCIÓN
          ============================ -->
     {% if r.estado == 'pendiente' %}
-        {% if r.tipo_venta == 'directa' %}
+        {% if not r.marca or r.marca == '' %}
         <a href="/venta_rapida" class="btn btn-primary w-100 mt-2" style="background: #4fc3f7 !important; color: #000 !important;">
             ⚡ Completar Venta
         </a>
