@@ -1582,3 +1582,33 @@ def validar_flota_completa(nombre_flota):
     except Exception as e:
         print(f"❌ Error en validar_flota_completa: {e}")
         return jsonify({"error": str(e)}), 500
+# ============================
+# VERIFICAR DUPLICADO (ANTES DE AGREGAR)
+# ============================
+@pago_bp.route('/verificar_duplicado', methods=['GET'])
+def verificar_duplicado():
+    nombre = request.args.get('nombre', '').strip()
+    patente = request.args.get('patente', '').strip().upper()
+    
+    if not nombre or not patente:
+        return jsonify({"duplicado": False})
+    
+    try:
+        conn, cur = get_cursor()
+        
+        # Buscar registros con el mismo nombre y patente en los últimos 5 minutos
+        cur.execute("""
+            SELECT COUNT(*) FROM pagos 
+            WHERE nombre = %s 
+            AND patente = %s 
+            AND fecha >= CURRENT_DATE
+        """, (nombre, patente))
+        
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        
+        return jsonify({"duplicado": count > 0})
+    except Exception as e:
+        print(f"❌ Error en verificar_duplicado: {e}")
+        return jsonify({"duplicado": False}), 500
