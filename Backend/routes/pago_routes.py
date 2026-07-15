@@ -220,7 +220,7 @@ def editar_repuestos_venta(id_reg):
                 costo_mano_obra_real = %s,
                 costo_diagnostico_real = %s,
                 ganancia_neta = %s,
-                updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                actualizado_en = NOW() AT TIME ZONE 'America/Santiago'
             WHERE id = %s
         """, (
             json.dumps(detalles_repuestos),
