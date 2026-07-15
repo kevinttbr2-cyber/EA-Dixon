@@ -342,7 +342,7 @@
     </div>
     {% endif %}
 
-    <form method="POST" id="formValidacion">
+    <form id="formValidacion">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="tiempo_estimado" id="tiempoEstimadoHidden" value="{{ registro.tiempo_estimado or '00:00:00' }}">
 
@@ -945,31 +945,76 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('input[name="costo_diagnostico"]').addEventListener('input', recalcularResumen);
 
     // ============================
-    // 10. ENVIAR FORMULARIO CON CANTIDAD
-    // ============================
-    document.getElementById('formValidacion').addEventListener('submit', function(e) {
-        // Obtener repuestos CON CANTIDAD para validar antes de enviar
-        const repuestos = [];
-        document.querySelectorAll('.fila-repuesto').forEach(fila => {
-            const nombre = fila.querySelector('.repuesto-nombre')?.value || '';
-            const cantidad = parseInt(fila.querySelector('.cantidad-repuesto')?.value) || 1;
-            const costo = parseFloat(fila.querySelector('.costo-repuesto')?.value) || 0;
-            const subtotal = cantidad * costo;
-            
-            if (nombre && costo > 0) {
-                repuestos.push({ 
-                    nombre: nombre, 
-                    cantidad: cantidad,
-                    costo_unitario: costo,
-                    subtotal: subtotal
-                });
-            }
-        });
+// 10. ENVIAR FORMULARIO CON CANTIDAD (CORREGIDO)
+// ============================
+document.getElementById('formValidacion').addEventListener('submit', function(e) {
+    e.preventDefault();  // ✅ PREVENIR ENVÍO TRADICIONAL
+    
+    // ✅ OBTENER REPUESTOS CON CANTIDAD
+    const repuestos = [];
+    document.querySelectorAll('.fila-repuesto').forEach(fila => {
+        const nombre = fila.querySelector('.repuesto-nombre')?.value || '';
+        const cantidad = parseInt(fila.querySelector('.cantidad-repuesto')?.value) || 1;
+        const costo = parseFloat(fila.querySelector('.costo-repuesto')?.value) || 0;
+        const subtotal = cantidad * costo;
         
-        // Actualizar el campo hidden con los repuestos (se enviará en el POST)
-        // Nota: El backend usa los campos repuesto_nombre[] y repuesto_costo[]
-        // pero ahora también necesitamos la cantidad
-        // Esto se maneja en el backend con request.form.getlist()
+        if (nombre && costo > 0) {
+            repuestos.push({ 
+                nombre: nombre, 
+                cantidad: cantidad,
+                costo_unitario: costo,
+                subtotal: subtotal
+            });
+        }
+    });
+    
+    // ✅ OBTENER DATOS DEL FORMULARIO
+    const formData = new FormData(this);
+    const data = {
+        diagnostico: formData.get('diagnostico') || '',
+        reparacion: formData.get('reparacion') || 'Reparación realizada',
+        resultado: formData.get('resultado') || 'reparado',
+        costo_mano_obra_real: parseFloat(formData.get('costo_mano_obra')) || 0,
+        costo_diagnostico_real: parseFloat(formData.get('costo_diagnostico')) || 0,
+        observaciones_pago: formData.get('observaciones_costos') || '',
+        validado_por: formData.get('validado_por') || 'Sistema',
+        tiempo_estimado: document.getElementById('tiempoEstimadoHidden').value || '00:00:00',
+        detalles_repuestos: repuestos,  // ✅ ENVIAR REPUESTOS
+        costo_repuestos: parseFloat(document.getElementById('costoRepuestosHidden').value) || 0,
+        ganancia_neta: parseFloat(document.getElementById('gananciaNetaHidden').value) || 0
+    };
+    
+    // ✅ MOSTRAR QUE SE ESTÁ ENVIANDO
+    console.log('📤 Enviando datos:', data);
+    
+    // ✅ ENVIAR COMO JSON
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = '⏳ Validando...';
+    
+    fetch(`${API_URL}/api/validar_pago/{{ registro.id }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(resp => resp.json())
+    .then(result => {
+        if (result.success) {
+            alert('✅ Pago validado correctamente');
+            window.location.href = `/pago_validado/{{ registro.id }}`;
+        } else {
+            alert('❌ Error al validar: ' + (result.error || 'Desconocido'));
+            btn.disabled = false;
+            btn.textContent = '✅ Validar y Guardar';
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error:', error);
+        alert('❌ Error de conexión');
+        btn.disabled = false;
+        btn.textContent = '✅ Validar y Guardar';
     });
 });
 </script>
