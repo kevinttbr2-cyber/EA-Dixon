@@ -441,7 +441,7 @@ def validar_pago(id_reg):
                         print(f"✅ Repuesto '{nombre}' actualizado con costo_venta_final: ${costo_unitario}")
                 else:
                     iva = 1.19
-                    costo_proveedor_estimado = round(costo_unitario / 1.19 / 1.3, 0) if costo_unitario > 0 else 0
+                    costo_proveedor_estimado = int(costo_unitario / 1.19 / 1.3) if costo_unitario > 0 else 0
                     
                     cur.execute("""
                         INSERT INTO repuestos 
