@@ -293,7 +293,7 @@ def cambiar_password():
 
 @app.route('/pendientes_validacion')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def pendientes_validacion():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/pendientes_validacion", timeout=10)
@@ -318,7 +318,7 @@ def pendientes_validacion():
 @login_required
 @role_required(['admin', 'operador'])
 def validar_pago(id_reg):
-    if session.get('rol') not in ['admin', 'operador']:
+    if session.get('rol') not in ['admin']:
         return "No tienes permisos para validar pagos", 403
     
     try:
@@ -406,7 +406,7 @@ def pago_validado(id_reg):
 # ============================
 @app.route('/registros')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def registros():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registros", timeout=10)
@@ -440,7 +440,7 @@ def registros():
 # ============================
 @app.route('/balance')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def balance():
     filtro = request.args.get('filtro', 'hoy')
     try:
@@ -491,7 +491,7 @@ def modelos(marca):
         return jsonify([])
 @app.route('/editar_completo/<int:id_reg>', methods=['POST'])
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def editar_completo(id_reg):
     """Edición completa de un registro (todos los campos)"""
     data = request.json
@@ -508,7 +508,7 @@ def editar_completo(id_reg):
 
 @app.route('/flotas')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def flotas():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/flotas", timeout=10)
@@ -563,7 +563,7 @@ def register():
 # ============================
 @app.route('/flotas_pendientes')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def flotas_pendientes():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/flotas_pendientes_agrupadas", timeout=10)
@@ -584,7 +584,7 @@ def flotas_pendientes():
     
 @app.route('/usuarios')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def usuarios():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/usuarios", timeout=10)
@@ -596,7 +596,7 @@ def usuarios():
 
 @app.route('/auditoria_descargas')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def auditoria_descargas():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/auditoria", timeout=10)
@@ -608,7 +608,7 @@ def auditoria_descargas():
 
 @app.route("/exportar_flota_pdf/<flota>", methods=["GET", "POST"])
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def exportar_flota_pdf(flota):
     if request.method == "GET":
         return render_template("exportar_flota.html", flota=flota)
@@ -669,7 +669,7 @@ def eliminar_usuario(id_usuario):
 
 @app.route('/dashboard')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def dashboard():
     filtro = request.args.get('filtro', '7d')
     mes = request.args.get('mes')
@@ -761,7 +761,7 @@ def venta_rapida():
 # ============================
 @app.route('/balance_ventas')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def balance_ventas():
     filtro = request.args.get('filtro', 'hoy')
     try:
