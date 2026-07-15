@@ -149,22 +149,23 @@
 </div>
 
     <!-- ============================
-         FLOTAS AGRUPADAS
-         ============================ -->
-    {% for flota in flotas_agrupadas %}
-    <div class="card-flota-agrupada">
-        <!-- HEADER DE LA FLOTA -->
-        <div class="toggle-detalle" onclick="toggleFlotaDetalle(this)">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-size: 24px;">🚛</span>
-                    <span style="color: #ffcc00; font-weight: 700; font-size: 18px;">
-                        {{ flota.nombre }}
-                    </span>
-                    <span class="badge-pendiente">
-                        {{ flota.servicios|length }} servicio{% if flota.servicios|length > 1 %}s{% endif %}
-                    </span>
-                </div>
+     FLOTAS AGRUPADAS
+     ============================ -->
+{% for flota in flotas_agrupadas %}
+<div class="card-flota-agrupada">
+    <!-- HEADER DE LA FLOTA (UNO SOLO) -->
+    <div class="toggle-detalle" onclick="toggleFlotaDetalle(this)">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 24px;">🚛</span>
+                <span style="color: #ffcc00; font-weight: 700; font-size: 18px;">
+                    {{ flota.nombre }}
+                </span>
+                <span class="badge-pendiente">
+                    {{ flota.servicios|length }} servicio{% if flota.servicios|length > 1 %}s{% endif %}
+                </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <div style="text-align: right;">
                     <div style="color: #00ff66; font-weight: 700; font-size: 18px;">
                         ${{ "{:,.0f}".format(flota.total_pendiente) }}
@@ -173,57 +174,63 @@
                         <i class="fa-regular fa-clock"></i> Pendiente
                     </div>
                 </div>
-            </div>
-            <div style="color: #666; font-size: 12px; margin-top: 4px;">
-                <i class="fa-solid fa-chevron-down" id="icono-chevron"></i> 
-                <span id="texto-toggle">Mostrar servicios</span>
+                <!-- ✅ BOTÓN: VALIDAR TODA LA FLOTA -->
+                <button onclick="event.stopPropagation(); validarFlotaCompleta('{{ flota.nombre }}', {{ flota.total_pendiente }}, {{ flota.servicios|length }})" 
+                        class="btn-marcar-pagado" style="background: #ffcc00 !important; color: #000 !important; padding: 6px 16px; font-size: 13px;">
+                    ✅ Validar toda la flota
+                </button>
             </div>
         </div>
+        <div style="color: #666; font-size: 12px; margin-top: 4px;">
+            <i class="fa-solid fa-chevron-down" id="icono-chevron-{{ loop.index }}"></i> 
+            <span id="texto-toggle-{{ loop.index }}">Mostrar servicios</span>
+        </div>
+    </div>
 
-        <!-- DETALLE DE SERVICIOS (COLLAPSIBLE) -->
-        <div class="detalle-servicios" style="display: none;">
-            {% for servicio in flota.servicios %}
-            <div class="servicio-item">
-                <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-                        <span style="color: #fff; font-weight: 600; font-size: 14px;">
-                            👤 {{ servicio.nombre }}
-                        </span>
-                        <span style="color: #888; font-size: 12px;">
-                            🚗 {{ servicio.marca or '-' }} {{ servicio.modelo or '-' }}
-                        </span>
-                        <span style="color: #888; font-size: 12px;">
-                            🔢 {{ servicio.patente or '-' }}
-                        </span>
-                    </div>
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 12px; color: #888;">
-                        <span>📅 {{ servicio.fecha[:10] if servicio.fecha else '' }}</span>
-                        <span>🆔 #{{ servicio.id }}</span>
-                        {% if servicio.detalles_repuestos %}
-                            <span>📦 {{ servicio.detalles_repuestos|length }} repuesto{% if servicio.detalles_repuestos|length > 1 %}s{% endif %}</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                    <span style="color: #00ff66; font-weight: 700; font-size: 16px;">
-                        ${{ "{:,.0f}".format(servicio.monto) }}
+    <!-- DETALLE DE SERVICIOS (COLLAPSIBLE) -->
+    <div class="detalle-servicios" style="display: none;">
+        {% for servicio in flota.servicios %}
+        <div class="servicio-item">
+            <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                    <span style="color: #fff; font-weight: 600; font-size: 14px;">
+                        👤 {{ servicio.nombre }}
                     </span>
-                    <button onclick="event.stopPropagation(); marcarComoPagado({{ servicio.id }})" class="btn-marcar-pagado">
-                        💰 Pagar
-                    </button>
+                    <span style="color: #888; font-size: 12px;">
+                        🚗 {{ servicio.marca or '-' }} {{ servicio.modelo or '-' }}
+                    </span>
+                    <span style="color: #888; font-size: 12px;">
+                        🔢 {{ servicio.patente or '-' }}
+                    </span>
+                </div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 12px; color: #888;">
+                    <span>📅 {{ servicio.fecha[:10] if servicio.fecha else '' }}</span>
+                    <span>🆔 #{{ servicio.id }}</span>
+                    {% if servicio.detalles_repuestos %}
+                        <span>📦 {{ servicio.detalles_repuestos|length }} repuesto{% if servicio.detalles_repuestos|length > 1 %}s{% endif %}</span>
+                    {% endif %}
                 </div>
             </div>
-            {% endfor %}
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <span style="color: #00ff66; font-weight: 700; font-size: 16px;">
+                    ${{ "{:,.0f}".format(servicio.monto) }}
+                </span>
+                <button onclick="event.stopPropagation(); marcarComoPagado({{ servicio.id }})" class="btn-marcar-pagado">
+                    💰 Pagar
+                </button>
+            </div>
         </div>
+        {% endfor %}
     </div>
-    {% else %}
-    <!-- SIN FLOTAS PENDIENTES -->
-    <div style="text-align: center; color: #666; padding: 60px 0;">
-        <i class="fa-solid fa-check-circle" style="font-size: 48px; color: #00ff66; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
-        <p style="font-size: 16px;">🎉 No hay flotas pendientes de cobro</p>
-        <p style="color: #888; font-size: 13px;">Todas las flotas están al día</p>
-    </div>
-    {% endfor %}
+</div>
+{% else %}
+<!-- SIN FLOTAS PENDIENTES -->
+<div style="text-align: center; color: #666; padding: 60px 0;">
+    <i class="fa-solid fa-check-circle" style="font-size: 48px; color: #00ff66; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
+    <p style="font-size: 16px;">🎉 No hay flotas pendientes de cobro</p>
+    <p style="color: #888; font-size: 13px;">Todas las flotas están al día</p>
+</div>
+{% endfor %}
 
     <!-- VOLVER -->
     <div style="margin-top: 20px; text-align: center;">
