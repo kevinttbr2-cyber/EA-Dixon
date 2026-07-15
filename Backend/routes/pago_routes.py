@@ -1048,7 +1048,7 @@ def venta_rapida():
 
 
 # ============================
-# 19. BALANCE DE VENTAS (CORREGIDO)
+# 19. BALANCE DE VENTAS (CORREGIDO - SOLO VENTA DE REPUESTOS)
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
@@ -1076,9 +1076,7 @@ def balance_ventas():
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
-        # ✅ CORREGIDO: Detectar correctamente trabajo vs directa
-        # TRABAJO: tiene marca Y modelo (vehículo) Y tipo_venta NO es 'directa'
-        # VENTA DIRECTA: NO tiene marca O tipo_venta es 'directa'
+        # ✅ SEPARAR TRABAJO vs DIRECTA (por vehículo)
         trabajo = []
         directa = []
         
@@ -1091,101 +1089,85 @@ def balance_ventas():
             else:
                 trabajo.append(r)
         
-        total_ventas = float(sum(r.get('monto', 0) or 0 for r in registros))
-        total_trabajo = float(sum(r.get('monto', 0) or 0 for r in trabajo))
-        total_directa = float(sum(r.get('monto', 0) or 0 for r in directa))
-        
         # ============================
-        # PROCESAR TRABAJO (CON CANTIDAD)
+        # FUNCIÓN PARA CALCULAR TOTAL DE REPUESTOS VENDIDOS
         # ============================
-        total_repuestos_trabajo = 0
-        ganancia_trabajo = 0
-        margenes_trabajo = []
+        def calcular_total_repuestos(registros):
+            total = 0
+            for r in registros:
+                detalles = r.get('detalles_repuestos', [])
+                for item in detalles:
+                    cantidad = int(item.get('cantidad', 1) or 1)
+                    precio_venta = float(item.get('costo_unitario', 0) or 0)
+                    total += cantidad * precio_venta
+            return total
         
-        for r in trabajo:
-            detalles = r.get('detalles_repuestos', [])
-            costo_repuestos = 0
-            
-            for item in detalles:
-                nombre = item.get('nombre', '')
-                cantidad = int(item.get('cantidad', 1) or 1)
-                costo_unitario = float(item.get('costo_unitario', 0) or 0)
-                
-                if nombre:
-                    cur.execute("SELECT costo_proveedor, margen_ganancia FROM repuestos WHERE nombre = %s", (nombre,))
-                    resultado = cur.fetchone()
-                    if resultado:
-                        costo_prov = float(resultado[0] or 0)
-                        margen_item = float(resultado[1] or 0)
-                        costo_repuestos += costo_prov * cantidad
-                        margenes_trabajo.append(margen_item)
+        def calcular_costo_repuestos(registros):
+            total = 0
+            for r in registros:
+                detalles = r.get('detalles_repuestos', [])
+                for item in detalles:
+                    nombre = item.get('nombre', '')
+                    cantidad = int(item.get('cantidad', 1) or 1)
+                    
+                    if nombre:
+                        cur.execute("SELECT costo_proveedor FROM repuestos WHERE nombre = %s", (nombre,))
+                        resultado = cur.fetchone()
+                        if resultado:
+                            costo_prov = float(resultado[0] or 0)
+                            total += costo_prov * cantidad
+                        else:
+                            # Si no está en la tabla repuestos, usar el costo_unitario como fallback
+                            total += float(item.get('costo_unitario', 0) or 0) * cantidad
                     else:
-                        costo_repuestos += costo_unitario * cantidad
-            
-            if costo_repuestos == 0:
-                costo_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
-            
-            total_repuestos_trabajo += costo_repuestos
-            ganancia_trabajo += float(r.get('monto', 0) or 0) - costo_repuestos
+                        total += float(item.get('costo_unitario', 0) or 0) * cantidad
+            return total
         
-        if margenes_trabajo:
-            trabajo_margen = sum(margenes_trabajo) / len(margenes_trabajo)
-        else:
-            trabajo_margen = 0
+        def calcular_margen_promedio(registros):
+            margenes = []
+            for r in registros:
+                detalles = r.get('detalles_repuestos', [])
+                for item in detalles:
+                    nombre = item.get('nombre', '')
+                    if nombre:
+                        cur.execute("SELECT margen_ganancia FROM repuestos WHERE nombre = %s", (nombre,))
+                        resultado = cur.fetchone()
+                        if resultado:
+                            margenes.append(float(resultado[0] or 0))
+            if margenes:
+                return sum(margenes) / len(margenes)
+            return 0
         
         # ============================
-        # PROCESAR VENTA DIRECTA (CON CANTIDAD)
+        # CALCULAR TOTALES
         # ============================
-        total_repuestos_directa = 0
-        ganancia_directa = 0
-        margenes_directa = []
+        total_ventas_repuestos = calcular_total_repuestos(registros)
+        total_trabajo = calcular_total_repuestos(trabajo)
+        total_directa = calcular_total_repuestos(directa)
         
-        for r in directa:
-            detalles = r.get('detalles_repuestos', [])
-            costo_repuestos = 0
-            
-            for item in detalles:
-                nombre = item.get('nombre', '')
-                cantidad = int(item.get('cantidad', 1) or 1)
-                costo_unitario = float(item.get('costo_unitario', 0) or 0)
-                
-                if nombre:
-                    cur.execute("SELECT costo_proveedor, margen_ganancia FROM repuestos WHERE nombre = %s", (nombre,))
-                    resultado = cur.fetchone()
-                    if resultado:
-                        costo_prov = float(resultado[0] or 0)
-                        margen_item = float(resultado[1] or 0)
-                        costo_repuestos += costo_prov * cantidad
-                        margenes_directa.append(margen_item)
-                    else:
-                        costo_repuestos += costo_unitario * cantidad
-            
-            if costo_repuestos == 0:
-                costo_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
-            
-            total_repuestos_directa += costo_repuestos
-            ganancia_directa += float(r.get('monto', 0) or 0) - costo_repuestos
+        costo_trabajo = calcular_costo_repuestos(trabajo)
+        costo_directa = calcular_costo_repuestos(directa)
         
-        if margenes_directa:
-            directa_margen = sum(margenes_directa) / len(margenes_directa)
-        else:
-            directa_margen = 0
-        
+        ganancia_trabajo = total_trabajo - costo_trabajo
+        ganancia_directa = total_directa - costo_directa
         ganancia_neta = ganancia_trabajo + ganancia_directa
+        
+        trabajo_margen = calcular_margen_promedio(trabajo)
+        directa_margen = calcular_margen_promedio(directa)
         
         cur.close()
         conn.close()
         
         return jsonify({
             "registros": registros,
-            "total_ventas": total_ventas,
+            "total_ventas": total_ventas_repuestos,
             "total_trabajo": total_trabajo,
             "total_directa": total_directa,
             "ganancia_trabajo": round(ganancia_trabajo, 2),
             "ganancia_directa": round(ganancia_directa, 2),
             "ganancia_neta": round(ganancia_neta, 2),
-            "total_repuestos_trabajo": round(total_repuestos_trabajo, 2),
-            "total_repuestos_directa": round(total_repuestos_directa, 2),
+            "total_repuestos_trabajo": round(costo_trabajo, 2),
+            "total_repuestos_directa": round(costo_directa, 2),
             "trabajo_margen": round(trabajo_margen, 1),
             "directa_margen": round(directa_margen, 1)
         })
