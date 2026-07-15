@@ -1376,3 +1376,59 @@ def get_dashboard():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+# ============================
+# 21. FLOTAS PENDIENTES DE COBRO
+# ============================
+@pago_bp.route('/flotas_pendientes', methods=['GET'])
+def get_flotas_pendientes():
+    """Obtiene todas las flotas que están pendientes de pago"""
+    try:
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT * FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pendiente'
+            AND flota IS NOT NULL 
+            AND flota != ''
+            ORDER BY fecha DESC
+        """)
+        
+        rows = cur.fetchall()
+        flotas = [dict(row) for row in rows]
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify(flotas)
+    except Exception as e:
+        print(f"❌ Error en get_flotas_pendientes: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================
+# 22. CONTADOR DE FLOTAS PENDIENTES
+# ============================
+@pago_bp.route('/flotas_pendientes_count', methods=['GET'])
+def get_flotas_pendientes_count():
+    """Devuelve el número de flotas pendientes de cobro"""
+    try:
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT COUNT(*) FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pendiente'
+            AND flota IS NOT NULL 
+            AND flota != ''
+        """)
+        
+        count = cur.fetchone()[0] or 0
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({"count": count})
+    except Exception as e:
+        print(f"❌ Error en get_flotas_pendientes_count: {e}")
+        return jsonify({"count": 0}), 500
