@@ -196,6 +196,49 @@ def editar_completo(id_reg):
     except Exception as e:
         print(f"❌ Error en editar_completo: {e}")
         return jsonify({"error": str(e)}), 500
+# ============================
+# EDITAR REPUESTOS DE VENTA (ACTUALIZAR SOLO REPUESTOS Y COSTOS)
+# ============================
+@pago_bp.route('/editar_repuestos_venta/<int:id_reg>', methods=['POST'])
+def editar_repuestos_venta(id_reg):
+    try:
+        data = request.json
+        detalles_repuestos = data.get('detalles_repuestos', [])
+        costo_repuestos = float(data.get('costo_repuestos_real', 0))
+        mano_obra = float(data.get('costo_mano_obra_real', 0))
+        diagnostico = float(data.get('costo_diagnostico_real', 0))
+        ganancia_neta = float(data.get('ganancia_neta', 0))
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Actualizar solo los campos relacionados con repuestos y costos
+        cur.execute("""
+            UPDATE pagos 
+            SET detalles_repuestos = %s::jsonb,
+                costo_repuestos_real = %s,
+                costo_mano_obra_real = %s,
+                costo_diagnostico_real = %s,
+                ganancia_neta = %s,
+                updated_at = NOW() AT TIME ZONE 'America/Santiago'
+            WHERE id = %s
+        """, (
+            json.dumps(detalles_repuestos),
+            costo_repuestos,
+            mano_obra,
+            diagnostico,
+            ganancia_neta,
+            id_reg
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"❌ Error en editar_repuestos_venta: {e}")
+        return jsonify({"error": str(e)}), 500
 
 # ============================
 # 5. ELIMINAR REGISTRO
