@@ -1047,8 +1047,8 @@ def venta_rapida():
         return jsonify({"error": str(e)}), 500
 
 
-## ============================
-# 19. BALANCE DE VENTAS (CORREGIDO - SOLO VENTA DE REPUESTOS)
+# ============================
+# 19. BALANCE DE VENTAS (CORREGIDO - MANEJA TODOS LOS CASOS)
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
@@ -1090,58 +1090,57 @@ def balance_ventas():
                 trabajo.append(r)
         
         # ============================
-        # FUNCIONES PARA CALCULAR SOLO REPUESTOS
+        # FUNCIÓN: Calcular Venta de Repuestos
         # ============================
         def calcular_venta_repuestos(registros):
-            """Calcula la suma de precios de venta de los repuestos"""
             total = 0
             for r in registros:
+                # 1. Intentar con detalles_repuestos
                 detalles = r.get('detalles_repuestos', [])
-                for item in detalles:
-                    cantidad = int(item.get('cantidad', 1) or 1)
-                    precio_venta = float(item.get('costo_unitario', 0) or 0)
-                    total += cantidad * precio_venta
+                if detalles and len(detalles) > 0:
+                    for item in detalles:
+                        cantidad = int(item.get('cantidad', 1) or 1)
+                        # ✅ Soporta tanto 'costo_unitario' como 'costo'
+                        precio_venta = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+                        total += cantidad * precio_venta
+                else:
+                    # 2. Fallback: usar costo_repuestos_real
+                    total += float(r.get('costo_repuestos_real', 0) or 0)
             return total
-        
-        def calcular_costo_repuestos(registros):
-            """Calcula la suma de costos de compra de los repuestos"""
-            total = 0
-            for r in registros:
-                detalles = r.get('detalles_repuestos', [])
-                for item in detalles:
-                    nombre = item.get('nombre', '')
-                    cantidad = int(item.get('cantidad', 1) or 1)
-                    
-                    if nombre:
-                        cur.execute("SELECT costo_proveedor FROM repuestos WHERE nombre = %s", (nombre,))
-                        resultado = cur.fetchone()
-                        if resultado:
-                            costo_prov = float(resultado[0] or 0)
-                            total += costo_prov * cantidad
-                        else:
-                            total += float(item.get('costo_unitario', 0) or 0) * cantidad
-                    else:
-                        total += float(item.get('costo_unitario', 0) or 0) * cantidad
-            return total
-        
-        def calcular_margen_promedio(registros):
-            """Calcula el margen promedio de los repuestos"""
-            margenes = []
-            for r in registros:
-                detalles = r.get('detalles_repuestos', [])
-                for item in detalles:
-                    nombre = item.get('nombre', '')
-                    if nombre:
-                        cur.execute("SELECT margen_ganancia FROM repuestos WHERE nombre = %s", (nombre,))
-                        resultado = cur.fetchone()
-                        if resultado:
-                            margenes.append(float(resultado[0] or 0))
-            if margenes:
-                return sum(margenes) / len(margenes)
-            return 0
         
         # ============================
-        # CALCULAR TOTALES (SOLO REPUESTOS)
+        # FUNCIÓN: Calcular Costo de Repuestos
+        # ============================
+        def calcular_costo_repuestos(registros):
+            total = 0
+            for r in registros:
+                # 1. Intentar con detalles_repuestos (buscar costo_proveedor en tabla repuestos)
+                detalles = r.get('detalles_repuestos', [])
+                if detalles and len(detalles) > 0:
+                    for item in detalles:
+                        nombre = item.get('nombre', '')
+                        cantidad = int(item.get('cantidad', 1) or 1)
+                        
+                        if nombre:
+                            cur.execute("SELECT costo_proveedor FROM repuestos WHERE nombre = %s", (nombre,))
+                            resultado = cur.fetchone()
+                            if resultado:
+                                costo_prov = float(resultado[0] or 0)
+                                total += costo_prov * cantidad
+                            else:
+                                # Si no está en tabla repuestos, usar precio_venta como fallback
+                                precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+                                total += precio * cantidad
+                        else:
+                            precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+                            total += precio * cantidad
+                else:
+                    # 2. Fallback: usar costo_repuestos_real
+                    total += float(r.get('costo_repuestos_real', 0) or 0)
+            return total
+        
+        # ============================
+        # CALCULAR TOTALES
         # ============================
         total_ventas = calcular_venta_repuestos(registros)
         total_trabajo = calcular_venta_repuestos(trabajo)
@@ -1153,9 +1152,6 @@ def balance_ventas():
         ganancia_trabajo = total_trabajo - costo_trabajo
         ganancia_directa = total_directa - costo_directa
         ganancia_neta = ganancia_trabajo + ganancia_directa
-        
-        trabajo_margen = calcular_margen_promedio(trabajo)
-        directa_margen = calcular_margen_promedio(directa)
         
         cur.close()
         conn.close()
@@ -1170,8 +1166,8 @@ def balance_ventas():
             "ganancia_neta": round(ganancia_neta, 2),
             "total_repuestos_trabajo": round(costo_trabajo, 2),
             "total_repuestos_directa": round(costo_directa, 2),
-            "trabajo_margen": round(trabajo_margen, 1),
-            "directa_margen": round(directa_margen, 1)
+            "trabajo_margen": 0,
+            "directa_margen": 0
         })
     except Exception as e:
         print(f"❌ Error en balance_ventas: {e}")
