@@ -1524,3 +1524,61 @@ def get_flotas_pendientes_agrupadas():
     except Exception as e:
         print(f"❌ Error en get_flotas_pendientes_agrupadas: {e}")
         return jsonify({"error": str(e)}), 500
+# ============================
+# 25. VALIDAR TODA LA FLOTA (MARCAR TODOS COMO PAGADOS)
+# ============================
+@pago_bp.route('/validar_flota_completa/<nombre_flota>', methods=['POST'])
+def validar_flota_completa(nombre_flota):
+    try:
+        data = request.json
+        fecha_pago = data.get('fecha_pago')
+        forma_pago = data.get('forma_pago', 'transferencia')
+        
+        if not fecha_pago:
+            return jsonify({"error": "La fecha de pago es obligatoria"}), 400
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # ✅ Obtener todos los servicios pendientes de esta flota
+        cur.execute("""
+            SELECT id, monto FROM pagos 
+            WHERE flota = %s 
+            AND estado = 'pagado' 
+            AND estado_pago = 'pendiente'
+        """, (nombre_flota,))
+        
+        servicios = cur.fetchall()
+        
+        if not servicios:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "No hay servicios pendientes para esta flota"}), 404
+        
+        # ✅ Calcular total
+        total_pagado = sum(float(s[1] or 0) for s in servicios)
+        
+        # ✅ Marcar TODOS como pagados
+        cur.execute("""
+            UPDATE pagos 
+            SET estado_pago = 'pagado',
+                fecha_pago_real = %s,
+                forma_pago = %s,
+                actualizado_en = NOW() AT TIME ZONE 'America/Santiago'
+            WHERE flota = %s 
+            AND estado = 'pagado' 
+            AND estado_pago = 'pendiente'
+        """, (fecha_pago, forma_pago, nombre_flota))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "success": True, 
+            "total_pagado": total_pagado,
+            "servicios_actualizados": len(servicios)
+        })
+    except Exception as e:
+        print(f"❌ Error en validar_flota_completa: {e}")
+        return jsonify({"error": str(e)}), 500
