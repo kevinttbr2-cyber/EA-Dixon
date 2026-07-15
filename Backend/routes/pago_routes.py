@@ -1226,7 +1226,7 @@ def balance_ventas():
 
 
 # ============================
-# 20. DASHBOARD
+# 20. DASHBOARD (CORREGIDO - CON estado_pago)
 # ============================
 @pago_bp.route('/dashboard', methods=['GET'])
 def get_dashboard():
@@ -1257,6 +1257,7 @@ def get_dashboard():
         
         conn, cur = get_cursor()
         
+        # ✅ SOLO REGISTROS CON estado_pago = 'pagado'
         cur.execute("""
             SELECT 
                 COALESCE(SUM(monto), 0) as total_facturado,
@@ -1266,6 +1267,7 @@ def get_dashboard():
                 COUNT(*) as total_servicios
             FROM pagos 
             WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
             AND fecha >= %s
         """, (fecha_desde,))
         totales = cur.fetchone()
@@ -1276,6 +1278,7 @@ def get_dashboard():
                 COALESCE(SUM(monto), 0) as total
             FROM pagos 
             WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
             AND fecha >= %s
             GROUP BY fecha
             ORDER BY fecha ASC
@@ -1288,6 +1291,7 @@ def get_dashboard():
                 COALESCE(SUM(monto - COALESCE(costo_repuestos_real, 0) - COALESCE(costo_mano_obra_real, 0) - COALESCE(costo_diagnostico_real, 0)), 0) as ganancia
             FROM pagos 
             WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
             AND fecha >= %s
             GROUP BY fecha
             ORDER BY fecha ASC
@@ -1300,6 +1304,7 @@ def get_dashboard():
                 COALESCE(SUM(monto), 0) as total_gastado
             FROM pagos 
             WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
             AND nombre IS NOT NULL
             AND fecha >= %s
             GROUP BY nombre
@@ -1313,6 +1318,7 @@ def get_dashboard():
                 COALESCE(AVG(monto), 0) as promedio_diario
             FROM pagos 
             WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
             AND fecha >= %s
         """, (fecha_desde,))
         promedio = cur.fetchone()
@@ -1349,6 +1355,7 @@ def get_dashboard():
                 EXTRACT(MONTH FROM fecha) as mes
             FROM pagos 
             WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
             AND fecha IS NOT NULL
             ORDER BY anio DESC, mes DESC
         """)
