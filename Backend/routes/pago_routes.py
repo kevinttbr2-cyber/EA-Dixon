@@ -1048,7 +1048,7 @@ def venta_rapida():
 
 
 # ============================
-# 19. BALANCE DE VENTAS (CON CANTIDAD)
+# 19. BALANCE DE VENTAS (CORREGIDO)
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
@@ -1076,8 +1076,20 @@ def balance_ventas():
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
-        trabajo = [r for r in registros if r.get('tipo_venta') != 'directa']
-        directa = [r for r in registros if r.get('tipo_venta') == 'directa']
+        # ✅ CORREGIDO: Detectar correctamente trabajo vs directa
+        # TRABAJO: tiene marca Y modelo (vehículo) Y tipo_venta NO es 'directa'
+        # VENTA DIRECTA: NO tiene marca O tipo_venta es 'directa'
+        trabajo = []
+        directa = []
+        
+        for r in registros:
+            tiene_vehiculo = r.get('marca') and r.get('marca').strip() != '' and r.get('modelo') and r.get('modelo').strip() != ''
+            es_directa = r.get('tipo_venta') == 'directa' or not tiene_vehiculo
+            
+            if es_directa:
+                directa.append(r)
+            else:
+                trabajo.append(r)
         
         total_ventas = float(sum(r.get('monto', 0) or 0 for r in registros))
         total_trabajo = float(sum(r.get('monto', 0) or 0 for r in trabajo))
