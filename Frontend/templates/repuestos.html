@@ -271,14 +271,17 @@
                 El archivo Excel debe tener estas columnas (en este orden):
             </p>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;color:#aaa;">
-                <span>1. <strong style="color:#fff;">Nombre</strong> *</span>
+                <span>1. <strong style="color:#fff;">Producto</strong> *</span>
                 <span style="color:#666;">Ej: "Filtro de aceite"</span>
                 <span>2. <strong style="color:#fff;">Costo Proveedor</strong> *</span>
                 <span style="color:#666;">Ej: 15000</span>
-                <span>3. <strong style="color:#fff;">Margen %</strong></span>
-                <span style="color:#666;">Ej: 30 (opcional, por defecto 30%)</span>
+                <span>3. <strong style="color:#fff;">Precio Venta</strong> *</span>
+                <span style="color:#666;">Ej: 23205</span>
                 <span>4. <strong style="color:#fff;">Proveedor</strong></span>
                 <span style="color:#666;">Ej: "Bosch" (opcional)</span>
+            </div>
+            <div style="margin-top:6px;padding:8px;background:rgba(255,255,255,0.03);border-radius:4px;">
+                <span style="color:#888;font-size:11px;">💡 El margen se calculará automáticamente con 1 decimal</span>
             </div>
         </div>
 
@@ -317,14 +320,20 @@
                     <thead style="background:rgba(79,195,247,0.1);position:sticky;top:0;">
                         <tr>
                             <th style="padding:4px 6px;color:#4fc3f7;">#</th>
-                            <th style="padding:4px 6px;color:#4fc3f7;">Nombre</th>
+                            <th style="padding:4px 6px;color:#4fc3f7;">Producto</th>
                             <th style="padding:4px 6px;color:#4fc3f7;">Costo</th>
+                            <th style="padding:4px 6px;color:#4fc3f7;">Precio Venta</th>
                             <th style="padding:4px 6px;color:#4fc3f7;">Margen</th>
                         </tr>
                     </thead>
                     <tbody id="previewBodyProductos"></tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- ÁREA DE RESULTADOS DE IMPORTACIÓN -->
+        <div id="resultadoImportacion" style="display:none;margin-top:15px;padding:12px;border-radius:8px;max-height:250px;overflow-y:auto;">
+            <div id="resultadoContenido"></div>
         </div>
 
         <div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">
@@ -446,6 +455,7 @@ function abrirModalImportarProductos() {
     document.getElementById('modalImportarProductos').style.display = 'flex';
     document.getElementById('previewProductos').style.display = 'none';
     document.getElementById('btnImportarProductos').style.display = 'none';
+    document.getElementById('resultadoImportacion').style.display = 'none';
     document.getElementById('fileInputProductos').value = '';
     datosProductos = [];
 }
@@ -495,20 +505,20 @@ function procesarArchivoProductos(file) {
                 return;
             }
             
-            // ✅ LEER COLUMNAS REALES
+            // ✅ LEER COLUMNAS REALES - AHORA CON PRECIO VENTA
             datosProductos = jsonData.map(row => {
                 const nombre = row['Producto'] || row['nombre'] || '';
                 const costo = parseFloat(row['Costo Proveedor'] || row['costo_proveedor'] || 0);
                 const precioVenta = parseFloat(row['Precio Venta'] || row['precio_venta'] || 0);
-                const margen = parseFloat(row['Margen %'] || row['margen'] || 0);
                 const proveedor = row['Proveedor'] || row['proveedor'] || 'Importado';
                 
-                let margenFinal = margen;
-                if (margenFinal === 0 && costo > 0 && precioVenta > 0) {
+                // ✅ CALCULAR MARGEN CON DECIMALES
+                let margenFinal = 0;
+                if (costo > 0 && precioVenta > 0) {
                     const iva = 1.19;
                     const costoConIva = costo * iva;
                     margenFinal = ((precioVenta / costoConIva) - 1) * 100;
-                    margenFinal = Math.round(margenFinal * 10) / 10;
+                    margenFinal = Math.round(margenFinal * 10) / 10; // 1 decimal
                 }
                 
                 return { 
@@ -518,7 +528,7 @@ function procesarArchivoProductos(file) {
                     margen: margenFinal,
                     proveedor: proveedor || 'Importado'
                 };
-            }).filter(item => item.nombre && item.costo > 0);
+            }).filter(item => item.nombre && item.costo > 0 && item.precio_venta > 0);
             
             if (datosProductos.length === 0) {
                 alert('⚠️ No hay datos válidos para importar');
@@ -549,6 +559,7 @@ function mostrarPreviewProductos(datos) {
             <td style="padding:4px 6px;color:#666;">${index + 1}</td>
             <td style="padding:4px 6px;color:#fff;">${item.nombre}</td>
             <td style="padding:4px 6px;color:#ffcc00;">$${item.costo.toLocaleString('es-CL')}</td>
+            <td style="padding:4px 6px;color:#00ff66;">$${item.precio_venta.toLocaleString('es-CL')}</td>
             <td style="padding:4px 6px;color:#4fc3f7;">${item.margen}%</td>
         `;
         previewBody.appendChild(tr);
@@ -556,7 +567,7 @@ function mostrarPreviewProductos(datos) {
     
     if (datos.length > 10) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="4" style="padding:6px;text-align:center;color:#666;">... y ${datos.length - 10} más</td>`;
+        tr.innerHTML = `<td colspan="5" style="padding:6px;text-align:center;color:#666;">... y ${datos.length - 10} más</td>`;
         previewBody.appendChild(tr);
     }
     
@@ -564,6 +575,43 @@ function mostrarPreviewProductos(datos) {
     previewContainer.style.display = 'block';
     btnImportar.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datos.length} productos`;
     btnImportar.style.display = 'block';
+}
+
+function mostrarResultadoImportacion(importados, exitosos, errores) {
+    const resultadoDiv = document.getElementById('resultadoImportacion');
+    const contenido = document.getElementById('resultadoContenido');
+    
+    resultadoDiv.style.display = 'block';
+    
+    let html = `<div style="font-weight:700;font-size:16px;margin-bottom:10px;">📊 RESULTADO DE IMPORTACIÓN</div>`;
+    html += `<div style="color:#00ff66;margin-bottom:8px;">✅ ${importados} productos importados correctamente</div>`;
+    
+    if (errores.length > 0) {
+        html += `<div style="color:#ff6b6b;margin-bottom:8px;">❌ ${errores.length} productos con errores:</div>`;
+        html += `<div style="max-height:150px;overflow-y:auto;font-size:12px;">`;
+        html += `<table style="width:100%;border-collapse:collapse;font-size:12px;">`;
+        html += `<tr><th style="text-align:left;padding:4px 6px;color:#90e0a0;">Producto</th><th style="text-align:left;padding:4px 6px;color:#90e0a0;">Error</th></tr>`;
+        
+        errores.forEach(item => {
+            html += `<tr>`;
+            html += `<td style="padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.05);">${item.nombre}</td>`;
+            html += `<td style="padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.05);color:#ff6b6b;">${item.error}</td>`;
+            html += `</tr>`;
+        });
+        
+        html += `</table>`;
+        html += `</div>`;
+    }
+    
+    if (exitosos.length > 0 && exitosos.length <= 10) {
+        html += `<div style="margin-top:8px;color:#888;font-size:12px;">✅ ${exitosos.join(', ')}</div>`;
+    } else if (exitosos.length > 10) {
+        html += `<div style="margin-top:8px;color:#888;font-size:12px;">✅ ${exitosos.length} productos importados (los primeros 10: ${exitosos.slice(0,10).join(', ')}...)</div>`;
+    }
+    
+    contenido.innerHTML = html;
+    resultadoDiv.style.border = errores.length > 0 ? '1px solid #ff6b6b' : '1px solid #00ff66';
+    resultadoDiv.style.background = errores.length > 0 ? 'rgba(255,68,68,0.05)' : 'rgba(0,255,102,0.05)';
 }
 
 async function importarProductos() {
@@ -581,13 +629,10 @@ async function importarProductos() {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
     
     let importados = 0;
-    let errores = 0;
+    let errores = [];
+    let exitosos = [];
     
     for (const item of datosProductos) {
-        const iva = 1.19;
-        const costoConIva = item.costo * iva;
-        const costoVentaFinal = Math.floor(costoConIva * (1 + (item.margen / 100))); // ✅ FLOOR
-        
         try {
             const resp = await fetch(`${API_URL}/api/repuestos`, {
                 method: 'POST',
@@ -597,23 +642,45 @@ async function importarProductos() {
                     costo_proveedor: item.costo,
                     margen_ganancia: item.margen,
                     proveedor: item.proveedor || 'Importado',
-                    costo_venta_final: costoVentaFinal
+                    costo_venta_final: item.precio_venta  // ✅ USA EL PRECIO DEL EXCEL
                 })
             });
             const result = await resp.json();
             if (result.success) {
                 importados++;
+                exitosos.push(item.nombre);
             } else {
-                errores++;
+                errores.push({
+                    nombre: item.nombre,
+                    error: result.error || 'Error desconocido'
+                });
             }
         } catch (error) {
-            errores++;
+            errores.push({
+                nombre: item.nombre,
+                error: 'Error de conexión'
+            });
         }
     }
     
-    alert(`✅ Importación completada!\n\n📊 ${importados} importados\n${errores > 0 ? `⚠️ ${errores} con errores` : ''}`);
-    cerrarModalImportarProductos();
-    if (importados > 0) location.reload();
+    // ✅ Mostrar informe detallado
+    mostrarResultadoImportacion(importados, exitosos, errores);
+    
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datosProductos.length} productos`;
+    
+    if (errores.length === 0) {
+        alert(`✅ Importación completada!\n\n📊 ${importados} importados correctamente`);
+    } else {
+        // No mostrar alert, ya tenemos el informe
+        alert(`⚠️ Importación completada con errores\n\n✅ ${importados} importados\n❌ ${errores.length} con errores\n\nRevisa el informe abajo.`);
+    }
+    
+    if (importados > 0) {
+        setTimeout(() => {
+            location.reload();
+        }, 3000);
+    }
 }
 
 // ============================
