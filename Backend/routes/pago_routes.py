@@ -404,7 +404,7 @@ def get_pendientes_validacion():
 
 
 # ============================
-# 10. VALIDAR PAGO (PASO 2 - VALIDACIÓN DE COSTOS) CON CANTIDAD
+# 10. VALIDAR PAGO (CORREGIDO CON estado_pago)
 # ============================
 @pago_bp.route('/validar_pago/<int:id_reg>', methods=['POST'])
 def validar_pago(id_reg):
@@ -417,6 +417,19 @@ def validar_pago(id_reg):
     try:
         conn = get_connection()
         cur = conn.cursor()
+        
+        # ✅ OBTENER EL REGISTRO PARA SABER SI TIENE FLOTA
+        cur.execute("SELECT flota FROM pagos WHERE id = %s", (id_reg,))
+        registro = cur.fetchone()
+        es_flota = registro and registro[0] and registro[0].strip() != ''
+        
+        # ✅ DETERMINAR estado_pago
+        # Si es flota → queda pendiente de pago
+        # Si no es flota → queda pagado
+        estado_pago = 'pendiente' if es_flota else 'pagado'
+        fecha_pago_real = None if es_flota else get_fecha_chile().strftime('%Y-%m-%d')
+        
+        print(f"🚛 ¿Es flota? {es_flota} → estado_pago: {estado_pago}")
         
         # ✅ GUARDAR REPUESTOS CON CANTIDAD
         for item in detalles_repuestos:
@@ -478,7 +491,9 @@ def validar_pago(id_reg):
                 reparacion = %s,
                 resultado = %s,
                 tiempo_estimado = %s,
-                detalles_repuestos = %s::jsonb
+                detalles_repuestos = %s::jsonb,
+                estado_pago = %s,
+                fecha_pago_real = %s
             WHERE id = %s
         """, (
             costo_repuestos,
@@ -492,19 +507,22 @@ def validar_pago(id_reg):
             data.get('resultado', 'reparado'),
             data.get('tiempo_estimado', '00:00:00'),
             detalles_json,
+            estado_pago,
+            fecha_pago_real,
             id_reg
         ))
         
         conn.commit()
         cur.close()
         conn.close()
-        return jsonify({"success": True})
+        
+        print(f"✅ Validación completada para ID {id_reg} - estado_pago: {estado_pago}")
+        return jsonify({"success": True, "estado_pago": estado_pago})
     except Exception as e:
-        print(f"Error en validar_pago: {e}")
+        print(f"❌ Error en validar_pago: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 
 # ============================
 # 11. REPUESTOS - OBTENER LISTA
