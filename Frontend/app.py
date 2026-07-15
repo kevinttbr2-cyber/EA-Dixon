@@ -75,7 +75,6 @@ def inject_globals():
         meses = {1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'}
         return f"{dias.get(fecha.weekday(), '')} {fecha.day} de {meses.get(fecha.month, '')} {fecha.year}"
     
-    # ✅ También puedes agregar la versión corta (Lun, Mar, etc.)
     def fecha_corta_espanol(fecha):
         if not fecha:
             return ''
@@ -88,10 +87,22 @@ def inject_globals():
         meses_cortos = {1: 'Ene', 2: 'Feb', 3: 'Mar', 4: 'Abr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dic'}
         return f"{dias_cortos.get(fecha.weekday(), '')} {fecha.day} {meses_cortos.get(fecha.month, '')}"
     
+    # ✅ OBTENER CONTEO DE FLOTAS PENDIENTES
+    flotas_pendientes_count = 0
+    try:
+        import requests
+        resp = requests.get(f"{BACKEND_URL}/api/flotas_pendientes_count", timeout=3)
+        if resp.status_code == 200:
+            flotas_pendientes_count = resp.json().get('count', 0)
+    except Exception as e:
+        print(f"⚠️ Error al obtener flotas pendientes: {e}")
+        flotas_pendientes_count = 0
+    
     return dict(
         backend_url=BACKEND_URL,
         fecha_espanol=fecha_espanol,
-        fecha_corta_espanol=fecha_corta_espanol
+        fecha_corta_espanol=fecha_corta_espanol,
+        flotas_pendientes_count=flotas_pendientes_count  # ✅ AGREGADO
     )
 
 @app.route('/')
