@@ -208,11 +208,12 @@ def editar_repuestos_venta(id_reg):
         mano_obra = float(data.get('costo_mano_obra_real', 0))
         diagnostico = float(data.get('costo_diagnostico_real', 0))
         ganancia_neta = float(data.get('ganancia_neta', 0))
+        monto = float(data.get('monto', 0))  # ✅ AGREGAR ESTO
         
         conn = get_connection()
         cur = conn.cursor()
         
-        # Actualizar solo los campos relacionados con repuestos y costos
+        # ✅ AGREGAR monto al UPDATE
         cur.execute("""
             UPDATE pagos 
             SET detalles_repuestos = %s::jsonb,
@@ -220,6 +221,7 @@ def editar_repuestos_venta(id_reg):
                 costo_mano_obra_real = %s,
                 costo_diagnostico_real = %s,
                 ganancia_neta = %s,
+                monto = %s,
                 actualizado_en = NOW() AT TIME ZONE 'America/Santiago'
             WHERE id = %s
         """, (
@@ -228,6 +230,7 @@ def editar_repuestos_venta(id_reg):
             mano_obra,
             diagnostico,
             ganancia_neta,
+            monto,  # ✅ AGREGAR ESTO
             id_reg
         ))
         
