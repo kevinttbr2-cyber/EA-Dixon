@@ -114,123 +114,90 @@
             {{ flotas_agrupadas|length }} flota{% if flotas_agrupadas|length > 1 %}s{% endif %} pendiente{% if flotas_agrupadas|length > 1 %}s{% endif %}
         </span>
     </div>
-    <!-- HEADER DE LA FLOTA (modificado) -->
-<div class="toggle-detalle" onclick="toggleFlotaDetalle(this)">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-size: 24px;">🚛</span>
-            <span style="color: #ffcc00; font-weight: 700; font-size: 18px;">
-                {{ flota.nombre }}
-            </span>
-            <span class="badge-pendiente">
-                {{ flota.servicios|length }} servicio{% if flota.servicios|length > 1 %}s{% endif %}
-            </span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <div style="text-align: right;">
-                <div style="color: #00ff66; font-weight: 700; font-size: 18px;">
-                    ${{ "{:,.0f}".format(flota.total_pendiente) }}
-                </div>
-                <div style="color: #888; font-size: 11px;">
-                    <i class="fa-regular fa-clock"></i> Pendiente
-                </div>
-            </div>
-            <!-- ✅ BOTÓN: VALIDAR TODA LA FLOTA -->
-            <button onclick="event.stopPropagation(); validarFlotaCompleta('{{ flota.nombre }}', {{ flota.total_pendiente }}, {{ flota.servicios|length }})" 
-                    class="btn-marcar-pagado" style="background: #ffcc00 !important; color: #000 !important; padding: 6px 16px; font-size: 13px;">
-                ✅ Validar toda la flota
-            </button>
-        </div>
-    </div>
-    <div style="color: #666; font-size: 12px; margin-top: 4px;">
-        <i class="fa-solid fa-chevron-down" id="icono-chevron-{{ loop.index }}"></i> 
-        <span id="texto-toggle-{{ loop.index }}">Mostrar servicios</span>
-    </div>
-</div>
 
     <!-- ============================
-     FLOTAS AGRUPADAS
-     ============================ -->
-{% for flota in flotas_agrupadas %}
-<div class="card-flota-agrupada">
-    <!-- HEADER DE LA FLOTA (UNO SOLO) -->
-    <div class="toggle-detalle" onclick="toggleFlotaDetalle(this)">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 24px;">🚛</span>
-                <span style="color: #ffcc00; font-weight: 700; font-size: 18px;">
-                    {{ flota.nombre }}
-                </span>
-                <span class="badge-pendiente">
-                    {{ flota.servicios|length }} servicio{% if flota.servicios|length > 1 %}s{% endif %}
-                </span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <div style="text-align: right;">
-                    <div style="color: #00ff66; font-weight: 700; font-size: 18px;">
-                        ${{ "{:,.0f}".format(flota.total_pendiente) }}
-                    </div>
-                    <div style="color: #888; font-size: 11px;">
-                        <i class="fa-regular fa-clock"></i> Pendiente
-                    </div>
+         FLOTAS AGRUPADAS
+         ============================ -->
+    {% for flota in flotas_agrupadas %}
+    <div class="card-flota-agrupada">
+        <!-- HEADER DE LA FLOTA -->
+        <div class="toggle-detalle" onclick="toggleFlotaDetalle(this)">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 24px;">🚛</span>
+                    <span style="color: #ffcc00; font-weight: 700; font-size: 18px;">
+                        {{ flota.nombre }}
+                    </span>
+                    <span class="badge-pendiente">
+                        {{ flota.servicios|length }} servicio{% if flota.servicios|length > 1 %}s{% endif %}
+                    </span>
                 </div>
-                <!-- ✅ BOTÓN: VALIDAR TODA LA FLOTA -->
-                <button onclick="event.stopPropagation(); validarFlotaCompleta('{{ flota.nombre }}', {{ flota.total_pendiente }}, {{ flota.servicios|length }})" 
-                        class="btn-marcar-pagado" style="background: #ffcc00 !important; color: #000 !important; padding: 6px 16px; font-size: 13px;">
-                    ✅ Validar toda la flota
-                </button>
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <div style="text-align: right;">
+                        <div style="color: #00ff66; font-weight: 700; font-size: 18px;">
+                            ${{ "{:,.0f}".format(flota.total_pendiente) }}
+                        </div>
+                        <div style="color: #888; font-size: 11px;">
+                            <i class="fa-regular fa-clock"></i> Pendiente
+                        </div>
+                    </div>
+                    <!-- ✅ BOTÓN: VALIDAR TODA LA FLOTA -->
+                    <button onclick="event.stopPropagation(); validarFlotaCompleta('{{ flota.nombre }}', {{ flota.total_pendiente }}, {{ flota.servicios|length }})" 
+                            class="btn-marcar-pagado" style="background: #ffcc00 !important; color: #000 !important; padding: 6px 16px; font-size: 13px;">
+                        ✅ Validar toda la flota
+                    </button>
+                </div>
+            </div>
+            <div style="color: #666; font-size: 12px; margin-top: 4px;">
+                <i class="fa-solid fa-chevron-down" id="icono-chevron-{{ loop.index }}"></i> 
+                <span id="texto-toggle-{{ loop.index }}">Mostrar servicios</span>
             </div>
         </div>
-        <div style="color: #666; font-size: 12px; margin-top: 4px;">
-            <i class="fa-solid fa-chevron-down" id="icono-chevron-{{ loop.index }}"></i> 
-            <span id="texto-toggle-{{ loop.index }}">Mostrar servicios</span>
-        </div>
-    </div>
 
-    <!-- DETALLE DE SERVICIOS (COLLAPSIBLE) -->
-    <div class="detalle-servicios" style="display: none;">
-        {% for servicio in flota.servicios %}
-        <div class="servicio-item">
-            <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
-                <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-                    <span style="color: #fff; font-weight: 600; font-size: 14px;">
-                        👤 {{ servicio.nombre }}
-                    </span>
-                    <span style="color: #888; font-size: 12px;">
-                        🚗 {{ servicio.marca or '-' }} {{ servicio.modelo or '-' }}
-                    </span>
-                    <span style="color: #888; font-size: 12px;">
-                        🔢 {{ servicio.patente or '-' }}
-                    </span>
+        <!-- DETALLE DE SERVICIOS (COLLAPSIBLE) -->
+        <div class="detalle-servicios" style="display: none;">
+            {% for servicio in flota.servicios %}
+            <div class="servicio-item">
+                <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                        <span style="color: #fff; font-weight: 600; font-size: 14px;">
+                            👤 {{ servicio.nombre }}
+                        </span>
+                        <span style="color: #888; font-size: 12px;">
+                            🚗 {{ servicio.marca or '-' }} {{ servicio.modelo or '-' }}
+                        </span>
+                        <span style="color: #888; font-size: 12px;">
+                            🔢 {{ servicio.patente or '-' }}
+                        </span>
+                    </div>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 12px; color: #888;">
+                        <span>📅 {{ servicio.fecha[:10] if servicio.fecha else '' }}</span>
+                        <span>🆔 #{{ servicio.id }}</span>
+                        {% if servicio.detalles_repuestos %}
+                            <span>📦 {{ servicio.detalles_repuestos|length }} repuesto{% if servicio.detalles_repuestos|length > 1 %}s{% endif %}</span>
+                        {% endif %}
+                    </div>
                 </div>
-                <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 12px; color: #888;">
-                    <span>📅 {{ servicio.fecha[:10] if servicio.fecha else '' }}</span>
-                    <span>🆔 #{{ servicio.id }}</span>
-                    {% if servicio.detalles_repuestos %}
-                        <span>📦 {{ servicio.detalles_repuestos|length }} repuesto{% if servicio.detalles_repuestos|length > 1 %}s{% endif %}</span>
-                    {% endif %}
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span style="color: #00ff66; font-weight: 700; font-size: 16px;">
+                        ${{ "{:,.0f}".format(servicio.monto) }}
+                    </span>
+                    <button onclick="event.stopPropagation(); marcarComoPagado({{ servicio.id }})" class="btn-marcar-pagado">
+                        💰 Pagar
+                    </button>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <span style="color: #00ff66; font-weight: 700; font-size: 16px;">
-                    ${{ "{:,.0f}".format(servicio.monto) }}
-                </span>
-                <button onclick="event.stopPropagation(); marcarComoPagado({{ servicio.id }})" class="btn-marcar-pagado">
-                    💰 Pagar
-                </button>
-            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
-</div>
-{% else %}
-<!-- SIN FLOTAS PENDIENTES -->
-<div style="text-align: center; color: #666; padding: 60px 0;">
-    <i class="fa-solid fa-check-circle" style="font-size: 48px; color: #00ff66; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
-    <p style="font-size: 16px;">🎉 No hay flotas pendientes de cobro</p>
-    <p style="color: #888; font-size: 13px;">Todas las flotas están al día</p>
-</div>
-{% endfor %}
+    {% else %}
+    <!-- SIN FLOTAS PENDIENTES -->
+    <div style="text-align: center; color: #666; padding: 60px 0;">
+        <i class="fa-solid fa-check-circle" style="font-size: 48px; color: #00ff66; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
+        <p style="font-size: 16px;">🎉 No hay flotas pendientes de cobro</p>
+        <p style="color: #888; font-size: 13px;">Todas las flotas están al día</p>
+    </div>
+    {% endfor %}
 
     <!-- VOLVER -->
     <div style="margin-top: 20px; text-align: center;">
@@ -249,7 +216,7 @@
 </div>
 
 <!-- ============================
-     MODAL PARA MARCAR COMO PAGADO
+     MODAL PARA MARCAR COMO PAGADO (INDIVIDUAL)
      ============================ -->
 <div id="modalMarcarPagado" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
     <div style="background:rgba(15,15,15,0.98);border:2px solid #ffcc00;border-radius:16px;padding:25px 30px;max-width:450px;width:95%;">
@@ -298,48 +265,6 @@
     </div>
 </div>
 
-<script>
-const API_URL = 'https://ea-dixon-production.up.railway.app';
-let idFlotaEditando = null;
-
-// ============================
-// TOGGLE DETALLE DE FLOTA
-// ============================
-function toggleFlotaDetalle(element) {
-    const card = element.closest('.card-flota-agrupada');
-    const detalle = card.querySelector('.detalle-servicios');
-    const chevron = card.querySelector('#icono-chevron');
-    const texto = card.querySelector('#texto-toggle');
-    
-    if (detalle.style.display === 'none') {
-        detalle.style.display = 'block';
-        chevron.className = 'fa-solid fa-chevron-up';
-        texto.textContent = 'Ocultar servicios';
-    } else {
-        detalle.style.display = 'none';
-        chevron.className = 'fa-solid fa-chevron-down';
-        texto.textContent = 'Mostrar servicios';
-    }
-}
-
-// ============================
-// MARCAR COMO PAGADO (abrir modal)
-// ============================
-function marcarComoPagado(id) {
-    event.stopPropagation();
-    idFlotaEditando = id;
-    
-    // Obtener el monto del servicio
-    const servicioItem = document.querySelector(`.servicio-item:has(button[onclick*="${id}"])`);
-    if (servicioItem) {
-        const montoText = servicioItem.querySelector('[style*="color: #00ff66"]')?.textContent || '0';
-        const monto = parseFloat(montoText.replace(/[$,]/g, '')) || 0;
-        document.getElementById('montoPagado').value = monto;
-    }
-    
-    document.getElementById('fechaPago').value = new Date().toISOString().split('T')[0];
-    document.getElementById('modalMarcarPagado').style.display = 'flex';
-}
 <!-- ============================
      MODAL VALIDAR FLOTA COMPLETA
      ============================ -->
@@ -391,8 +316,50 @@ function marcarComoPagado(id) {
     </div>
 </div>
 
+<script>
+const API_URL = 'https://ea-dixon-production.up.railway.app';
+let idFlotaEditando = null;
+
 // ============================
-// CERRAR MODAL
+// TOGGLE DETALLE DE FLOTA
+// ============================
+function toggleFlotaDetalle(element) {
+    const card = element.closest('.card-flota-agrupada');
+    const detalle = card.querySelector('.detalle-servicios');
+    const chevron = card.querySelector('.fa-chevron-down, .fa-chevron-up');
+    const texto = card.querySelector('[id^="texto-toggle-"]');
+    
+    if (detalle.style.display === 'none') {
+        detalle.style.display = 'block';
+        if (chevron) chevron.className = 'fa-solid fa-chevron-up';
+        if (texto) texto.textContent = 'Ocultar servicios';
+    } else {
+        detalle.style.display = 'none';
+        if (chevron) chevron.className = 'fa-solid fa-chevron-down';
+        if (texto) texto.textContent = 'Mostrar servicios';
+    }
+}
+
+// ============================
+// MARCAR COMO PAGADO (abrir modal individual)
+// ============================
+function marcarComoPagado(id) {
+    event.stopPropagation();
+    idFlotaEditando = id;
+    
+    const servicioItem = document.querySelector(`.servicio-item:has(button[onclick*="${id}"])`);
+    if (servicioItem) {
+        const montoText = servicioItem.querySelector('[style*="color: #00ff66"]')?.textContent || '0';
+        const monto = parseFloat(montoText.replace(/[$,]/g, '')) || 0;
+        document.getElementById('montoPagado').value = monto;
+    }
+    
+    document.getElementById('fechaPago').value = new Date().toISOString().split('T')[0];
+    document.getElementById('modalMarcarPagado').style.display = 'flex';
+}
+
+// ============================
+// CERRAR MODAL INDIVIDUAL
 // ============================
 function cerrarModalPago() {
     document.getElementById('modalMarcarPagado').style.display = 'none';
@@ -400,7 +367,7 @@ function cerrarModalPago() {
 }
 
 // ============================
-// CONFIRMAR PAGO
+// CONFIRMAR PAGO INDIVIDUAL
 // ============================
 function confirmarPago() {
     if (!idFlotaEditando) {
@@ -459,13 +426,7 @@ function confirmarPago() {
     });
 }
 
-// Cerrar modal al hacer clic fuera
-document.getElementById('modalMarcarPagado').addEventListener('click', function(e) {
-    if (e.target === this) {
-        cerrarModalPago();
-    }
-});
-    // ============================
+// ============================
 // VALIDAR FLOTA COMPLETA
 // ============================
 function validarFlotaCompleta(nombreFlota, totalPendiente, cantidadServicios) {
@@ -479,18 +440,17 @@ function validarFlotaCompleta(nombreFlota, totalPendiente, cantidadServicios) {
         return;
     }
     
-    // Abrir modal para seleccionar fecha y forma de pago
     document.getElementById('modalFlotaCompleta').style.display = 'flex';
     document.getElementById('flotaCompletaNombre').textContent = nombreFlota;
     document.getElementById('flotaCompletaTotal').textContent = '$' + totalPendiente.toLocaleString();
     document.getElementById('flotaCompletaCantidad').textContent = cantidadServicios + ' servicio(s)';
     document.getElementById('flotaCompletaFecha').value = new Date().toISOString().split('T')[0];
     
-    // Guardar datos en el botón de confirmar
     const btnConfirmar = document.getElementById('btnConfirmarFlotaCompleta');
     btnConfirmar.dataset.flota = nombreFlota;
     btnConfirmar.dataset.total = totalPendiente;
 }
+
 // ============================
 // CONFIRMAR VALIDACIÓN FLOTA COMPLETA
 // ============================
@@ -550,6 +510,19 @@ function confirmarFlotaCompleta() {
 function cerrarModalFlotaCompleta() {
     document.getElementById('modalFlotaCompleta').style.display = 'none';
 }
+
+// Cerrar modales al hacer clic fuera
+document.getElementById('modalMarcarPagado').addEventListener('click', function(e) {
+    if (e.target === this) {
+        cerrarModalPago();
+    }
+});
+
+document.getElementById('modalFlotaCompleta').addEventListener('click', function(e) {
+    if (e.target === this) {
+        cerrarModalFlotaCompleta();
+    }
+});
 </script>
 
 {% endblock %}
