@@ -265,6 +265,9 @@ def eliminar_registro(id_reg):
 # ============================
 # 6. BALANCE DE GANANCIA
 # ============================
+# ============================
+# 6. BALANCE DE GANANCIA (CORREGIDO - CON estado_pago)
+# ============================
 @pago_bp.route('/balance', methods=['GET'])
 def get_balance():
     filtro = request.args.get('filtro', 'hoy')
@@ -273,9 +276,11 @@ def get_balance():
     try:
         conn, cur = get_cursor()
         
+        # ✅ SOLO REGISTROS CON estado_pago = 'pagado'
         query = """
             SELECT * FROM pagos 
-            WHERE estado = 'pagado'
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
         """
         params = []
         
