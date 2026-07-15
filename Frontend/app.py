@@ -177,14 +177,35 @@ def agregar_cliente():
 @app.route('/agregar', methods=['POST'])
 @login_required
 def agregar():
-    # Obtener flota (si viene como "__nueva__" usar el valor manual)
-    flota = request.form.get('flota', '').strip()
-    if flota == '__nueva__':
-        flota = request.form.get('flota_nueva', '').strip()
+    # ✅ Obtener datos
+    nombre = request.form.get('nombre', '').strip()
+    patente = request.form.get('patente', '').strip().upper()
     
+    # ✅ VALIDACIÓN: Verificar si ya existe un registro en los últimos 5 minutos
+    try:
+        # Obtener flota
+        flota = request.form.get('flota', '').strip()
+        if flota == '__nueva__':
+            flota = request.form.get('flota_nueva', '').strip()
+        
+        # Verificar duplicado en backend
+        resp_verificar = requests.get(
+            f"{BACKEND_URL}/api/verificar_duplicado",
+            params={"nombre": nombre, "patente": patente},
+            timeout=5
+        )
+        
+        if resp_verificar.status_code == 200 and resp_verificar.json().get('duplicado', False):
+            flash('⚠️ Ya existe un registro con estos datos en los últimos 5 minutos. Si es un error, intenta de nuevo.', 'warning')
+            return redirect("/agregar_cliente")
+    except Exception as e:
+        print(f"⚠️ Error al verificar duplicado: {e}")
+        # Si falla la verificación, continuar de todas formas
+    
+    # ✅ Construir data
     data = {
-        'nombre': request.form.get('nombre', '').strip(),
-        'patente': request.form.get('patente', '').strip().upper(),
+        'nombre': nombre,
+        'patente': patente,
         'marca': request.form.get('marca', '').strip(),
         'modelo': request.form.get('modelo', '').strip(),
         'telefono': request.form.get('telefono', '').strip(),
@@ -199,9 +220,14 @@ def agregar():
         resp = requests.post(f"{BACKEND_URL}/api/agregar", json=data, timeout=10)
         if resp.status_code != 200:
             print(f"Error al agregar: {resp.text}")
+            flash('❌ Error al registrar el cliente. Intenta de nuevo.', 'error')
+            return redirect("/agregar_cliente")
     except Exception as e:
         print(f"Error en /agregar: {e}")
+        flash('⚠️ Error de conexión. Intenta de nuevo.', 'error')
+        return redirect("/agregar_cliente")
     
+    flash('✅ Cliente registrado correctamente', 'success')
     return redirect("/estado")
 
 @app.route('/pagar/<int:id_reg>', methods=['GET', 'POST'])
