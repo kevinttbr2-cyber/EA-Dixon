@@ -389,10 +389,10 @@
             
             if (metodo === 'margen') {
                 const costoFinal = costoConIva * (1 + (margen / 100));
-                document.getElementById('previewCostoVenta').textContent = '$' + Math.round(costoFinal).toLocaleString('es-CL');
+                document.getElementById('previewCostoVenta').textContent = '$' + Math.floor(costoFinal).toLocaleString('es-CL');
                 document.getElementById('previewCostoVenta').style.color = '#00ff66';
                 document.getElementById('previewMargen').textContent = margen + '%';
-                costoVentaFinalInput.value = Math.round(costoFinal);
+                costoVentaFinalInput.value = Math.floor(costoFinal);
             } else {
                 const costoVenta = parseFloat(costoVentaFinalInput.value) || 0;
                 if (costoVenta > 0 && costoConIva > 0) {
@@ -456,7 +456,7 @@
                 document.getElementById('editPreviewCostoVenta').textContent = '$' + Math.round(costoFinal).toLocaleString('es-CL');
                 document.getElementById('editPreviewCostoVenta').style.color = '#00ff66';
                 document.getElementById('editPreviewMargen').textContent = margen + '%';
-                costoVentaFinalInput.value = Math.round(costoFinal);
+                costoVentaFinalInput.value = Math.floor(costoFinal);
             } else {
                 let costoVenta = parseFloat(costoVentaFinalInput.value) || 0;
                 
@@ -576,7 +576,7 @@
                 `📊 Resumen del repuesto:\n\n` +
                 `🔧 Nombre: ${nombre}\n` +
                 `💰 Costo Proveedor: $${costoProveedor}\n` +
-                `💵 Costo Venta Final: $${costoVentaFinal > 0 ? costoVentaFinal : Math.round(costoFinal)}\n` +
+                `💵 Costo Venta Final: $${costoVentaFinal > 0 ? costoVentaFinal : Math.floor(costoFinal)}\n` +
                 `📈 Margen: ${margen}%\n` +
                 `🏢 Proveedor: ${proveedor || 'No especificado'}\n\n` +
                 `¿Guardar este repuesto?`
@@ -715,7 +715,7 @@ document.getElementById('formEditarRepuesto').addEventListener('submit', functio
     const iva = 1.19;
     const costoConIva = costoProveedor * iva;
     const costoFinal = costoConIva * (1 + (margen / 100));
-    const costoFinalMostrar = costoVentaFinal > 0 ? costoVentaFinal : Math.round(costoFinal);
+    const costoFinalMostrar = costoVentaFinal > 0 ? costoVentaFinal : Math.floor(costoFinal);
     
     const confirmar = confirm(
         `📊 Resumen del repuesto:\n\n` +
