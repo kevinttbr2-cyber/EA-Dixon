@@ -547,6 +547,27 @@ def register():
                 error = "⚠️ Error de conexión con el servidor"
     
     return render_template("register.html", error=error, success=success)
+# ============================
+# FLOTAS PENDIENTES
+# ============================
+@app.route('/flotas_pendientes')
+@login_required
+@role_required(['admin', 'operador'])
+def flotas_pendientes():
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/flotas_pendientes", timeout=10)
+        flotas = resp.json() if resp.status_code == 200 else []
+        
+        # Calcular total pendiente
+        total_pendiente = sum(float(r.get('monto', 0) or 0) for r in flotas)
+        
+    except Exception as e:
+        print(f"Error en /flotas_pendientes: {e}")
+        flotas = []
+        total_pendiente = 0
+    
+    today = datetime.now().strftime('%Y-%m-%d')
+    return render_template("flotas_pendientes.html", flotas=flotas, total_pendiente=total_pendiente, today=today)
     
 @app.route('/usuarios')
 @login_required
