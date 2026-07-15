@@ -627,7 +627,7 @@ def actualizar_repuesto(id_repuesto):
         iva = 1.19
         costo_con_iva = costo_proveedor * iva
         costo_venta_final = costo_con_iva * (1 + (margen_ganancia / 100))
-        costo_venta_final = math.floor(costo_venta_final)
+        costo_venta_final = int(costo_venta_final)
         costo_proveedor_pendiente = costo_proveedor == 0
         
         conn = get_connection()
