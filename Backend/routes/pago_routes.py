@@ -1404,6 +1404,54 @@ def get_flotas_pendientes():
     except Exception as e:
         print(f"❌ Error en get_flotas_pendientes: {e}")
         return jsonify({"error": str(e)}), 500
+# ============================
+# 23. VALIDAR PAGO DE FLOTA (MARCAR COMO PAGADO)
+# ============================
+@pago_bp.route('/validar_flota/<int:id_reg>', methods=['POST'])
+def validar_flota(id_reg):
+    try:
+        data = request.json
+        fecha_pago = data.get('fecha_pago')
+        forma_pago = data.get('forma_pago', 'transferencia')
+        monto_pagado = float(data.get('monto_pagado', 0))
+        
+        if not fecha_pago:
+            return jsonify({"error": "La fecha de pago es obligatoria"}), 400
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # ✅ Verificar que existe y está pendiente
+        cur.execute("""
+            SELECT id, estado_pago FROM pagos 
+            WHERE id = %s AND estado_pago = 'pendiente'
+        """, (id_reg,))
+        registro = cur.fetchone()
+        
+        if not registro:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Registro no encontrado o ya está pagado"}), 404
+        
+        # ✅ Actualizar a pagado
+        cur.execute("""
+            UPDATE pagos 
+            SET estado_pago = 'pagado',
+                fecha_pago_real = %s,
+                forma_pago = %s,
+                monto = %s,
+                actualizado_en = NOW() AT TIME ZONE 'America/Santiago'
+            WHERE id = %s
+        """, (fecha_pago, forma_pago, monto_pagado, id_reg))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"❌ Error en validar_flota: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # ============================
