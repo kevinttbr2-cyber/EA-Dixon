@@ -3,15 +3,15 @@
 {% block content %}
 
 <style>
-    .card-flota-pendiente {
+    .card-flota-agrupada {
         background: rgba(20,20,20,0.80);
         border: 1px solid rgba(255,200,0,0.25);
         border-radius: 14px;
         padding: 16px 18px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
         transition: all 0.3s ease;
     }
-    .card-flota-pendiente:hover {
+    .card-flota-agrupada:hover {
         border-color: rgba(255,200,0,0.50);
     }
     .badge-pendiente {
@@ -22,20 +22,49 @@
         font-size: 11px;
         border: 1px solid rgba(255,200,0,0.20);
     }
+    .servicio-item {
+        background: rgba(255,255,255,0.02);
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 6px;
+        border-left: 3px solid rgba(255,200,0,0.30);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .servicio-item:hover {
+        background: rgba(255,255,255,0.04);
+    }
     .btn-marcar-pagado {
         background: #00ff66 !important;
         color: #000 !important;
         font-weight: 700;
         border: none;
-        border-radius: 8px;
-        padding: 6px 16px;
-        font-size: 13px;
+        border-radius: 6px;
+        padding: 4px 14px;
+        font-size: 12px;
         cursor: pointer;
         transition: all 0.3s ease;
+        white-space: nowrap;
     }
     .btn-marcar-pagado:hover {
         background: #00cc52 !important;
         transform: scale(1.02);
+    }
+    .toggle-detalle {
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.3s ease;
+    }
+    .toggle-detalle:hover {
+        opacity: 0.8;
+    }
+    .detalle-servicios {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255,255,255,0.06);
     }
 </style>
 
@@ -45,9 +74,9 @@
         <h2 style="color: #ffcc00; font-weight: 700; margin: 0; font-size: 22px;">
             🚛 Flotas Pendientes de Cobro
         </h2>
-        <div style="display: flex; gap: 8px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
             <span class="badge-pendiente">
-                <i class="fa-regular fa-clock"></i> {{ flotas|length }} pendientes
+                <i class="fa-regular fa-clock"></i> {{ flotas_agrupadas|length }} flota{% if flotas_agrupadas|length > 1 %}s{% endif %}
             </span>
             <a href="/flotas" class="btn btn-sm" style="
                 background: rgba(255,255,255,0.06);
@@ -58,12 +87,12 @@
                 text-decoration: none;
                 font-size: 13px;
             ">
-                📋 Ver todas las flotas
+                📋 Ver todas
             </a>
         </div>
     </div>
 
-    <!-- TOTAL PENDIENTE -->
+    <!-- TOTAL GENERAL -->
     <div style="
         background: rgba(255,200,0,0.06);
         border-radius: 10px;
@@ -78,74 +107,80 @@
         <span style="color: #90e0a0; font-size: 14px;">
             💰 Total pendiente de cobro:
             <strong style="color: #ffcc00; font-size: 18px;">
-                ${{ "{:,.0f}".format(total_pendiente) }}
+                ${{ "{:,.0f}".format(total_general) }}
             </strong>
         </span>
         <span style="color: #888; font-size: 12px;">
-            {{ flotas|length }} flota{% if flotas|length > 1 %}s{% endif %} pendiente{% if flotas|length > 1 %}s{% endif %}
+            {{ flotas_agrupadas|length }} flota{% if flotas_agrupadas|length > 1 %}s{% endif %} pendiente{% if flotas_agrupadas|length > 1 %}s{% endif %}
         </span>
     </div>
 
-    <!-- LISTA DE FLOTAS PENDIENTES -->
-    {% for r in flotas %}
-    <div class="card-flota-pendiente" id="flota-{{ r.id }}">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <div>
-                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <span style="font-size: 20px;">🚛</span>
+    <!-- ============================
+         FLOTAS AGRUPADAS
+         ============================ -->
+    {% for flota in flotas_agrupadas %}
+    <div class="card-flota-agrupada">
+        <!-- HEADER DE LA FLOTA -->
+        <div class="toggle-detalle" onclick="toggleFlotaDetalle(this)">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 24px;">🚛</span>
                     <span style="color: #ffcc00; font-weight: 700; font-size: 18px;">
-                        {{ r.flota }}
+                        {{ flota.nombre }}
                     </span>
                     <span class="badge-pendiente">
-                        <i class="fa-regular fa-clock"></i> Pendiente
+                        {{ flota.servicios|length }} servicio{% if flota.servicios|length > 1 %}s{% endif %}
                     </span>
                 </div>
-                <div style="color: #90e0a0; font-size: 13px; margin-top: 4px;">
-                    👤 {{ r.nombre }}
+                <div style="text-align: right;">
+                    <div style="color: #00ff66; font-weight: 700; font-size: 18px;">
+                        ${{ "{:,.0f}".format(flota.total_pendiente) }}
+                    </div>
+                    <div style="color: #888; font-size: 11px;">
+                        <i class="fa-regular fa-clock"></i> Pendiente
+                    </div>
                 </div>
             </div>
-            <div style="text-align: right;">
-                <div style="color: #00ff66; font-weight: 700; font-size: 20px;">
-                    ${{ "{:,.0f}".format(r.monto) }}
-                </div>
-                <div style="color: #888; font-size: 12px;">
-                    📅 {{ r.fecha[:10] if r.fecha else '' }}
-                </div>
+            <div style="color: #666; font-size: 12px; margin-top: 4px;">
+                <i class="fa-solid fa-chevron-down" id="icono-chevron"></i> 
+                <span id="texto-toggle">Mostrar servicios</span>
             </div>
         </div>
 
-        <!-- DETALLES -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
-            <div>
-                <span style="color: #888; font-size: 11px;">🚗 Vehículo</span>
-                <div style="color: #fff; font-size: 13px;">{{ r.marca }} {{ r.modelo }}</div>
-            </div>
-            <div>
-                <span style="color: #888; font-size: 11px;">🔢 Patente</span>
-                <div style="color: #fff; font-size: 13px;">{{ r.patente or '-' }}</div>
-            </div>
-            <div>
-                <span style="color: #888; font-size: 11px;">📦 Repuestos</span>
-                <div style="color: #ffcc00; font-size: 13px;">
-                    {% if r.detalles_repuestos %}
-                        {% for item in r.detalles_repuestos %}
-                            {{ item.nombre }}{% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        -
-                    {% endif %}
+        <!-- DETALLE DE SERVICIOS (COLLAPSIBLE) -->
+        <div class="detalle-servicios" style="display: none;">
+            {% for servicio in flota.servicios %}
+            <div class="servicio-item">
+                <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                        <span style="color: #fff; font-weight: 600; font-size: 14px;">
+                            👤 {{ servicio.nombre }}
+                        </span>
+                        <span style="color: #888; font-size: 12px;">
+                            🚗 {{ servicio.marca or '-' }} {{ servicio.modelo or '-' }}
+                        </span>
+                        <span style="color: #888; font-size: 12px;">
+                            🔢 {{ servicio.patente or '-' }}
+                        </span>
+                    </div>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 12px; color: #888;">
+                        <span>📅 {{ servicio.fecha[:10] if servicio.fecha else '' }}</span>
+                        <span>🆔 #{{ servicio.id }}</span>
+                        {% if servicio.detalles_repuestos %}
+                            <span>📦 {{ servicio.detalles_repuestos|length }} repuesto{% if servicio.detalles_repuestos|length > 1 %}s{% endif %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span style="color: #00ff66; font-weight: 700; font-size: 16px;">
+                        ${{ "{:,.0f}".format(servicio.monto) }}
+                    </span>
+                    <button onclick="event.stopPropagation(); marcarComoPagado({{ servicio.id }})" class="btn-marcar-pagado">
+                        💰 Pagar
+                    </button>
                 </div>
             </div>
-        </div>
-
-        <!-- BOTÓN MARCAR COMO PAGADO -->
-        <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-            <button onclick="marcarComoPagado({{ r.id }})" class="btn-marcar-pagado">
-                💰 Marcar como Pagado
-            </button>
-            <span style="color: #666; font-size: 11px;">
-                <i class="fa-regular fa-calendar"></i> Elige la fecha real de pago
-            </span>
+            {% endfor %}
         </div>
     </div>
     {% else %}
@@ -228,17 +263,40 @@ const API_URL = 'https://ea-dixon-production.up.railway.app';
 let idFlotaEditando = null;
 
 // ============================
+// TOGGLE DETALLE DE FLOTA
+// ============================
+function toggleFlotaDetalle(element) {
+    const card = element.closest('.card-flota-agrupada');
+    const detalle = card.querySelector('.detalle-servicios');
+    const chevron = card.querySelector('#icono-chevron');
+    const texto = card.querySelector('#texto-toggle');
+    
+    if (detalle.style.display === 'none') {
+        detalle.style.display = 'block';
+        chevron.className = 'fa-solid fa-chevron-up';
+        texto.textContent = 'Ocultar servicios';
+    } else {
+        detalle.style.display = 'none';
+        chevron.className = 'fa-solid fa-chevron-down';
+        texto.textContent = 'Mostrar servicios';
+    }
+}
+
+// ============================
 // MARCAR COMO PAGADO (abrir modal)
 // ============================
 function marcarComoPagado(id) {
+    event.stopPropagation();
     idFlotaEditando = id;
     
-    // Obtener el monto del registro
-    const card = document.getElementById(`flota-${id}`);
-    const montoText = card.querySelector('.card-flota-pendiente .text-right .text-success')?.textContent || '0';
-    const monto = parseFloat(montoText.replace(/[$,]/g, '')) || 0;
+    // Obtener el monto del servicio
+    const servicioItem = document.querySelector(`.servicio-item:has(button[onclick*="${id}"])`);
+    if (servicioItem) {
+        const montoText = servicioItem.querySelector('[style*="color: #00ff66"]')?.textContent || '0';
+        const monto = parseFloat(montoText.replace(/[$,]/g, '')) || 0;
+        document.getElementById('montoPagado').value = monto;
+    }
     
-    document.getElementById('montoPagado').value = monto;
     document.getElementById('fechaPago').value = new Date().toISOString().split('T')[0];
     document.getElementById('modalMarcarPagado').style.display = 'flex';
 }
