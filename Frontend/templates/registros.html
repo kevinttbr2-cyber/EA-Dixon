@@ -82,6 +82,9 @@
     .dropdown-3p .menu-3p .text-success {
         color: #00ff66 !important;
     }
+    .dropdown-3p .menu-3p .text-warning {
+        color: #ffcc00 !important;
+    }
     .dropdown-3p .menu-3p .divider {
         border: none;
         border-top: 1px solid rgba(255,255,255,0.06);
@@ -100,6 +103,21 @@
     .dropdown-3p .menu-3p i {
         width: 20px;
         text-align: center;
+    }
+
+    /* Estilos para el modal de editar repuestos */
+    .fila-editar-repuesto input {
+        background: rgba(0,0,0,0.40) !important;
+        color: #fff !important;
+        border: 1px solid rgba(255,200,0,0.20) !important;
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+    }
+    .fila-editar-repuesto input:focus {
+        border-color: #ffcc00 !important;
+        box-shadow: 0 0 0 2px rgba(255,200,0,0.10) !important;
+        outline: none !important;
     }
 </style>
 
@@ -241,6 +259,8 @@
                             <div class="menu-3p" data-id="{{ r.id }}">
                                 <button onclick="verDetalle({{ r.id }})"><i class="fa-solid fa-eye" style="color: #fff;"></i> Detalle</button>
                                 <button onclick="editarRegistro({{ r.id }})" class="text-primary"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
+                                <!-- ✅ NUEVO: Botón para editar repuestos -->
+                                <button onclick="editarRepuestosVenta({{ r.id }})" class="text-warning"><i class="fa-solid fa-boxes-stacked"></i> Editar Repuestos</button>
                                 <hr class="divider">
                                 <button onclick="eliminarRegistro({{ r.id }})" class="text-danger"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
                             </div>
@@ -404,20 +424,18 @@
             </div>
 
             <!-- DATOS DEL INGRESO -->
-<div style="background:rgba(79,195,247,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #4fc3f7;">
-    <h4 style="color:#4fc3f7;margin:0 0 10px 0;font-size:15px;">📥 Datos del Ingreso</h4>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div><label style="color:#90e0a0;font-size:12px;">Fecha</label><input type="date" name="fecha" id="edit_fecha" class="form-control form-control-sm"></div>
-        <div><label style="color:#90e0a0;font-size:12px;">Hora</label><input type="time" name="hora" id="edit_hora" class="form-control form-control-sm"></div>
-        <!-- ⬇️ AQUÍ DEBES AGREGAR EL CAMPO MONTO -->
-        <div><label style="color:#90e0a0;font-size:12px;">💰 Monto Pagado ($)</label>
-            <input type="number" name="monto" id="edit_monto" class="form-control form-control-sm" step="0.01" min="0">
-        </div>
-        <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Observaciones de ingreso</label>
-            <textarea name="observaciones_cliente" id="edit_observaciones_cliente" class="form-control form-control-sm" rows="2"></textarea>
-        </div>
-    </div>
-</div>
+            <div style="background:rgba(79,195,247,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #4fc3f7;">
+                <h4 style="color:#4fc3f7;margin:0 0 10px 0;font-size:15px;">📥 Datos del Ingreso</h4>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div><label style="color:#90e0a0;font-size:12px;">Fecha</label><input type="date" name="fecha" id="edit_fecha" class="form-control form-control-sm"></div>
+                    <div><label style="color:#90e0a0;font-size:12px;">Hora</label><input type="time" name="hora" id="edit_hora" class="form-control form-control-sm"></div>
+                    <div><label style="color:#90e0a0;font-size:12px;">💰 Monto Pagado ($)</label>
+                        <input type="number" name="monto" id="edit_monto" class="form-control form-control-sm" step="0.01" min="0">
+                    </div>
+                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Observaciones de ingreso</label>
+                        <textarea name="observaciones_cliente" id="edit_observaciones_cliente" class="form-control form-control-sm" rows="2"></textarea>
+                    </div>
+                </div>
             </div>
 
             <!-- REPARACIÓN Y COSTOS -->
@@ -486,6 +504,113 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- ============================================
+     MODAL EDITAR REPUESTOS DE VENTA (NUEVO)
+     ============================================ -->
+<div id="modalEditarRepuestosVenta" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0;">
+    <div style="background:rgba(15,15,15,0.98);border:2px solid #ffcc00;border-radius:16px;padding:25px 30px;max-width:750px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+            <h3 style="color:#ffcc00;margin:0;font-size:22px;">📦 Editar Repuestos de Venta</h3>
+            <button onclick="cerrarModalEditarRepuestos()" style="background:transparent;border:none;color:#ff6b6b;font-size:28px;cursor:pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div style="background:rgba(255,200,0,0.05);border-radius:10px;padding:12px 16px;margin-bottom:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div><span style="color:#888;">📋 ID:</span> <span id="edit_venta_id" style="color:#fff;font-weight:600;">-</span></div>
+                <div><span style="color:#888;">👤 Cliente:</span> <span id="edit_venta_cliente" style="color:#fff;">-</span></div>
+                <div><span style="color:#888;">💰 Total Pagado:</span> <span id="edit_venta_total" style="color:#00ff66;font-weight:700;">$0</span></div>
+                <div><span style="color:#888;">📅 Fecha:</span> <span id="edit_venta_fecha" style="color:#fff;">-</span></div>
+            </div>
+        </div>
+
+        <!-- LISTA DE REPUESTOS EDITABLE -->
+        <div style="margin-bottom:12px;">
+            <label style="color:#90e0a0;font-size:13px;font-weight:500;display:block;margin-bottom:6px;">
+                🔧 Lista de Repuestos (Cantidad y Precio)
+            </label>
+            <div style="background:rgba(0,0,0,0.20);border-radius:10px;padding:10px;border:1px solid rgba(255,200,0,0.15);">
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;padding:4px 6px;color:#90e0a0;font-size:11px;">Producto</th>
+                            <th style="text-align:center;padding:4px 6px;color:#90e0a0;font-size:11px;width:60px;">Cant.</th>
+                            <th style="text-align:right;padding:4px 6px;color:#90e0a0;font-size:11px;">Precio Unit.</th>
+                            <th style="text-align:right;padding:4px 6px;color:#90e0a0;font-size:11px;">Subtotal</th>
+                            <th style="width:30px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoEditarRepuestos">
+                        <!-- Filas generadas por JavaScript -->
+                    </tbody>
+                </table>
+                <button onclick="agregarFilaEditarRepuesto()" style="
+                    background:rgba(255,200,0,0.08);
+                    color:#ffcc00;
+                    border:1px solid rgba(255,200,0,0.15);
+                    border-radius:6px;
+                    padding:4px 12px;
+                    font-size:12px;
+                    cursor:pointer;
+                    margin-top:6px;
+                ">
+                    <i class="fa-solid fa-plus"></i> Agregar repuesto
+                </button>
+                <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="color:#888;font-size:12px;">Total repuestos:</span>
+                    <span id="totalEditarRepuestos" style="color:#ffcc00;font-weight:700;font-size:18px;">$0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COSTOS ASOCIADOS -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;padding:12px;background:rgba(0,0,0,0.20);border-radius:8px;">
+            <div>
+                <label style="color:#90e0a0;font-size:11px;">👨‍🔧 Mano de obra</label>
+                <input type="number" id="edit_mano_obra" class="form-control form-control-sm" step="0.01" min="0">
+            </div>
+            <div>
+                <label style="color:#90e0a0;font-size:11px;">🩺 Diagnóstico</label>
+                <input type="number" id="edit_diagnostico_costo" class="form-control form-control-sm" step="0.01" min="0">
+            </div>
+        </div>
+
+        <!-- RESUMEN ACTUALIZADO -->
+        <div style="background:rgba(0,255,102,0.04);border-radius:10px;padding:14px 16px;margin-bottom:12px;border:1px solid rgba(0,255,102,0.15);">
+            <div style="display:flex;justify-content:space-between;padding:4px 0;">
+                <span style="color:#888;">💰 Total Venta:</span>
+                <span id="resumen_nuevo_total" style="color:#00ff66;font-weight:700;font-size:20px;">$0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;">
+                <span style="color:#888;">📦 Total Repuestos:</span>
+                <span id="resumen_nuevo_repuestos" style="color:#ffcc00;">$0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;margin-top:4px;">
+                <span style="color:#fff;font-weight:700;">📊 Nueva Ganancia Neta:</span>
+                <span id="resumen_nueva_ganancia" style="color:#00ff66;font-weight:700;font-size:18px;">$0</span>
+            </div>
+        </div>
+
+        <!-- BOTONES -->
+        <div style="display:flex;gap:10px;">
+            <button onclick="guardarEdicionRepuestos()" class="btn btn-primary" style="flex:1;background:#ffcc00 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;cursor:pointer;">
+                💾 Guardar cambios en repuestos
+            </button>
+            <button onclick="cerrarModalEditarRepuestos()" style="
+                background:rgba(255,255,255,0.06);
+                color:#888;
+                border:1px solid rgba(255,255,255,0.08);
+                border-radius:10px;
+                padding:12px 24px;
+                cursor:pointer;
+            ">
+                Cancelar
+            </button>
+        </div>
     </div>
 </div>
 
@@ -672,6 +797,7 @@ function editarRegistro(id) {
             document.getElementById('edit_flota').value = data.flota || '';
             document.getElementById('edit_fecha').value = data.fecha || '';
             document.getElementById('edit_hora').value = data.hora || '';
+            document.getElementById('edit_monto').value = data.monto || 0;
             document.getElementById('edit_observaciones_cliente').value = data.observaciones_cliente || '';
             document.getElementById('edit_diagnostico').value = data.diagnostico || '';
             document.getElementById('edit_reparacion').value = data.reparacion || '';
@@ -719,6 +845,7 @@ document.getElementById('formEditarCompleto').onsubmit = async function(e) {
         flota: document.getElementById('edit_flota').value,
         fecha: document.getElementById('edit_fecha').value,
         hora: document.getElementById('edit_hora').value,
+        monto: parseFloat(document.getElementById('edit_monto').value) || 0,
         observaciones_cliente: document.getElementById('edit_observaciones_cliente').value,
         diagnostico: document.getElementById('edit_diagnostico').value,
         reparacion: document.getElementById('edit_reparacion').value,
@@ -736,7 +863,7 @@ document.getElementById('formEditarCompleto').onsubmit = async function(e) {
 
     try {
         // ✅ URL COMPLETA DE RAILWAY
-        const resp = await fetch(`${API_URL}/editar_completo/${id}`, {
+        const resp = await fetch(`${API_URL}/api/editar_completo/${id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -777,6 +904,232 @@ function eliminarRegistro(id) {
         }
     }).catch(() => alert('❌ Error de conexión'));
 }
+
+// ============================================
+// EDITAR REPUESTOS DE VENTA (NUEVO)
+// ============================================
+let idVentaEditando = null;
+
+function editarRepuestosVenta(id) {
+    document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
+    
+    idVentaEditando = id;
+    const modal = document.getElementById('modalEditarRepuestosVenta');
+    modal.style.display = 'flex';
+    
+    // Cargar datos de la venta
+    fetch(`${API_URL}/api/registro/${id}`)
+        .then(resp => resp.json())
+        .then(data => {
+            document.getElementById('edit_venta_id').textContent = data.id;
+            document.getElementById('edit_venta_cliente').textContent = data.nombre;
+            document.getElementById('edit_venta_total').textContent = '$' + Number(data.monto || 0).toLocaleString();
+            document.getElementById('edit_venta_fecha').textContent = data.fecha || '';
+            
+            // Cargar repuestos
+            const repuestos = data.detalles_repuestos || [];
+            cargarRepuestosEditar(repuestos);
+            
+            // Cargar costos
+            document.getElementById('edit_mano_obra').value = data.costo_mano_obra_real || 0;
+            document.getElementById('edit_diagnostico_costo').value = data.costo_diagnostico_real || 0;
+            
+            calcularResumenEditar();
+        })
+        .catch(e => {
+            console.error('Error:', e);
+            alert('❌ Error al cargar los datos');
+        });
+}
+
+function cargarRepuestosEditar(repuestos) {
+    const tbody = document.getElementById('cuerpoEditarRepuestos');
+    tbody.innerHTML = '';
+    
+    if (!repuestos || repuestos.length === 0) {
+        agregarFilaEditarRepuesto();
+        return;
+    }
+    
+    repuestos.forEach(item => {
+        agregarFilaEditarRepuesto(item.nombre || '', item.cantidad || 1, item.costo_unitario || 0);
+    });
+}
+
+function agregarFilaEditarRepuesto(nombre = '', cantidad = 1, costo = 0) {
+    const tbody = document.getElementById('cuerpoEditarRepuestos');
+    const fila = document.createElement('tr');
+    fila.className = 'fila-editar-repuesto';
+    fila.innerHTML = `
+        <td style="padding:4px 4px;">
+            <input type="text" class="form-control form-control-sm editar-repuesto-nombre" 
+                   value="${nombre}" placeholder="Nombre" style="font-size:12px;width:100%;">
+        </td>
+        <td style="padding:4px 4px;text-align:center;">
+            <input type="number" class="form-control form-control-sm editar-repuesto-cantidad" 
+                   value="${cantidad}" min="1" step="1" style="text-align:center;width:50px;font-size:12px;">
+        </td>
+        <td style="padding:4px 4px;">
+            <input type="number" class="form-control form-control-sm editar-repuesto-costo" 
+                   value="${costo}" step="0.01" min="0" style="text-align:right;font-size:12px;width:100%;">
+        </td>
+        <td style="padding:4px 4px;text-align:right;font-weight:600;color:#ffcc00;font-size:12px;" class="subtotal-editar">
+            $${(cantidad * costo).toLocaleString()}
+        </td>
+        <td style="padding:4px 4px;text-align:center;">
+            <button onclick="eliminarFilaEditarRepuesto(this)" style="
+                background:transparent;
+                border:none;
+                color:#ff6b6b;
+                cursor:pointer;
+                font-size:14px;
+                opacity:0.4;
+            ">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </td>
+    `;
+    
+    // Eventos para recalcular
+    const cantidadInput = fila.querySelector('.editar-repuesto-cantidad');
+    const costoInput = fila.querySelector('.editar-repuesto-costo');
+    
+    cantidadInput.addEventListener('input', function() {
+        actualizarSubtotalFila(this.closest('.fila-editar-repuesto'));
+        calcularResumenEditar();
+    });
+    costoInput.addEventListener('input', function() {
+        actualizarSubtotalFila(this.closest('.fila-editar-repuesto'));
+        calcularResumenEditar();
+    });
+    
+    tbody.appendChild(fila);
+    actualizarSubtotalFila(fila);
+    calcularResumenEditar();
+}
+
+function actualizarSubtotalFila(fila) {
+    const cantidad = parseInt(fila.querySelector('.editar-repuesto-cantidad').value) || 0;
+    const costo = parseFloat(fila.querySelector('.editar-repuesto-costo').value) || 0;
+    const subtotal = cantidad * costo;
+    fila.querySelector('.subtotal-editar').textContent = '$' + subtotal.toLocaleString();
+}
+
+function eliminarFilaEditarRepuesto(btn) {
+    const fila = btn.closest('.fila-editar-repuesto');
+    if (document.querySelectorAll('.fila-editar-repuesto').length > 1) {
+        fila.remove();
+        calcularResumenEditar();
+    } else {
+        alert('Debe haber al menos una fila.');
+    }
+}
+
+function calcularResumenEditar() {
+    let totalRepuestos = 0;
+    document.querySelectorAll('.fila-editar-repuesto').forEach(fila => {
+        const cantidad = parseInt(fila.querySelector('.editar-repuesto-cantidad').value) || 0;
+        const costo = parseFloat(fila.querySelector('.editar-repuesto-costo').value) || 0;
+        totalRepuestos += cantidad * costo;
+    });
+    
+    const manoObra = parseFloat(document.getElementById('edit_mano_obra').value) || 0;
+    const diagnostico = parseFloat(document.getElementById('edit_diagnostico_costo').value) || 0;
+    const totalVenta = parseFloat(document.getElementById('edit_venta_total').textContent.replace(/[$,]/g, '')) || 0;
+    
+    const totalCostos = totalRepuestos + manoObra + diagnostico;
+    const gananciaNeta = totalVenta - totalCostos;
+    
+    document.getElementById('totalEditarRepuestos').textContent = '$' + totalRepuestos.toLocaleString();
+    document.getElementById('resumen_nuevo_total').textContent = '$' + totalVenta.toLocaleString();
+    document.getElementById('resumen_nuevo_repuestos').textContent = '$' + totalRepuestos.toLocaleString();
+    document.getElementById('resumen_nueva_ganancia').textContent = '$' + gananciaNeta.toLocaleString();
+    document.getElementById('resumen_nueva_ganancia').style.color = gananciaNeta >= 0 ? '#00ff66' : '#ff6b6b';
+}
+
+function guardarEdicionRepuestos() {
+    if (!idVentaEditando) {
+        alert('❌ No hay venta seleccionada');
+        return;
+    }
+    
+    // Recolectar repuestos editados
+    const repuestos = [];
+    document.querySelectorAll('.fila-editar-repuesto').forEach(fila => {
+        const nombre = fila.querySelector('.editar-repuesto-nombre').value.trim();
+        const cantidad = parseInt(fila.querySelector('.editar-repuesto-cantidad').value) || 1;
+        const costoUnitario = parseFloat(fila.querySelector('.editar-repuesto-costo').value) || 0;
+        
+        if (nombre && costoUnitario > 0) {
+            repuestos.push({
+                nombre: nombre,
+                cantidad: cantidad,
+                costo_unitario: costoUnitario,
+                subtotal: cantidad * costoUnitario
+            });
+        }
+    });
+    
+    if (repuestos.length === 0) {
+        alert('⚠️ Debe haber al menos un repuesto válido');
+        return;
+    }
+    
+    const totalRepuestos = repuestos.reduce((sum, item) => sum + item.subtotal, 0);
+    const manoObra = parseFloat(document.getElementById('edit_mano_obra').value) || 0;
+    const diagnostico = parseFloat(document.getElementById('edit_diagnostico_costo').value) || 0;
+    const totalVenta = parseFloat(document.getElementById('edit_venta_total').textContent.replace(/[$,]/g, '')) || 0;
+    const gananciaNeta = totalVenta - (totalRepuestos + manoObra + diagnostico);
+    
+    const data = {
+        detalles_repuestos: repuestos,
+        costo_repuestos_real: totalRepuestos,
+        costo_mano_obra_real: manoObra,
+        costo_diagnostico_real: diagnostico,
+        ganancia_neta: gananciaNeta
+    };
+    
+    if (!confirm(`📊 ¿Actualizar repuestos de la venta #${idVentaEditando}?\n\n` +
+                 `📦 Total Repuestos: $${totalRepuestos.toLocaleString()}\n` +
+                 `👨‍🔧 Mano de Obra: $${manoObra.toLocaleString()}\n` +
+                 `🩺 Diagnóstico: $${diagnostico.toLocaleString()}\n` +
+                 `📊 Nueva Ganancia: $${gananciaNeta.toLocaleString()}\n\n` +
+                 `¿Confirmar cambios?`)) {
+        return;
+    }
+    
+    fetch(`${API_URL}/api/editar_repuestos_venta/${idVentaEditando}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(resp => resp.json())
+    .then(result => {
+        if (result.success) {
+            alert('✅ Repuestos actualizados correctamente');
+            cerrarModalEditarRepuestos();
+            location.reload();
+        } else {
+            alert('❌ Error: ' + (result.error || 'Desconocido'));
+        }
+    })
+    .catch(e => {
+        console.error('Error:', e);
+        alert('❌ Error de conexión');
+    });
+}
+
+function cerrarModalEditarRepuestos() {
+    document.getElementById('modalEditarRepuestosVenta').style.display = 'none';
+    idVentaEditando = null;
+}
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('modalEditarRepuestosVenta').addEventListener('click', function(e) {
+    if (e.target === this) {
+        cerrarModalEditarRepuestos();
+    }
+});
 
 // ============================================
 // RESTO DEL CÓDIGO (Buscador, Ordenar, etc.)
@@ -838,20 +1191,6 @@ document.addEventListener('DOMContentLoaded', function() {
         campoBusqueda.value = 'nombre';
         filtrarTabla();
     });
-    document.querySelectorAll('.card-android').forEach(card => {
-    const texto = card.textContent.toLowerCase();
-    const formaPagoEl = card.querySelector('.forma-pago-texto');
-    const formaPago = formaPagoEl ? formaPagoEl.textContent.toLowerCase() : '';
-    let mostrar = true;
-    
-    if (campo === 'forma_pago') {
-        mostrar = formaPago.includes(texto);
-    } else {
-        mostrar = texto === '' || card.textContent.toLowerCase().includes(texto);
-    }
-    
-    card.style.display = mostrar ? '' : 'none';
-});
 
     // ============================
     // ORDENAR TABLA
