@@ -1480,3 +1480,47 @@ def get_flotas_pendientes_count():
     except Exception as e:
         print(f"❌ Error en get_flotas_pendientes_count: {e}")
         return jsonify({"count": 0}), 500
+# ============================
+# 24. FLOTAS PENDIENTES AGRUPADAS
+# ============================
+@pago_bp.route('/flotas_pendientes_agrupadas', methods=['GET'])
+def get_flotas_pendientes_agrupadas():
+    """Devuelve flotas pendientes agrupadas por nombre"""
+    try:
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT * FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pendiente'
+            AND flota IS NOT NULL 
+            AND flota != ''
+            ORDER BY flota, fecha DESC
+        """)
+        
+        rows = cur.fetchall()
+        registros = [dict(row) for row in rows]
+        
+        # ✅ AGRUPAR POR FLOTA
+        flotas_agrupadas = {}
+        for r in registros:
+            nombre_flota = r.get('flota', 'Sin flota')
+            if nombre_flota not in flotas_agrupadas:
+                flotas_agrupadas[nombre_flota] = {
+                    'nombre': nombre_flota,
+                    'servicios': [],
+                    'total_pendiente': 0
+                }
+            flotas_agrupadas[nombre_flota]['servicios'].append(r)
+            flotas_agrupadas[nombre_flota]['total_pendiente'] += float(r.get('monto', 0) or 0)
+        
+        # Convertir a lista
+        resultado = list(flotas_agrupadas.values())
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify(resultado)
+    except Exception as e:
+        print(f"❌ Error en get_flotas_pendientes_agrupadas: {e}")
+        return jsonify({"error": str(e)}), 500
