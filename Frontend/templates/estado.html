@@ -75,11 +75,84 @@
 <input type="text" id="buscador" class="form-control mb-3" placeholder="Buscar...">
 
 <!-- ============================
-     TARJETAS
+     TARJETAS DE TRABAJO
      ============================ -->
 {% for r in registros %}
 <div class="card-android" style="border-left: 4px solid {% if r.estado == 'pagado' %}#00ff66{% else %}#ff6b6b{% endif %};">
-    <!-- ... resto del código igual ... -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;">
+        <div style="font-size:20px; font-weight:700; color:#00ff66;">
+            {{ r.nombre }}
+            <!-- ✅ INDICADOR DE VENTA DIRECTA (por marca vacía) -->
+            {% if not r.marca or r.marca == '' %}
+            <span style="font-size:12px; background: rgba(79,195,247,0.15); color: #4fc3f7; padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(79,195,247,0.20); margin-left: 6px;">
+                ⚡ Directa
+            </span>
+            {% endif %}
+            <!-- ✅ INDICADOR DE FLOTA -->
+            {% if r.flota and r.flota != '' %}
+            <span style="font-size:11px; background: rgba(255,200,0,0.12); color: #ffcc00; padding: 1px 8px; border-radius: 12px; border: 1px solid rgba(255,200,0,0.15); margin-left: 4px;">
+                🚛 {{ r.flota }}
+            </span>
+            {% endif %}
+        </div>
+        {% if r.telefono %}
+        <div style="color:#90e0a0; font-size:14px;">
+            📞 {{ r.telefono }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- ============================
+         DATOS SEGÚN TIPO DE VENTA
+         ============================ -->
+    {% if not r.marca or r.marca == '' %}
+    <!-- ✅ VENTA DIRECTA: Productos + Forma de Pago -->
+    <div>
+        <strong style="color:#90e0a0;">📦 Productos:</strong> 
+        {% if r.detalles_repuestos %}
+            {% for item in r.detalles_repuestos %}
+                <span style="background: rgba(0,255,102,0.06); padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 12px; display: inline-block;">
+                    {{ item.nombre }}
+                    <span style="color: #ffcc00;">(${{ "{:,.0f}".format(item.costo_unitario|default(0)) }})</span>
+                </span>
+            {% endfor %}
+        {% else %}
+            {{ r.producto_vendido or 'Sin producto' }}
+        {% endif %}
+    </div>
+    <div><strong style="color:#90e0a0;">💳 Forma de Pago:</strong> {{ r.forma_pago or 'No especificada' }}</div>
+    
+    {% else %}
+    <!-- ✅ TRABAJO: Datos del vehículo -->
+    <div><strong style="color:#90e0a0;">🚗 Marca:</strong> {{ r.marca or '-' }}</div>
+    <div><strong style="color:#90e0a0;">🚙 Modelo:</strong> {{ r.modelo or '-' }}</div>
+    <div><strong style="color:#90e0a0;">🔢 Patente:</strong> {{ r.patente or '-' }}</div>
+    {% endif %}
+    
+    <!-- ============================
+         DATOS COMUNES
+         ============================ -->
+    <div><strong style="color:#90e0a0;">📅 Fecha:</strong> {{ r.fecha[:10] if r.fecha else '' }}</div>
+    <div><strong style="color:#90e0a0;">Estado:</strong>
+        {% if r.estado == 'pendiente' %}
+        <span style="color:#ff6b6b; font-weight:700;">PENDIENTE</span>
+        {% else %}
+        <span style="color:#00ff66; font-weight:700;">PAGADO</span>
+        {% endif %}
+    </div>
+    
+    <!-- ============================
+         BOTÓN DE ACCIÓN
+         ============================ -->
+    {% if r.estado == 'pendiente' %}
+        {% if not r.marca or r.marca == '' %}
+        <a href="/venta_rapida" class="btn btn-primary w-100 mt-2" style="background: #4fc3f7 !important; color: #000 !important;">
+            ⚡ Completar Venta
+        </a>
+        {% else %}
+        <a href="/pagar/{{ r.id }}" class="btn btn-primary w-100 mt-2">💰 Pagar</a>
+        {% endif %}
+    {% endif %}
 </div>
 {% endfor %}
 
