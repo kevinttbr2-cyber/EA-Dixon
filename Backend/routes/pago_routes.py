@@ -1047,7 +1047,7 @@ def venta_rapida():
         return jsonify({"error": str(e)}), 500
 
 
-# ============================
+## ============================
 # 19. BALANCE DE VENTAS (CORREGIDO - SOLO VENTA DE REPUESTOS)
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
@@ -1076,7 +1076,7 @@ def balance_ventas():
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
-        # ✅ SEPARAR TRABAJO vs DIRECTA (por vehículo)
+        # ✅ SEPARAR TRABAJO vs DIRECTA
         trabajo = []
         directa = []
         
@@ -1090,9 +1090,10 @@ def balance_ventas():
                 trabajo.append(r)
         
         # ============================
-        # FUNCIÓN PARA CALCULAR TOTAL DE REPUESTOS VENDIDOS
+        # FUNCIONES PARA CALCULAR SOLO REPUESTOS
         # ============================
-        def calcular_total_repuestos(registros):
+        def calcular_venta_repuestos(registros):
+            """Calcula la suma de precios de venta de los repuestos"""
             total = 0
             for r in registros:
                 detalles = r.get('detalles_repuestos', [])
@@ -1103,6 +1104,7 @@ def balance_ventas():
             return total
         
         def calcular_costo_repuestos(registros):
+            """Calcula la suma de costos de compra de los repuestos"""
             total = 0
             for r in registros:
                 detalles = r.get('detalles_repuestos', [])
@@ -1117,13 +1119,13 @@ def balance_ventas():
                             costo_prov = float(resultado[0] or 0)
                             total += costo_prov * cantidad
                         else:
-                            # Si no está en la tabla repuestos, usar el costo_unitario como fallback
                             total += float(item.get('costo_unitario', 0) or 0) * cantidad
                     else:
                         total += float(item.get('costo_unitario', 0) or 0) * cantidad
             return total
         
         def calcular_margen_promedio(registros):
+            """Calcula el margen promedio de los repuestos"""
             margenes = []
             for r in registros:
                 detalles = r.get('detalles_repuestos', [])
@@ -1139,11 +1141,11 @@ def balance_ventas():
             return 0
         
         # ============================
-        # CALCULAR TOTALES
+        # CALCULAR TOTALES (SOLO REPUESTOS)
         # ============================
-        total_ventas_repuestos = calcular_total_repuestos(registros)
-        total_trabajo = calcular_total_repuestos(trabajo)
-        total_directa = calcular_total_repuestos(directa)
+        total_ventas = calcular_venta_repuestos(registros)
+        total_trabajo = calcular_venta_repuestos(trabajo)
+        total_directa = calcular_venta_repuestos(directa)
         
         costo_trabajo = calcular_costo_repuestos(trabajo)
         costo_directa = calcular_costo_repuestos(directa)
@@ -1160,7 +1162,7 @@ def balance_ventas():
         
         return jsonify({
             "registros": registros,
-            "total_ventas": total_ventas_repuestos,
+            "total_ventas": total_ventas,
             "total_trabajo": total_trabajo,
             "total_directa": total_directa,
             "ganancia_trabajo": round(ganancia_trabajo, 2),
