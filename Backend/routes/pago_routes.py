@@ -94,7 +94,7 @@ def get_registro(id_reg):
 @pago_bp.route('/registros', methods=['GET'])
 def get_registros_filtrados():
     filtro = request.args.get('filtro', 'todos')
-    hoy = get_fecha_chile()  # ✅ CORREGIDO
+    hoy = get_fecha_chile()
     
     try:
         conn, cur = get_cursor()
@@ -219,7 +219,7 @@ def eliminar_registro(id_reg):
 @pago_bp.route('/balance', methods=['GET'])
 def get_balance():
     filtro = request.args.get('filtro', 'hoy')
-    hoy = get_fecha_chile()  # ✅ CORREGIDO
+    hoy = get_fecha_chile()
     
     try:
         conn, cur = get_cursor()
@@ -356,7 +356,7 @@ def get_pendientes_validacion():
 
 
 # ============================
-# 10. VALIDAR PAGO (PASO 2 - VALIDACIÓN DE COSTOS)
+# 10. VALIDAR PAGO (PASO 2 - VALIDACIÓN DE COSTOS) CON CANTIDAD
 # ============================
 @pago_bp.route('/validar_pago/<int:id_reg>', methods=['POST'])
 def validar_pago(id_reg):
@@ -370,10 +370,12 @@ def validar_pago(id_reg):
         conn = get_connection()
         cur = conn.cursor()
         
-        # ✅ GUARDAR REPUESTOS EN LA TABLA repuestos
+        # ✅ GUARDAR REPUESTOS CON CANTIDAD
         for item in detalles_repuestos:
             nombre = item.get('nombre', '').strip()
-            costo_venta = float(item.get('costo', 0) or 0)
+            cantidad = int(item.get('cantidad', 1) or 1)
+            costo_unitario = float(item.get('costo_unitario', 0) or 0)
+            subtotal = cantidad * costo_unitario
             
             if nombre:
                 cur.execute("SELECT id, costo_proveedor, costo_venta_final FROM repuestos WHERE nombre = %s", (nombre,))
@@ -381,17 +383,17 @@ def validar_pago(id_reg):
                 
                 if existente:
                     id_existente, costo_prov, costo_venta_existente = existente
-                    if costo_venta_existente == 0 and costo_venta > 0:
+                    if costo_venta_existente == 0 and costo_unitario > 0:
                         cur.execute("""
                             UPDATE repuestos 
                             SET costo_venta_final = %s, 
                                 updated_at = NOW() AT TIME ZONE 'America/Santiago'
                             WHERE id = %s
-                        """, (costo_venta, id_existente))
-                        print(f"✅ Repuesto '{nombre}' actualizado con costo_venta_final: ${costo_venta}")
+                        """, (costo_unitario, id_existente))
+                        print(f"✅ Repuesto '{nombre}' actualizado con costo_venta_final: ${costo_unitario}")
                 else:
                     iva = 1.19
-                    costo_proveedor_estimado = round(costo_venta / 1.19 / 1.3, 0) if costo_venta > 0 else 0
+                    costo_proveedor_estimado = round(costo_unitario / 1.19 / 1.3, 0) if costo_unitario > 0 else 0
                     
                     cur.execute("""
                         INSERT INTO repuestos 
@@ -404,16 +406,16 @@ def validar_pago(id_reg):
                         nombre,
                         costo_proveedor_estimado,
                         30,
-                        costo_venta,
+                        costo_unitario,
                         'Desde Validación',
                         costo_proveedor_estimado == 0
                     ))
                     id_nuevo = cur.fetchone()[0]
-                    print(f"✅ Repuesto '{nombre}' creado con costo_venta_final: ${costo_venta} (ID: {id_nuevo})")
+                    print(f"✅ Repuesto '{nombre}' creado con costo_venta_final: ${costo_unitario} (ID: {id_nuevo})")
         
+        # ✅ Guardar detalles con cantidad
         detalles_json = json.dumps(detalles_repuestos)
         
-        # ✅ CORREGIDO: Usar NOW() AT TIME ZONE 'America/Santiago'
         cur.execute("""
             UPDATE pagos 
             SET costo_repuestos_real = %s,
@@ -540,7 +542,6 @@ def crear_repuesto():
         conn = get_connection()
         cur = conn.cursor()
         
-        # ✅ CORREGIDO: Usar NOW() AT TIME ZONE 'America/Santiago'
         cur.execute("""
             INSERT INTO repuestos 
             (nombre, costo_proveedor, margen_ganancia, proveedor, costo_venta_final, costo_proveedor_pendiente, created_at, updated_at)
@@ -584,7 +585,6 @@ def actualizar_repuesto(id_repuesto):
         conn = get_connection()
         cur = conn.cursor()
         
-        # ✅ CORREGIDO: Usar NOW() AT TIME ZONE 'America/Santiago'
         cur.execute("""
             UPDATE repuestos 
             SET nombre = %s, 
@@ -897,7 +897,6 @@ def exportar_flota_pdf(flota):
         elementos.append(linea_final)
         elementos.append(Spacer(1, 0.15 * inch))
         
-        # ✅ CORREGIDO: Usar hora de Chile
         ahora_chile = datetime.now(CHILE_TZ)
         pie_text = f"""
         <b>Dixon Electricidad Automotriz</b><br/>
@@ -933,7 +932,7 @@ def exportar_flota_pdf(flota):
 
 
 # ============================
-# VENTA RÁPIDA (SIN TRABAJO) - CORREGIDO
+# 18. VENTA RÁPIDA (CON CANTIDAD)
 # ============================
 @pago_bp.route('/venta_rapida', methods=['POST'])
 def venta_rapida():
@@ -946,22 +945,30 @@ def venta_rapida():
         conn = get_connection()
         cur = conn.cursor()
         
-        # ✅ Obtener fecha y hora de Chile
         fecha_chile, hora_chile = get_fecha_hora_chile()
         
         detalles_repuestos = data.get('detalles_repuestos', [])
         for item in detalles_repuestos:
             nombre = item.get('nombre', '').strip()
-            costo_venta = float(item.get('costo', 0) or 0)
-            if nombre and costo_venta > 0:
+            cantidad = int(item.get('cantidad', 1) or 1)
+            costo_unitario = float(item.get('costo_unitario', 0) or 0)
+            subtotal = cantidad * costo_unitario
+            
+            if nombre and costo_unitario > 0:
                 cur.execute("SELECT id FROM repuestos WHERE nombre = %s", (nombre,))
                 if not cur.fetchone():
                     cur.execute("""
                         INSERT INTO repuestos (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, costo_proveedor_pendiente, created_at, updated_at)
                         VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    """, (nombre, 0, 30, costo_venta, 'Desde Venta Rápida', True))
+                    """, (nombre, 0, 30, costo_unitario, 'Desde Venta Rápida', True))
+                else:
+                    cur.execute("""
+                        UPDATE repuestos 
+                        SET costo_venta_final = %s,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE nombre = %s AND (costo_venta_final = 0 OR costo_venta_final IS NULL)
+                    """, (costo_unitario, nombre))
         
-        # ✅ Guardar la venta con fecha y hora de Chile
         cur.execute("""
             INSERT INTO pagos 
             (nombre, monto, fecha, hora, estado, tipo_venta, producto_vendido, 
@@ -971,8 +978,8 @@ def venta_rapida():
         """, (
             data.get('nombre'),
             data.get('monto'),
-            fecha_chile,  # ✅ Fecha de Chile
-            hora_chile,   # ✅ Hora de Chile
+            fecha_chile,
+            hora_chile,
             data.get('producto_vendido', ''),
             data.get('atendido_por', 'Técnico'),
             data.get('observaciones', ''),
@@ -993,13 +1000,13 @@ def venta_rapida():
 
 
 # ============================
-# BALANCE DE VENTAS (usando márgenes de repuestos)
+# 19. BALANCE DE VENTAS (CON CANTIDAD)
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
     try:
         filtro = request.args.get('filtro', 'hoy')
-        hoy = get_fecha_chile()  # ✅ CORREGIDO
+        hoy = get_fecha_chile()
         
         conn, cur = get_cursor()
         
@@ -1029,7 +1036,7 @@ def balance_ventas():
         total_directa = float(sum(r.get('monto', 0) or 0 for r in directa))
         
         # ============================
-        # PROCESAR TRABAJO
+        # PROCESAR TRABAJO (CON CANTIDAD)
         # ============================
         total_repuestos_trabajo = 0
         ganancia_trabajo = 0
@@ -1041,16 +1048,19 @@ def balance_ventas():
             
             for item in detalles:
                 nombre = item.get('nombre', '')
+                cantidad = int(item.get('cantidad', 1) or 1)
+                costo_unitario = float(item.get('costo_unitario', 0) or 0)
+                
                 if nombre:
                     cur.execute("SELECT costo_proveedor, margen_ganancia FROM repuestos WHERE nombre = %s", (nombre,))
                     resultado = cur.fetchone()
                     if resultado:
                         costo_prov = float(resultado[0] or 0)
                         margen_item = float(resultado[1] or 0)
-                        costo_repuestos += costo_prov
+                        costo_repuestos += costo_prov * cantidad
                         margenes_trabajo.append(margen_item)
                     else:
-                        costo_repuestos += float(item.get('costo', 0) or 0)
+                        costo_repuestos += costo_unitario * cantidad
             
             if costo_repuestos == 0:
                 costo_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
@@ -1064,7 +1074,7 @@ def balance_ventas():
             trabajo_margen = 0
         
         # ============================
-        # PROCESAR VENTA DIRECTA
+        # PROCESAR VENTA DIRECTA (CON CANTIDAD)
         # ============================
         total_repuestos_directa = 0
         ganancia_directa = 0
@@ -1076,16 +1086,19 @@ def balance_ventas():
             
             for item in detalles:
                 nombre = item.get('nombre', '')
+                cantidad = int(item.get('cantidad', 1) or 1)
+                costo_unitario = float(item.get('costo_unitario', 0) or 0)
+                
                 if nombre:
                     cur.execute("SELECT costo_proveedor, margen_ganancia FROM repuestos WHERE nombre = %s", (nombre,))
                     resultado = cur.fetchone()
                     if resultado:
                         costo_prov = float(resultado[0] or 0)
                         margen_item = float(resultado[1] or 0)
-                        costo_repuestos += costo_prov
+                        costo_repuestos += costo_prov * cantidad
                         margenes_directa.append(margen_item)
                     else:
-                        costo_repuestos += float(item.get('costo', 0) or 0)
+                        costo_repuestos += costo_unitario * cantidad
             
             if costo_repuestos == 0:
                 costo_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
@@ -1122,7 +1135,7 @@ def balance_ventas():
 
 
 # ============================
-# 18. DASHBOARD - CORREGIDO
+# 20. DASHBOARD
 # ============================
 @pago_bp.route('/dashboard', methods=['GET'])
 def get_dashboard():
@@ -1133,7 +1146,7 @@ def get_dashboard():
         anio = request.args.get('anio')
         
         from datetime import timedelta
-        hoy = get_fecha_chile()  # ✅ CORREGIDO
+        hoy = get_fecha_chile()
         
         fecha_desde = None
         
