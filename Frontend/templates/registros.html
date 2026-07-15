@@ -404,15 +404,20 @@
             </div>
 
             <!-- DATOS DEL INGRESO -->
-            <div style="background:rgba(79,195,247,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #4fc3f7;">
-                <h4 style="color:#4fc3f7;margin:0 0 10px 0;font-size:15px;">📥 Datos del Ingreso</h4>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div><label style="color:#90e0a0;font-size:12px;">Fecha</label><input type="date" name="fecha" id="edit_fecha" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Hora</label><input type="time" name="hora" id="edit_hora" class="form-control form-control-sm"></div>
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Observaciones de ingreso</label>
-                        <textarea name="observaciones_cliente" id="edit_observaciones_cliente" class="form-control form-control-sm" rows="2"></textarea>
-                    </div>
-                </div>
+<div style="background:rgba(79,195,247,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #4fc3f7;">
+    <h4 style="color:#4fc3f7;margin:0 0 10px 0;font-size:15px;">📥 Datos del Ingreso</h4>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div><label style="color:#90e0a0;font-size:12px;">Fecha</label><input type="date" name="fecha" id="edit_fecha" class="form-control form-control-sm"></div>
+        <div><label style="color:#90e0a0;font-size:12px;">Hora</label><input type="time" name="hora" id="edit_hora" class="form-control form-control-sm"></div>
+        <!-- ⬇️ AQUÍ DEBES AGREGAR EL CAMPO MONTO -->
+        <div><label style="color:#90e0a0;font-size:12px;">💰 Monto Pagado ($)</label>
+            <input type="number" name="monto" id="edit_monto" class="form-control form-control-sm" step="0.01" min="0">
+        </div>
+        <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Observaciones de ingreso</label>
+            <textarea name="observaciones_cliente" id="edit_observaciones_cliente" class="form-control form-control-sm" rows="2"></textarea>
+        </div>
+    </div>
+</div>
             </div>
 
             <!-- REPARACIÓN Y COSTOS -->
