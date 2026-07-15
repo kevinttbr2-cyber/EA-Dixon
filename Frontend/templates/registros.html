@@ -1078,22 +1078,30 @@ function guardarEdicionRepuestos() {
     const totalRepuestos = repuestos.reduce((sum, item) => sum + item.subtotal, 0);
     const manoObra = parseFloat(document.getElementById('edit_mano_obra').value) || 0;
     const diagnostico = parseFloat(document.getElementById('edit_diagnostico_costo').value) || 0;
-    const totalVenta = parseFloat(document.getElementById('edit_venta_total').textContent.replace(/[$,]/g, '')) || 0;
-    const gananciaNeta = totalVenta - (totalRepuestos + manoObra + diagnostico);
+    
+    // ✅ RECALCULAR EL MONTO TOTAL
+    const totalCostos = totalRepuestos + manoObra + diagnostico;
+    
+    // Si quieres mantener la misma ganancia, el monto = costos + ganancia original
+    // O puedes calcular el monto como la suma de todo
+    const gananciaOriginal = parseFloat(document.getElementById('resumen_nueva_ganancia').textContent.replace(/[$,]/g, '')) || 0;
+    const nuevoMonto = totalCostos + gananciaOriginal;
     
     const data = {
         detalles_repuestos: repuestos,
         costo_repuestos_real: totalRepuestos,
         costo_mano_obra_real: manoObra,
         costo_diagnostico_real: diagnostico,
-        ganancia_neta: gananciaNeta
+        ganancia_neta: gananciaOriginal,
+        monto: nuevoMonto  // ✅ AGREGAR ESTO
     };
     
     if (!confirm(`📊 ¿Actualizar repuestos de la venta #${idVentaEditando}?\n\n` +
                  `📦 Total Repuestos: $${totalRepuestos.toLocaleString()}\n` +
                  `👨‍🔧 Mano de Obra: $${manoObra.toLocaleString()}\n` +
                  `🩺 Diagnóstico: $${diagnostico.toLocaleString()}\n` +
-                 `📊 Nueva Ganancia: $${gananciaNeta.toLocaleString()}\n\n` +
+                 `💰 Nuevo Monto Total: $${nuevoMonto.toLocaleString()}\n` +
+                 `📊 Ganancia: $${gananciaOriginal.toLocaleString()}\n\n` +
                  `¿Confirmar cambios?`)) {
         return;
     }
