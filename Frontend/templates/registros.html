@@ -641,35 +641,27 @@ let idVentaEditando = null;
 function toggleMenu3p(button, id) {
     event.stopPropagation();
     
-    // Obtener el menú (el div siguiente al botón)
     const menu = button.nextElementSibling;
     
-    // Si ya está abierto, lo cerramos
     if (menu.classList.contains('show')) {
         menu.classList.remove('show');
         return;
     }
     
-    // Cerrar todos los menús abiertos
     document.querySelectorAll('.menu-3p.show').forEach(m => {
         if (m !== menu) m.classList.remove('show');
     });
     
-    // Abrir el menú actual
     menu.classList.add('show');
     
-    // Si hay ID, guardarlo para las acciones
     if (id) {
         menu.setAttribute('data-id', id);
-        // Guardar el nombre también si existe
         const nombre = button.getAttribute('data-nombre') || '';
         menu.setAttribute('data-nombre', nombre);
     }
 }
 
-// Cerrar dropdowns al hacer clic fuera
 document.addEventListener('click', function(e) {
-    // Si el clic NO fue dentro de un dropdown-3p
     if (!e.target.closest('.dropdown-3p')) {
         document.querySelectorAll('.menu-3p.show').forEach(m => {
             m.classList.remove('show');
@@ -677,7 +669,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Cerrar con ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         document.querySelectorAll('.menu-3p.show').forEach(m => {
@@ -730,7 +721,6 @@ function confirmarExportarYBorrar() {
 // VER DETALLE
 // ============================================
 function verDetalle(id) {
-    // Cerrar menú
     document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
     
     const modal = document.getElementById('modalDetalle');
@@ -738,7 +728,6 @@ function verDetalle(id) {
     modal.style.display = 'flex';
     contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
 
-    // ✅ URL COMPLETA DE RAILWAY
     fetch(`${API_URL}/api/registro/${id}`)
         .then(resp => {
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -786,13 +775,11 @@ document.getElementById('modalDetalle').onclick = function(e) {
 // EDITAR REGISTRO
 // ============================================
 function editarRegistro(id) {
-    // Cerrar menú
     document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
     
     const modal = document.getElementById('modalEditarCompleto');
     modal.style.display = 'flex';
 
-    // ✅ URL COMPLETA DE RAILWAY
     fetch(`${API_URL}/api/registro/${id}`)
         .then(resp => {
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -874,7 +861,6 @@ document.getElementById('formEditarCompleto').onsubmit = async function(e) {
     };
 
     try {
-        // ✅ URL COMPLETA DE RAILWAY
         const resp = await fetch(`${API_URL}/api/editar_completo/${id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -899,12 +885,10 @@ document.getElementById('formEditarCompleto').onsubmit = async function(e) {
 // ELIMINAR REGISTRO
 // ============================================
 function eliminarRegistro(id) {
-    // Cerrar menú
     document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
     
     if (!confirm(`¿Eliminar el registro #${id} permanentemente?`)) return;
     
-    // ✅ URL COMPLETA DE RAILWAY
     fetch(`${API_URL}/api/eliminar_registro/${id}`, {
         method: 'DELETE'
     }).then(resp => {
@@ -918,7 +902,7 @@ function eliminarRegistro(id) {
 }
 
 // ============================================
-// EDITAR REPUESTOS DE VENTA
+// EDITAR REPUESTOS DE VENTA (CORREGIDO - SIN DUPLICADOS)
 // ============================================
 function editarRepuestosVenta(id) {
     document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
@@ -952,7 +936,7 @@ function editarRepuestosVenta(id) {
             document.getElementById('edit_venta_total').textContent = '$' + Number(data.monto || 0).toLocaleString();
             document.getElementById('edit_venta_fecha').textContent = data.fecha || '';
             
-            // ✅ SOLO SI EL ELEMENTO EXISTE
+            // ✅ MOSTRAR INDICADOR SEGÚN TIPO
             const tipoLabel = document.getElementById('tipo_venta_label');
             if (tipoLabel) {
                 if (tipoVentaEditando === 'directa') {
@@ -962,42 +946,6 @@ function editarRepuestosVenta(id) {
                     tipoLabel.innerHTML = '🔧 TRABAJO - El monto final NO cambia, la ganancia se recalcula';
                     tipoLabel.style.color = '#ffcc00';
                 }
-            }
-            
-            // Cargar repuestos
-            const repuestos = data.detalles_repuestos || [];
-            cargarRepuestosEditar(repuestos);
-            
-            // Cargar costos
-            document.getElementById('edit_mano_obra').value = data.costo_mano_obra_real || 0;
-            document.getElementById('edit_diagnostico_costo').value = data.costo_diagnostico_real || 0;
-            
-            calcularResumenEditar();
-        })
-        .catch(e => {
-            console.error('❌ Error detallado:', e);
-            document.getElementById('edit_venta_id').textContent = 'Error';
-            document.getElementById('edit_venta_cliente').textContent = 'Error al cargar';
-            alert('❌ Error al cargar los datos: ' + e.message);
-        });
-}
-            
-            // ✅ DETECTAR TIPO DE VENTA
-            tipoVentaEditando = (data.marca && data.marca.trim() !== '') ? 'trabajo' : 'directa';
-            
-            document.getElementById('edit_venta_id').textContent = data.id;
-            document.getElementById('edit_venta_cliente').textContent = data.nombre;
-            document.getElementById('edit_venta_total').textContent = '$' + Number(data.monto || 0).toLocaleString();
-            document.getElementById('edit_venta_fecha').textContent = data.fecha || '';
-            
-            // ✅ MOSTRAR INDICADOR SEGÚN TIPO
-            const tipoLabel = document.getElementById('tipo_venta_label');
-            if (tipoVentaEditando === 'directa') {
-                tipoLabel.innerHTML = '⚡ VENTA DIRECTA - El monto final se recalcula automáticamente';
-                tipoLabel.style.color = '#4fc3f7';
-            } else {
-                tipoLabel.innerHTML = '🔧 TRABAJO - El monto final NO cambia, la ganancia se recalcula';
-                tipoLabel.style.color = '#ffcc00';
             }
             
             // Cargar repuestos
@@ -1066,7 +1014,6 @@ function agregarFilaEditarRepuesto(nombre = '', cantidad = 1, costo = 0) {
         </td>
     `;
     
-    // Eventos para recalcular
     const cantidadInput = fila.querySelector('.editar-repuesto-cantidad');
     const costoInput = fila.querySelector('.editar-repuesto-costo');
     
@@ -1115,10 +1062,8 @@ function calcularResumenEditar() {
     
     let gananciaNeta;
     if (tipoVentaEditando === 'directa') {
-        // VENTA DIRECTA: la ganancia es 0 (el precio ya incluye todo)
         gananciaNeta = 0;
     } else {
-        // TRABAJO: ganancia = monto - costos
         gananciaNeta = totalVenta - (totalRepuestos + manoObra + diagnostico);
     }
     
@@ -1135,7 +1080,6 @@ function guardarEdicionRepuestos() {
         return;
     }
     
-    // Recolectar repuestos editados
     const repuestos = [];
     document.querySelectorAll('.fila-editar-repuesto').forEach(fila => {
         const nombre = fila.querySelector('.editar-repuesto-nombre').value.trim();
@@ -1165,11 +1109,9 @@ function guardarEdicionRepuestos() {
     let nuevoMonto, gananciaNeta;
     
     if (tipoVentaEditando === 'directa') {
-        // ✅ VENTA DIRECTA: el monto = suma de productos
         nuevoMonto = totalRepuestos + manoObra + diagnostico;
         gananciaNeta = 0;
     } else {
-        // ✅ TRABAJO: el monto NO cambia, la ganancia se recalcula
         nuevoMonto = montoOriginal;
         gananciaNeta = montoOriginal - (totalRepuestos + manoObra + diagnostico);
     }
@@ -1228,7 +1170,6 @@ function cerrarModalEditarRepuestos() {
     idVentaEditando = null;
 }
 
-// Cerrar modal al hacer clic fuera
 document.getElementById('modalEditarRepuestosVenta').addEventListener('click', function(e) {
     if (e.target === this) {
         cerrarModalEditarRepuestos();
@@ -1240,9 +1181,6 @@ document.getElementById('modalEditarRepuestosVenta').addEventListener('click', f
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ============================
-    // TOGGLE VISTA MÓVIL / ESCRITORIO
-    // ============================
     function toggleVista() {
         const isMobile = window.innerWidth < 768;
         const escritorio = document.querySelector('.vista-escritorio');
@@ -1253,9 +1191,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', toggleVista);
     toggleVista();
 
-    // ============================
-    // BUSCADOR
-    // ============================
     const campoBusqueda = document.getElementById('campoBusqueda');
     const buscadorInput = document.getElementById('buscadorInput');
     const btnBuscar = document.getElementById('btnBuscar');
@@ -1296,9 +1231,6 @@ document.addEventListener('DOMContentLoaded', function() {
         filtrarTabla();
     });
 
-    // ============================
-    // ORDENAR TABLA
-    // ============================
     window.ordenarTabla = function(columna) {
         const tbody = document.querySelector('#tablaRegistros tbody');
         const filasArray = Array.from(tbody.querySelectorAll('.fila-registro'));
@@ -1323,4 +1255,5 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 </script>
-{% endblock %} 
+{% endblock %}
+ 
