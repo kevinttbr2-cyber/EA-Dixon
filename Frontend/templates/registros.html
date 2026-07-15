@@ -518,6 +518,12 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
+        <!-- INDICADOR DE TIPO DE VENTA -->
+<div style="background:rgba(0,255,102,0.08);border-radius:8px;padding:8px 12px;margin-bottom:12px;border-left:3px solid #00ff66;">
+    <span id="tipo_venta_label" style="font-size:13px;font-weight:600;color:#00ff66;">
+        💰 El monto se recalcula automáticamente
+    </span>
+</div>
         
         <div style="background:rgba(255,200,0,0.05);border-radius:10px;padding:12px 16px;margin-bottom:12px;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -923,7 +929,6 @@ function editarRepuestosVenta(id) {
     const modal = document.getElementById('modalEditarRepuestosVenta');
     modal.style.display = 'flex';
     
-    // Mostrar carga
     document.getElementById('edit_venta_id').textContent = 'Cargando...';
     document.getElementById('edit_venta_cliente').textContent = 'Cargando...';
     document.getElementById('edit_venta_total').textContent = 'Cargando...';
@@ -938,6 +943,44 @@ function editarRepuestosVenta(id) {
         })
         .then(data => {
             console.log('📦 Datos recibidos:', data);
+            
+            // ✅ DETECTAR TIPO DE VENTA
+            tipoVentaEditando = (data.marca && data.marca.trim() !== '') ? 'trabajo' : 'directa';
+            
+            document.getElementById('edit_venta_id').textContent = data.id;
+            document.getElementById('edit_venta_cliente').textContent = data.nombre;
+            document.getElementById('edit_venta_total').textContent = '$' + Number(data.monto || 0).toLocaleString();
+            document.getElementById('edit_venta_fecha').textContent = data.fecha || '';
+            
+            // ✅ SOLO SI EL ELEMENTO EXISTE
+            const tipoLabel = document.getElementById('tipo_venta_label');
+            if (tipoLabel) {
+                if (tipoVentaEditando === 'directa') {
+                    tipoLabel.innerHTML = '⚡ VENTA DIRECTA - El monto final se recalcula automáticamente';
+                    tipoLabel.style.color = '#4fc3f7';
+                } else {
+                    tipoLabel.innerHTML = '🔧 TRABAJO - El monto final NO cambia, la ganancia se recalcula';
+                    tipoLabel.style.color = '#ffcc00';
+                }
+            }
+            
+            // Cargar repuestos
+            const repuestos = data.detalles_repuestos || [];
+            cargarRepuestosEditar(repuestos);
+            
+            // Cargar costos
+            document.getElementById('edit_mano_obra').value = data.costo_mano_obra_real || 0;
+            document.getElementById('edit_diagnostico_costo').value = data.costo_diagnostico_real || 0;
+            
+            calcularResumenEditar();
+        })
+        .catch(e => {
+            console.error('❌ Error detallado:', e);
+            document.getElementById('edit_venta_id').textContent = 'Error';
+            document.getElementById('edit_venta_cliente').textContent = 'Error al cargar';
+            alert('❌ Error al cargar los datos: ' + e.message);
+        });
+}
             
             // ✅ DETECTAR TIPO DE VENTA
             tipoVentaEditando = (data.marca && data.marca.trim() !== '') ? 'trabajo' : 'directa';
