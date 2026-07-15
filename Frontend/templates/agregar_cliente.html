@@ -296,5 +296,43 @@
         });
     });
 </script>
+<script>
+// ============================
+// ANTI-DOBLE CLIC EN AGREGAR CLIENTE
+// ============================
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const submitBtn = form?.querySelector('button[type="submit"]');
+    
+    if (form && submitBtn) {
+        form.addEventListener('submit', function(e) {
+            // Deshabilitar botón para evitar doble clic
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '⏳ Guardando...';
+            submitBtn.style.opacity = '0.7';
+            
+            // Si después de 10 segundos no ha respondido, habilitar de nuevo
+            setTimeout(function() {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '💾 Guardar Cliente';
+                submitBtn.style.opacity = '1';
+            }, 10000);
+        });
+    }
+});
+
+// ============================
+// PREVENIR DOBLE CLIC MANUAL
+// ============================
+function prevenirDobleClic(btn) {
+    if (btn.disabled) {
+        return false;
+    }
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Procesando...';
+    btn.style.opacity = '0.7';
+    return true;
+}
+</script>
 
 {% endblock %}
