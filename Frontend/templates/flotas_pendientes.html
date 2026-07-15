@@ -114,6 +114,39 @@
             {{ flotas_agrupadas|length }} flota{% if flotas_agrupadas|length > 1 %}s{% endif %} pendiente{% if flotas_agrupadas|length > 1 %}s{% endif %}
         </span>
     </div>
+    <!-- HEADER DE LA FLOTA (modificado) -->
+<div class="toggle-detalle" onclick="toggleFlotaDetalle(this)">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 24px;">🚛</span>
+            <span style="color: #ffcc00; font-weight: 700; font-size: 18px;">
+                {{ flota.nombre }}
+            </span>
+            <span class="badge-pendiente">
+                {{ flota.servicios|length }} servicio{% if flota.servicios|length > 1 %}s{% endif %}
+            </span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div style="text-align: right;">
+                <div style="color: #00ff66; font-weight: 700; font-size: 18px;">
+                    ${{ "{:,.0f}".format(flota.total_pendiente) }}
+                </div>
+                <div style="color: #888; font-size: 11px;">
+                    <i class="fa-regular fa-clock"></i> Pendiente
+                </div>
+            </div>
+            <!-- ✅ BOTÓN: VALIDAR TODA LA FLOTA -->
+            <button onclick="event.stopPropagation(); validarFlotaCompleta('{{ flota.nombre }}', {{ flota.total_pendiente }}, {{ flota.servicios|length }})" 
+                    class="btn-marcar-pagado" style="background: #ffcc00 !important; color: #000 !important; padding: 6px 16px; font-size: 13px;">
+                ✅ Validar toda la flota
+            </button>
+        </div>
+    </div>
+    <div style="color: #666; font-size: 12px; margin-top: 4px;">
+        <i class="fa-solid fa-chevron-down" id="icono-chevron-{{ loop.index }}"></i> 
+        <span id="texto-toggle-{{ loop.index }}">Mostrar servicios</span>
+    </div>
+</div>
 
     <!-- ============================
          FLOTAS AGRUPADAS
@@ -300,6 +333,56 @@ function marcarComoPagado(id) {
     document.getElementById('fechaPago').value = new Date().toISOString().split('T')[0];
     document.getElementById('modalMarcarPagado').style.display = 'flex';
 }
+<!-- ============================
+     MODAL VALIDAR FLOTA COMPLETA
+     ============================ -->
+<div id="modalFlotaCompleta" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="background:rgba(15,15,15,0.98);border:2px solid #ffcc00;border-radius:16px;padding:25px 30px;max-width:450px;width:95%;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+            <h3 style="color:#ffcc00;margin:0;font-size:20px;">✅ Validar Flota Completa</h3>
+            <button onclick="cerrarModalFlotaCompleta()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div style="background:rgba(255,200,0,0.05);border-radius:8px;padding:12px;margin-bottom:15px;">
+            <div><span style="color:#888;">🚛 Flota:</span> <span id="flotaCompletaNombre" style="color:#fff;font-weight:600;">-</span></div>
+            <div><span style="color:#888;">📦 Servicios:</span> <span id="flotaCompletaCantidad" style="color:#fff;">-</span></div>
+            <div><span style="color:#888;">💰 Total:</span> <span id="flotaCompletaTotal" style="color:#00ff66;font-weight:700;font-size:18px;">-</span></div>
+        </div>
+        
+        <div style="margin-bottom:12px;">
+            <label style="color:#90e0a0;font-size:13px;">📅 Fecha de pago</label>
+            <input type="date" id="flotaCompletaFecha" class="form-control" value="{{ today }}">
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="color:#90e0a0;font-size:13px;">💳 Forma de pago</label>
+            <select id="flotaCompletaFormaPago" class="form-control">
+                <option value="transferencia">🏦 Transferencia</option>
+                <option value="efectivo">💵 Efectivo</option>
+                <option value="tarjeta">💳 Tarjeta</option>
+                <option value="cheque">📄 Cheque</option>
+            </select>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+            <button id="btnConfirmarFlotaCompleta" onclick="confirmarFlotaCompleta()" class="btn btn-primary" style="flex:1;background:#ffcc00 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;cursor:pointer;">
+                ✅ Confirmar todo
+            </button>
+            <button onclick="cerrarModalFlotaCompleta()" style="
+                background:rgba(255,255,255,0.06);
+                color:#888;
+                border:1px solid rgba(255,255,255,0.08);
+                border-radius:10px;
+                padding:12px 20px;
+                cursor:pointer;
+            ">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
 
 // ============================
 // CERRAR MODAL
@@ -375,6 +458,91 @@ document.getElementById('modalMarcarPagado').addEventListener('click', function(
         cerrarModalPago();
     }
 });
+    // ============================
+// VALIDAR FLOTA COMPLETA
+// ============================
+function validarFlotaCompleta(nombreFlota, totalPendiente, cantidadServicios) {
+    event.stopPropagation();
+    
+    if (!confirm(`📊 ¿Validar TODA la flota "${nombreFlota}"?\n\n` +
+                 `📦 ${cantidadServicios} servicio(s) pendiente(s)\n` +
+                 `💰 Total: $${totalPendiente.toLocaleString()}\n\n` +
+                 `⚠️ Todos los servicios se marcarán como PAGADOS.\n` +
+                 `¿Estás seguro?`)) {
+        return;
+    }
+    
+    // Abrir modal para seleccionar fecha y forma de pago
+    document.getElementById('modalFlotaCompleta').style.display = 'flex';
+    document.getElementById('flotaCompletaNombre').textContent = nombreFlota;
+    document.getElementById('flotaCompletaTotal').textContent = '$' + totalPendiente.toLocaleString();
+    document.getElementById('flotaCompletaCantidad').textContent = cantidadServicios + ' servicio(s)';
+    document.getElementById('flotaCompletaFecha').value = new Date().toISOString().split('T')[0];
+    
+    // Guardar datos en el botón de confirmar
+    const btnConfirmar = document.getElementById('btnConfirmarFlotaCompleta');
+    btnConfirmar.dataset.flota = nombreFlota;
+    btnConfirmar.dataset.total = totalPendiente;
+}
+// ============================
+// CONFIRMAR VALIDACIÓN FLOTA COMPLETA
+// ============================
+function confirmarFlotaCompleta() {
+    const btn = document.getElementById('btnConfirmarFlotaCompleta');
+    const nombreFlota = btn.dataset.flota;
+    const fechaPago = document.getElementById('flotaCompletaFecha').value;
+    const formaPago = document.getElementById('flotaCompletaFormaPago').value;
+    
+    if (!nombreFlota) {
+        alert('❌ No hay flota seleccionada');
+        return;
+    }
+    
+    if (!fechaPago) {
+        alert('⚠️ Selecciona la fecha de pago');
+        return;
+    }
+    
+    if (!confirm(`📊 ¿Confirmar pago de TODA la flota "${nombreFlota}"?\n\n📅 Fecha: ${fechaPago}\n💳 Forma: ${formaPago}\n\n⚠️ Esta acción NO se puede deshacer.`)) {
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = '⏳ Procesando...';
+    
+    fetch(`${API_URL}/api/validar_flota_completa/${encodeURIComponent(nombreFlota)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            fecha_pago: fechaPago,
+            forma_pago: formaPago
+        })
+    })
+    .then(resp => resp.json())
+    .then(result => {
+        if (result.success) {
+            alert(`✅ Flota "${nombreFlota}" validada correctamente!\n\n` +
+                  `📦 ${result.servicios_actualizados} servicios pagados\n` +
+                  `💰 Total: $${result.total_pagado.toLocaleString()}`);
+            cerrarModalFlotaCompleta();
+            location.reload();
+        } else {
+            alert('❌ Error: ' + (result.error || 'Desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error de conexión');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = '✅ Confirmar todo';
+    });
+}
+
+function cerrarModalFlotaCompleta() {
+    document.getElementById('modalFlotaCompleta').style.display = 'none';
+}
 </script>
 
 {% endblock %}
