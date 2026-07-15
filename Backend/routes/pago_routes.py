@@ -90,7 +90,7 @@ def get_registro(id_reg):
 
 
 # ============================
-# 3. REGISTROS CON FILTROS
+# 3. REGISTROS CON FILTROS (CORREGIDO)
 # ============================
 @pago_bp.route('/registros', methods=['GET'])
 def get_registros_filtrados():
@@ -99,7 +99,8 @@ def get_registros_filtrados():
     
     try:
         conn, cur = get_cursor()
-        query = "SELECT * FROM pagos WHERE estado = 'pagado'"
+        # ✅ SOLO REGISTROS CON estado_pago = 'pagado'
+        query = "SELECT * FROM pagos WHERE estado = 'pagado' AND estado_pago = 'pagado'"
         params = []
         
         if filtro == 'hoy':
