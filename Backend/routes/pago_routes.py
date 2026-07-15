@@ -148,6 +148,7 @@ def editar_completo(id_reg):
                 flota = %s,
                 fecha = %s,
                 hora = %s,
+                monto = %s,
                 observaciones_cliente = %s,
                 diagnostico = %s,
                 reparacion = %s,
@@ -172,6 +173,7 @@ def editar_completo(id_reg):
             data.get('flota'),
             data.get('fecha'),
             data.get('hora'),
+            data.get('monto', 0),  # ✅ DEBE ESTAR AQUÍ
             data.get('observaciones_cliente'),
             data.get('diagnostico'),
             data.get('reparacion', 'Reparación realizada'),
@@ -192,9 +194,8 @@ def editar_completo(id_reg):
         conn.close()
         return jsonify({"success": True})
     except Exception as e:
-        print(f"Error en editar_completo: {e}")
+        print(f"❌ Error en editar_completo: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 # ============================
 # 5. ELIMINAR REGISTRO
