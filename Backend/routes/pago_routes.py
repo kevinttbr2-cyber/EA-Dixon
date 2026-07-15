@@ -1074,6 +1074,9 @@ def venta_rapida():
 # ============================
 # 19. BALANCE DE VENTAS (CORREGIDO - CON total_repuestos)
 # ============================
+# ============================
+# 19. BALANCE DE VENTAS (CORREGIDO - CON estado_pago)
+# ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
     try:
@@ -1082,7 +1085,8 @@ def balance_ventas():
         
         conn, cur = get_cursor()
         
-        query = "SELECT * FROM pagos WHERE estado = 'pagado'"
+        # ✅ SOLO REGISTROS CON estado_pago = 'pagado'
+        query = "SELECT * FROM pagos WHERE estado = 'pagado' AND estado_pago = 'pagado'"
         params = []
         
         if filtro == 'hoy':
@@ -1163,7 +1167,8 @@ def balance_ventas():
                 else:
                     total += float(r.get('costo_repuestos_real', 0) or 0)
             return total
-                # ============================
+        
+        # ============================
         # FUNCIÓN: Calcular Margen Promedio
         # ============================
         def calcular_margen_promedio(registros):
