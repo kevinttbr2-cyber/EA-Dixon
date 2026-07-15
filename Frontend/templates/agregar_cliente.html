@@ -127,7 +127,7 @@
              BOTONES
              ============================ -->
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button type="submit" class="btn btn-primary" style="flex:1; background: #00ff66 !important; color: #000 !important; font-weight: 700; border-radius: 10px; padding: 14px; font-size: 18px; border: none;">
+            <button type="submit" id="btnGuardarCliente" class="btn btn-primary" style="flex:1; background: #00ff66 !important; color: #000 !important; font-weight: 700; border-radius: 10px; padding: 14px; font-size: 18px; border: none; cursor: pointer;">
                 <i class="fas fa-save"></i> Registrar Cliente
             </button>
             <a href="/estado" class="btn" style="
@@ -146,193 +146,168 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
 
-        // ============================
-        // 1. FLOTA: Mostrar input para nueva flota
-        // ============================
-        const flotaSelect = document.getElementById('flotaSelect');
-        const flotaNuevaInput = document.getElementById('flotaNuevaInput');
-        const btnNuevaFlota = document.getElementById('btnNuevaFlota');
+    // ============================
+    // 1. FLOTA: Mostrar input para nueva flota
+    // ============================
+    const flotaSelect = document.getElementById('flotaSelect');
+    const flotaNuevaInput = document.getElementById('flotaNuevaInput');
+    const btnNuevaFlota = document.getElementById('btnNuevaFlota');
 
-        flotaSelect.addEventListener('change', function() {
-            if (this.value === '__nueva__') {
-                flotaNuevaInput.style.display = 'block';
-                flotaNuevaInput.focus();
-                btnNuevaFlota.textContent = '✅ Guardar';
-                btnNuevaFlota.style.background = 'rgba(0,255,102,0.20)';
-            } else {
+    flotaSelect.addEventListener('change', function() {
+        if (this.value === '__nueva__') {
+            flotaNuevaInput.style.display = 'block';
+            flotaNuevaInput.focus();
+            btnNuevaFlota.textContent = '✅ Guardar';
+            btnNuevaFlota.style.background = 'rgba(0,255,102,0.20)';
+        } else {
+            flotaNuevaInput.style.display = 'none';
+            btnNuevaFlota.innerHTML = '<i class="fa-solid fa-plus"></i>';
+            btnNuevaFlota.style.background = 'rgba(0,255,102,0.12)';
+        }
+    });
+
+    btnNuevaFlota.addEventListener('click', function() {
+        if (flotaSelect.value === '__nueva__') {
+            const nombre = flotaNuevaInput.value.trim();
+            if (nombre) {
+                const option = document.createElement('option');
+                option.value = nombre;
+                option.textContent = nombre;
+                flotaSelect.insertBefore(option, flotaSelect.querySelector('option[value="__nueva__"]'));
+                flotaSelect.value = nombre;
                 flotaNuevaInput.style.display = 'none';
                 btnNuevaFlota.innerHTML = '<i class="fa-solid fa-plus"></i>';
                 btnNuevaFlota.style.background = 'rgba(0,255,102,0.12)';
-            }
-        });
-
-        btnNuevaFlota.addEventListener('click', function() {
-            if (flotaSelect.value === '__nueva__') {
-                const nombre = flotaNuevaInput.value.trim();
-                if (nombre) {
-                    // Agregar al select
-                    const option = document.createElement('option');
-                    option.value = nombre;
-                    option.textContent = nombre;
-                    flotaSelect.insertBefore(option, flotaSelect.querySelector('option[value="__nueva__"]'));
-                    flotaSelect.value = nombre;
-                    flotaNuevaInput.style.display = 'none';
-                    btnNuevaFlota.innerHTML = '<i class="fa-solid fa-plus"></i>';
-                    btnNuevaFlota.style.background = 'rgba(0,255,102,0.12)';
-                } else {
-                    alert('⚠️ Escribe un nombre para la flota');
-                }
             } else {
-                flotaSelect.value = '__nueva__';
-                flotaNuevaInput.style.display = 'block';
-                flotaNuevaInput.focus();
-                btnNuevaFlota.textContent = '✅ Guardar';
-                btnNuevaFlota.style.background = 'rgba(0,255,102,0.20)';
+                alert('⚠️ Escribe un nombre para la flota');
             }
-        });
+        } else {
+            flotaSelect.value = '__nueva__';
+            flotaNuevaInput.style.display = 'block';
+            flotaNuevaInput.focus();
+            btnNuevaFlota.textContent = '✅ Guardar';
+            btnNuevaFlota.style.background = 'rgba(0,255,102,0.20)';
+        }
+    });
 
-        // ============================
-        // 2. MARCA + MODELO (con "OTRA")
-        // ============================
-        const marcaSelect = document.getElementById('marca');
-        const modeloSelect = document.getElementById('modelo');
-        const marcaManual = document.getElementById('marca_manual');
-        const modeloManual = document.getElementById('modelo_manual');
+    // ============================
+    // 2. MARCA + MODELO (con "OTRA")
+    // ============================
+    const marcaSelect = document.getElementById('marca');
+    const modeloSelect = document.getElementById('modelo');
+    const marcaManual = document.getElementById('marca_manual');
+    const modeloManual = document.getElementById('modelo_manual');
 
-        marcaSelect.addEventListener('change', function() {
-            const marca = this.value;
-            if (marca === '__manual__') {
-                marcaManual.style.display = 'block';
+    marcaSelect.addEventListener('change', function() {
+        const marca = this.value;
+        if (marca === '__manual__') {
+            marcaManual.style.display = 'block';
+            modeloSelect.innerHTML = '<option value="">Seleccione modelo</option>';
+            modeloSelect.disabled = true;
+            modeloManual.style.display = 'block';
+            return;
+        }
+        marcaManual.style.display = 'none';
+        modeloSelect.disabled = false;
+        modeloManual.style.display = 'none';
+
+        fetch('/modelos/' + encodeURIComponent(marca))
+            .then(r => r.json())
+            .then(data => {
                 modeloSelect.innerHTML = '<option value="">Seleccione modelo</option>';
-                modeloSelect.disabled = true;
-                modeloManual.style.display = 'block';
+                data.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    modeloSelect.appendChild(opt);
+                });
+                const optManual = document.createElement('option');
+                optManual.value = '__manual__';
+                optManual.textContent = 'OTRO';
+                modeloSelect.appendChild(optManual);
+            })
+            .catch(() => {});
+    });
+
+    modeloSelect.addEventListener('change', function() {
+        if (this.value === '__manual__') {
+            modeloManual.style.display = 'block';
+        } else {
+            modeloManual.style.display = 'none';
+        }
+    });
+
+    // ============================
+    // 3. ENVÍO DEL FORMULARIO (con anti-doble clic)
+    // ============================
+    const form = document.getElementById('formAgregar');
+    const submitBtn = document.getElementById('btnGuardarCliente');
+
+    form.addEventListener('submit', function(e) {
+        // Si se seleccionó "OTRA" en marca, usar el valor manual
+        if (marcaSelect.value === '__manual__') {
+            const manualVal = marcaManual.value.trim();
+            if (manualVal) {
+                const opt = document.createElement('option');
+                opt.value = manualVal;
+                opt.textContent = manualVal;
+                opt.selected = true;
+                marcaSelect.appendChild(opt);
+            } else {
+                e.preventDefault();
+                alert('⚠️ Escribe el nombre de la marca');
                 return;
             }
-            marcaManual.style.display = 'none';
-            modeloSelect.disabled = false;
-            modeloManual.style.display = 'none';
+        }
 
-            fetch('/modelos/' + encodeURIComponent(marca))
-                .then(r => r.json())
-                .then(data => {
-                    modeloSelect.innerHTML = '<option value="">Seleccione modelo</option>';
-                    data.forEach(m => {
-                        const opt = document.createElement('option');
-                        opt.value = m;
-                        opt.textContent = m;
-                        modeloSelect.appendChild(opt);
-                    });
-                    const optManual = document.createElement('option');
-                    optManual.value = '__manual__';
-                    optManual.textContent = 'OTRO';
-                    modeloSelect.appendChild(optManual);
-                })
-                .catch(() => {});
-        });
-
-        modeloSelect.addEventListener('change', function() {
-            if (this.value === '__manual__') {
-                modeloManual.style.display = 'block';
+        // Si se seleccionó "OTRO" en modelo, usar el valor manual
+        if (modeloSelect.value === '__manual__') {
+            const manualVal = modeloManual.value.trim();
+            if (manualVal) {
+                const opt = document.createElement('option');
+                opt.value = manualVal;
+                opt.textContent = manualVal;
+                opt.selected = true;
+                modeloSelect.appendChild(opt);
             } else {
-                modeloManual.style.display = 'none';
+                e.preventDefault();
+                alert('⚠️ Escribe el nombre del modelo');
+                return;
             }
-        });
+        }
 
-        // ============================
-        // 3. ENVÍO DEL FORMULARIO
-        // ============================
-        document.getElementById('formAgregar').addEventListener('submit', function(e) {
-            // Si se seleccionó "OTRA" en marca, usar el valor manual
-            if (marcaSelect.value === '__manual__') {
-                const manualVal = marcaManual.value.trim();
-                if (manualVal) {
-                    // Crear una opción temporal y seleccionarla
-                    const opt = document.createElement('option');
-                    opt.value = manualVal;
-                    opt.textContent = manualVal;
-                    opt.selected = true;
-                    marcaSelect.appendChild(opt);
-                } else {
-                    e.preventDefault();
-                    alert('⚠️ Escribe el nombre de la marca');
-                    return;
-                }
+        // Si flota es "__nueva__", usar el valor del input
+        if (flotaSelect.value === '__nueva__') {
+            const flotaVal = flotaNuevaInput.value.trim();
+            if (flotaVal) {
+                const opt = document.createElement('option');
+                opt.value = flotaVal;
+                opt.textContent = flotaVal;
+                opt.selected = true;
+                flotaSelect.appendChild(opt);
+            } else {
+                e.preventDefault();
+                alert('⚠️ Escribe el nombre de la flota');
+                return;
             }
+        }
 
-            // Si se seleccionó "OTRO" en modelo, usar el valor manual
-            if (modeloSelect.value === '__manual__') {
-                const manualVal = modeloManual.value.trim();
-                if (manualVal) {
-                    const opt = document.createElement('option');
-                    opt.value = manualVal;
-                    opt.textContent = manualVal;
-                    opt.selected = true;
-                    modeloSelect.appendChild(opt);
-                } else {
-                    e.preventDefault();
-                    alert('⚠️ Escribe el nombre del modelo');
-                    return;
-                }
-            }
-
-            // Si flota es "__nueva__", usar el valor del input
-            if (flotaSelect.value === '__nueva__') {
-                const flotaVal = flotaNuevaInput.value.trim();
-                if (flotaVal) {
-                    // Crear una opción temporal
-                    const opt = document.createElement('option');
-                    opt.value = flotaVal;
-                    opt.textContent = flotaVal;
-                    opt.selected = true;
-                    flotaSelect.appendChild(opt);
-                } else {
-                    e.preventDefault();
-                    alert('⚠️ Escribe el nombre de la flota');
-                    return;
-                }
-            }
-        });
+        // ✅ ANTI-DOBLE CLIC: Deshabilitar botón
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Guardando...';
+        submitBtn.style.opacity = '0.7';
     });
-</script>
-<script>
-// ============================
-// ANTI-DOBLE CLIC EN AGREGAR CLIENTE
-// ============================
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
-    const submitBtn = form?.querySelector('button[type="submit"]');
-    
-    if (form && submitBtn) {
-        form.addEventListener('submit', function(e) {
-            // Deshabilitar botón para evitar doble clic
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '⏳ Guardando...';
-            submitBtn.style.opacity = '0.7';
-            
-            // Si después de 10 segundos no ha respondido, habilitar de nuevo
-            setTimeout(function() {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '💾 Guardar Cliente';
-                submitBtn.style.opacity = '1';
-            }, 10000);
-        });
-    }
-});
 
-// ============================
-// PREVENIR DOBLE CLIC MANUAL
-// ============================
-function prevenirDobleClic(btn) {
-    if (btn.disabled) {
-        return false;
-    }
-    btn.disabled = true;
-    btn.innerHTML = '⏳ Procesando...';
-    btn.style.opacity = '0.7';
-    return true;
-}
+    // ✅ Si el formulario falla, habilitar botón después de 10 segundos
+    // (por si la página no se recarga por error de red)
+    setTimeout(function() {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '💾 Guardar Cliente';
+        submitBtn.style.opacity = '1';
+    }, 10000);
+});
 </script>
 
 {% endblock %}
