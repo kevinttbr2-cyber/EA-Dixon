@@ -917,13 +917,28 @@ function eliminarRegistro(id) {
 function editarRepuestosVenta(id) {
     document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
     
+    console.log('🔍 Editando repuestos de venta ID:', id);
+    
     idVentaEditando = id;
     const modal = document.getElementById('modalEditarRepuestosVenta');
     modal.style.display = 'flex';
     
+    // Mostrar carga
+    document.getElementById('edit_venta_id').textContent = 'Cargando...';
+    document.getElementById('edit_venta_cliente').textContent = 'Cargando...';
+    document.getElementById('edit_venta_total').textContent = 'Cargando...';
+    
     fetch(`${API_URL}/api/registro/${id}`)
-        .then(resp => resp.json())
+        .then(resp => {
+            console.log('📡 Respuesta del servidor:', resp.status);
+            if (!resp.ok) {
+                throw new Error(`Error HTTP: ${resp.status}`);
+            }
+            return resp.json();
+        })
         .then(data => {
+            console.log('📦 Datos recibidos:', data);
+            
             // ✅ DETECTAR TIPO DE VENTA
             tipoVentaEditando = (data.marca && data.marca.trim() !== '') ? 'trabajo' : 'directa';
             
@@ -953,8 +968,10 @@ function editarRepuestosVenta(id) {
             calcularResumenEditar();
         })
         .catch(e => {
-            console.error('Error:', e);
-            alert('❌ Error al cargar los datos');
+            console.error('❌ Error detallado:', e);
+            document.getElementById('edit_venta_id').textContent = 'Error';
+            document.getElementById('edit_venta_cliente').textContent = 'Error al cargar';
+            alert('❌ Error al cargar los datos: ' + e.message);
         });
 }
 
