@@ -1048,7 +1048,7 @@ def venta_rapida():
 
 
 # ============================
-# 19. BALANCE DE VENTAS (CORREGIDO - MANEJA TODOS LOS CASOS)
+# 19. BALANCE DE VENTAS (CORREGIDO - CON total_repuestos)
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
@@ -1076,6 +1076,16 @@ def balance_ventas():
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
+        # ✅ CALCULAR TOTAL REPUESTOS POR REGISTRO
+        for r in registros:
+            total = 0
+            detalles = r.get('detalles_repuestos', [])
+            for item in detalles:
+                cantidad = item.get('cantidad', 1)
+                precio = item.get('costo_unitario', 0) or item.get('costo', 0)
+                total += cantidad * precio
+            r['total_repuestos'] = total
+        
         # ✅ SEPARAR TRABAJO vs DIRECTA
         trabajo = []
         directa = []
@@ -1090,31 +1100,24 @@ def balance_ventas():
                 trabajo.append(r)
         
         # ============================
-        # FUNCIÓN: Calcular Venta de Repuestos
+        # FUNCIONES PARA CALCULAR SOLO REPUESTOS
         # ============================
         def calcular_venta_repuestos(registros):
             total = 0
             for r in registros:
-                # 1. Intentar con detalles_repuestos
                 detalles = r.get('detalles_repuestos', [])
                 if detalles and len(detalles) > 0:
                     for item in detalles:
                         cantidad = int(item.get('cantidad', 1) or 1)
-                        # ✅ Soporta tanto 'costo_unitario' como 'costo'
                         precio_venta = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
                         total += cantidad * precio_venta
                 else:
-                    # 2. Fallback: usar costo_repuestos_real
                     total += float(r.get('costo_repuestos_real', 0) or 0)
             return total
         
-        # ============================
-        # FUNCIÓN: Calcular Costo de Repuestos
-        # ============================
         def calcular_costo_repuestos(registros):
             total = 0
             for r in registros:
-                # 1. Intentar con detalles_repuestos (buscar costo_proveedor en tabla repuestos)
                 detalles = r.get('detalles_repuestos', [])
                 if detalles and len(detalles) > 0:
                     for item in detalles:
@@ -1128,14 +1131,12 @@ def balance_ventas():
                                 costo_prov = float(resultado[0] or 0)
                                 total += costo_prov * cantidad
                             else:
-                                # Si no está en tabla repuestos, usar precio_venta como fallback
                                 precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
                                 total += precio * cantidad
                         else:
                             precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
                             total += precio * cantidad
                 else:
-                    # 2. Fallback: usar costo_repuestos_real
                     total += float(r.get('costo_repuestos_real', 0) or 0)
             return total
         
