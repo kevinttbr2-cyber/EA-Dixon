@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+    .card-flota-pendiente {
+        background: rgba(20,20,20,0.80);
+        border: 1px solid rgba(255,200,0,0.25);
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
+    }
+    .card-flota-pendiente:hover {
+        border-color: rgba(255,200,0,0.50);
+    }
+    .badge-pendiente {
+        background: rgba(255,200,0,0.15);
+        color: #ffcc00;
+        padding: 2px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        border: 1px solid rgba(255,200,0,0.20);
+    }
+    .btn-marcar-pagado {
+        background: #00ff66 !important;
+        color: #000 !important;
+        font-weight: 700;
+        border: none;
+        border-radius: 8px;
+        padding: 6px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .btn-marcar-pagado:hover {
+        background: #00cc52 !important;
+        transform: scale(1.02);
+    }
+</style>
+
+<div class="base-container">
+    <!-- ENCABEZADO -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+        <h2 style="color: #ffcc00; font-weight: 700; margin: 0; font-size: 22px;">
+            🚛 Flotas Pendientes de Cobro
+        </h2>
+        <div style="display: flex; gap: 8px;">
+            <span class="badge-pendiente">
+                <i class="fa-regular fa-clock"></i> {{ flotas|length }} pendientes
+            </span>
+            <a href="/flotas" class="btn btn-sm" style="
+                background: rgba(255,255,255,0.06);
+                color: #888;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 20px;
+                padding: 6px 16px;
+                text-decoration: none;
+                font-size: 13px;
+            ">
+                📋 Ver todas las flotas
+            </a>
+        </div>
+    </div>
+
+    <!-- TOTAL PENDIENTE -->
+    <div style="
+        background: rgba(255,200,0,0.06);
+        border-radius: 10px;
+        padding: 10px 16px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(255,200,0,0.12);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    ">
+        <span style="color: #90e0a0; font-size: 14px;">
+            💰 Total pendiente de cobro:
+            <strong style="color: #ffcc00; font-size: 18px;">
+                ${{ "{:,.0f}".format(total_pendiente) }}
+            </strong>
+        </span>
+        <span style="color: #888; font-size: 12px;">
+            {{ flotas|length }} flota{% if flotas|length > 1 %}s{% endif %} pendiente{% if flotas|length > 1 %}s{% endif %}
+        </span>
+    </div>
+
+    <!-- LISTA DE FLOTAS PENDIENTES -->
+    {% for r in flotas %}
+    <div class="card-flota-pendiente" id="flota-{{ r.id }}">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span style="font-size: 20px;">🚛</span>
+                    <span style="color: #ffcc00; font-weight: 700; font-size: 18px;">
+                        {{ r.flota }}
+                    </span>
+                    <span class="badge-pendiente">
+                        <i class="fa-regular fa-clock"></i> Pendiente
+                    </span>
+                </div>
+                <div style="color: #90e0a0; font-size: 13px; margin-top: 4px;">
+                    👤 {{ r.nombre }}
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="color: #00ff66; font-weight: 700; font-size: 20px;">
+                    ${{ "{:,.0f}".format(r.monto) }}
+                </div>
+                <div style="color: #888; font-size: 12px;">
+                    📅 {{ r.fecha[:10] if r.fecha else '' }}
+                </div>
+            </div>
+        </div>
+
+        <!-- DETALLES -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <div>
+                <span style="color: #888; font-size: 11px;">🚗 Vehículo</span>
+                <div style="color: #fff; font-size: 13px;">{{ r.marca }} {{ r.modelo }}</div>
+            </div>
+            <div>
+                <span style="color: #888; font-size: 11px;">🔢 Patente</span>
+                <div style="color: #fff; font-size: 13px;">{{ r.patente or '-' }}</div>
+            </div>
+            <div>
+                <span style="color: #888; font-size: 11px;">📦 Repuestos</span>
+                <div style="color: #ffcc00; font-size: 13px;">
+                    {% if r.detalles_repuestos %}
+                        {% for item in r.detalles_repuestos %}
+                            {{ item.nombre }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTÓN MARCAR COMO PAGADO -->
+        <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <button onclick="marcarComoPagado({{ r.id }})" class="btn-marcar-pagado">
+                💰 Marcar como Pagado
+            </button>
+            <span style="color: #666; font-size: 11px;">
+                <i class="fa-regular fa-calendar"></i> Elige la fecha real de pago
+            </span>
+        </div>
+    </div>
+    {% else %}
+    <!-- SIN FLOTAS PENDIENTES -->
+    <div style="text-align: center; color: #666; padding: 60px 0;">
+        <i class="fa-solid fa-check-circle" style="font-size: 48px; color: #00ff66; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
+        <p style="font-size: 16px;">🎉 No hay flotas pendientes de cobro</p>
+        <p style="color: #888; font-size: 13px;">Todas las flotas están al día</p>
+    </div>
+    {% endfor %}
+
+    <!-- VOLVER -->
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="/estado" class="btn btn-sm" style="
+            background: rgba(255,255,255,0.06);
+            color: #888;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 8px 24px;
+            text-decoration: none;
+            font-size: 13px;
+        ">
+            ← Volver a Estado
+        </a>
+    </div>
+</div>
+
+<!-- ============================
+     MODAL PARA MARCAR COMO PAGADO
+     ============================ -->
+<div id="modalMarcarPagado" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="background:rgba(15,15,15,0.98);border:2px solid #ffcc00;border-radius:16px;padding:25px 30px;max-width:450px;width:95%;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+            <h3 style="color:#ffcc00;margin:0;font-size:20px;">💰 Marcar como Pagado</h3>
+            <button onclick="cerrarModalPago()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div style="margin-bottom:12px;">
+            <label style="color:#90e0a0;font-size:13px;">📅 Fecha de pago</label>
+            <input type="date" id="fechaPago" class="form-control" value="{{ today }}">
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="color:#90e0a0;font-size:13px;">💳 Forma de pago</label>
+            <select id="formaPago" class="form-control">
+                <option value="transferencia">🏦 Transferencia</option>
+                <option value="efectivo">💵 Efectivo</option>
+                <option value="tarjeta">💳 Tarjeta</option>
+                <option value="cheque">📄 Cheque</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="color:#90e0a0;font-size:13px;">💰 Monto pagado</label>
+            <input type="number" id="montoPagado" class="form-control" step="0.01" placeholder="Monto">
+        </div>
+
+        <div style="display:flex;gap:10px;">
+            <button onclick="confirmarPago()" class="btn btn-primary" style="flex:1;background:#ffcc00 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;cursor:pointer;">
+                ✅ Confirmar Pago
+            </button>
+            <button onclick="cerrarModalPago()" style="
+                background:rgba(255,255,255,0.06);
+                color:#888;
+                border:1px solid rgba(255,255,255,0.08);
+                border-radius:10px;
+                padding:12px 20px;
+                cursor:pointer;
+            ">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_URL = 'https://ea-dixon-production.up.railway.app';
+let idFlotaEditando = null;
+
+// ============================
+// MARCAR COMO PAGADO (abrir modal)
+// ============================
+function marcarComoPagado(id) {
+    idFlotaEditando = id;
+    
+    // Obtener el monto del registro
+    const card = document.getElementById(`flota-${id}`);
+    const montoText = card.querySelector('.card-flota-pendiente .text-right .text-success')?.textContent || '0';
+    const monto = parseFloat(montoText.replace(/[$,]/g, '')) || 0;
+    
+    document.getElementById('montoPagado').value = monto;
+    document.getElementById('fechaPago').value = new Date().toISOString().split('T')[0];
+    document.getElementById('modalMarcarPagado').style.display = 'flex';
+}
+
+// ============================
+// CERRAR MODAL
+// ============================
+function cerrarModalPago() {
+    document.getElementById('modalMarcarPagado').style.display = 'none';
+    idFlotaEditando = null;
+}
+
+// ============================
+// CONFIRMAR PAGO
+// ============================
+function confirmarPago() {
+    if (!idFlotaEditando) {
+        alert('❌ No hay flota seleccionada');
+        return;
+    }
+    
+    const fechaPago = document.getElementById('fechaPago').value;
+    const formaPago = document.getElementById('formaPago').value;
+    const montoPagado = parseFloat(document.getElementById('montoPagado').value) || 0;
+    
+    if (!fechaPago) {
+        alert('⚠️ Selecciona la fecha de pago');
+        return;
+    }
+    
+    if (montoPagado <= 0) {
+        alert('⚠️ Ingresa un monto válido');
+        return;
+    }
+    
+    if (!confirm(`📊 ¿Confirmar pago?\n\n💰 Monto: $${montoPagado.toLocaleString()}\n📅 Fecha: ${fechaPago}\n💳 Forma: ${formaPago}\n\n¿Estás seguro?`)) {
+        return;
+    }
+    
+    const btn = document.querySelector('#modalMarcarPagado .btn-primary');
+    btn.disabled = true;
+    btn.textContent = '⏳ Procesando...';
+    
+    fetch(`${API_URL}/api/validar_flota/${idFlotaEditando}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            fecha_pago: fechaPago,
+            forma_pago: formaPago,
+            monto_pagado: montoPagado
+        })
+    })
+    .then(resp => resp.json())
+    .then(result => {
+        if (result.success) {
+            alert('✅ Pago registrado correctamente');
+            cerrarModalPago();
+            location.reload();
+        } else {
+            alert('❌ Error: ' + (result.error || 'Desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error de conexión');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = '✅ Confirmar Pago';
+    });
+}
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('modalMarcarPagado').addEventListener('click', function(e) {
+    if (e.target === this) {
+        cerrarModalPago();
+    }
+});
+</script>
+
+{% endblock %}
