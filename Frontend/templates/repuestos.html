@@ -30,6 +30,20 @@
                 text-decoration: none;
                 font-size: 13px;
             ">
+                <button onclick="abrirModalImportarProductos()" class="btn btn-sm" style="
+                background: rgba(79,195,247,0.15);
+                color: #4fc3f7;
+                border: 1px solid rgba(79,195,247,0.25);
+                border-radius: 20px;
+                padding: 6px 16px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 13px;
+                cursor: pointer;
+            "> 
+                <i class="fa-solid fa-file-import"></i> Importar productos
+                </button>
+            
                 ← Volver a Registros
             </a>
         </div>
@@ -235,6 +249,108 @@
                 💾 Guardar repuesto
             </button>
         </form>
+    </div>
+</div>
+<!-- ============================
+     MODAL IMPORTAR PRODUCTOS
+     ============================ -->
+<div id="modalImportarProductos" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="background:rgba(15,15,15,0.98);border:2px solid #4fc3f7;border-radius:16px;padding:25px 30px;max-width:600px;width:95%;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+            <h3 style="color:#4fc3f7;margin:0;font-size:20px;">📂 Importar Productos</h3>
+            <button onclick="cerrarModalImportarProductos()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div style="margin-bottom:15px;padding:12px;background:rgba(79,195,247,0.06);border-radius:8px;border:1px solid rgba(79,195,247,0.15);">
+            <p style="color:#888;font-size:12px;margin:0 0 8px 0;">
+                <i class="fa-solid fa-info-circle" style="color:#4fc3f7;"></i> 
+                El archivo Excel debe tener estas columnas (en este orden):
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;color:#aaa;">
+                <span>1. <strong style="color:#fff;">Nombre</strong> *</span>
+                <span style="color:#666;">Ej: "Filtro de aceite"</span>
+                <span>2. <strong style="color:#fff;">Costo Proveedor</strong> *</span>
+                <span style="color:#666;">Ej: 15000</span>
+                <span>3. <strong style="color:#fff;">Margen %</strong></span>
+                <span style="color:#666;">Ej: 30 (opcional, por defecto 30%)</span>
+                <span>4. <strong style="color:#fff;">Proveedor</strong></span>
+                <span style="color:#666;">Ej: "Bosch" (opcional)</span>
+            </div>
+        </div>
+
+        <div style="border:2px dashed rgba(79,195,247,0.3);border-radius:12px;padding:20px;text-align:center;cursor:pointer;" 
+             id="dropZoneProductos"
+             ondrop="handleDropProductos(event)"
+             ondragover="handleDragOverProductos(event)"
+             ondragleave="handleDragLeaveProductos(event)">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size:40px;color:#4fc3f7;opacity:0.5;display:block;margin-bottom:10px;"></i>
+            <p style="color:#888;font-size:14px;margin:0;">
+                <strong style="color:#fff;">Arrastra tu archivo Excel</strong> o haz clic para seleccionarlo
+            </p>
+            <p style="color:#666;font-size:12px;">.xlsx, .xls</p>
+            <input type="file" id="fileInputProductos" accept=".xlsx,.xls" style="display:none;" onchange="handleFileSelectProductos(event)">
+            <button onclick="document.getElementById('fileInputProductos').click()" style="
+                margin-top:10px;
+                background:rgba(79,195,247,0.15);
+                color:#4fc3f7;
+                border:1px solid rgba(79,195,247,0.25);
+                border-radius:8px;
+                padding:6px 18px;
+                font-size:13px;
+                cursor:pointer;
+            ">
+                <i class="fa-solid fa-folder-open"></i> Seleccionar archivo
+            </button>
+        </div>
+
+        <div id="previewProductos" style="display:none;margin-top:15px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="color:#888;font-size:13px;">📊 Vista previa:</span>
+                <span id="contadorProductos" style="color:#00ff66;font-size:13px;font-weight:600;">0 registros</span>
+            </div>
+            <div style="overflow-x:auto;max-height:150px;overflow-y:auto;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+                <table style="width:100%;font-size:12px;border-collapse:collapse;">
+                    <thead style="background:rgba(79,195,247,0.1);position:sticky;top:0;">
+                        <tr>
+                            <th style="padding:4px 6px;color:#4fc3f7;">#</th>
+                            <th style="padding:4px 6px;color:#4fc3f7;">Nombre</th>
+                            <th style="padding:4px 6px;color:#4fc3f7;">Costo</th>
+                            <th style="padding:4px 6px;color:#4fc3f7;">Margen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewBodyProductos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">
+            <button onclick="cerrarModalImportarProductos()" style="
+                background:rgba(255,255,255,0.05);
+                color:#888;
+                border:1px solid rgba(255,255,255,0.08);
+                border-radius:8px;
+                padding:8px 20px;
+                font-size:13px;
+                cursor:pointer;
+            ">
+                Cancelar
+            </button>
+            <button id="btnImportarProductos" onclick="importarProductos()" style="
+                background:#4fc3f7 !important;
+                color:#000 !important;
+                font-weight:700;
+                border:none;
+                border-radius:8px;
+                padding:8px 20px;
+                font-size:13px;
+                cursor:pointer;
+                display:none;
+            ">
+                <i class="fa-solid fa-upload"></i> Importar {count} productos
+            </button>
+        </div>
     </div>
 </div>
 
@@ -515,6 +631,170 @@
                 calcularCostoVentaEdit();
             }
         });
+// ============================
+// IMPORTAR PRODUCTOS DESDE EXCEL
+// ============================
+let datosProductos = [];
+
+function abrirModalImportarProductos() {
+    document.getElementById('modalImportarProductos').style.display = 'flex';
+    document.getElementById('previewProductos').style.display = 'none';
+    document.getElementById('btnImportarProductos').style.display = 'none';
+    document.getElementById('fileInputProductos').value = '';
+    datosProductos = [];
+}
+
+function cerrarModalImportarProductos() {
+    document.getElementById('modalImportarProductos').style.display = 'none';
+}
+
+function handleDropProductos(e) {
+    e.preventDefault();
+    const dropZone = document.getElementById('dropZoneProductos');
+    dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        procesarArchivoProductos(files[0]);
+    }
+}
+
+function handleDragOverProductos(e) {
+    e.preventDefault();
+    document.getElementById('dropZoneProductos').style.borderColor = '#4fc3f7';
+}
+
+function handleDragLeaveProductos(e) {
+    e.preventDefault();
+    document.getElementById('dropZoneProductos').style.borderColor = 'rgba(79,195,247,0.3)';
+}
+
+function handleFileSelectProductos(e) {
+    const file = e.target.files[0];
+    if (file) {
+        procesarArchivoProductos(file);
+    }
+}
+
+function procesarArchivoProductos(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+            
+            if (jsonData.length === 0) {
+                alert('⚠️ El archivo está vacío');
+                return;
+            }
+            
+            // Procesar datos
+            datosProductos = jsonData.map(row => {
+                const valores = Object.values(row);
+                const nombre = String(valores[0] || '').trim();
+                const costo = parseFloat(String(valores[1] || '0').replace(/[$,]/g, '')) || 0;
+                const margen = parseFloat(String(valores[2] || '30').replace('%', '')) || 30;
+                const proveedor = String(valores[3] || '').trim();
+                
+                return { nombre, costo, margen, proveedor };
+            }).filter(item => item.nombre && item.costo > 0);
+            
+            if (datosProductos.length === 0) {
+                alert('⚠️ No hay datos válidos para importar');
+                return;
+            }
+            
+            mostrarPreviewProductos(datosProductos);
+            
+        } catch (error) {
+            alert('❌ Error al leer el archivo: ' + error.message);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function mostrarPreviewProductos(datos) {
+    const previewBody = document.getElementById('previewBodyProductos');
+    const previewContainer = document.getElementById('previewProductos');
+    const btnImportar = document.getElementById('btnImportarProductos');
+    const contador = document.getElementById('contadorProductos');
+    
+    previewBody.innerHTML = '';
+    const mostrar = datos.slice(0, 10);
+    mostrar.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+        tr.innerHTML = `
+            <td style="padding:4px 6px;color:#666;">${index + 1}</td>
+            <td style="padding:4px 6px;color:#fff;">${item.nombre}</td>
+            <td style="padding:4px 6px;color:#ffcc00;">$${item.costo.toLocaleString('es-CL')}</td>
+            <td style="padding:4px 6px;color:#4fc3f7;">${item.margen}%</td>
+        `;
+        previewBody.appendChild(tr);
+    });
+    
+    if (datos.length > 10) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="4" style="padding:6px;text-align:center;color:#666;">... y ${datos.length - 10} más</td>`;
+        previewBody.appendChild(tr);
+    }
+    
+    contador.textContent = `${datos.length} registros`;
+    previewContainer.style.display = 'block';
+    btnImportar.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datos.length} productos`;
+    btnImportar.style.display = 'block';
+}
+
+async function importarProductos() {
+    if (datosProductos.length === 0) {
+        alert('⚠️ No hay datos para importar');
+        return;
+    }
+    
+    if (!confirm(`📊 ¿Importar ${datosProductos.length} productos?\n\nSe agregarán a la lista de repuestos.`)) {
+        return;
+    }
+    
+    const btn = document.getElementById('btnImportarProductos');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
+    
+    let importados = 0;
+    let errores = 0;
+    
+    for (const item of datosProductos) {
+        const iva = 1.19;
+        const costoConIva = item.costo * iva;
+        const costoVentaFinal = Math.round(costoConIva * (1 + (item.margen / 100)));
+        
+        try {
+            const resp = await fetch(`${API_URL}/api/repuestos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: item.nombre,
+                    costo_proveedor: item.costo,
+                    margen_ganancia: item.margen,
+                    proveedor: item.proveedor || 'Importado',
+                    costo_venta_final: costoVentaFinal
+                })
+            });
+            const result = await resp.json();
+            if (result.success) {
+                importados++;
+            } else {
+                errores++;
+            }
+        } catch (error) {
+            errores++;
+        }
+    }
+    
+    alert(`✅ Importación completada!\n\n📊 ${importados} importados\n${errores > 0 ? `⚠️ ${errores} con errores` : ''}`);
+    cerrarModalImportarProductos();
+    if (importados > 0) location.reload();
+}
 
         // ============================
         // 6. AGREGAR REPUESTO
