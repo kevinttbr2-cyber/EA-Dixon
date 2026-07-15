@@ -220,7 +220,7 @@
                 <th>ID</th>
                 <th>Cliente</th>
                 <th>Productos</th>
-                <th>Total</th>
+                <th>Total Venta</th>
                 <th>Fecha</th>
                 <th>Tipo</th>
             </tr>
@@ -245,15 +245,7 @@
                     {% endif %}
                 </td>
                 <td style="color: #00ff66; font-weight: 600;">
-                    {% set total_repuestos = 0 %}
-                    {% if r.detalles_repuestos %}
-                        {% for item in r.detalles_repuestos %}
-                            {% set cantidad = item.cantidad|default(1) %}
-                            {% set precio = item.costo_unitario|default(item.costo|default(0)) %}
-                            {% set total_repuestos = total_repuestos + (cantidad * precio) %}
-                        {% endfor %}
-                    {% endif %}
-                    ${{ "{:,.0f}".format(total_repuestos) }}
+                    ${{ "{:,.0f}".format(r.total_repuestos) }}
                 </td>
                 <td>{{ r.fecha }}</td>
                 <td>
