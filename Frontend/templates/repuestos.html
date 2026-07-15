@@ -8,45 +8,48 @@
             🔧 Listado de Repuestos
         </h2>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button onclick="abrirModalAgregar()" class="btn btn-sm" style="
-                background: rgba(0,255,102,0.15);
-                color: #00ff66;
-                border: 1px solid rgba(0,255,102,0.25);
-                border-radius: 20px;
-                padding: 6px 16px;
-                text-decoration: none;
-                font-weight: 600;
-                font-size: 13px;
-                cursor: pointer;
-            ">
-                <i class="fa-solid fa-plus"></i> Agregar repuesto
-            </button>
-            <a href="/registros" class="btn btn-sm" style="
-                background: rgba(255,255,255,0.06);
-                color: #888;
-                border: 1px solid rgba(255,255,255,0.08);
-                border-radius: 20px;
-                padding: 6px 16px;
-                text-decoration: none;
-                font-size: 13px;
-            ">
-                <button onclick="abrirModalImportarProductos()" class="btn btn-sm" style="
-                background: rgba(79,195,247,0.15);
-                color: #4fc3f7;
-                border: 1px solid rgba(79,195,247,0.25);
-                border-radius: 20px;
-                padding: 6px 16px;
-                text-decoration: none;
-                font-weight: 600;
-                font-size: 13px;
-                cursor: pointer;
-            "> 
-                <i class="fa-solid fa-file-import"></i> Importar productos
-                </button>
-            
-                ← Volver a Registros
-            </a>
-        </div>
+    <button onclick="abrirModalAgregar()" class="btn btn-sm" style="
+        background: rgba(0,255,102,0.15);
+        color: #00ff66;
+        border: 1px solid rgba(0,255,102,0.25);
+        border-radius: 20px;
+        padding: 6px 16px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+    ">
+        <i class="fa-solid fa-plus"></i> Agregar repuesto
+    </button>
+    
+    <!-- ✅ BOTÓN IMPORTAR (FUERA DEL <a>) -->
+    <button onclick="abrirModalImportarProductos()" class="btn btn-sm" style="
+        background: rgba(79,195,247,0.15);
+        color: #4fc3f7;
+        border: 1px solid rgba(79,195,247,0.25);
+        border-radius: 20px;
+        padding: 6px 16px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+    ">
+        <i class="fa-solid fa-file-import"></i> Importar productos
+    </button>
+    
+    <!-- ✅ VOLVER A REGISTROS (SOLO) -->
+    <a href="/registros" class="btn btn-sm" style="
+        background: rgba(255,255,255,0.06);
+        color: #888;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 20px;
+        padding: 6px 16px;
+        text-decoration: none;
+        font-size: 13px;
+    ">
+        ← Volver a Registros
+    </a>
+</div>
     </div>
 
     <!-- Leyenda de repuestos pendientes -->
