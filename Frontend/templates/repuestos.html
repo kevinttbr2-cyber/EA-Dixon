@@ -1048,6 +1048,60 @@ document.getElementById('formEditarRepuesto').addEventListener('submit', functio
                 .catch(() => alert('❌ Error de conexión'));
             });
         });
+function procesarArchivoProductos(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+            
+            if (jsonData.length === 0) {
+                alert('⚠️ El archivo está vacío');
+                return;
+            }
+            
+            // ✅ LEER COLUMNAS REALES
+            datosProductos = jsonData.map(row => {
+                // Buscar las columnas por nombre (flexible)
+                const nombre = row['Producto'] || row['nombre'] || '';
+                const costo = parseFloat(row['Costo Proveedor'] || row['costo_proveedor'] || 0);
+                const precioVenta = parseFloat(row['Precio Venta'] || row['precio_venta'] || 0);
+                const margen = parseFloat(row['Margen %'] || row['margen'] || 0);
+                const proveedor = row['Proveedor'] || row['proveedor'] || 'Importado';
+                
+                // Si no tiene margen, calcularlo
+                let margenFinal = margen;
+                if (margenFinal === 0 && costo > 0 && precioVenta > 0) {
+                    const iva = 1.19;
+                    const costoConIva = costo * iva;
+                    margenFinal = ((precioVenta / costoConIva) - 1) * 100;
+                    margenFinal = Math.round(margenFinal * 10) / 10;
+                }
+                
+                return { 
+                    nombre: String(nombre).trim(), 
+                    costo: costo,
+                    precio_venta: precioVenta,
+                    margen: margenFinal,
+                    proveedor: proveedor || 'Importado'
+                };
+            }).filter(item => item.nombre && item.costo > 0);
+            
+            if (datosProductos.length === 0) {
+                alert('⚠️ No hay datos válidos para importar');
+                return;
+            }
+            
+            mostrarPreviewProductos(datosProductos);
+            
+        } catch (error) {
+            alert('❌ Error al leer el archivo: ' + error.message);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
 
         // ============================
         // 11. CERRAR MODALES AL HACER CLICK FUERA
