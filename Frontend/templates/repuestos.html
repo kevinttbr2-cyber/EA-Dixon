@@ -7,7 +7,7 @@
         <h2 style="color: #00ff66; font-weight: 700; margin: 0; font-size: 22px;">
             🔧 Listado de Repuestos
         </h2>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button onclick="abrirModalAgregar()" class="btn btn-sm" style="
                 background: rgba(0,255,102,0.15);
                 color: #00ff66;
@@ -21,7 +21,7 @@
             ">
                 <i class="fa-solid fa-plus"></i> Agregar repuesto
             </button>
-    
+            
             <button onclick="abrirModalImportarProductos()" class="btn btn-sm" style="
                 background: rgba(79,195,247,0.15);
                 color: #4fc3f7;
@@ -35,7 +35,7 @@
             ">
                 <i class="fa-solid fa-file-import"></i> Importar productos
             </button>
-    
+            
             <a href="/registros" class="btn btn-sm" style="
                 background: rgba(255,255,255,0.06);
                 color: #888;
@@ -252,6 +252,7 @@
         </form>
     </div>
 </div>
+
 <!-- ============================
      MODAL IMPORTAR PRODUCTOS
      ============================ -->
@@ -429,6 +430,7 @@
         </form>
     </div>
 </div>
+
 <script>
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
@@ -493,6 +495,7 @@ function procesarArchivoProductos(file) {
                 return;
             }
             
+            // ✅ LEER COLUMNAS REALES
             datosProductos = jsonData.map(row => {
                 const nombre = row['Producto'] || row['nombre'] || '';
                 const costo = parseFloat(row['Costo Proveedor'] || row['costo_proveedor'] || 0);
@@ -583,7 +586,7 @@ async function importarProductos() {
     for (const item of datosProductos) {
         const iva = 1.19;
         const costoConIva = item.costo * iva;
-        const costoVentaFinal = Math.round(costoConIva * (1 + (item.margen / 100)));
+        const costoVentaFinal = Math.floor(costoConIva * (1 + (item.margen / 100))); // ✅ FLOOR
         
         try {
             const resp = await fetch(`${API_URL}/api/repuestos`, {
@@ -671,7 +674,7 @@ document.addEventListener('DOMContentLoaded', function() {
         filasArray.forEach(fila => tbody.appendChild(fila));
     };
 
-    // CALCULAR COSTO VENTA (AGREGAR)
+    // CALCULAR COSTO VENTA (AGREGAR) - CON FLOOR
     function calcularCostoVenta() {
         const costoProveedor = parseFloat(document.getElementById('inputCostoProveedor').value) || 0;
         const margen = parseFloat(document.getElementById('inputMargenGanancia').value) || 0;
@@ -732,7 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('inputCostoVentaFinal').disabled = true;
     document.getElementById('inputCostoVentaFinal').style.opacity = '0.5';
 
-    // CALCULAR EN EDITAR
+    // CALCULAR EN EDITAR - CON FLOOR
     function calcularCostoVentaEdit() {
         const costoProveedor = parseFloat(document.getElementById('editCostoProveedor').value) || 0;
         const margen = parseFloat(document.getElementById('editMargenGanancia').value) || 0;
@@ -912,7 +915,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const iva = 1.19;
             const costoConIva = costoProveedor * iva;
-            const costoFinalCalculado = Math.round(costoConIva * (1 + (margen / 100)));
+            const costoFinalCalculado = Math.floor(costoConIva * (1 + (margen / 100)));
             const coincideConMargen = Math.abs(costoVentaFinal - costoFinalCalculado) < 1;
             
             document.getElementById('editMargenGanancia').dataset.usuarioModifico = 'false';
@@ -1056,4 +1059,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
+
 {% endblock %}
