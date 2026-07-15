@@ -1139,6 +1139,24 @@ def balance_ventas():
                 else:
                     total += float(r.get('costo_repuestos_real', 0) or 0)
             return total
+                # ============================
+        # FUNCIÓN: Calcular Margen Promedio
+        # ============================
+        def calcular_margen_promedio(registros):
+            """Calcula el margen promedio de los repuestos vendidos"""
+            margenes = []
+            for r in registros:
+                detalles = r.get('detalles_repuestos', [])
+                for item in detalles:
+                    nombre = item.get('nombre', '')
+                    if nombre:
+                        cur.execute("SELECT margen_ganancia FROM repuestos WHERE nombre ILIKE %s", (nombre,))
+                        resultado = cur.fetchone()
+                        if resultado and resultado[0] is not None and resultado[0] > 0:
+                            margenes.append(float(resultado[0]))
+            if margenes:
+                return sum(margenes) / len(margenes)
+            return 0
         
         # ============================
         # CALCULAR TOTALES
@@ -1149,6 +1167,9 @@ def balance_ventas():
         
         costo_trabajo = calcular_costo_repuestos(trabajo)
         costo_directa = calcular_costo_repuestos(directa)
+
+        trabajo_margen = calcular_margen_promedio(trabajo)
+        directa_margen = calcular_margen_promedio(directa)
         
         ganancia_trabajo = total_trabajo - costo_trabajo
         ganancia_directa = total_directa - costo_directa
@@ -1167,8 +1188,8 @@ def balance_ventas():
             "ganancia_neta": round(ganancia_neta, 2),
             "total_repuestos_trabajo": round(costo_trabajo, 2),
             "total_repuestos_directa": round(costo_directa, 2),
-            "trabajo_margen": 0,
-            "directa_margen": 0
+            "trabajo_margen": round(trabajo_margen, 1),
+            "directa_margen": round(directa_margen, 1)
         })
     except Exception as e:
         print(f"❌ Error en balance_ventas: {e}")
