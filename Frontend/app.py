@@ -34,11 +34,17 @@ VAPID_EMAIL = os.environ.get("VAPID_EMAIL", "admin@dixon.cl")
 # ============================
 # SUSCRIPCIONES (guardar en Neon)
 # ============================
+def get_db_connection():
+    """Obtiene conexión a Neon usando DATABASE_URL"""
+    DATABASE_URL = os.environ.get("DATABASE_URL")
+    if not DATABASE_URL:
+        raise Exception("DATABASE_URL no configurada en Vercel")
+    return psycopg2.connect(DATABASE_URL)
+
 def cargar_suscripciones():
     """Carga suscripciones desde Neon"""
     try:
-        from database import get_connection
-        conn = get_connection()
+        conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("SELECT endpoint, auth_key, p256dh_key FROM push_subscriptions")
         rows = cur.fetchall()
@@ -62,13 +68,12 @@ def cargar_suscripciones():
 def guardar_suscripcion(suscripcion):
     """Guarda suscripción en Neon"""
     try:
-        from database import get_connection
         endpoint = suscripcion.get('endpoint', '')
         keys = suscripcion.get('keys', {})
         auth_key = keys.get('auth', '')
         p256dh_key = keys.get('p256dh', '')
         
-        conn = get_connection()
+        conn = get_db_connection()
         cur = conn.cursor()
         
         # Eliminar duplicado
@@ -88,7 +93,6 @@ def guardar_suscripcion(suscripcion):
     except Exception as e:
         logger.error(f"Error guardando suscripción: {e}")
         return False
-
 # ============================
 # ENVIAR NOTIFICACIONES PUSH
 # ============================
