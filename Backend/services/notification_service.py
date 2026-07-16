@@ -50,8 +50,10 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
     print(f"📌 Título: {titulo}")
     print(f"📌 Mensaje: {mensaje}")
     print(f"📌 URL: {url}")
+    print(f"📌 ID: {id}")
     print(f"🔑 VAPID_PRIVATE_KEY: {'✅' if VAPID_PRIVATE_KEY else '❌'} (longitud: {len(VAPID_PRIVATE_KEY)})")
     print(f"🔑 VAPID_PUBLIC_KEY: {'✅' if VAPID_PUBLIC_KEY else '❌'} (longitud: {len(VAPID_PUBLIC_KEY)})")
+    print(f"📧 VAPID_EMAIL: {VAPID_EMAIL}")
     
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
         print("❌ VAPID keys no configuradas")
