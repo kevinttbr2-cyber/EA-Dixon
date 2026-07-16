@@ -23,12 +23,6 @@ app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
 PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
 
 # ============================
-# VAPID KEYS (desde variables de entorno)
-# ============================
-
-"connect-src 'self' https://ea-dixon-production.up.railway.app https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com https://code.jquery.com; "
-
-# ============================
 # CONFIGURACIÓN DE LOGS PERSISTENTES
 # ============================
 IS_VERCEL = os.environ.get('VERCEL_ENV') == 'production' or os.environ.get('VERCEL')
@@ -102,29 +96,6 @@ app.jinja_env.filters['strftime'] = lambda date, fmt: date.strftime(fmt) if date
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
 
 # ============================
-# HEADERS DE SEGURIDAD
-# ============================
-#@app.after_request
-#def add_security_headers(response):
- #   response.headers['X-Content-Type-Options'] = 'nosniff'
-  #  response.headers['X-Frame-Options'] = 'DENY'
-   # response.headers['X-XSS-Protection'] = '1; mode=block'
-   # response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-   # response.headers['Content-Security-Policy'] = (
-      #  "default-src 'self'; "
-      #  "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://code.jquery.com 'unsafe-inline'; "
-      #  "style-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'; "
-      #  "img-src 'self' data:; "
-      #  "font-src 'self' https://cdnjs.cloudflare.com; "
-      #  "connect-src 'self' https://ea-dixon-production.up.railway.app; "
-      #  "frame-ancestors 'none'; "
-      #  "form-action 'self'; "
-      ##  "base-uri 'self'; "
-     #   "upgrade-insecure-requests"
-    #)
-   # return response
-
-# ============================
 # SANITIZACIÓN
 # ============================
 def sanitizar_input(texto):
@@ -174,22 +145,7 @@ def generar_firma_pdf(id_reg):
         str(id_reg).encode(),
         hashlib.sha256
     ).hexdigest()[:16]
-@app.route('/debug_push')
-@login_required
-@role_required(['admin'])
-def debug_push():
-    suscripciones = cargar_suscripciones()
-    return jsonify({
-        "total": len(suscripciones),
-        "vapid_public": VAPID_PUBLIC_KEY[:20] + "..." if VAPID_PUBLIC_KEY else "NO",
-        "vapid_private": "✅" if VAPID_PRIVATE_KEY else "❌",
-        "suscripciones": [
-            {
-                "endpoint": s.get('endpoint', '')[:50] + "...",
-                "keys": s.get('keys', {})
-            } for s in suscripciones[:1]
-        ] if suscripciones else []
-    })
+
 # ============================
 # CONTEXT PROCESSOR
 # ============================
@@ -228,7 +184,6 @@ def inject_globals():
         print(f"⚠️ Error al obtener flotas pendientes: {e}")
         flotas_pendientes_count = 0
     
-    # ✅ AGREGAR VAPID PUBLIC KEY
     vapid_public_key = os.environ.get("VAPID_PUBLIC_KEY", "")
     
     return dict(
@@ -236,7 +191,7 @@ def inject_globals():
         fecha_espanol=fecha_espanol,
         fecha_corta_espanol=fecha_corta_espanol,
         flotas_pendientes_count=flotas_pendientes_count,
-        vapid_public_key=vapid_public_key  # ✅ NUEVO
+        vapid_public_key=vapid_public_key
     )
 
 # ============================
@@ -297,19 +252,6 @@ def verificar_sesion():
     })
 
 # ============================
-# RUTA PARA GUARDAR SUSCRIPCIÓN
-# ============================
-@app.route('/api/guardar_suscripcion', methods=['POST'])
-def guardar_suscripcion_route():
-    try:
-        data = request.json
-        guardar_suscripcion(data)
-        logger.info(f"✅ Suscripción push guardada")
-        return jsonify({"success": True})
-    except Exception as e:
-        logger.error(f"Error al guardar suscripción: {e}")
-        return jsonify({"success": False}), 500
-# ============================
 # PROXY PARA GUARDAR SUSCRIPCIÓN (SOLO REENVÍA AL BACKEND)
 # ============================
 @app.route('/api/guardar_suscripcion', methods=['POST'])
@@ -319,7 +261,6 @@ def guardar_suscripcion_route():
         data = request.json
         backend_url = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
         
-        # Reenviar al backend
         resp = requests.post(
             f"{backend_url}/api/guardar_suscripcion",
             json=data,
@@ -337,6 +278,7 @@ def guardar_suscripcion_route():
     except Exception as e:
         logger.error(f"Error al guardar suscripción: {e}")
         return jsonify({"success": False}), 500
+
 # ============================
 # ESTADO
 # ============================
@@ -426,7 +368,6 @@ def agregar():
             return redirect("/agregar_cliente")
         
         logger.info(f"✅ Cliente agregado exitosamente por '{usuario}': '{nombre}', patente: '{patente}'")
-        
         flash('✅ Cliente registrado correctamente', 'success')
     except Exception as e:
         logger.error(f"⚠️ Error en /agregar: {str(e)}")
@@ -455,7 +396,6 @@ def pagar(id_reg):
         return "Error de conexión", 500
     
     if request.method == 'POST':
-        # ✅ SANITIZAR
         monto = float(request.form.get('monto', 0))
         forma_pago = sanitizar_input(request.form.get('forma_pago', 'efectivo').strip())
         observaciones_pago = sanitizar_input(request.form.get('observaciones_pago', '').strip())
@@ -464,7 +404,6 @@ def pagar(id_reg):
         resultado = sanitizar_input(request.form.get('resultado', 'reparado').strip())
         tiempo_estimado = sanitizar_input(request.form.get('tiempo_estimado', '00:00:00').strip())
         
-        # ✅ Validar que el monto sea mayor a 0
         if monto <= 0:
             logger.warning(f"⚠️ Intento de pago con monto 0 o negativo ID {id_reg}")
             flash('⚠️ El monto debe ser mayor a 0', 'error')
@@ -487,7 +426,6 @@ def pagar(id_reg):
             resp = requests.post(f"{BACKEND_URL}/api/pagar/{id_reg}", json=data, timeout=10)
             if resp.status_code == 200:
                 logger.info(f"✅ Pago ID {id_reg} completado por '{usuario}' - monto: ${monto}")
-                
                 return redirect(f"/pago_exitoso/{id_reg}")
             logger.error(f"❌ Error en pago ID {id_reg}: {resp.text}")
             flash('❌ Error al procesar el pago', 'error')
@@ -619,12 +557,10 @@ def validar_pago(id_reg):
     if request.method == 'POST':
         logger.info(f"📝 Usuario '{usuario}' enviando validación para ID {id_reg}")
         
-        # ✅ SANITIZAR
         validado_por = sanitizar_input(request.form.get('validado_por', '').strip())
         if not validado_por:
             validado_por = session.get('nombre_completo', session.get('usuario'))
         
-        # ✅ Sanitizar nombres de repuestos
         nombres_repuestos = request.form.getlist('repuesto_nombre[]')
         nombres_repuestos = [sanitizar_input(n) for n in nombres_repuestos]
         costos_repuestos = request.form.getlist('repuesto_costo[]')
@@ -641,7 +577,6 @@ def validar_pago(id_reg):
                     'costo': costo
                 })
         
-        # ✅ SANITIZAR campos de texto
         observaciones_pago = sanitizar_input(request.form.get('observaciones_costos', '').strip())
         diagnostico = sanitizar_input(request.form.get('diagnostico', '').strip())
         reparacion = sanitizar_input(request.form.get('reparacion', 'Reparación realizada').strip())
@@ -649,12 +584,10 @@ def validar_pago(id_reg):
         tiempo_estimado = sanitizar_input(request.form.get('tiempo_estimado', '00:00:00').strip())
         estado_ot = sanitizar_input(request.form.get('estado_ot', 'Pendiente').strip())
         
-        # ✅ Validar que haya al menos un repuesto
         if not detalles_repuestos:
             flash('⚠️ Debes agregar al menos un repuesto para validar.', 'warning')
             return render_template("validar_pago.html", id=id_reg, registro=registro, usuarios=usuarios, error=None)
         
-        # ✅ Validar que costo_repuestos sea mayor a 0 o que haya repuestos
         costo_repuestos_total = float(request.form.get('costo_repuestos', 0))
         if costo_repuestos_total <= 0 and not detalles_repuestos:
             flash('⚠️ El costo de repuestos debe ser mayor a 0.', 'warning')
@@ -679,7 +612,6 @@ def validar_pago(id_reg):
             resp = requests.post(f"{BACKEND_URL}/api/validar_pago/{id_reg}", json=data, timeout=10)
             if resp.status_code == 200:
                 logger.info(f"✅ Validación completada para ID {id_reg} por '{usuario}'")
-                
                 return redirect(f"/pago_validado/{id_reg}")
             error = resp.json().get('error', 'Error al validar')
             logger.error(f"❌ Error en validación ID {id_reg}: {error}")
@@ -802,7 +734,6 @@ def modelos(marca):
 def editar_completo(id_reg):
     data = request.json
     
-    # ✅ SANITIZAR TODOS LOS CAMPOS DE TEXTO
     campos_texto = [
         'nombre', 'telefono', 'patente', 'marca', 'modelo', 'flota', 
         'observaciones_cliente', 'diagnostico', 'reparacion', 'resultado',
@@ -813,11 +744,9 @@ def editar_completo(id_reg):
         if campo in data and data[campo] is not None:
             data[campo] = sanitizar_input(str(data[campo]))
     
-    # ✅ Sanitizar patente específicamente
     if 'patente' in data and data['patente']:
         data['patente'] = sanitizar_patente(data['patente'])
     
-    # ✅ Sanitizar campos numéricos (asegurar que sean números)
     campos_numericos = [
         'monto', 'anio', 'costo_repuestos_real', 'costo_mano_obra_real',
         'costo_diagnostico_real', 'ganancia_neta', 'kilometraje'
@@ -830,11 +759,9 @@ def editar_completo(id_reg):
             except (ValueError, TypeError):
                 data[campo] = 0
     
-    # ✅ Sanitizar booleano
     if 'validado' in data:
         data['validado'] = bool(data['validado'])
     
-    # ✅ Sanitizar fecha y hora (si existen)
     if 'fecha' in data and data['fecha']:
         import re
         if not re.match(r'^\d{4}-\d{2}-\d{2}$', data['fecha']):
@@ -845,7 +772,6 @@ def editar_completo(id_reg):
         if not re.match(r'^\d{2}:\d{2}:\d{2}$', data['hora']):
             data['hora'] = '00:00:00'
     
-    # ✅ Validar que campos obligatorios no estén vacíos
     if not data.get('nombre') or not data.get('nombre').strip():
         return jsonify({"success": False, "error": "El nombre es obligatorio"}), 400
     
