@@ -400,17 +400,30 @@ def pagar(id_reg):
         return "Error de conexión", 500
     
     if request.method == 'POST':
+        # ✅ SANITIZAR
         monto = float(request.form.get('monto', 0))
-        forma_pago = request.form.get('forma_pago', 'efectivo')
+        forma_pago = sanitizar_input(request.form.get('forma_pago', 'efectivo').strip())
+        observaciones_pago = sanitizar_input(request.form.get('observaciones_pago', '').strip())
+        diagnostico = sanitizar_input(request.form.get('diagnostico', '').strip())
+        reparacion = sanitizar_input(request.form.get('reparacion', 'Reparación realizada').strip())
+        resultado = sanitizar_input(request.form.get('resultado', 'reparado').strip())
+        tiempo_estimado = sanitizar_input(request.form.get('tiempo_estimado', '00:00:00').strip())
+        
+        # ✅ Validar que el monto sea mayor a 0
+        if monto <= 0:
+            logger.warning(f"⚠️ Intento de pago con monto 0 o negativo ID {id_reg}")
+            flash('⚠️ El monto debe ser mayor a 0', 'error')
+            return render_template("pagar.html", id=id_reg, registro=registro)
+        
         logger.info(f"💳 Usuario '{usuario}' procesando pago ID {id_reg}: monto ${monto}, forma: {forma_pago}")
         
         data = {
             'monto': monto,
-            'observaciones_pago': request.form.get('observaciones_pago', ''),
-            'diagnostico': request.form.get('diagnostico', ''),
-            'reparacion': request.form.get('reparacion', 'Reparación realizada'),
-            'resultado': request.form.get('resultado', 'reparado'),
-            'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
+            'observaciones_pago': observaciones_pago,
+            'diagnostico': diagnostico,
+            'reparacion': reparacion,
+            'resultado': resultado,
+            'tiempo_estimado': tiempo_estimado,
             'atendido_por': session.get('nombre_completo', session.get('usuario')),
             'forma_pago': forma_pago
         }
@@ -421,10 +434,12 @@ def pagar(id_reg):
                 logger.info(f"✅ Pago ID {id_reg} completado por '{usuario}' - monto: ${monto}")
                 return redirect(f"/pago_exitoso/{id_reg}")
             logger.error(f"❌ Error en pago ID {id_reg}: {resp.text}")
-            return f"Error al procesar el pago: {resp.text}", 500
+            flash('❌ Error al procesar el pago', 'error')
+            return render_template("pagar.html", id=id_reg, registro=registro)
         except Exception as e:
             logger.error(f"⚠️ Error en pago ID {id_reg}: {str(e)}")
-            return "Error de conexión", 500
+            flash('⚠️ Error de conexión', 'error')
+            return render_template("pagar.html", id=id_reg, registro=registro)
     
     return render_template("pagar.html", id=id_reg, registro=registro)
 
@@ -548,34 +563,60 @@ def validar_pago(id_reg):
     if request.method == 'POST':
         logger.info(f"📝 Usuario '{usuario}' enviando validación para ID {id_reg}")
         
-        validado_por = request.form.get('validado_por', '').strip()
+        # ✅ SANITIZAR
+        validado_por = sanitizar_input(request.form.get('validado_por', '').strip())
         if not validado_por:
             validado_por = session.get('nombre_completo', session.get('usuario'))
         
+        # ✅ Sanitizar nombres de repuestos
         nombres_repuestos = request.form.getlist('repuesto_nombre[]')
-        costos_repuestos = request.form.getlist('repuesto_costo[]')
+        nombres_repuestos = [sanitizar_input(n) for n in nombres_repuestos]
+        costos_repuestos = request.form.getlist('repuesto_costo[])
         
         detalles_repuestos = []
         for i in range(len(nombres_repuestos)):
             if nombres_repuestos[i].strip():
+                try:
+                    costo = float(costos_repuestos[i]) if costos_repuestos[i] else 0
+                except ValueError:
+                    costo = 0
                 detalles_repuestos.append({
                     'nombre': nombres_repuestos[i].strip(),
-                    'costo': float(costos_repuestos[i]) if costos_repuestos[i] else 0
+                    'costo': costo
                 })
         
+        # ✅ SANITIZAR campos de texto
+        observaciones_pago = sanitizar_input(request.form.get('observaciones_costos', '').strip())
+        diagnostico = sanitizar_input(request.form.get('diagnostico', '').strip())
+        reparacion = sanitizar_input(request.form.get('reparacion', 'Reparación realizada').strip())
+        resultado = sanitizar_input(request.form.get('resultado', 'reparado').strip())
+        tiempo_estimado = sanitizar_input(request.form.get('tiempo_estimado', '00:00:00').strip())
+        estado_ot = sanitizar_input(request.form.get('estado_ot', 'Pendiente').strip())
+        
+        # ✅ Validar que haya al menos un repuesto
+        if not detalles_repuestos:
+            flash('⚠️ Debes agregar al menos un repuesto para validar.', 'warning')
+            return render_template("validar_pago.html", id=id_reg, registro=registro, usuarios=usuarios, error=None)
+        
+        # ✅ Validar que costo_repuestos sea mayor a 0 o que haya repuestos
+        costo_repuestos_total = float(request.form.get('costo_repuestos', 0))
+        if costo_repuestos_total <= 0 and not detalles_repuestos:
+            flash('⚠️ El costo de repuestos debe ser mayor a 0.', 'warning')
+            return render_template("validar_pago.html", id=id_reg, registro=registro, usuarios=usuarios, error=None)
+        
         data = {
-            'costo_repuestos': float(request.form.get('costo_repuestos', 0)),
+            'costo_repuestos': costo_repuestos_total,
             'costo_mano_obra_real': float(request.form.get('costo_mano_obra', 0)),
             'costo_diagnostico_real': float(request.form.get('costo_diagnostico', 0)),
             'ganancia_neta': float(request.form.get('ganancia_neta', 0)),
-            'observaciones_pago': request.form.get('observaciones_costos', ''),
+            'observaciones_pago': observaciones_pago,
             'validado_por': validado_por,
-            'diagnostico': request.form.get('diagnostico', ''),
-            'reparacion': request.form.get('reparacion', 'Reparación realizada'),
-            'resultado': request.form.get('resultado', 'reparado'),
-            'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
+            'diagnostico': diagnostico,
+            'reparacion': reparacion,
+            'resultado': resultado,
+            'tiempo_estimado': tiempo_estimado,
             'detalles_repuestos': detalles_repuestos,
-            'estado_ot': request.form.get('estado_ot', 'Pendiente')
+            'estado_ot': estado_ot
         }
         
         try:
@@ -703,13 +744,66 @@ def modelos(marca):
 @role_required(['admin'])
 def editar_completo(id_reg):
     data = request.json
+    
+    # ✅ SANITIZAR TODOS LOS CAMPOS DE TEXTO
+    campos_texto = [
+        'nombre', 'telefono', 'patente', 'marca', 'modelo', 'flota', 
+        'observaciones_cliente', 'diagnostico', 'reparacion', 'resultado',
+        'observaciones_pago', 'validado_por', 'atendido_por'
+    ]
+    
+    for campo in campos_texto:
+        if campo in data and data[campo] is not None:
+            data[campo] = sanitizar_input(str(data[campo]))
+    
+    # ✅ Sanitizar patente específicamente
+    if 'patente' in data and data['patente']:
+        data['patente'] = sanitizar_patente(data['patente'])
+    
+    # ✅ Sanitizar campos numéricos (asegurar que sean números)
+    campos_numericos = [
+        'monto', 'anio', 'costo_repuestos_real', 'costo_mano_obra_real',
+        'costo_diagnostico_real', 'ganancia_neta', 'kilometraje'
+    ]
+    
+    for campo in campos_numericos:
+        if campo in data and data[campo] is not None:
+            try:
+                data[campo] = float(data[campo])
+            except (ValueError, TypeError):
+                data[campo] = 0
+    
+    # ✅ Sanitizar booleano
+    if 'validado' in data:
+        data['validado'] = bool(data['validado'])
+    
+    # ✅ Sanitizar fecha y hora (si existen)
+    if 'fecha' in data and data['fecha']:
+        # Validar formato fecha YYYY-MM-DD
+        import re
+        if not re.match(r'^\d{4}-\d{2}-\d{2}$', data['fecha']):
+            data['fecha'] = None
+    
+    if 'hora' in data and data['hora']:
+        # Validar formato hora HH:MM:SS
+        import re
+        if not re.match(r'^\d{2}:\d{2}:\d{2}$', data['hora']):
+            data['hora'] = '00:00:00'
+    
+    # ✅ Validar que campos obligatorios no estén vacíos
+    if not data.get('nombre') or not data.get('nombre').strip():
+        return jsonify({"success": False, "error": "El nombre es obligatorio"}), 400
+    
     try:
         resp = requests.post(f"{BACKEND_URL}/api/editar_completo/{id_reg}", json=data, timeout=10)
         if resp.status_code == 200:
+            logger.info(f"✅ Registro ID {id_reg} editado correctamente por '{session.get('usuario')}'")
             return jsonify({"success": True})
+        
+        logger.error(f"❌ Error al editar registro ID {id_reg}: {resp.text}")
         return jsonify({"success": False, "error": resp.text}), 500
     except Exception as e:
-        logger.error(f"Error en /editar_completo: {e}")
+        logger.error(f"⚠️ Error en /editar_completo ID {id_reg}: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 # ============================
@@ -753,30 +847,47 @@ def register():
     if session.get('rol') != 'admin':
         return "No tienes permisos", 403
     
-    error, success = None, None
+    error = None
+    success = None
     
     if request.method == 'POST':
-        username = request.form.get('username')
+        # ✅ SANITIZAR
+        username = sanitizar_input(request.form.get('username', '').strip())
         password = request.form.get('password')
-        rol = request.form.get('rol', 'basico')
-        nombre_completo = request.form.get('nombre_completo', '')
+        rol = sanitizar_input(request.form.get('rol', 'basico').strip())
+        nombre_completo = sanitizar_input(request.form.get('nombre_completo', '').strip())
         
-        if not username or not password:
-            error = "⚠️ Usuario y contraseña son obligatorios"
+        # ✅ VALIDACIONES
+        if not username:
+            error = "⚠️ El nombre de usuario no puede estar vacío o contener caracteres inválidos"
+        elif not password:
+            error = "⚠️ La contraseña es obligatoria"
         elif len(password) < 6:
             error = "⚠️ La contraseña debe tener al menos 6 caracteres"
+        elif rol not in ['admin', 'operador', 'basico']:
+            error = "⚠️ Rol inválido"
+        elif nombre_completo and len(nombre_completo) < 2:
+            error = "⚠️ El nombre completo debe tener al menos 2 caracteres"
         else:
             try:
-                data = {'username': username, 'password': password, 'rol': rol, 'nombre_completo': nombre_completo}
+                data = {
+                    'username': username,
+                    'password': password,
+                    'rol': rol,
+                    'nombre_completo': nombre_completo
+                }
+                logger.info(f"📝 Creando usuario: {username}, rol: {rol}")
                 resp = requests.post(f"{BACKEND_URL}/api/crear_usuario", json=data, timeout=10)
+                
                 if resp.status_code == 200:
                     success = f"✅ Usuario {username} creado correctamente"
                     logger.info(f"👤 Usuario '{username}' creado por '{session.get('usuario')}'")
                 else:
                     error = resp.json().get('error', '❌ Error al crear usuario')
+                    logger.error(f"❌ Error al crear usuario {username}: {error}")
             except Exception as e:
-                logger.error(f"Error en /register: {e}")
-                error = "⚠️ Error de conexión"
+                logger.error(f"⚠️ Error en /register: {e}")
+                error = "⚠️ Error de conexión con el servidor"
     
     return render_template("register.html", error=error, success=success)
 
