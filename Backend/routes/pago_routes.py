@@ -15,6 +15,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 import pytz 
 import math
+from services.notification_service import enviar_notificacion_push
 
 # ============================
 # ZONA HORARIA CHILE
@@ -1664,3 +1665,38 @@ def verificar_duplicado():
     except Exception as e:
         print(f"❌ Error en verificar_duplicado: {e}")
         return jsonify({"duplicado": False}), 500
+# backend/routes/pago_routes.py
+
+# ============================
+# GUARDAR SUSCRIPCIÓN PUSH
+# ============================
+@pago_bp.route('/guardar_suscripcion', methods=['POST'])
+def guardar_suscripcion():
+    try:
+        data = request.json
+        endpoint = data.get('endpoint', '')
+        keys = data.get('keys', {})
+        auth_key = keys.get('auth', '')
+        p256dh_key = keys.get('p256dh', '')
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Eliminar duplicado
+        cur.execute("DELETE FROM push_subscriptions WHERE endpoint = %s", (endpoint,))
+        
+        # Insertar nueva
+        cur.execute("""
+            INSERT INTO push_subscriptions (endpoint, auth_key, p256dh_key)
+            VALUES (%s, %s, %s)
+        """, (endpoint, auth_key, p256dh_key))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        logger.info(f"✅ Suscripción push guardada")
+        return jsonify({"success": True})
+    except Exception as e:
+        logger.error(f"Error al guardar suscripción: {e}")
+        return jsonify({"success": False}), 500
