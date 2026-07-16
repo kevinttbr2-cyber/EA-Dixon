@@ -9,13 +9,96 @@ from datetime import datetime, timedelta
 import io
 import time
 import locale
-# ============================
-# CONFIGURACIÓN DE LOGS PERSISTENTES
-# ============================
 import logging
 from logging.handlers import RotatingFileHandler
 import os
 import sys
+import re
+from datetime import timedelta
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+# ============================
+# SANITIZACIÓN
+# ============================
+def sanitizar_input(texto):
+    if not texto:
+        return ''
+    texto = re.sub(r'<[^>]+>', '', texto)
+    texto = re.sub(r'[;(){}<>]', '', texto)
+    return texto[:500]
+
+def sanitizar_patente(patente):
+    if not patente:
+        return ''
+    patente = re.sub(r'[^A-Za-z0-9]', '', patente)
+    return patente.upper()[:10]
+
+# ============================
+# RATE LIMITING
+# ============================
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["100 per day", "20 per hour"],
+    storage_uri="memory://"
+)
+
+# ============================
+# HEADERS DE SEGURIDAD
+# ============================
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://code.jquery.com 'unsafe-inline'; "
+        "style-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'; "
+        "img-src 'self' data:; "
+        "font-src 'self' https://cdnjs.cloudflare.com; "
+        "connect-src 'self' https://ea-dixon-production.up.railway.app; "
+        "frame-ancestors 'none'; "
+        "form-action 'self'; "
+        "base-uri 'self'; "
+        "upgrade-insecure-requests"
+    )
+    return response
+
+# ============================
+# CONFIGURACIÓN DE SESIÓN
+# ============================
+app.permanent_session_lifetime = timedelta(hours=8)
+
+# ============================
+# VERIFICAR SESIÓN
+# ============================
+@app.route('/verificar_sesion')
+@login_required
+def verificar_sesion():
+    return jsonify({
+        "activa": True,
+        "usuario": session.get('usuario'),
+        "rol": session.get('rol')
+    })
+
+# ============================
+# RATE LIMITING
+# ============================
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["100 per day", "20 per hour"]
+)
+
+# Límites específicos para login
+@app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")  # Máximo 5 intentos por minuto
+@limiter.limit("20 per hour")   # Máximo 20 intentos por hora
+def login():
+    # ... código existente
 
 # ✅ DETECTAR ENTORNO (Vercel o local)
 IS_VERCEL = os.environ.get('VERCEL_ENV') == 'production' or os.environ.get('VERCEL')
@@ -104,6 +187,39 @@ app.jinja_env.filters['strftime'] = lambda date, fmt: date.strftime(fmt) if date
 # URL del backend en Railway
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
 
+# ============================
+# HEADERS DE SEGURIDAD
+# ============================
+@app.after_request
+def add_security_headers(response):
+    # Prevenir MIME type sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # Prevenir clickjacking (no permitir iframes)
+    response.headers['X-Frame-Options'] = 'DENY'
+    
+    # Protección XSS (para navegadores antiguos)
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # Control de referer
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Política de seguridad de contenido (CSP)
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://code.jquery.com https://stackpath.bootstrapcdn.com 'unsafe-inline'; "
+        "style-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com 'unsafe-inline'; "
+        "img-src 'self' data:; "
+        "font-src 'self' https://cdnjs.cloudflare.com; "
+        "connect-src 'self' https://ea-dixon-production.up.railway.app; "
+        "frame-ancestors 'none'; "
+        "form-action 'self'; "
+        "base-uri 'self'; "
+        "upgrade-insecure-requests"
+    )
+    
+    return response
+
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -131,6 +247,27 @@ def generar_firma_pdf(id_reg):
         str(id_reg).encode(),
         hashlib.sha256
     ).hexdigest()[:16]
+# ============================
+# SANITIZACIÓN DE INPUTS
+# ============================
+def sanitizar_input(texto):
+    """Elimina caracteres peligrosos y HTML"""
+    if not texto:
+        return ''
+    # Eliminar tags HTML
+    texto = re.sub(r'<[^>]+>', '', texto)
+    # Eliminar caracteres especiales peligrosos
+    texto = re.sub(r'[;(){}<>]', '', texto)
+    # Limitar longitud
+    return texto[:500]  # Máximo 500 caracteres
+
+def sanitizar_patente(patente):
+    """Limpia y formatea una patente"""
+    if not patente:
+        return ''
+    # Solo letras mayúsculas y números
+    patente = re.sub(r'[^A-Za-z0-9]', '', patente)
+    return patente.upper()[:10]  # Máximo 10 caracteres
     
 @app.context_processor
 def inject_globals():
