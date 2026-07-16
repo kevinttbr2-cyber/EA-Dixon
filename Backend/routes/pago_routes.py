@@ -373,7 +373,7 @@ def pagar(id_reg):
         # ✅ NOTIFICACIÓN PUSH - PAGO EXPRESS
         enviar_notificacion_push(
             titulo="💰 Pago Express",
-            mensaje=f"Cliente: {pago.nombre}\nMonto: ${pago.monto:,.0f}\nForma: {pago.forma_pago}",
+            mensaje=f"Cliente: {pago.nombre}\nMonto: ${float(pago.monto):,.0f}\nForma: {pago.forma_pago}",
             url=f"/pago_exitoso/{id_reg}",
             id=id_reg
         )
