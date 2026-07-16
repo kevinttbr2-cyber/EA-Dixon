@@ -3,6 +3,7 @@ import os
 import json
 import logging
 import psycopg2
+import base64
 from pywebpush import webpush, WebPushException
 
 logger = logging.getLogger(__name__)
@@ -10,20 +11,16 @@ logger = logging.getLogger(__name__)
 def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
     """Envía notificaciones push a todos los dispositivos suscritos"""
     
-    # ✅ OBTENER CLAVES DE VARIABLES DE ENTORNO
     VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
     VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
     VAPID_EMAIL = os.environ.get("VAPID_EMAIL", "admin@dixon.cl")
     
-    # ✅ VERIFICAR QUE LAS CLAVES EXISTEN
-    if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
-        logger.error("❌ VAPID keys no configuradas en el backend")
-        logger.error(f"  - VAPID_PUBLIC_KEY: {'✅' if VAPID_PUBLIC_KEY else '❌'}")
-        logger.error(f"  - VAPID_PRIVATE_KEY: {'✅' if VAPID_PRIVATE_KEY else '❌'}")
-        return 0
+    logger.info(f"🔑 VAPID_PRIVATE_KEY longitud: {len(VAPID_PRIVATE_KEY)}")
+    logger.info(f"🔑 VAPID_PUBLIC_KEY longitud: {len(VAPID_PUBLIC_KEY)}")
     
-    logger.info(f"✅ VAPID keys configuradas correctamente")
-    logger.info(f"  - Public Key: {VAPID_PUBLIC_KEY[:20]}...")
+    if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
+        logger.warning("⚠️ VAPID keys no configuradas")
+        return 0
     
     # Cargar suscripciones desde Neon
     try:
@@ -66,18 +63,23 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
     enviados = 0
     for sub in suscripciones:
         try:
+            # ✅ IMPORTANTE: La clave privada debe pasarse como string directamente
             webpush(
                 subscription_info=sub,
                 data=json.dumps(data),
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims={"sub": f"mailto:{VAPID_EMAIL}"}
+                vapid_private_key=VAPID_PRIVATE_KEY,  # ✅ String directo
+                vapid_claims={
+                    "sub": f"mailto:{VAPID_EMAIL}"
+                }
             )
             enviados += 1
-            logger.info(f"✅ Notificación enviada a dispositivo {enviados}")
+            logger.info(f"✅ Notificación enviada exitosamente")
         except WebPushException as e:
             logger.error(f"❌ Error enviando push: {e}")
             if hasattr(e, 'response') and e.response:
                 logger.error(f"Detalles: {e.response.text}")
+        except Exception as e:
+            logger.error(f"❌ Error inesperado: {e}")
     
     logger.info(f"📱 Notificaciones enviadas a {enviados} dispositivos")
     return enviados
