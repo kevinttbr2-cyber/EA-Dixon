@@ -988,6 +988,34 @@ def formato_fecha_espanol(fecha):
 # Agregar el filtro a Jinja2
 app.jinja_env.filters['fecha_espanol'] = formato_fecha_espanol
 
+@app.route('/ver_logs')
+@login_required
+@role_required(['admin'])  # Solo admin
+def ver_logs():
+    try:
+        log_file = os.path.join(LOG_DIR, 'dixon_app.log')
+        
+        if request.args.get('limpiar') == 'si':
+            if os.path.exists(log_file):
+                with open(log_file, 'w') as f:
+                    f.write('')
+                logger.info(f"🗑️ Logs limpiados por '{session.get('usuario')}'")
+                flash('✅ Logs limpiados correctamente', 'success')
+                return redirect('/ver_logs')
+        
+        if not os.path.exists(log_file):
+            logs = "No hay logs disponibles"
+        else:
+            with open(log_file, 'r') as f:
+                lines = f.readlines()
+                ultimas = lines[-200:] if len(lines) > 200 else lines
+                logs = ''.join(ultimas)
+        
+        return render_template("ver_logs.html", logs=logs)
+    except Exception as e:
+        logger.error(f"Error al leer logs: {str(e)}")
+        return render_template("ver_logs.html", logs=f"Error al leer logs: {str(e)}")
+
 # ============================
 # INICIO
 # ============================
