@@ -13,8 +13,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 import sys
 import re
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
 # ============================
 # CONFIGURACIÓN DE LA APP (PRIMERO)
@@ -79,15 +77,6 @@ if IS_VERCEL:
 else:
     logger.info(f"📁 Logs guardados en: {LOG_DIR}")
 
-# ============================
-# RATE LIMITING (DESPUÉS DE app)
-# ============================
-limiter = Limiter(
-    app,
-    key_func=get_remote_address,
-    default_limits=["100 per day", "20 per hour"],
-    storage_uri="memory://"
-)
 
 # ============================
 # CONFIGURAR IDIOMA A ESPAÑOL
@@ -238,8 +227,6 @@ def index():
 # LOGIN (CON RATE LIMITING)
 # ============================
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
-@limiter.limit("20 per hour")
 def login():
     error = None
     if 'csrf_token' not in session:
