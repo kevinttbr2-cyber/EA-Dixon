@@ -25,116 +25,8 @@ PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
 # ============================
 # VAPID KEYS (desde variables de entorno)
 # ============================
-VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
-VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
-VAPID_EMAIL = os.environ.get("VAPID_EMAIL", "admin@dixon.cl")
 
 "connect-src 'self' https://ea-dixon-production.up.railway.app https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com https://code.jquery.com; "
-
-# ============================
-# SUSCRIPCIONES (frontend - conexión directa a Neon)
-# ============================
-import psycopg2
-
-def get_db_connection():
-    """Obtiene conexión directa a Neon desde el frontend"""
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    if not DATABASE_URL:
-        raise Exception("DATABASE_URL no configurada en Vercel")
-    return psycopg2.connect(DATABASE_URL)
-
-def cargar_suscripciones():
-    """Carga suscripciones desde Neon"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT endpoint, auth_key, p256dh_key FROM push_subscriptions")
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        suscripciones = []
-        for row in rows:
-            suscripciones.append({
-                'endpoint': row[0],
-                'keys': {
-                    'auth': row[1],
-                    'p256dh': row[2]
-                }
-            })
-        return suscripciones
-    except Exception as e:
-        logger.error(f"Error cargando suscripciones: {e}")
-        return []
-
-def guardar_suscripcion(suscripcion):
-    """Guarda suscripción en Neon"""
-    try:
-        endpoint = suscripcion.get('endpoint', '')
-        keys = suscripcion.get('keys', {})
-        auth_key = keys.get('auth', '')
-        p256dh_key = keys.get('p256dh', '')
-        
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        # Eliminar duplicado
-        cur.execute("DELETE FROM push_subscriptions WHERE endpoint = %s", (endpoint,))
-        
-        # Insertar nueva
-        cur.execute("""
-            INSERT INTO push_subscriptions (endpoint, auth_key, p256dh_key)
-            VALUES (%s, %s, %s)
-        """, (endpoint, auth_key, p256dh_key))
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        logger.info(f"✅ Suscripción guardada en Neon (frontend)")
-        return True
-    except Exception as e:
-        logger.error(f"Error guardando suscripción: {e}")
-        return False
-# ============================
-# ENVIAR NOTIFICACIONES PUSH
-# ============================
-from pywebpush import webpush, WebPushException
-
-def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
-    """Envía notificaciones push a todos los dispositivos suscritos"""
-    if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
-        logger.warning("⚠️ VAPID keys no configuradas")
-        return 0
-    
-    suscripciones = cargar_suscripciones()
-    if not suscripciones:
-        logger.info("ℹ️ No hay suscripciones push")
-        return 0
-    
-    data = {
-        "title": titulo,
-        "body": mensaje,
-        "url": url,
-        "id": id
-    }
-    
-    enviados = 0
-    for sub in suscripciones:
-        try:
-            webpush(
-                subscription_info=sub,
-                data=json.dumps(data),
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims={
-                    "sub": f"mailto:{VAPID_EMAIL}"
-                }
-            )
-            enviados += 1
-        except WebPushException as e:
-            logger.error(f"Error enviando push: {e}")
-    
-    logger.info(f"📱 Notificaciones enviadas a {enviados} dispositivos")
-    return enviados
 
 # ============================
 # CONFIGURACIÓN DE LOGS PERSISTENTES
@@ -417,25 +309,34 @@ def guardar_suscripcion_route():
     except Exception as e:
         logger.error(f"Error al guardar suscripción: {e}")
         return jsonify({"success": False}), 500
-
 # ============================
-# RUTA DE PRUEBA PARA NOTIFICACIONES
+# PROXY PARA GUARDAR SUSCRIPCIÓN (SOLO REENVÍA AL BACKEND)
 # ============================
-@app.route('/test_notificacion')
-@login_required
-@role_required(['admin'])
-def test_notificacion():
-    enviados = enviar_notificacion_push(
-        titulo="🔔 Notificación de prueba",
-        mensaje="¡Las notificaciones push funcionan correctamente!",
-        url="/estado"
-    )
-    if enviados > 0:
-        flash(f'✅ Notificación de prueba enviada a {enviados} dispositivos', 'success')
-    else:
-        flash('⚠️ No hay dispositivos suscritos. Abre la app en tu celular y acepta las notificaciones.', 'warning')
-    return redirect("/estado")
-
+@app.route('/api/guardar_suscripcion', methods=['POST'])
+def guardar_suscripcion_route():
+    """Reenvía la suscripción al backend (NO guarda directamente)"""
+    try:
+        data = request.json
+        backend_url = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
+        
+        # Reenviar al backend
+        resp = requests.post(
+            f"{backend_url}/api/guardar_suscripcion",
+            json=data,
+            timeout=10,
+            headers={'Content-Type': 'application/json'}
+        )
+        
+        if resp.status_code == 200:
+            logger.info("✅ Suscripción guardada en el backend")
+            return jsonify(resp.json()), resp.status_code
+        else:
+            logger.error(f"❌ Error guardando suscripción en backend: {resp.text}")
+            return jsonify({"success": False}), 500
+            
+    except Exception as e:
+        logger.error(f"Error al guardar suscripción: {e}")
+        return jsonify({"success": False}), 500
 # ============================
 # ESTADO
 # ============================
@@ -526,13 +427,6 @@ def agregar():
         
         logger.info(f"✅ Cliente agregado exitosamente por '{usuario}': '{nombre}', patente: '{patente}'")
         
-        # ✅ ENVIAR NOTIFICACIÓN PUSH
-        enviar_notificacion_push(
-            titulo="📋 Nuevo Cliente",
-            mensaje=f"{nombre}\nPatente: {patente}\nRegistrado por: {usuario}",
-            url="/estado"
-        )
-        
         flash('✅ Cliente registrado correctamente', 'success')
     except Exception as e:
         logger.error(f"⚠️ Error en /agregar: {str(e)}")
@@ -593,14 +487,6 @@ def pagar(id_reg):
             resp = requests.post(f"{BACKEND_URL}/api/pagar/{id_reg}", json=data, timeout=10)
             if resp.status_code == 200:
                 logger.info(f"✅ Pago ID {id_reg} completado por '{usuario}' - monto: ${monto}")
-                
-                # ✅ ENVIAR NOTIFICACIÓN PUSH
-                enviar_notificacion_push(
-                    titulo="💰 Pago Registrado",
-                    mensaje=f"Cliente: {registro.get('nombre', '')}\nMonto: ${monto:,.0f}\nForma: {forma_pago}",
-                    url=f"/pago_exitoso/{id_reg}",
-                    id=id_reg
-                )
                 
                 return redirect(f"/pago_exitoso/{id_reg}")
             logger.error(f"❌ Error en pago ID {id_reg}: {resp.text}")
@@ -793,14 +679,6 @@ def validar_pago(id_reg):
             resp = requests.post(f"{BACKEND_URL}/api/validar_pago/{id_reg}", json=data, timeout=10)
             if resp.status_code == 200:
                 logger.info(f"✅ Validación completada para ID {id_reg} por '{usuario}'")
-                
-                # ✅ ENVIAR NOTIFICACIÓN PUSH
-                enviar_notificacion_push(
-                    titulo="✅ Validación Completada",
-                    mensaje=f"OT #{id_reg}\nCliente: {registro.get('nombre', '')}",
-                    url=f"/pago_validado/{id_reg}",
-                    id=id_reg
-                )
                 
                 return redirect(f"/pago_validado/{id_reg}")
             error = resp.json().get('error', 'Error al validar')
@@ -1124,12 +1002,6 @@ def exportar_flota_pdf(flota):
         resp = requests.post(url, json={"fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta}, timeout=60)
         
         if resp.status_code == 200:
-            # ✅ ENVIAR NOTIFICACIÓN PUSH
-            enviar_notificacion_push(
-                titulo="📄 Reporte Generado",
-                mensaje=f"Flota: {flota}\nFechas: {fecha_desde} - {fecha_hasta}\nGenerado por: {session.get('usuario')}",
-                url="/flotas"
-            )
             return send_file(
                 io.BytesIO(resp.content),
                 mimetype='application/pdf',
