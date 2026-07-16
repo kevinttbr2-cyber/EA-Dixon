@@ -1,5 +1,4 @@
 {
-  "version": 2,
   "builds": [
     {
       "src": "app.py",
@@ -11,9 +10,10 @@
       "src": "/(.*)",
       "dest": "app.py"
     }
-  ]
-}
-{
+  ],
+  "env": {
+    "VAPID_PUBLIC_KEY": "{{ .VAPID_PUBLIC_KEY }}"
+  },
   "headers": [
     {
       "source": "/(.*)",
