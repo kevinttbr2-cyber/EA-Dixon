@@ -32,10 +32,12 @@ VAPID_EMAIL = os.environ.get("VAPID_EMAIL", "admin@dixon.cl")
 "connect-src 'self' https://ea-dixon-production.up.railway.app https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com https://code.jquery.com; "
 
 # ============================
-# SUSCRIPCIONES (guardar en Neon)
+# SUSCRIPCIONES (frontend - conexión directa a Neon)
 # ============================
+import psycopg2
+
 def get_db_connection():
-    """Obtiene conexión a Neon usando DATABASE_URL"""
+    """Obtiene conexión directa a Neon desde el frontend"""
     DATABASE_URL = os.environ.get("DATABASE_URL")
     if not DATABASE_URL:
         raise Exception("DATABASE_URL no configurada en Vercel")
@@ -88,7 +90,7 @@ def guardar_suscripcion(suscripcion):
         conn.commit()
         cur.close()
         conn.close()
-        logger.info(f"✅ Suscripción guardada en Neon")
+        logger.info(f"✅ Suscripción guardada en Neon (frontend)")
         return True
     except Exception as e:
         logger.error(f"Error guardando suscripción: {e}")
