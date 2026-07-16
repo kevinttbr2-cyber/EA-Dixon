@@ -15,14 +15,14 @@ import sys
 import re
 
 # ============================
-# CONFIGURACIÓN DE LA APP (PRIMERO)
+# CONFIGURACIÓN DE LA APP
 # ============================
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
 PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
 
 # ============================
-# CONFIGURACIÓN DE LOGS PERSISTENTES (DESPUÉS DE app)
+# CONFIGURACIÓN DE LOGS PERSISTENTES
 # ============================
 IS_VERCEL = os.environ.get('VERCEL_ENV') == 'production' or os.environ.get('VERCEL')
 
@@ -76,7 +76,6 @@ if IS_VERCEL:
     logger.info("🚀 Aplicación corriendo en Vercel - Logs en consola")
 else:
     logger.info(f"📁 Logs guardados en: {LOG_DIR}")
-
 
 # ============================
 # CONFIGURAR IDIOMA A ESPAÑOL
@@ -223,9 +222,6 @@ def index():
         return redirect("/estado")
     return redirect("/login")
 
-# ============================
-# LOGIN (CON RATE LIMITING)
-# ============================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
@@ -561,7 +557,7 @@ def validar_pago(id_reg):
         # ✅ Sanitizar nombres de repuestos
         nombres_repuestos = request.form.getlist('repuesto_nombre[]')
         nombres_repuestos = [sanitizar_input(n) for n in nombres_repuestos]
-        costos_repuestos = request.form.getlist('repuesto_costo[])
+        costos_repuestos = request.form.getlist('repuesto_costo[]')
         
         detalles_repuestos = []
         for i in range(len(nombres_repuestos)):
