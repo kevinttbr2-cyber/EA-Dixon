@@ -1675,3 +1675,29 @@ def guardar_suscripcion():
     except Exception as e:
         logger.error(f"Error al guardar suscripción: {e}")
         return jsonify({"success": False}), 500
+# ============================
+# ENVIAR NOTIFICACIÓN DESDE FRONTEND
+# ============================
+@pago_bp.route('/enviar_notificacion', methods=['POST'])
+def enviar_notificacion_desde_frontend():
+    """Endpoint para que el frontend envíe notificaciones"""
+    try:
+        data = request.json
+        titulo = data.get('titulo', 'Notificación')
+        mensaje = data.get('mensaje', '')
+        url = data.get('url', '/estado')
+        id_reg = data.get('id', None)
+        
+        print(f"📨 Enviando notificación desde frontend: {titulo}")
+        enviados = enviar_notificacion_push(titulo, mensaje, url, id_reg)
+        
+        return jsonify({
+            "success": enviados > 0,
+            "enviados": enviados,
+            "mensaje": f"Notificación enviada a {enviados} dispositivos"
+        })
+    except Exception as e:
+        print(f"❌ Error enviando notificación: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
