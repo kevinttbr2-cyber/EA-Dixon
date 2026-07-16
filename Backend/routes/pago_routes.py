@@ -1023,6 +1023,11 @@ def exportar_flota_pdf(flota):
 @pago_bp.route('/venta_rapida', methods=['POST'])
 def venta_rapida():
     try:
+        print("=" * 60)
+        print("📥 VENTA RÁPIDA - DATOS RECIBIDOS:")
+        print(request.json)
+        print("=" * 60)
+        
         data = request.json
         
         if not data.get('nombre') or not data.get('monto'):
