@@ -11,9 +11,6 @@
       "dest": "app.py"
     }
   ],
-  "env": {
-    "VAPID_PUBLIC_KEY": "{{ .VAPID_PUBLIC_KEY }}"
-  },
   "headers": [
     {
       "source": "/(.*)",
