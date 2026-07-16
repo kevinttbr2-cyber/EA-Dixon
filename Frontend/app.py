@@ -452,10 +452,36 @@ def pago_exitoso(id_reg):
         firma = generar_firma_pdf(id_reg)
         registro['firma'] = firma
         url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
+        
+        # ✅ ENVIAR NOTIFICACIÓN PUSH AL VER PAGO EXITOSO
+        try:
+            # Obtener el nombre del cliente y monto
+            nombre_cliente = registro.get('nombre', 'Cliente')
+            monto = registro.get('monto', 0)
+            forma_pago = registro.get('forma_pago', 'efectivo')
+            
+            notif_resp = requests.post(
+                f"{BACKEND_URL}/api/enviar_notificacion",
+                json={
+                    "titulo": "💰 Pago Confirmado",
+                    "mensaje": f"Cliente: {nombre_cliente}\nMonto: ${float(monto):,.0f}\nForma: {forma_pago}",
+                    "url": f"/pago_exitoso/{id_reg}",
+                    "id": id_reg
+                },
+                timeout=5
+            )
+            if notif_resp.status_code == 200:
+                logger.info("✅ Notificación enviada correctamente")
+            else:
+                logger.warning(f"⚠️ Respuesta de notificación: {notif_resp.text}")
+        except Exception as e:
+            logger.error(f"⚠️ Error al enviar notificación: {e}")
+            
     except Exception as e:
         logger.error(f"❌ Error en /pago_exitoso: {str(e)}")
         registro = {}
         url_pdf = ""
+    
     return render_template("pago_exitoso.html", registro=registro, url_pdf=url_pdf)
 
 # ============================
@@ -931,6 +957,24 @@ def exportar_flota_pdf(flota):
         resp = requests.post(url, json={"fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta}, timeout=60)
         
         if resp.status_code == 200:
+            # ✅ ENVIAR NOTIFICACIÓN PUSH AL GENERAR EL PDF
+            try:
+                notif_resp = requests.post(
+                    f"{backend_url}/api/enviar_notificacion",
+                    json={
+                        "titulo": "📄 Reporte Generado",
+                        "mensaje": f"Flota: {flota}\nFechas: {fecha_desde} - {fecha_hasta}\nGenerado por: {session.get('usuario')}",
+                        "url": "/flotas"
+                    },
+                    timeout=5
+                )
+                if notif_resp.status_code == 200:
+                    logger.info("✅ Notificación enviada correctamente")
+                else:
+                    logger.warning(f"⚠️ Respuesta de notificación: {notif_resp.text}")
+            except Exception as e:
+                logger.error(f"⚠️ Error al enviar notificación: {e}")
+            
             return send_file(
                 io.BytesIO(resp.content),
                 mimetype='application/pdf',
