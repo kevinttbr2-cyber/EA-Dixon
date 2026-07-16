@@ -121,119 +121,168 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     {% block scripts %}{% endblock %}
 
-    <!-- ============================
-         NOTIFICACIONES PUSH (CORREGIDO)
-         ============================ -->
-    <script>
-    // ✅ OBTENER LA CLAVE PÚBLICA DEL SERVIDOR (NO HARDCODEADA)
-    const VAPID_PUBLIC_KEY = '{{ vapid_public_key }}';
+   <!-- ============================
+     NOTIFICACIONES PUSH (CON FALLBACK)
+     ============================ -->
+<script>
+// ✅ INTENTAR OBTENER DEL SERVIDOR
+let VAPID_PUBLIC_KEY = '{{ vapid_public_key }}';
 
-    if ('Notification' in window && 'serviceWorker' in navigator) {
+// ✅ SI LA CLAVE DEL SERVIDOR ESTÁ VACÍA O ES LA PLANTILLA, USAR HARDCODEADA
+if (!VAPID_PUBLIC_KEY || VAPID_PUBLIC_KEY === '' || VAPID_PUBLIC_KEY === '{{ vapid_public_key }}') {
+    console.warn('⚠️ Clave del servidor no disponible, usando hardcodeada');
+    VAPID_PUBLIC_KEY = 'BMQZr_LzzSq0huNc-cUkIp2qEytZ71kEiiLRmKC8v26K6BsOJ81_owcteH1hHqQATxQ7HDQxI5Gas7iwhfNz3Z8';
+}
+
+console.log('🔑 Clave VAPID:', VAPID_PUBLIC_KEY.substring(0, 30) + '...');
+console.log('📏 Longitud:', VAPID_PUBLIC_KEY.length);
+
+// ✅ FUNCIÓN PARA CONVERTIR BASE64 A Uint8Array
+function urlBase64ToUint8Array(base64String) {
+    if (!base64String) {
+        console.error('❌ Clave VAPID vacía');
+        return null;
+    }
+    try {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        console.log('✅ Clave convertida, longitud:', outputArray.length);
+        return outputArray;
+    } catch (error) {
+        console.error('❌ Error convirtiendo clave:', error);
+        return null;
+    }
+}
+
+// ✅ FUNCIÓN PARA SUSCRIBIRSE
+async function suscribirsePush() {
+    if (!('Notification' in window)) {
+        console.warn('⚠️ Notificaciones no soportadas');
+        return;
+    }
+    
+    if (Notification.permission !== 'granted') {
+        console.warn('⚠️ Permiso no concedido');
+        return;
+    }
+    
+    if (!VAPID_PUBLIC_KEY) {
+        console.error('❌ VAPID_PUBLIC_KEY no disponible');
+        return;
+    }
+    
+    console.log('🔄 Iniciando suscripción...');
+    
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        console.log('✅ Service Worker listo');
         
-        // ✅ FUNCIÓN PARA SUSCRIBIRSE
-        async function suscribirsePush() {
-            if (Notification.permission !== 'granted') {
-                console.warn('⚠️ Permiso de notificaciones no concedido');
-                return;
-            }
-            
-            if (!VAPID_PUBLIC_KEY) {
-                console.warn('⚠️ VAPID_PUBLIC_KEY no configurada en el servidor');
-                return;
-            }
-            
-            console.log('✅ Clave VAPID obtenida del servidor:', VAPID_PUBLIC_KEY.substring(0, 20) + '...');
-            
+        // Verificar si ya está suscrito
+        let subscription = await registration.pushManager.getSubscription();
+        
+        if (subscription) {
+            console.log('✅ Suscripción activa encontrada');
+            return subscription;
+        }
+        
+        // Convertir clave
+        const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+        if (!applicationServerKey) {
+            console.error('❌ Error convirtiendo clave');
+            return;
+        }
+        
+        // Crear suscripción
+        subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey
+        });
+        
+        console.log('✅ Nueva suscripción creada');
+        
+        // Guardar en el backend
+        const response = await fetch('/api/guardar_suscripcion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(subscription)
+        });
+        
+        if (response.ok) {
+            console.log('✅ Suscripción guardada en el backend');
+        } else {
+            console.error('❌ Error guardando suscripción:', await response.text());
+        }
+        
+        return subscription;
+        
+    } catch (error) {
+        console.error('❌ Error en suscripción:', error);
+        
+        // Si el error es por clave diferente, limpiar y reintentar
+        if (error.message && error.message.includes('different applicationServerKey')) {
+            console.log('🔄 Eliminando suscripción antigua...');
             try {
-                // ✅ REGISTRAR SERVICE WORKER
                 const registration = await navigator.serviceWorker.ready;
-                console.log('✅ Service Worker listo');
-                
-                // ✅ VERIFICAR SI YA ESTÁ SUSCRITO
-                const existingSubscription = await registration.pushManager.getSubscription();
-                if (existingSubscription) {
-                    console.log('✅ Ya existe una suscripción activa');
-                    return existingSubscription;
+                const sub = await registration.pushManager.getSubscription();
+                if (sub) {
+                    await sub.unsubscribe();
+                    console.log('✅ Suscripción eliminada, reintentando...');
+                    setTimeout(suscribirsePush, 2000);
                 }
-                
-                // ✅ CONVERTIR CLAVE A Uint8Array
-                const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-                
-                // ✅ CREAR NUEVA SUSCRIPCIÓN
-                const subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: applicationServerKey
-                });
-                
-                console.log('✅ Suscripción creada exitosamente');
-                
-                // ✅ GUARDAR EN EL BACKEND
-                const response = await fetch('/api/guardar_suscripcion', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(subscription)
-                });
-                
-                if (response.ok) {
-                    console.log('✅ Suscripción guardada en el backend');
-                } else {
-                    console.error('❌ Error guardando suscripción:', await response.text());
-                }
-                
-                return subscription;
-                
-            } catch (error) {
-                console.error('❌ Error al suscribirse:', error);
-                
-                // ✅ SI HAY ERROR DE CLAVE DIFERENTE, LIMPIAR Y REINTENTAR
-                if (error.message && error.message.includes('different applicationServerKey')) {
-                    console.log('🔄 Limpiando suscripción antigua y reintentando...');
-                    try {
-                        const registration = await navigator.serviceWorker.ready;
-                        const sub = await registration.pushManager.getSubscription();
-                        if (sub) {
-                            await sub.unsubscribe();
-                            console.log('✅ Suscripción antigua eliminada');
-                            // Reintentar después de 1 segundo
-                            setTimeout(suscribirsePush, 1000);
-                        }
-                    } catch (e) {
-                        console.error('❌ Error limpiando suscripción:', e);
-                    }
-                }
+            } catch (e) {
+                console.error('❌ Error limpiando:', e);
             }
         }
-
-        // ✅ FUNCIÓN PARA CONVERTIR BASE64 A Uint8Array
-        function urlBase64ToUint8Array(base64String) {
-            if (!base64String) {
-                throw new Error('Base64 string vacía');
-            }
-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-            const rawData = window.atob(base64);
-            const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; ++i) {
-                outputArray[i] = rawData.charCodeAt(i);
-            }
-            return outputArray;
-        }
-
-        // ✅ SOLICITAR PERMISO AL CARGAR LA PÁGINA
-        if (Notification.permission === 'default') {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    console.log('✅ Notificaciones permitidas');
-                    suscribirsePush();
-                } else {
-                    console.log('❌ Notificaciones denegadas');
-                }
-            });
-        } else if (Notification.permission === 'granted') {
-            suscribirsePush();
+        
+        // Si el error es de curva, mostrar mensaje
+        if (error.message && error.message.includes('curve must be an EllipticCurve')) {
+            console.error('❌ Error de curva: La clave VAPID no es válida');
+            console.log('📌 Verifica que la clave tenga 87 caracteres');
         }
     }
-    </script>
+}
+
+// ✅ INICIALIZAR
+if ('Notification' in window && 'serviceWorker' in navigator) {
+    if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('✅ Notificaciones permitidas');
+                navigator.serviceWorker.ready.then(() => {
+                    setTimeout(suscribirsePush, 1000);
+                });
+            } else {
+                console.log('❌ Notificaciones denegadas');
+            }
+        });
+    } else if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(() => {
+            setTimeout(suscribirsePush, 500);
+        });
+    }
+}
+
+// ✅ FUNCIÓN PARA LIMPIAR SUSCRIPCIONES (desde consola)
+function limpiarSuscripcionPush() {
+    navigator.serviceWorker.ready.then(async function(registration) {
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+            await subscription.unsubscribe();
+            console.log('✅ Suscripción eliminada');
+        } else {
+            console.log('ℹ️ No hay suscripción activa');
+        }
+    });
+}
+
+console.log('✅ Sistema de notificaciones listo');
+console.log('📌 Para limpiar suscripción: limpiarSuscripcionPush()');
+</script>
 
 </body>
 </html>
