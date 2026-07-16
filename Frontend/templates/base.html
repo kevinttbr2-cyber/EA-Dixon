@@ -125,9 +125,7 @@
      NOTIFICACIONES PUSH
      ============================ -->
 <script>
-// ✅ LA VAPID PUBLIC KEY SE CARGA DESDE EL BACKEND
-// Si no llega, usa el valor hardcodeado como fallback
-const VAPID_PUBLIC_KEY = '{{ vapid_public_key }}' || 'BDcQvX8Y9Z2W4m3N1p5Q7rT6uV8wX0yZ2aB4cD6eF8gH0iJ2kL4mN6oP8qR0sT2uV4wX6yZ8';
+const VAPID_PUBLIC_KEY = 'BDM_STZXB-GT2q4XvnqW_MC4mQvPO71eSpdRIA61Rd0rk9v3l83eLKa3cXSxLlsSK0Lfu-eF3ttpbMfLwQEPr-4';
 
 if ('Notification' in window && 'serviceWorker' in navigator) {
     // Solicitar permiso
