@@ -220,19 +220,23 @@ def exportar_y_borrar():
 
 
 # ============================
-# RUTA DE PRUEBA PARA NOTIFICACIONES
+# RUTA DE PRUEBA PARA NOTIFICACIONES (CORREGIDA)
 # ============================
 @app.route('/api/test_notificacion', methods=['GET'])
 def test_notificacion():
-    """Ruta para probar notificaciones push desde el backend"""
+    """Ruta para probar notificaciones push desde el navegador"""
     try:
         from services.notification_service import enviar_notificacion_push
+        
+        print("📨 TEST_NOTIFICACION - Iniciando prueba...")
         
         enviados = enviar_notificacion_push(
             titulo="🔔 Notificación de Prueba (Backend)",
             mensaje="¡Las notificaciones push funcionan correctamente desde el backend!",
             url="/estado"
         )
+        
+        print(f"📱 TEST_NOTIFICACION - Enviados: {enviados}")
         
         if enviados > 0:
             return jsonify({
@@ -242,9 +246,12 @@ def test_notificacion():
         else:
             return jsonify({
                 "success": False,
-                "mensaje": "No hay dispositivos suscritos."
+                "mensaje": "No hay dispositivos suscritos. Acepta las notificaciones en tu navegador."
             })
     except Exception as e:
+        print(f"❌ TEST_NOTIFICACION - Error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             "success": False,
             "error": str(e)
