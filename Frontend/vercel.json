@@ -13,3 +13,16 @@
     }
   ]
 }
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "connect-src 'self' https://ea-dixon-production.up.railway.app https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com https://code.jquery.com;"
+        }
+      ]
+    }
+  ]
+}
