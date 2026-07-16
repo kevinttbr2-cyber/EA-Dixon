@@ -1,8 +1,11 @@
-# backend/services/notificacion_service.py
+# backend/services/notification_service.py (o notificacion_service.py)
 import os
 import json
+import logging
 import psycopg2
 from pywebpush import webpush, WebPushException
+
+logger = logging.getLogger(__name__)
 
 def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
     """Envía notificaciones push a todos los dispositivos suscritos"""
@@ -11,14 +14,14 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
     VAPID_EMAIL = os.environ.get("VAPID_EMAIL", "admin@dixon.cl")
     
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
-        print("⚠️ VAPID keys no configuradas")
+        logger.warning("⚠️ VAPID keys no configuradas")
         return 0
     
     # Cargar suscripciones desde Neon
     try:
         DATABASE_URL = os.environ.get("DATABASE_URL")
         if not DATABASE_URL:
-            print("❌ DATABASE_URL no configurada")
+            logger.error("❌ DATABASE_URL no configurada")
             return 0
         
         conn = psycopg2.connect(DATABASE_URL)
@@ -38,14 +41,19 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
                 }
             })
     except Exception as e:
-        print(f"❌ Error cargando suscripciones: {e}")
+        logger.error(f"❌ Error cargando suscripciones: {e}")
         return 0
     
     if not suscripciones:
-        print("ℹ️ No hay suscripciones")
+        logger.info("ℹ️ No hay suscripciones push")
         return 0
     
-    data = {"title": titulo, "body": mensaje, "url": url, "id": id}
+    data = {
+        "title": titulo,
+        "body": mensaje,
+        "url": url,
+        "id": id
+    }
     
     enviados = 0
     for sub in suscripciones:
@@ -57,8 +65,11 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
                 vapid_claims={"sub": f"mailto:{VAPID_EMAIL}"}
             )
             enviados += 1
+            logger.info(f"✅ Notificación enviada a: {sub['endpoint'][:50]}...")
         except WebPushException as e:
-            print(f"❌ Error enviando push: {e}")
+            logger.error(f"❌ Error enviando push: {e}")
+            if hasattr(e, 'response') and e.response:
+                logger.error(f"Detalles: {e.response.text}")
     
-    print(f"📱 Notificaciones enviadas a {enviados} dispositivos")
+    logger.info(f"📱 Notificaciones enviadas a {enviados} dispositivos")
     return enviados
