@@ -13,11 +13,19 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
     VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
     VAPID_EMAIL = os.environ.get("VAPID_EMAIL", "admin@dixon.cl")
     
-    print(f"🔑 VAPID_PRIVATE_KEY configurada: {'✅' if VAPID_PRIVATE_KEY else '❌'}")
-    print(f"🔑 VAPID_PUBLIC_KEY configurada: {'✅' if VAPID_PUBLIC_KEY else '❌'}")
+    print("=" * 60)
+    print("📨 ENVIANDO NOTIFICACIÓN PUSH")
+    print("=" * 60)
+    print(f"📌 Título: {titulo}")
+    print(f"📌 Mensaje: {mensaje}")
+    print(f"📌 URL: {url}")
+    print(f"📌 ID: {id}")
+    print(f"🔑 VAPID_PRIVATE_KEY: {'✅' if VAPID_PRIVATE_KEY else '❌'} (longitud: {len(VAPID_PRIVATE_KEY)})")
+    print(f"🔑 VAPID_PUBLIC_KEY: {'✅' if VAPID_PUBLIC_KEY else '❌'} (longitud: {len(VAPID_PUBLIC_KEY)})")
+    print(f"📧 VAPID_EMAIL: {VAPID_EMAIL}")
     
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
-        print("⚠️ VAPID keys no configuradas")
+        print("❌ VAPID keys no configuradas")
         return 0
     
     # Cargar suscripciones desde Neon
@@ -31,30 +39,6 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
         
-        # ✅ VERIFICAR QUE LA TABLA EXISTE
-        cur.execute("""
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_name = 'push_subscriptions'
-            )
-        """)
-        table_exists = cur.fetchone()[0]
-        print(f"📋 Tabla push_subscriptions existe: {table_exists}")
-        
-        if not table_exists:
-            print("❌ La tabla no existe. Creándola...")
-            cur.execute("""
-                CREATE TABLE push_subscriptions (
-                    id SERIAL PRIMARY KEY,
-                    endpoint TEXT NOT NULL UNIQUE,
-                    auth_key TEXT NOT NULL,
-                    p256dh_key TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            conn.commit()
-            print("✅ Tabla creada")
-        
         # ✅ CONTAR SUSCRIPCIONES
         cur.execute("SELECT COUNT(*) FROM push_subscriptions")
         count = cur.fetchone()[0]
@@ -66,8 +50,14 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
         cur.close()
         conn.close()
         
+        print(f"📱 Filas obtenidas: {len(rows)}")
+        
         suscripciones = []
-        for row in rows:
+        for idx, row in enumerate(rows, 1):
+            print(f"📋 Suscripción {idx}:")
+            print(f"   Endpoint: {row[0][:50]}...")
+            print(f"   Auth: {row[1][:20]}...")
+            print(f"   P256dh: {row[2][:20]}...")
             suscripciones.append({
                 'endpoint': row[0],
                 'keys': {
@@ -95,6 +85,8 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
         "id": id
     }
     
+    print(f"📤 Datos a enviar: {json.dumps(data)}")
+    
     enviados = 0
     for idx, sub in enumerate(suscripciones, 1):
         try:
@@ -103,11 +95,13 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
                 subscription_info=sub,
                 data=json.dumps(data),
                 vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims={"sub": f"mailto:{VAPID_EMAIL}"},
+                vapid_claims={
+                    "sub": f"mailto:{VAPID_EMAIL}"
+                },
                 timeout=30
             )
             enviados += 1
-            print(f"✅ Notificación {idx} enviada")
+            print(f"✅ Notificación {idx} enviada exitosamente")
         except WebPushException as e:
             print(f"❌ Error WebPush {idx}: {e}")
             if hasattr(e, 'response') and e.response:
@@ -115,6 +109,11 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
                 print(f"📄 Respuesta: {e.response.text}")
         except Exception as e:
             print(f"❌ Error inesperado {idx}: {e}")
+            import traceback
+            traceback.print_exc()
     
+    print("=" * 60)
     print(f"📱 Notificaciones enviadas: {enviados} de {len(suscripciones)}")
+    print("=" * 60)
+    
     return enviados
