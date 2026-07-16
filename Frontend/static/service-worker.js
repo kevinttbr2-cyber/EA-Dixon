@@ -26,31 +26,41 @@ const urlsToCache = [
     '/offline'
 ];
 
-// Instalación
+// ============================
+// INSTALACIÓN
+// ============================
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(urlsToCache))
+            .then(cache => {
+                console.log('📦 Caché abierta');
+                return cache.addAll(urlsToCache);
+            })
             .then(() => self.skipWaiting())
     );
 });
 
-// Activación
+// ============================
+// ACTIVACIÓN
+// ============================
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheName !== CACHE_NAME) {
+                        console.log('🗑️ Eliminando caché antigua:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
             );
-        })
+        }).then(() => self.clients.claim())
     );
 });
 
-// ✅ RECIBIR NOTIFICACIONES PUSH
+// ============================
+// RECIBIR NOTIFICACIONES PUSH
+// ============================
 self.addEventListener('push', function(event) {
     let data = {};
     
@@ -89,7 +99,9 @@ self.addEventListener('push', function(event) {
     );
 });
 
-// ✅ CLIC EN NOTIFICACIÓN
+// ============================
+// CLIC EN NOTIFICACIÓN
+// ============================
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     
@@ -111,11 +123,22 @@ self.addEventListener('notificationclick', function(event) {
     }
 });
 
-// Fetch para offline
+// ============================
+// FETCH (OFFLINE)
+// ============================
 self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request)
-            .then(response => response || fetch(event.request))
-            .catch(() => caches.match('/offline'))
+            .then(response => {
+                // Si está en caché, devolverlo
+                if (response) {
+                    return response;
+                }
+                // Si no, buscar en la red
+                return fetch(event.request).catch(() => {
+                    // Si offline, mostrar página de offline
+                    return caches.match('/offline');
+                });
+            })
     );
 });
