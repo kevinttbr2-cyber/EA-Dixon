@@ -21,57 +21,87 @@ import json
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
 PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
-# Archivo para guardar suscripciones
-SUSCRIPCIONES_FILE = 'suscripciones.json'
-
-def cargar_suscripciones():
-    try:
-        with open(SUSCRIPCIONES_FILE, 'r') as f:
-            return json.load(f)
-    except:
-        return []
-
-def guardar_suscripcion(suscripcion):
-    suscripciones = cargar_suscripciones()
-    # Evitar duplicados
-    suscripciones = [s for s in suscripciones if s.get('endpoint') != suscripcion.get('endpoint')]
-    suscripciones.append(suscripcion)
-    with open(SUSCRIPCIONES_FILE, 'w') as f:
-        json.dump(suscripciones, f)
 
 # ============================
-# RUTA PARA GUARDAR SUSCRIPCIÓN
+# VAPID KEYS (desde variables de entorno)
 # ============================
-@app.route('/api/guardar_suscripcion', methods=['POST'])
-def guardar_suscripcion():
-    try:
-        data = request.json
-        guardar_suscripcion(data)
-        logger.info(f"✅ Nueva suscripción push guardada")
-        return jsonify({"success": True})
-    except Exception as e:
-        logger.error(f"Error al guardar suscripción: {e}")
-        return jsonify({"success": False}), 500
-
-# ============================
-# FUNCIÓN PARA ENVIAR NOTIFICACIONES PUSH
-# ============================
-from pywebpush import webpush, WebPushException
-
 VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
 VAPID_EMAIL = os.environ.get("VAPID_EMAIL", "admin@dixon.cl")
+
+# ============================
+# SUSCRIPCIONES (guardar en Neon)
+# ============================
+def cargar_suscripciones():
+    """Carga suscripciones desde Neon"""
+    try:
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT endpoint, auth_key, p256dh_key FROM push_subscriptions")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        suscripciones = []
+        for row in rows:
+            suscripciones.append({
+                'endpoint': row[0],
+                'keys': {
+                    'auth': row[1],
+                    'p256dh': row[2]
+                }
+            })
+        return suscripciones
+    except Exception as e:
+        logger.error(f"Error cargando suscripciones: {e}")
+        return []
+
+def guardar_suscripcion(suscripcion):
+    """Guarda suscripción en Neon"""
+    try:
+        from database import get_connection
+        endpoint = suscripcion.get('endpoint', '')
+        keys = suscripcion.get('keys', {})
+        auth_key = keys.get('auth', '')
+        p256dh_key = keys.get('p256dh', '')
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Eliminar duplicado
+        cur.execute("DELETE FROM push_subscriptions WHERE endpoint = %s", (endpoint,))
+        
+        # Insertar nueva
+        cur.execute("""
+            INSERT INTO push_subscriptions (endpoint, auth_key, p256dh_key)
+            VALUES (%s, %s, %s)
+        """, (endpoint, auth_key, p256dh_key))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        logger.info(f"✅ Suscripción guardada en Neon")
+        return True
+    except Exception as e:
+        logger.error(f"Error guardando suscripción: {e}")
+        return False
+
+# ============================
+# ENVIAR NOTIFICACIONES PUSH
+# ============================
+from pywebpush import webpush, WebPushException
 
 def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
     """Envía notificaciones push a todos los dispositivos suscritos"""
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
         logger.warning("⚠️ VAPID keys no configuradas")
-        return
+        return 0
     
     suscripciones = cargar_suscripciones()
     if not suscripciones:
         logger.info("ℹ️ No hay suscripciones push")
-        return
+        return 0
     
     data = {
         "title": titulo,
@@ -283,11 +313,15 @@ def inject_globals():
         print(f"⚠️ Error al obtener flotas pendientes: {e}")
         flotas_pendientes_count = 0
     
+    # ✅ AGREGAR VAPID PUBLIC KEY
+    vapid_public_key = os.environ.get("VAPID_PUBLIC_KEY", "")
+    
     return dict(
         backend_url=BACKEND_URL,
         fecha_espanol=fecha_espanol,
         fecha_corta_espanol=fecha_corta_espanol,
-        flotas_pendientes_count=flotas_pendientes_count
+        flotas_pendientes_count=flotas_pendientes_count,
+        vapid_public_key=vapid_public_key  # ✅ NUEVO
     )
 
 # ============================
@@ -346,6 +380,38 @@ def verificar_sesion():
         "usuario": session.get('usuario'),
         "rol": session.get('rol')
     })
+
+# ============================
+# RUTA PARA GUARDAR SUSCRIPCIÓN
+# ============================
+@app.route('/api/guardar_suscripcion', methods=['POST'])
+def guardar_suscripcion_route():
+    try:
+        data = request.json
+        guardar_suscripcion(data)
+        logger.info(f"✅ Suscripción push guardada")
+        return jsonify({"success": True})
+    except Exception as e:
+        logger.error(f"Error al guardar suscripción: {e}")
+        return jsonify({"success": False}), 500
+
+# ============================
+# RUTA DE PRUEBA PARA NOTIFICACIONES
+# ============================
+@app.route('/test_notificacion')
+@login_required
+@role_required(['admin'])
+def test_notificacion():
+    enviados = enviar_notificacion_push(
+        titulo="🔔 Notificación de prueba",
+        mensaje="¡Las notificaciones push funcionan correctamente!",
+        url="/estado"
+    )
+    if enviados > 0:
+        flash(f'✅ Notificación de prueba enviada a {enviados} dispositivos', 'success')
+    else:
+        flash('⚠️ No hay dispositivos suscritos. Abre la app en tu celular y acepta las notificaciones.', 'warning')
+    return redirect("/estado")
 
 # ============================
 # ESTADO
@@ -434,13 +500,22 @@ def agregar():
             logger.error(f"❌ Error al agregar cliente: {resp.text}")
             flash('❌ Error al registrar el cliente.', 'error')
             return redirect("/agregar_cliente")
+        
         logger.info(f"✅ Cliente agregado exitosamente por '{usuario}': '{nombre}', patente: '{patente}'")
+        
+        # ✅ ENVIAR NOTIFICACIÓN PUSH
+        enviar_notificacion_push(
+            titulo="📋 Nuevo Cliente",
+            mensaje=f"{nombre}\nPatente: {patente}\nRegistrado por: {usuario}",
+            url="/estado"
+        )
+        
+        flash('✅ Cliente registrado correctamente', 'success')
     except Exception as e:
         logger.error(f"⚠️ Error en /agregar: {str(e)}")
         flash('⚠️ Error de conexión.', 'error')
         return redirect("/agregar_cliente")
     
-    flash('✅ Cliente registrado correctamente', 'success')
     return redirect("/estado")
 
 # ============================
@@ -495,6 +570,15 @@ def pagar(id_reg):
             resp = requests.post(f"{BACKEND_URL}/api/pagar/{id_reg}", json=data, timeout=10)
             if resp.status_code == 200:
                 logger.info(f"✅ Pago ID {id_reg} completado por '{usuario}' - monto: ${monto}")
+                
+                # ✅ ENVIAR NOTIFICACIÓN PUSH
+                enviar_notificacion_push(
+                    titulo="💰 Pago Registrado",
+                    mensaje=f"Cliente: {registro.get('nombre', '')}\nMonto: ${monto:,.0f}\nForma: {forma_pago}",
+                    url=f"/pago_exitoso/{id_reg}",
+                    id=id_reg
+                )
+                
                 return redirect(f"/pago_exitoso/{id_reg}")
             logger.error(f"❌ Error en pago ID {id_reg}: {resp.text}")
             flash('❌ Error al procesar el pago', 'error')
@@ -686,6 +770,15 @@ def validar_pago(id_reg):
             resp = requests.post(f"{BACKEND_URL}/api/validar_pago/{id_reg}", json=data, timeout=10)
             if resp.status_code == 200:
                 logger.info(f"✅ Validación completada para ID {id_reg} por '{usuario}'")
+                
+                # ✅ ENVIAR NOTIFICACIÓN PUSH
+                enviar_notificacion_push(
+                    titulo="✅ Validación Completada",
+                    mensaje=f"OT #{id_reg}\nCliente: {registro.get('nombre', '')}",
+                    url=f"/pago_validado/{id_reg}",
+                    id=id_reg
+                )
+                
                 return redirect(f"/pago_validado/{id_reg}")
             error = resp.json().get('error', 'Error al validar')
             logger.error(f"❌ Error en validación ID {id_reg}: {error}")
@@ -842,13 +935,11 @@ def editar_completo(id_reg):
     
     # ✅ Sanitizar fecha y hora (si existen)
     if 'fecha' in data and data['fecha']:
-        # Validar formato fecha YYYY-MM-DD
         import re
         if not re.match(r'^\d{4}-\d{2}-\d{2}$', data['fecha']):
             data['fecha'] = None
     
     if 'hora' in data and data['hora']:
-        # Validar formato hora HH:MM:SS
         import re
         if not re.match(r'^\d{2}:\d{2}:\d{2}$', data['hora']):
             data['hora'] = '00:00:00'
@@ -914,13 +1005,11 @@ def register():
     success = None
     
     if request.method == 'POST':
-        # ✅ SANITIZAR
         username = sanitizar_input(request.form.get('username', '').strip())
         password = request.form.get('password')
         rol = sanitizar_input(request.form.get('rol', 'basico').strip())
         nombre_completo = sanitizar_input(request.form.get('nombre_completo', '').strip())
         
-        # ✅ VALIDACIONES
         if not username:
             error = "⚠️ El nombre de usuario no puede estar vacío o contener caracteres inválidos"
         elif not password:
@@ -1012,6 +1101,12 @@ def exportar_flota_pdf(flota):
         resp = requests.post(url, json={"fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta}, timeout=60)
         
         if resp.status_code == 200:
+            # ✅ ENVIAR NOTIFICACIÓN PUSH
+            enviar_notificacion_push(
+                titulo="📄 Reporte Generado",
+                mensaje=f"Flota: {flota}\nFechas: {fecha_desde} - {fecha_hasta}\nGenerado por: {session.get('usuario')}",
+                url="/flotas"
+            )
             return send_file(
                 io.BytesIO(resp.content),
                 mimetype='application/pdf',
