@@ -15,7 +15,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 import pytz 
 import math
-from services.notification_service import enviar_notificacion_push
+from services.notificacion_service import enviar_notificacion_push
+import logging
+logger = logging.getLogger(__name__)
 
 # ============================
 # ZONA HORARIA CHILE
