@@ -131,7 +131,7 @@ let VAPID_PUBLIC_KEY = '{{ vapid_public_key }}';
 // ✅ SI LA CLAVE DEL SERVIDOR ESTÁ VACÍA O ES LA PLANTILLA, USAR HARDCODEADA
 if (!VAPID_PUBLIC_KEY || VAPID_PUBLIC_KEY === '' || VAPID_PUBLIC_KEY === '{{ vapid_public_key }}') {
     console.warn('⚠️ Clave del servidor no disponible, usando hardcodeada');
-    VAPID_PUBLIC_KEY = 'BMQZr_LzzSq0huNc-cUkIp2qEytZ71kEiiLRmKC8v26K6BsOJ81_owcteH1hHqQATxQ7HDQxI5Gas7iwhfNz3Z8';
+    VAPID_PUBLIC_KEY = 'BJMiQjYynySFnvgwsForqgTnewTNLvH-kJgqKtMEWZ8LfPFkYOdpC0GhN4isHbydoYd-uc_LDs30SvqyuMyPwTY';
 }
 
 console.log('🔑 Clave VAPID:', VAPID_PUBLIC_KEY.substring(0, 30) + '...');
