@@ -11,28 +11,73 @@ import time
 import locale
 import logging
 from logging.handlers import RotatingFileHandler
-import os
 import sys
 import re
-from datetime import timedelta
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 # ============================
-# SANITIZACIÓN
+# CONFIGURACIÓN DE LA APP
 # ============================
-def sanitizar_input(texto):
-    if not texto:
-        return ''
-    texto = re.sub(r'<[^>]+>', '', texto)
-    texto = re.sub(r'[;(){}<>]', '', texto)
-    return texto[:500]
+app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
+PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
 
-def sanitizar_patente(patente):
-    if not patente:
-        return ''
-    patente = re.sub(r'[^A-Za-z0-9]', '', patente)
-    return patente.upper()[:10]
+# ============================
+# CONFIGURACIÓN DE LOGS PERSISTENTES
+# ============================
+IS_VERCEL = os.environ.get('VERCEL_ENV') == 'production' or os.environ.get('VERCEL')
+
+if IS_VERCEL:
+    LOG_DIR = '/tmp/logs'
+else:
+    LOG_DIR = 'logs'
+
+if not os.path.exists(LOG_DIR):
+    try:
+        os.makedirs(LOG_DIR)
+    except OSError:
+        LOG_DIR = None
+
+logger = logging.getLogger('dixon_app')
+logger.setLevel(logging.DEBUG)
+
+if logger.hasHandlers():
+    logger.handlers.clear()
+
+if LOG_DIR:
+    try:
+        file_handler = RotatingFileHandler(
+            os.path.join(LOG_DIR, 'dixon_app.log'),
+            maxBytes=10485760,
+            backupCount=5
+        )
+        file_handler.setLevel(logging.DEBUG)
+        file_formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        file_handler.setFormatter(file_formatter)
+        logger.addHandler(file_handler)
+    except Exception as e:
+        print(f"⚠️ No se pudo crear archivo de logs: {e}")
+
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+console_handler.setFormatter(console_formatter)
+logger.addHandler(console_handler)
+
+app.logger.handlers = logger.handlers
+app.logger.setLevel(logger.level)
+
+if IS_VERCEL:
+    logger.info("🚀 Aplicación corriendo en Vercel - Logs en consola")
+else:
+    logger.info(f"📁 Logs guardados en: {LOG_DIR}")
 
 # ============================
 # RATE LIMITING
@@ -43,6 +88,23 @@ limiter = Limiter(
     default_limits=["100 per day", "20 per hour"],
     storage_uri="memory://"
 )
+
+# ============================
+# CONFIGURAR IDIOMA A ESPAÑOL
+# ============================
+try:
+    locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+except:
+    try:
+        locale.setlocale(locale.LC_TIME, 'spanish')
+    except:
+        print("⚠️ No se pudo configurar el idioma español, usando inglés por defecto")
+
+os.environ['TZ'] = 'America/Santiago'
+time.tzset()
+
+app.jinja_env.filters['strftime'] = lambda date, fmt: date.strftime(fmt) if date else ''
+BACKEND_URL = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
 
 # ============================
 # HEADERS DE SEGURIDAD
@@ -68,158 +130,29 @@ def add_security_headers(response):
     return response
 
 # ============================
+# SANITIZACIÓN
+# ============================
+def sanitizar_input(texto):
+    if not texto:
+        return ''
+    texto = re.sub(r'<[^>]+>', '', texto)
+    texto = re.sub(r'[;(){}<>]', '', texto)
+    return texto[:500]
+
+def sanitizar_patente(patente):
+    if not patente:
+        return ''
+    patente = re.sub(r'[^A-Za-z0-9]', '', patente)
+    return patente.upper()[:10]
+
+# ============================
 # CONFIGURACIÓN DE SESIÓN
 # ============================
 app.permanent_session_lifetime = timedelta(hours=8)
 
 # ============================
-# VERIFICAR SESIÓN
+# DECORADORES
 # ============================
-@app.route('/verificar_sesion')
-@login_required
-def verificar_sesion():
-    return jsonify({
-        "activa": True,
-        "usuario": session.get('usuario'),
-        "rol": session.get('rol')
-    })
-
-# ============================
-# RATE LIMITING
-# ============================
-limiter = Limiter(
-    app,
-    key_func=get_remote_address,
-    default_limits=["100 per day", "20 per hour"]
-)
-
-# Límites específicos para login
-@app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")  # Máximo 5 intentos por minuto
-@limiter.limit("20 per hour")   # Máximo 20 intentos por hora
-def login():
-    # ... código existente
-
-# ✅ DETECTAR ENTORNO (Vercel o local)
-IS_VERCEL = os.environ.get('VERCEL_ENV') == 'production' or os.environ.get('VERCEL')
-
-# ✅ Usar /tmp en Vercel, o ./logs en local
-if IS_VERCEL:
-    LOG_DIR = '/tmp/logs'
-else:
-    LOG_DIR = 'logs'
-
-# Crear carpeta logs si no existe
-if not os.path.exists(LOG_DIR):
-    try:
-        os.makedirs(LOG_DIR)
-    except OSError:
-        # Si no se puede crear, usar logs en consola solamente
-        LOG_DIR = None
-
-# Configurar logger principal
-logger = logging.getLogger('dixon_app')
-logger.setLevel(logging.DEBUG)
-
-# Limpiar handlers existentes para evitar duplicados
-if logger.hasHandlers():
-    logger.handlers.clear()
-
-# Handler para archivo (con rotación) - solo si se pudo crear el directorio
-if LOG_DIR:
-    try:
-        file_handler = RotatingFileHandler(
-            os.path.join(LOG_DIR, 'dixon_app.log'),
-            maxBytes=10485760,  # 10 MB
-            backupCount=5       # Mantener 5 archivos de backup
-        )
-        file_handler.setLevel(logging.DEBUG)
-        file_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        file_handler.setFormatter(file_formatter)
-        logger.addHandler(file_handler)
-    except Exception as e:
-        print(f"⚠️ No se pudo crear archivo de logs: {e}")
-
-# Handler para consola (siempre disponible)
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
-console_formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-console_handler.setFormatter(console_formatter)
-logger.addHandler(console_handler)
-
-# ✅ En Vercel, todos los logs van a la consola (que Vercel captura)
-if IS_VERCEL:
-    logger.info("🚀 Aplicación corriendo en Vercel - Logs en consola")
-else:
-    logger.info(f"📁 Logs guardados en: {LOG_DIR}")
-# ============================
-# CONFIGURACIÓN DE LA APP
-# ============================
-app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
-PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
-
-# Configurar logger de Flask con los mismos handlers
-app.logger.handlers = logger.handlers
-app.logger.setLevel(logger.level)
-
-# ============================
-# CONFIGURAR IDIOMA A ESPAÑOL
-# ============================
-try:
-    locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
-except:
-    try:
-        locale.setlocale(locale.LC_TIME, 'spanish')
-    except:
-        print("⚠️ No se pudo configurar el idioma español, usando inglés por defecto")
-
-os.environ['TZ'] = 'America/Santiago'
-time.tzset()
-
-app.jinja_env.filters['strftime'] = lambda date, fmt: date.strftime(fmt) if date else ''
-# URL del backend en Railway
-BACKEND_URL = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
-
-# ============================
-# HEADERS DE SEGURIDAD
-# ============================
-@app.after_request
-def add_security_headers(response):
-    # Prevenir MIME type sniffing
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    
-    # Prevenir clickjacking (no permitir iframes)
-    response.headers['X-Frame-Options'] = 'DENY'
-    
-    # Protección XSS (para navegadores antiguos)
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    
-    # Control de referer
-    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    
-    # Política de seguridad de contenido (CSP)
-    response.headers['Content-Security-Policy'] = (
-        "default-src 'self'; "
-        "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://code.jquery.com https://stackpath.bootstrapcdn.com 'unsafe-inline'; "
-        "style-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com 'unsafe-inline'; "
-        "img-src 'self' data:; "
-        "font-src 'self' https://cdnjs.cloudflare.com; "
-        "connect-src 'self' https://ea-dixon-production.up.railway.app; "
-        "frame-ancestors 'none'; "
-        "form-action 'self'; "
-        "base-uri 'self'; "
-        "upgrade-insecure-requests"
-    )
-    
-    return response
-
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -228,7 +161,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
-# Agrega este decorador para roles específicos
 def role_required(allowed_roles):
     def decorator(f):
         @wraps(f)
@@ -247,28 +179,10 @@ def generar_firma_pdf(id_reg):
         str(id_reg).encode(),
         hashlib.sha256
     ).hexdigest()[:16]
-# ============================
-# SANITIZACIÓN DE INPUTS
-# ============================
-def sanitizar_input(texto):
-    """Elimina caracteres peligrosos y HTML"""
-    if not texto:
-        return ''
-    # Eliminar tags HTML
-    texto = re.sub(r'<[^>]+>', '', texto)
-    # Eliminar caracteres especiales peligrosos
-    texto = re.sub(r'[;(){}<>]', '', texto)
-    # Limitar longitud
-    return texto[:500]  # Máximo 500 caracteres
 
-def sanitizar_patente(patente):
-    """Limpia y formatea una patente"""
-    if not patente:
-        return ''
-    # Solo letras mayúsculas y números
-    patente = re.sub(r'[^A-Za-z0-9]', '', patente)
-    return patente.upper()[:10]  # Máximo 10 caracteres
-    
+# ============================
+# CONTEXT PROCESSOR
+# ============================
 @app.context_processor
 def inject_globals():
     def fecha_espanol(fecha):
@@ -295,10 +209,8 @@ def inject_globals():
         meses_cortos = {1: 'Ene', 2: 'Feb', 3: 'Mar', 4: 'Abr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dic'}
         return f"{dias_cortos.get(fecha.weekday(), '')} {fecha.day} {meses_cortos.get(fecha.month, '')}"
     
-    # OBTENER CONTEO DE FLOTAS PENDIENTES
     flotas_pendientes_count = 0
     try:
-        import requests
         resp = requests.get(f"{BACKEND_URL}/api/flotas_pendientes_count", timeout=3)
         if resp.status_code == 200:
             flotas_pendientes_count = resp.json().get('count', 0)
@@ -313,6 +225,9 @@ def inject_globals():
         flotas_pendientes_count=flotas_pendientes_count
     )
 
+# ============================
+# RUTAS PRINCIPALES
+# ============================
 @app.route('/')
 def index():
     if session.get("usuario"):
@@ -320,6 +235,8 @@ def index():
     return redirect("/login")
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
+@limiter.limit("20 per hour")
 def login():
     error = None
     if 'csrf_token' not in session:
@@ -339,6 +256,7 @@ def login():
                 session["usuario"] = data['user']['username']
                 session["rol"] = data['user']['rol']
                 session["nombre_completo"] = data['user'].get('nombre_completo', username)
+                session.permanent = True
                 logger.info(f"✅ Login exitoso: '{username}' desde IP {ip}, rol: {session['rol']}")
                 return redirect("/estado")
             else:
@@ -357,6 +275,18 @@ def logout():
     session.clear()
     return redirect("/login")
 
+@app.route('/verificar_sesion')
+@login_required
+def verificar_sesion():
+    return jsonify({
+        "activa": True,
+        "usuario": session.get('usuario'),
+        "rol": session.get('rol')
+    })
+
+# ============================
+# ESTADO
+# ============================
 @app.route('/estado')
 @login_required
 def estado():
@@ -378,7 +308,7 @@ def estado():
                           estado="todos")
 
 # ============================
-# AGREGAR CLIENTE (CON FLOTAS)
+# AGREGAR CLIENTE
 # ============================
 @app.route('/agregar_cliente')
 @login_required
@@ -386,55 +316,49 @@ def agregar_cliente():
     try:
         resp_marcas = requests.get(f"{BACKEND_URL}/api/marcas", timeout=10)
         marcas = resp_marcas.json() if resp_marcas.status_code == 200 else []
-        
-        # CARGAR FLOTAS DISPONIBLES
         resp_flotas = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=10)
         flotas = resp_flotas.json() if resp_flotas.status_code == 200 else []
     except Exception as e:
-        print(f"Error en /agregar_cliente: {e}")
+        logger.error(f"Error en /agregar_cliente: {e}")
         marcas = []
         flotas = []
     
     hoy = datetime.now().strftime('%Y-%m-%d')
     return render_template("agregar_cliente.html", marcas=marcas, flotas=flotas, hoy=hoy)
-    
+
 @app.route('/agregar', methods=['POST'])
 @login_required
 def agregar():
     usuario = session.get('usuario')
-    nombre = request.form.get('nombre', '').strip()
-    patente = request.form.get('patente', '').strip().upper()
+    nombre = sanitizar_input(request.form.get('nombre', '').strip())
+    patente = sanitizar_patente(request.form.get('patente', '').strip())
 
     logger.info(f"📝 Usuario '{usuario}' agregando cliente: '{nombre}', patente: '{patente}'")
     
-    # Obtener flota
     flota = request.form.get('flota', '').strip()
     if flota == '__nueva__':
         flota = request.form.get('flota_nueva', '').strip()
     
-    # VALIDACIÓN: Verificar si ya existe un registro en los últimos 5 minutos
     try:
         resp_verificar = requests.get(
             f"{BACKEND_URL}/api/verificar_duplicado",
             params={"nombre": nombre, "patente": patente},
             timeout=5
         )
-        
         if resp_verificar.status_code == 200 and resp_verificar.json().get('duplicado', False):
             logger.warning(f"⚠️ Intento de duplicado: usuario '{usuario}' intentó agregar '{nombre}' - '{patente}'")
-            flash('⚠️ Ya existe un registro con estos datos en los últimos 5 minutos. Si es un error, intenta de nuevo.', 'warning')
+            flash('⚠️ Ya existe un registro con estos datos en los últimos 5 minutos.', 'warning')
             return redirect("/agregar_cliente")
     except Exception as e:
         logger.warning(f"⚠️ Error al verificar duplicado para '{nombre}': {str(e)}")
     
-    # Construir data
     data = {
         'nombre': nombre,
         'patente': patente,
-        'marca': request.form.get('marca', '').strip(),
-        'modelo': request.form.get('modelo', '').strip(),
-        'telefono': request.form.get('telefono', '').strip(),
-        'observaciones': request.form.get('observaciones', '').strip(),
+        'marca': sanitizar_input(request.form.get('marca', '').strip()),
+        'modelo': sanitizar_input(request.form.get('modelo', '').strip()),
+        'telefono': sanitizar_input(request.form.get('telefono', '').strip()),
+        'observaciones': sanitizar_input(request.form.get('observaciones', '').strip()),
         'kilometraje': int(request.form.get('kilometraje', 0) or 0),
         'anio': int(request.form.get('anio', 0) or 0),
         'flota': flota if flota else None,
@@ -444,39 +368,40 @@ def agregar():
     try:
         resp = requests.post(f"{BACKEND_URL}/api/agregar", json=data, timeout=10)
         if resp.status_code != 200:
-            logger.error(f"❌ Error al agregar cliente para usuario '{usuario}': {resp.text}")
-            flash('❌ Error al registrar el cliente. Intenta de nuevo.', 'error')
+            logger.error(f"❌ Error al agregar cliente: {resp.text}")
+            flash('❌ Error al registrar el cliente.', 'error')
             return redirect("/agregar_cliente")
-        else:
-            logger.info(f"✅ Cliente agregado exitosamente por '{usuario}': '{nombre}', patente: '{patente}'")
+        logger.info(f"✅ Cliente agregado exitosamente por '{usuario}': '{nombre}', patente: '{patente}'")
     except Exception as e:
-        logger.error(f"⚠️ Error en /agregar para usuario '{usuario}': {str(e)}")
-        flash('⚠️ Error de conexión. Intenta de nuevo.', 'error')
+        logger.error(f"⚠️ Error en /agregar: {str(e)}")
+        flash('⚠️ Error de conexión.', 'error')
         return redirect("/agregar_cliente")
     
     flash('✅ Cliente registrado correctamente', 'success')
     return redirect("/estado")
 
+# ============================
+# PAGAR
+# ============================
 @app.route('/pagar/<int:id_reg>', methods=['GET', 'POST'])
 @login_required
 def pagar(id_reg):
     usuario = session.get('usuario')
-    logger.info(f"💰 Usuario '{usuario}' iniciando pago para registro ID {id_reg}")
+    logger.info(f"💰 Usuario '{usuario}' iniciando pago para ID {id_reg}")
     
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         if resp.status_code != 200:
-            logger.error(f"❌ Registro ID {id_reg} no encontrado para usuario '{usuario}'")
-            return f"Registro {id_reg} no encontrado en backend", 404
+            logger.error(f"❌ Registro ID {id_reg} no encontrado")
+            return f"Registro {id_reg} no encontrado", 404
         registro = resp.json()
     except Exception as e:
-        logger.error(f"⚠️ Error al obtener registro ID {id_reg} para '{usuario}': {str(e)}")
+        logger.error(f"⚠️ Error al obtener registro ID {id_reg}: {str(e)}")
         return "Error de conexión", 500
     
     if request.method == 'POST':
         monto = float(request.form.get('monto', 0))
         forma_pago = request.form.get('forma_pago', 'efectivo')
-        
         logger.info(f"💳 Usuario '{usuario}' procesando pago ID {id_reg}: monto ${monto}, forma: {forma_pago}")
         
         data = {
@@ -495,12 +420,11 @@ def pagar(id_reg):
             if resp.status_code == 200:
                 logger.info(f"✅ Pago ID {id_reg} completado por '{usuario}' - monto: ${monto}")
                 return redirect(f"/pago_exitoso/{id_reg}")
-            else:
-                logger.error(f"❌ Error en pago ID {id_reg} por '{usuario}': {resp.text}")
-                return f"Error al procesar el pago: {resp.text}", 500
+            logger.error(f"❌ Error en pago ID {id_reg}: {resp.text}")
+            return f"Error al procesar el pago: {resp.text}", 500
         except Exception as e:
-            logger.error(f"⚠️ Error en pago ID {id_reg} por '{usuario}': {str(e)}")
-            return "Error de conexión al procesar el pago", 500
+            logger.error(f"⚠️ Error en pago ID {id_reg}: {str(e)}")
+            return "Error de conexión", 500
     
     return render_template("pagar.html", id=id_reg, registro=registro)
 
@@ -517,11 +441,14 @@ def pago_exitoso(id_reg):
         registro['firma'] = firma
         url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
     except Exception as e:
-        logger.error(f"❌ Error en /pago_exitoso ID {id_reg} para '{usuario}': {str(e)}")
+        logger.error(f"❌ Error en /pago_exitoso: {str(e)}")
         registro = {}
         url_pdf = ""
     return render_template("pago_exitoso.html", registro=registro, url_pdf=url_pdf)
 
+# ============================
+# CAMBIAR PASSWORD
+# ============================
 @app.route('/cambiar_password', methods=['GET', 'POST'])
 @login_required
 def cambiar_password():
@@ -542,11 +469,7 @@ def cambiar_password():
             error = "⚠️ La contraseña debe tener al menos 6 caracteres"
         else:
             try:
-                data = {
-                    'username': usuario,
-                    'password_actual': password_actual,
-                    'password_nueva': password_nueva
-                }
+                data = {'username': usuario, 'password_actual': password_actual, 'password_nueva': password_nueva}
                 resp = requests.post(f"{BACKEND_URL}/api/cambiar_password", json=data, timeout=10)
                 if resp.status_code == 200:
                     success = "✅ Contraseña actualizada correctamente"
@@ -554,11 +477,14 @@ def cambiar_password():
                 else:
                     error = resp.json().get('error', '❌ Error al cambiar contraseña')
             except Exception as e:
-                logger.error(f"⚠️ Error en /cambiar_password para '{usuario}': {str(e)}")
-                error = "⚠️ Error de conexión con el servidor"
+                logger.error(f"⚠️ Error en /cambiar_password: {str(e)}")
+                error = "⚠️ Error de conexión"
     
     return render_template("cambiar_password.html", error=error, success=success)
 
+# ============================
+# VALIDACIÓN DE PAGOS
+# ============================
 @app.route('/pendientes_validacion')
 @login_required
 @role_required(['admin'])
@@ -573,16 +499,11 @@ def pendientes_validacion():
             pendientes = [p for p in data.get('pendientes', []) if p.get('tipo_venta') != 'directa']
             validados = [v for v in data.get('validados', []) if v.get('tipo_venta') != 'directa']
             total_pagado = data.get('total_pagado', 0)
-            logger.debug(f"📊 Pendientes: {len(pendientes)}, Validados: {len(validados)}")
         else:
-            pendientes = []
-            validados = []
-            total_pagado = 0
+            pendientes, validados, total_pagado = [], [], 0
     except Exception as e:
-        logger.error(f"❌ Error en /pendientes_validacion para '{usuario}': {str(e)}")
-        pendientes = []
-        validados = []
-        total_pagado = 0
+        logger.error(f"❌ Error en /pendientes_validacion: {str(e)}")
+        pendientes, validados, total_pagado = [], [], 0
     
     return render_template("pendientes_validacion.html", pendientes=pendientes, validados=validados, total_pagado=total_pagado)
 
@@ -591,7 +512,7 @@ def pendientes_validacion():
 @role_required(['admin', 'operador'])
 def validar_pago(id_reg):
     usuario = session.get('usuario')
-    logger.info(f"📊 Usuario '{usuario}' iniciando validación para registro ID {id_reg}")
+    logger.info(f"📊 Usuario '{usuario}' iniciando validación para ID {id_reg}")
     
     if session.get('rol') not in ['admin']:
         logger.warning(f"⚠️ Usuario '{usuario}' sin permisos para validar ID {id_reg}")
@@ -600,21 +521,20 @@ def validar_pago(id_reg):
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         if resp.status_code != 200:
-            logger.error(f"❌ Registro ID {id_reg} no encontrado para validación")
+            logger.error(f"❌ Registro ID {id_reg} no encontrado")
             return "Registro no encontrado", 404
         registro = resp.json()
     except Exception as e:
-        logger.error(f"⚠️ Error al obtener registro ID {id_reg} para '{usuario}': {str(e)}")
+        logger.error(f"⚠️ Error al obtener registro ID {id_reg}: {str(e)}")
         return "Error de conexión", 500
     
-    # VALIDACIÓN: Venta directa no necesita validación
     if registro.get('tipo_venta') == 'directa':
         logger.info(f"ℹ️ Venta directa ID {id_reg} no requiere validación")
         flash('⚠️ Las ventas directas no requieren validación de costos.', 'warning')
         return redirect("/estado")
     
     if registro.get('estado') != 'pagado':
-        logger.warning(f"⚠️ Intento de validar registro ID {id_reg} que no está pagado")
+        logger.warning(f"⚠️ Intento de validar registro ID {id_reg} no pagado")
         return "Este pago no está pagado", 400
     
     try:
@@ -663,11 +583,10 @@ def validar_pago(id_reg):
             if resp.status_code == 200:
                 logger.info(f"✅ Validación completada para ID {id_reg} por '{usuario}'")
                 return redirect(f"/pago_validado/{id_reg}")
-            else:
-                error = resp.json().get('error', 'Error al validar')
-                logger.error(f"❌ Error en validación ID {id_reg} por '{usuario}': {error}")
+            error = resp.json().get('error', 'Error al validar')
+            logger.error(f"❌ Error en validación ID {id_reg}: {error}")
         except Exception as e:
-            logger.error(f"⚠️ Error en /validar_pago POST ID {id_reg} por '{usuario}': {str(e)}")
+            logger.error(f"⚠️ Error en /validar_pago POST: {str(e)}")
             error = "Error de conexión"
         
         return render_template("validar_pago.html", id=id_reg, registro=registro, usuarios=usuarios, error=error)
@@ -682,12 +601,12 @@ def pago_validado(id_reg):
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         registro = resp.json() if resp.status_code == 200 else {}
     except Exception as e:
-        print(f"Error en /pago_validado: {e}")
+        logger.error(f"Error en /pago_validado: {e}")
         registro = {}
     return render_template("pago_validado.html", registro=registro)
 
 # ============================
-# REGISTROS CON FILTROS
+# REGISTROS
 # ============================
 @app.route('/registros')
 @login_required
@@ -697,7 +616,7 @@ def registros():
         resp = requests.get(f"{BACKEND_URL}/api/registros", timeout=10)
         registros = resp.json() if resp.status_code == 200 else []
     except Exception as e:
-        print(f"Error en /registros: {e}")
+        logger.error(f"Error en /registros: {e}")
         registros = []
     
     hoy = datetime.now().date()
@@ -739,12 +658,10 @@ def balance():
             total_diagnostico = data.get('total_diagnostico', 0)
             ganancia_neta = data.get('ganancia_neta', 0)
         else:
-            registros = []
-            total_pagado = total_repuestos = total_mano_obra = total_diagnostico = ganancia_neta = 0
+            registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     except Exception as e:
-        print(f"Error en /balance: {e}")
-        registros = []
-        total_pagado = total_repuestos = total_mano_obra = total_diagnostico = ganancia_neta = 0
+        logger.error(f"Error en /balance: {e}")
+        registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     
     hoy = [r for r in registros if r.get('fecha') == datetime.now().strftime('%Y-%m-%d')]
     semana = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')]
@@ -766,6 +683,9 @@ def balance():
         todos=todos
     )
 
+# ============================
+# MODELOS
+# ============================
 @app.route('/modelos/<marca>')
 @login_required
 def modelos(marca):
@@ -774,23 +694,27 @@ def modelos(marca):
         return jsonify(resp.json() if resp.status_code == 200 else [])
     except:
         return jsonify([])
+
+# ============================
+# EDITAR COMPLETO
+# ============================
 @app.route('/editar_completo/<int:id_reg>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def editar_completo(id_reg):
-    """Edición completa de un registro (todos los campos)"""
     data = request.json
-    
     try:
         resp = requests.post(f"{BACKEND_URL}/api/editar_completo/{id_reg}", json=data, timeout=10)
         if resp.status_code == 200:
             return jsonify({"success": True})
-        else:
-            return jsonify({"success": False, "error": resp.text}), 500
+        return jsonify({"success": False, "error": resp.text}), 500
     except Exception as e:
-        print(f"Error en /editar_completo: {e}")
+        logger.error(f"Error en /editar_completo: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+# ============================
+# FLOTAS
+# ============================
 @app.route('/flotas')
 @login_required
 @role_required(['admin'])
@@ -802,50 +726,6 @@ def flotas():
         clientes = []
     return render_template("flotas.html", clientes=clientes)
 
-@app.route('/register', methods=['GET', 'POST'])
-@login_required
-def register():
-    if session.get('rol') != 'admin':
-        return "No tienes permisos", 403
-    
-    error = None
-    success = None
-    
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        rol = request.form.get('rol', 'basico')
-        nombre_completo = request.form.get('nombre_completo', '')
-        
-        print(f"📝 POST recibido: username={username}, rol={rol}")  # ← LOG
-        
-        if not username or not password:
-            error = "⚠️ Usuario y contraseña son obligatorios"
-        elif len(password) < 6:
-            error = "⚠️ La contraseña debe tener al menos 6 caracteres"
-        else:
-            try:
-                data = {
-                    'username': username,
-                    'password': password,
-                    'rol': rol,
-                    'nombre_completo': nombre_completo
-                }
-                print(f"📤 Enviando a backend: {data}")  # ← LOG
-                resp = requests.post(f"{BACKEND_URL}/api/crear_usuario", json=data, timeout=10)
-                print(f"📥 Respuesta: {resp.status_code} - {resp.text}")  # ← LOG
-                if resp.status_code == 200:
-                    success = f"✅ Usuario {username} creado correctamente"
-                else:
-                    error = resp.json().get('error', '❌ Error al crear usuario')
-            except Exception as e:
-                print(f"Error en /register POST: {e}")
-                error = "⚠️ Error de conexión con el servidor"
-    
-    return render_template("register.html", error=error, success=success)
-# ============================
-# FLOTAS PENDIENTES
-# ============================
 @app.route('/flotas_pendientes')
 @login_required
 @role_required(['admin'])
@@ -853,20 +733,53 @@ def flotas_pendientes():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/flotas_pendientes_agrupadas", timeout=10)
         flotas_agrupadas = resp.json() if resp.status_code == 200 else []
-        
         total_general = sum(float(f.get('total_pendiente', 0)) for f in flotas_agrupadas)
-        
     except Exception as e:
-        print(f"Error en /flotas_pendientes: {e}")
-        flotas_agrupadas = []
-        total_general = 0
+        logger.error(f"Error en /flotas_pendientes: {e}")
+        flotas_agrupadas, total_general = [], 0
     
     today = datetime.now().strftime('%Y-%m-%d')
     return render_template("flotas_pendientes.html", 
                           flotas_agrupadas=flotas_agrupadas, 
                           total_general=total_general, 
                           today=today)
+
+# ============================
+# USUARIOS
+# ============================
+@app.route('/register', methods=['GET', 'POST'])
+@login_required
+def register():
+    if session.get('rol') != 'admin':
+        return "No tienes permisos", 403
     
+    error, success = None, None
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        rol = request.form.get('rol', 'basico')
+        nombre_completo = request.form.get('nombre_completo', '')
+        
+        if not username or not password:
+            error = "⚠️ Usuario y contraseña son obligatorios"
+        elif len(password) < 6:
+            error = "⚠️ La contraseña debe tener al menos 6 caracteres"
+        else:
+            try:
+                data = {'username': username, 'password': password, 'rol': rol, 'nombre_completo': nombre_completo}
+                resp = requests.post(f"{BACKEND_URL}/api/crear_usuario", json=data, timeout=10)
+                if resp.status_code == 200:
+                    success = f"✅ Usuario {username} creado correctamente"
+                    logger.info(f"👤 Usuario '{username}' creado por '{session.get('usuario')}'")
+                else:
+                    error = resp.json().get('error', '❌ Error al crear usuario')
+            except Exception as e:
+                logger.error(f"Error en /register: {e}")
+                error = "⚠️ Error de conexión"
+    
+    return render_template("register.html", error=error, success=success)
+
 @app.route('/usuarios')
 @login_required
 @role_required(['admin'])
@@ -875,10 +788,25 @@ def usuarios():
         resp = requests.get(f"{BACKEND_URL}/api/usuarios", timeout=10)
         usuarios = resp.json() if resp.status_code == 200 else []
     except Exception as e:
-        print(f"Error en /usuarios: {e}")
+        logger.error(f"Error en /usuarios: {e}")
         usuarios = []
     return render_template("usuarios.html", usuarios=usuarios)
 
+@app.route('/eliminar_usuario/<int:id_usuario>')
+@login_required
+@role_required(['admin'])
+def eliminar_usuario(id_usuario):
+    try:
+        resp = requests.delete(f"{BACKEND_URL}/api/eliminar_usuario/{id_usuario}", timeout=10)
+        if resp.status_code == 200:
+            logger.info(f"🗑️ Usuario ID {id_usuario} eliminado por '{session.get('usuario')}'")
+    except Exception as e:
+        logger.error(f"Error en /eliminar_usuario: {e}")
+    return redirect("/usuarios")
+
+# ============================
+# AUDITORÍA
+# ============================
 @app.route('/auditoria_descargas')
 @login_required
 @role_required(['admin'])
@@ -887,7 +815,7 @@ def auditoria_descargas():
         resp = requests.get(f"{BACKEND_URL}/api/auditoria", timeout=10)
         historial = resp.json() if resp.status_code == 200 else []
     except Exception as e:
-        print(f"Error en /auditoria_descargas: {e}")
+        logger.error(f"Error en /auditoria_descargas: {e}")
         historial = []
     return render_template("auditoria_descargas.html", historial=historial)
 
@@ -905,20 +833,9 @@ def exportar_flota_pdf(flota):
         return "Debes seleccionar ambas fechas", 400
     
     try:
-        # 🔥 Usar la URL correcta del backend
         backend_url = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
         url = f"{backend_url}/api/exportar_flota_pdf/{flota}"
-        
-        print(f"📤 Enviando a: {url}")
-        print(f"📅 Fechas: {fecha_desde} - {fecha_hasta}")
-        
-        resp = requests.post(
-            url,
-            json={"fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta},
-            timeout=60
-        )
-        
-        print(f"📥 Respuesta: {resp.status_code}")
+        resp = requests.post(url, json={"fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta}, timeout=60)
         
         if resp.status_code == 200:
             return send_file(
@@ -927,31 +844,14 @@ def exportar_flota_pdf(flota):
                 as_attachment=True,
                 download_name=f'reporte_flota_{flota}.pdf'
             )
-        else:
-            return f"❌ Error: {resp.text}", resp.status_code
-            
-    except requests.exceptions.ConnectionError as e:
-        print(f"❌ Error de conexión: {e}")
-        return "❌ No se pudo conectar al servidor. Verifica que Railway esté funcionando.", 500
+        return f"❌ Error: {resp.text}", resp.status_code
     except Exception as e:
-        print(f"❌ Error: {e}")
+        logger.error(f"Error en /exportar_flota_pdf: {e}")
         return f"❌ Error: {str(e)}", 500
-        
-@app.route('/eliminar_usuario/<int:id_usuario>')
-@login_required
-@role_required(['admin'])
-def eliminar_usuario(id_usuario):
-    """Elimina un usuario (solo admin)"""
-    try:
-        resp = requests.delete(f"{BACKEND_URL}/api/eliminar_usuario/{id_usuario}", timeout=10)
-        if resp.status_code == 200:
-            # Redirige sin mensaje
-            pass
-    except Exception as e:
-        print(f"Error en /eliminar_usuario: {e}")
-    
-    return redirect("/usuarios")
 
+# ============================
+# DASHBOARD
+# ============================
 @app.route('/dashboard')
 @login_required
 @role_required(['admin'])
@@ -964,47 +864,30 @@ def dashboard():
         url = f"{BACKEND_URL}/api/dashboard?filtro={filtro}"
         if mes and anio:
             url += f"&mes={mes}&anio={anio}"
-        
         resp = requests.get(url, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-        else:
-            data = {}
+        data = resp.json() if resp.status_code == 200 else {}
     except Exception as e:
-        print(f"Error en /dashboard: {e}")
+        logger.error(f"Error en /dashboard: {e}")
         data = {}
     
-    # Valores por defecto
     default_data = {
-        "total_facturado": 0,
-        "total_repuestos": 0,
-        "total_mano_obra": 0,
-        "total_diagnostico": 0,
-        "total_servicios": 0,
-        "ganancia_total": 0,
-        "promedio_diario": 0,
-        "labels": [],
-        "ventas": [],
-        "ganancia_acumulada": [],
-        "proyeccion_labels": [],
-        "proyeccion": [],
-        "clientes_labels": [],
-        "clientes_data": [],
-        "meses_disponibles": [],
-        "filtro_actual": filtro,
-        "mes_actual": mes,
-        "anio_actual": anio
+        "total_facturado": 0, "total_repuestos": 0, "total_mano_obra": 0,
+        "total_diagnostico": 0, "total_servicios": 0, "ganancia_total": 0,
+        "promedio_diario": 0, "labels": [], "ventas": [],
+        "ganancia_acumulada": [], "proyeccion_labels": [], "proyeccion": [],
+        "clientes_labels": [], "clientes_data": [], "meses_disponibles": [],
+        "filtro_actual": filtro, "mes_actual": mes, "anio_actual": anio
     }
     
     for key, value in default_data.items():
         if key not in data:
             data[key] = value
     
-    # ✅ LOG PARA VERIFICAR DATOS
-    print(f"📊 Datos para dashboard: labels={len(data.get('labels', []))}, ventas={len(data.get('ventas', []))}")
-    
     return render_template("dashboard_v2.html", **data)
-    
+
+# ============================
+# REPUESTOS
+# ============================
 @app.route('/repuestos')
 @login_required
 @role_required(['admin', 'operador'])
@@ -1013,24 +896,10 @@ def repuestos():
         resp = requests.get(f"{BACKEND_URL}/api/repuestos", timeout=10)
         repuestos = resp.json() if resp.status_code == 200 else []
     except Exception as e:
-        print(f"Error en /repuestos: {e}")
+        logger.error(f"Error en /repuestos: {e}")
         repuestos = []
     return render_template("repuestos.html", repuestos=repuestos)
-        
-# ============================
-# RUTAS ESTÁTICAS
-# ============================
-@app.route('/static/<path:path>')
-def static_files(path):
-    return app.send_static_file(path)
 
-@app.route('/manifest.json')
-def manifest():
-    return app.send_static_file('manifest.json')
-
-@app.route('/service-worker.js')
-def service_worker():
-    return app.send_static_file('service-worker.js')
 # ============================
 # VENTA RÁPIDA
 # ============================
@@ -1039,7 +908,6 @@ def service_worker():
 @role_required(['admin', 'operador'])
 def venta_rapida():
     return render_template("venta_rapida.html")
-
 
 # ============================
 # BALANCE DE VENTAS
@@ -1077,7 +945,7 @@ def balance_ventas():
             trabajo_margen = 0
             directa_margen = 0
     except Exception as e:
-        print(f"Error en /balance_ventas: {e}")
+        logger.error(f"Error en /balance_ventas: {e}")
         registros = []
         total_ventas = 0
         total_trabajo = 0
@@ -1114,29 +982,21 @@ def balance_ventas():
         directa_margen=directa_margen,
         filtro=filtro
     )
+
 # ============================
 # FILTRO PARA FORMATO DE FECHA EN ESPAÑOL
 # ============================
 def formato_fecha_espanol(fecha):
-    """Formatea una fecha en español (ej: Lunes 13 de Julio 2026)"""
     if not fecha:
         return ''
-    
     if isinstance(fecha, str):
         try:
             fecha = datetime.strptime(fecha, '%Y-%m-%d')
         except:
             return fecha
     
-    dias = {
-        0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves',
-        4: 'Viernes', 5: 'Sábado', 6: 'Domingo'
-    }
-    meses = {
-        1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
-        5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
-        9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
-    }
+    dias = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
+    meses = {1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'}
     
     dia_nombre = dias.get(fecha.weekday(), '')
     dia = fecha.day
@@ -1145,12 +1005,14 @@ def formato_fecha_espanol(fecha):
     
     return f"{dia_nombre} {dia} de {mes} {año}"
 
-# Agregar el filtro a Jinja2
 app.jinja_env.filters['fecha_espanol'] = formato_fecha_espanol
 
+# ============================
+# VER LOGS
+# ============================
 @app.route('/ver_logs')
 @login_required
-@role_required(['admin'])  # Solo admin
+@role_required(['admin'])
 def ver_logs():
     try:
         log_file = os.path.join(LOG_DIR, 'dixon_app.log')
@@ -1175,6 +1037,21 @@ def ver_logs():
     except Exception as e:
         logger.error(f"Error al leer logs: {str(e)}")
         return render_template("ver_logs.html", logs=f"Error al leer logs: {str(e)}")
+
+# ============================
+# RUTAS ESTÁTICAS
+# ============================
+@app.route('/static/<path:path>')
+def static_files(path):
+    return app.send_static_file(path)
+
+@app.route('/manifest.json')
+def manifest():
+    return app.send_static_file('manifest.json')
+
+@app.route('/service-worker.js')
+def service_worker():
+    return app.send_static_file('service-worker.js')
 
 # ============================
 # INICIO
