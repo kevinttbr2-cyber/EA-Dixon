@@ -282,7 +282,22 @@ def generar_firma_pdf(id_reg):
         str(id_reg).encode(),
         hashlib.sha256
     ).hexdigest()[:16]
-
+@app.route('/debug_push')
+@login_required
+@role_required(['admin'])
+def debug_push():
+    suscripciones = cargar_suscripciones()
+    return jsonify({
+        "total": len(suscripciones),
+        "vapid_public": VAPID_PUBLIC_KEY[:20] + "..." if VAPID_PUBLIC_KEY else "NO",
+        "vapid_private": "✅" if VAPID_PRIVATE_KEY else "❌",
+        "suscripciones": [
+            {
+                "endpoint": s.get('endpoint', '')[:50] + "...",
+                "keys": s.get('keys', {})
+            } for s in suscripciones[:1]
+        ] if suscripciones else []
+    })
 # ============================
 # CONTEXT PROCESSOR
 # ============================
