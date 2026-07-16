@@ -177,7 +177,7 @@ def editar_completo(id_reg):
             data.get('flota'),
             data.get('fecha'),
             data.get('hora'),
-            data.get('monto', 0),  # ✅ DEBE ESTAR AQUÍ
+            data.get('monto', 0),
             data.get('observaciones_cliente'),
             data.get('diagnostico'),
             data.get('reparacion', 'Reparación realizada'),
@@ -200,6 +200,8 @@ def editar_completo(id_reg):
     except Exception as e:
         print(f"❌ Error en editar_completo: {e}")
         return jsonify({"error": str(e)}), 500
+
+
 # ============================
 # EDITAR REPUESTOS DE VENTA (ACTUALIZAR SOLO REPUESTOS Y COSTOS)
 # ============================
@@ -212,12 +214,11 @@ def editar_repuestos_venta(id_reg):
         mano_obra = float(data.get('costo_mano_obra_real', 0))
         diagnostico = float(data.get('costo_diagnostico_real', 0))
         ganancia_neta = float(data.get('ganancia_neta', 0))
-        monto = float(data.get('monto', 0))  # ✅ AGREGAR ESTO
+        monto = float(data.get('monto', 0))
         
         conn = get_connection()
         cur = conn.cursor()
         
-        # ✅ AGREGAR monto al UPDATE
         cur.execute("""
             UPDATE pagos 
             SET detalles_repuestos = %s::jsonb,
@@ -234,7 +235,7 @@ def editar_repuestos_venta(id_reg):
             mano_obra,
             diagnostico,
             ganancia_neta,
-            monto,  # ✅ AGREGAR ESTO
+            monto,
             id_reg
         ))
         
@@ -246,6 +247,7 @@ def editar_repuestos_venta(id_reg):
     except Exception as e:
         print(f"❌ Error en editar_repuestos_venta: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 # ============================
 # 5. ELIMINAR REGISTRO
@@ -268,9 +270,6 @@ def eliminar_registro(id_reg):
 # ============================
 # 6. BALANCE DE GANANCIA
 # ============================
-# ============================
-# 6. BALANCE DE GANANCIA (CORREGIDO - CON estado_pago)
-# ============================
 @pago_bp.route('/balance', methods=['GET'])
 def get_balance():
     filtro = request.args.get('filtro', 'hoy')
@@ -279,7 +278,6 @@ def get_balance():
     try:
         conn, cur = get_cursor()
         
-        # ✅ SOLO REGISTROS CON estado_pago = 'pagado'
         query = """
             SELECT * FROM pagos 
             WHERE estado = 'pagado' 
@@ -343,9 +341,6 @@ def agregar_pago():
 # ============================
 # 8. PROCESAR PAGO (PASO 1 - PAGO EXPRESS)
 # ============================
-# ============================
-# 8. PROCESAR PAGO (PASO 1 - PAGO EXPRESS)
-# ============================
 @pago_bp.route('/pagar/<int:id_reg>', methods=['POST'])
 def pagar(id_reg):
     data = request.json
@@ -370,7 +365,7 @@ def pagar(id_reg):
     if pago:
         print(f"✅ Pago procesado - forma_pago: {pago.forma_pago}")
         
-        # ✅ NOTIFICACIÓN PUSH - PAGO EXPRESS
+        # ✅ NOTIFICACIÓN PUSH - PAGO EXPRESS (CORREGIDO)
         enviar_notificacion_push(
             titulo="💰 Pago Express",
             mensaje=f"Cliente: {pago.nombre}\nMonto: ${float(pago.monto):,.0f}\nForma: {pago.forma_pago}",
@@ -380,6 +375,7 @@ def pagar(id_reg):
         
         return jsonify({"success": True, "pago": pago.to_dict()})
     return jsonify({"success": False, "error": "Error al procesar"}), 500
+
 
 # ============================
 # 9. PENDIENTES DE VALIDACIÓN
@@ -438,25 +434,19 @@ def validar_pago(id_reg):
         conn = get_connection()
         cur = conn.cursor()
         
-        # ✅ OBTENER EL REGISTRO PARA SABER SI TIENE FLOTA
         cur.execute("SELECT flota FROM pagos WHERE id = %s", (id_reg,))
         registro = cur.fetchone()
         es_flota = registro and registro[0] and registro[0].strip() != ''
         
-        # ✅ DETERMINAR estado_pago
-        # Si es flota → queda pendiente de pago
-        # Si no es flota → queda pagado
         estado_pago = 'pendiente' if es_flota else 'pagado'
         fecha_pago_real = None if es_flota else get_fecha_chile().strftime('%Y-%m-%d')
         
         print(f"🚛 ¿Es flota? {es_flota} → estado_pago: {estado_pago}")
         
-        # ✅ GUARDAR REPUESTOS CON CANTIDAD
         for item in detalles_repuestos:
             nombre = item.get('nombre', '').strip()
             cantidad = int(item.get('cantidad', 1) or 1)
             costo_unitario = float(item.get('costo_unitario', 0) or 0)
-            subtotal = cantidad * costo_unitario
             
             if nombre:
                 cur.execute("SELECT id, costo_proveedor, costo_venta_final FROM repuestos WHERE nombre = %s", (nombre,))
@@ -494,7 +484,6 @@ def validar_pago(id_reg):
                     id_nuevo = cur.fetchone()[0]
                     print(f"✅ Repuesto '{nombre}' creado con costo_venta_final: ${costo_unitario} (ID: {id_nuevo})")
         
-        # ✅ Guardar detalles con cantidad
         detalles_json = json.dumps(detalles_repuestos)
         
         cur.execute("""
@@ -543,6 +532,7 @@ def validar_pago(id_reg):
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 # ============================
 # 11. REPUESTOS - OBTENER LISTA
@@ -1043,7 +1033,6 @@ def venta_rapida():
             nombre = item.get('nombre', '').strip()
             cantidad = int(item.get('cantidad', 1) or 1)
             costo_unitario = float(item.get('costo_unitario', 0) or 0)
-            subtotal = cantidad * costo_unitario
             
             if nombre and costo_unitario > 0:
                 cur.execute("SELECT id FROM repuestos WHERE nombre = %s", (nombre,))
@@ -1084,10 +1073,10 @@ def venta_rapida():
         cur.close()
         conn.close()
         
-        # ✅ NOTIFICACIÓN PUSH - VENTA RÁPIDA
+        # ✅ NOTIFICACIÓN PUSH - VENTA RÁPIDA (CORREGIDO)
         enviar_notificacion_push(
             titulo="⚡ Venta Rápida",
-            mensaje=f"Cliente: {data.get('nombre')}\nTotal: ${data.get('monto'):,.0f}\nProductos: {len(detalles_repuestos)}",
+            mensaje=f"Cliente: {data.get('nombre')}\nTotal: ${float(data.get('monto', 0)):,.0f}\nProductos: {len(detalles_repuestos)}",
             url="/balance_ventas"
         )
         
@@ -1098,10 +1087,7 @@ def venta_rapida():
 
 
 # ============================
-# 19. BALANCE DE VENTAS (CORREGIDO - CON total_repuestos)
-# ============================
-# ============================
-# 19. BALANCE DE VENTAS (CORREGIDO - CON estado_pago)
+# 19. BALANCE DE VENTAS
 # ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
@@ -1111,7 +1097,6 @@ def balance_ventas():
         
         conn, cur = get_cursor()
         
-        # ✅ SOLO REGISTROS CON estado_pago = 'pagado'
         query = "SELECT * FROM pagos WHERE estado = 'pagado' AND estado_pago = 'pagado'"
         params = []
         
@@ -1130,7 +1115,6 @@ def balance_ventas():
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
-        # ✅ CALCULAR TOTAL REPUESTOS POR REGISTRO
         for r in registros:
             total = 0
             detalles = r.get('detalles_repuestos', [])
@@ -1140,7 +1124,6 @@ def balance_ventas():
                 total += cantidad * precio
             r['total_repuestos'] = total
         
-        # ✅ SEPARAR TRABAJO vs DIRECTA
         trabajo = []
         directa = []
         
@@ -1153,9 +1136,6 @@ def balance_ventas():
             else:
                 trabajo.append(r)
         
-        # ============================
-        # FUNCIONES PARA CALCULAR SOLO REPUESTOS
-        # ============================
         def calcular_venta_repuestos(registros):
             total = 0
             for r in registros:
@@ -1194,11 +1174,7 @@ def balance_ventas():
                     total += float(r.get('costo_repuestos_real', 0) or 0)
             return total
         
-        # ============================
-        # FUNCIÓN: Calcular Margen Promedio
-        # ============================
         def calcular_margen_promedio(registros):
-            """Calcula el margen promedio de los repuestos vendidos"""
             margenes = []
             for r in registros:
                 detalles = r.get('detalles_repuestos', [])
@@ -1213,9 +1189,6 @@ def balance_ventas():
                 return sum(margenes) / len(margenes)
             return 0
         
-        # ============================
-        # CALCULAR TOTALES
-        # ============================
         total_ventas = calcular_venta_repuestos(registros)
         total_trabajo = calcular_venta_repuestos(trabajo)
         total_directa = calcular_venta_repuestos(directa)
@@ -1252,11 +1225,10 @@ def balance_ventas():
 
 
 # ============================
-# 20. DASHBOARD (CORREGIDO - CON estado_pago)
+# 20. DASHBOARD
 # ============================
 @pago_bp.route('/dashboard', methods=['GET'])
 def get_dashboard():
-    """Devuelve datos agregados para el dashboard con filtros"""
     try:
         filtro = request.args.get('filtro', '7d')
         mes = request.args.get('mes')
@@ -1283,7 +1255,6 @@ def get_dashboard():
         
         conn, cur = get_cursor()
         
-        # ✅ SOLO REGISTROS CON estado_pago = 'pagado'
         cur.execute("""
             SELECT 
                 COALESCE(SUM(monto), 0) as total_facturado,
@@ -1419,12 +1390,13 @@ def get_dashboard():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+
 # ============================
 # 21. FLOTAS PENDIENTES DE COBRO
 # ============================
 @pago_bp.route('/flotas_pendientes', methods=['GET'])
 def get_flotas_pendientes():
-    """Obtiene todas las flotas que están pendientes de pago"""
     try:
         conn, cur = get_cursor()
         
@@ -1447,63 +1419,6 @@ def get_flotas_pendientes():
     except Exception as e:
         print(f"❌ Error en get_flotas_pendientes: {e}")
         return jsonify({"error": str(e)}), 500
-# ============================
-# 23. VALIDAR PAGO DE FLOTA (MARCAR COMO PAGADO)
-# ============================
-@pago_bp.route('/validar_flota/<int:id_reg>', methods=['POST'])
-def validar_flota(id_reg):
-    try:
-        data = request.json
-        fecha_pago = data.get('fecha_pago')
-        forma_pago = data.get('forma_pago', 'transferencia')
-        monto_pagado = float(data.get('monto_pagado', 0))
-        
-        if not fecha_pago:
-            return jsonify({"error": "La fecha de pago es obligatoria"}), 400
-        
-        conn = get_connection()
-        cur = conn.cursor()
-        
-        # ✅ Verificar que existe y está pendiente
-        cur.execute("""
-            SELECT id, estado_pago, flota, nombre FROM pagos 
-            WHERE id = %s AND estado_pago = 'pendiente'
-        """, (id_reg,))
-        registro = cur.fetchone()
-        
-        if not registro:
-            cur.close()
-            conn.close()
-            return jsonify({"error": "Registro no encontrado o ya está pagado"}), 404
-        
-        id_registro, estado, flota, nombre_cliente = registro
-        
-        # ✅ Actualizar a pagado
-        cur.execute("""
-            UPDATE pagos 
-            SET estado_pago = 'pagado',
-                fecha_pago_real = %s,
-                forma_pago = %s,
-                monto = %s,
-                actualizado_en = NOW() AT TIME ZONE 'America/Santiago'
-            WHERE id = %s
-        """, (fecha_pago, forma_pago, monto_pagado, id_reg))
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        # ✅ NOTIFICACIÓN PUSH - FLOTA PAGADA
-        enviar_notificacion_push(
-            titulo="✅ Flota Pagada",
-            mensaje=f"Flota: {flota or 'Sin flota'}\nCliente: {nombre_cliente}\nMonto: ${monto_pagado:,.0f}",
-            url="/flotas_pendientes"
-        )
-        
-        return jsonify({"success": True})
-    except Exception as e:
-        print(f"❌ Error en validar_flota: {e}")
-        return jsonify({"error": str(e)}), 500
 
 
 # ============================
@@ -1511,7 +1426,6 @@ def validar_flota(id_reg):
 # ============================
 @pago_bp.route('/flotas_pendientes_count', methods=['GET'])
 def get_flotas_pendientes_count():
-    """Devuelve el número de flotas pendientes de cobro"""
     try:
         conn, cur = get_cursor()
         
@@ -1532,12 +1446,70 @@ def get_flotas_pendientes_count():
     except Exception as e:
         print(f"❌ Error en get_flotas_pendientes_count: {e}")
         return jsonify({"count": 0}), 500
+
+
+# ============================
+# 23. VALIDAR PAGO DE FLOTA (MARCAR COMO PAGADO)
+# ============================
+@pago_bp.route('/validar_flota/<int:id_reg>', methods=['POST'])
+def validar_flota(id_reg):
+    try:
+        data = request.json
+        fecha_pago = data.get('fecha_pago')
+        forma_pago = data.get('forma_pago', 'transferencia')
+        monto_pagado = float(data.get('monto_pagado', 0))
+        
+        if not fecha_pago:
+            return jsonify({"error": "La fecha de pago es obligatoria"}), 400
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT id, estado_pago, flota, nombre FROM pagos 
+            WHERE id = %s AND estado_pago = 'pendiente'
+        """, (id_reg,))
+        registro = cur.fetchone()
+        
+        if not registro:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Registro no encontrado o ya está pagado"}), 404
+        
+        id_registro, estado, flota, nombre_cliente = registro
+        
+        cur.execute("""
+            UPDATE pagos 
+            SET estado_pago = 'pagado',
+                fecha_pago_real = %s,
+                forma_pago = %s,
+                monto = %s,
+                actualizado_en = NOW() AT TIME ZONE 'America/Santiago'
+            WHERE id = %s
+        """, (fecha_pago, forma_pago, monto_pagado, id_reg))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # ✅ NOTIFICACIÓN PUSH - FLOTA PAGADA (CORREGIDO)
+        enviar_notificacion_push(
+            titulo="✅ Flota Pagada",
+            mensaje=f"Flota: {flota or 'Sin flota'}\nCliente: {nombre_cliente}\nMonto: ${float(monto_pagado):,.0f}",
+            url="/flotas_pendientes"
+        )
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"❌ Error en validar_flota: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 # ============================
 # 24. FLOTAS PENDIENTES AGRUPADAS
 # ============================
 @pago_bp.route('/flotas_pendientes_agrupadas', methods=['GET'])
 def get_flotas_pendientes_agrupadas():
-    """Devuelve flotas pendientes agrupadas por nombre"""
     try:
         conn, cur = get_cursor()
         
@@ -1553,7 +1525,6 @@ def get_flotas_pendientes_agrupadas():
         rows = cur.fetchall()
         registros = [dict(row) for row in rows]
         
-        # ✅ AGRUPAR POR FLOTA
         flotas_agrupadas = {}
         for r in registros:
             nombre_flota = r.get('flota', 'Sin flota')
@@ -1566,7 +1537,6 @@ def get_flotas_pendientes_agrupadas():
             flotas_agrupadas[nombre_flota]['servicios'].append(r)
             flotas_agrupadas[nombre_flota]['total_pendiente'] += float(r.get('monto', 0) or 0)
         
-        # Convertir a lista
         resultado = list(flotas_agrupadas.values())
         
         cur.close()
@@ -1576,6 +1546,8 @@ def get_flotas_pendientes_agrupadas():
     except Exception as e:
         print(f"❌ Error en get_flotas_pendientes_agrupadas: {e}")
         return jsonify({"error": str(e)}), 500
+
+
 # ============================
 # 25. VALIDAR TODA LA FLOTA (MARCAR TODOS COMO PAGADOS)
 # ============================
@@ -1592,7 +1564,6 @@ def validar_flota_completa(nombre_flota):
         conn = get_connection()
         cur = conn.cursor()
         
-        # ✅ Obtener todos los servicios pendientes de esta flota
         cur.execute("""
             SELECT id, monto, nombre FROM pagos 
             WHERE flota = %s 
@@ -1607,11 +1578,9 @@ def validar_flota_completa(nombre_flota):
             conn.close()
             return jsonify({"error": "No hay servicios pendientes para esta flota"}), 404
         
-        # ✅ Calcular total
         total_pagado = sum(float(s[1] or 0) for s in servicios)
         cantidad_servicios = len(servicios)
         
-        # ✅ Marcar TODOS como pagados
         cur.execute("""
             UPDATE pagos 
             SET estado_pago = 'pagado',
@@ -1627,10 +1596,10 @@ def validar_flota_completa(nombre_flota):
         cur.close()
         conn.close()
         
-        # ✅ NOTIFICACIÓN PUSH - FLOTA COMPLETA
+        # ✅ NOTIFICACIÓN PUSH - FLOTA COMPLETA (CORREGIDO)
         enviar_notificacion_push(
             titulo="✅ Flota Completa Pagada",
-            mensaje=f"Flota: {nombre_flota}\nServicios: {cantidad_servicios}\nTotal: ${total_pagado:,.0f}",
+            mensaje=f"Flota: {nombre_flota}\nServicios: {cantidad_servicios}\nTotal: ${float(total_pagado):,.0f}",
             url="/flotas_pendientes"
         )
         
@@ -1642,6 +1611,8 @@ def validar_flota_completa(nombre_flota):
     except Exception as e:
         print(f"❌ Error en validar_flota_completa: {e}")
         return jsonify({"error": str(e)}), 500
+
+
 # ============================
 # VERIFICAR DUPLICADO (ANTES DE AGREGAR)
 # ============================
@@ -1656,7 +1627,6 @@ def verificar_duplicado():
     try:
         conn, cur = get_cursor()
         
-        # Buscar registros con el mismo nombre y patente en los últimos 5 minutos
         cur.execute("""
             SELECT COUNT(*) FROM pagos 
             WHERE nombre = %s 
@@ -1672,7 +1642,7 @@ def verificar_duplicado():
     except Exception as e:
         print(f"❌ Error en verificar_duplicado: {e}")
         return jsonify({"duplicado": False}), 500
-# backend/routes/pago_routes.py
+
 
 # ============================
 # GUARDAR SUSCRIPCIÓN PUSH
@@ -1689,10 +1659,8 @@ def guardar_suscripcion():
         conn = get_connection()
         cur = conn.cursor()
         
-        # Eliminar duplicado
         cur.execute("DELETE FROM push_subscriptions WHERE endpoint = %s", (endpoint,))
         
-        # Insertar nueva
         cur.execute("""
             INSERT INTO push_subscriptions (endpoint, auth_key, p256dh_key)
             VALUES (%s, %s, %s)
