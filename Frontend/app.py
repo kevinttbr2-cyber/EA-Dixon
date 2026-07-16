@@ -17,14 +17,14 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 # ============================
-# CONFIGURACIÓN DE LA APP
+# CONFIGURACIÓN DE LA APP (PRIMERO)
 # ============================
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
 PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
 
 # ============================
-# CONFIGURACIÓN DE LOGS PERSISTENTES
+# CONFIGURACIÓN DE LOGS PERSISTENTES (DESPUÉS DE app)
 # ============================
 IS_VERCEL = os.environ.get('VERCEL_ENV') == 'production' or os.environ.get('VERCEL')
 
@@ -80,7 +80,7 @@ else:
     logger.info(f"📁 Logs guardados en: {LOG_DIR}")
 
 # ============================
-# RATE LIMITING
+# RATE LIMITING (DESPUÉS DE app)
 # ============================
 limiter = Limiter(
     app,
@@ -234,6 +234,9 @@ def index():
         return redirect("/estado")
     return redirect("/login")
 
+# ============================
+# LOGIN (CON RATE LIMITING)
+# ============================
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("5 per minute")
 @limiter.limit("20 per hour")
@@ -243,7 +246,7 @@ def login():
         session['csrf_token'] = secrets.token_hex(32)
     
     if request.method == 'POST':
-        username = request.form.get('username')
+        username = sanitizar_input(request.form.get('username', '').strip())
         password = request.form.get('password')
         ip = request.remote_addr
         
