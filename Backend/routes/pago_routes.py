@@ -1065,6 +1065,13 @@ def venta_rapida():
         cur.close()
         conn.close()
         
+        # ✅ NOTIFICACIÓN PUSH - VENTA RÁPIDA
+        enviar_notificacion_push(
+            titulo="⚡ Venta Rápida",
+            mensaje=f"Cliente: {data.get('nombre')}\nTotal: ${data.get('monto'):,.0f}\nProductos: {len(detalles_repuestos)}",
+            url="/balance_ventas"
+        )
+        
         return jsonify({"success": True, "id": id_reg})
     except Exception as e:
         print(f"❌ Error en venta_rapida: {e}")
