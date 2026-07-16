@@ -10,3 +10,4 @@ twilio>=8.0.0
 qrcode[pil]==7.4.2
 openpyxl>=3.0.0 
 pywebpush==1.14.0
+cryptography==39.0.2
