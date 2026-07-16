@@ -13,6 +13,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import sys
 import re
+import json
 
 # ============================
 # CONFIGURACIÓN DE LA APP
@@ -20,6 +21,82 @@ import re
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
 PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
+# Archivo para guardar suscripciones
+SUSCRIPCIONES_FILE = 'suscripciones.json'
+
+def cargar_suscripciones():
+    try:
+        with open(SUSCRIPCIONES_FILE, 'r') as f:
+            return json.load(f)
+    except:
+        return []
+
+def guardar_suscripcion(suscripcion):
+    suscripciones = cargar_suscripciones()
+    # Evitar duplicados
+    suscripciones = [s for s in suscripciones if s.get('endpoint') != suscripcion.get('endpoint')]
+    suscripciones.append(suscripcion)
+    with open(SUSCRIPCIONES_FILE, 'w') as f:
+        json.dump(suscripciones, f)
+
+# ============================
+# RUTA PARA GUARDAR SUSCRIPCIÓN
+# ============================
+@app.route('/api/guardar_suscripcion', methods=['POST'])
+def guardar_suscripcion():
+    try:
+        data = request.json
+        guardar_suscripcion(data)
+        logger.info(f"✅ Nueva suscripción push guardada")
+        return jsonify({"success": True})
+    except Exception as e:
+        logger.error(f"Error al guardar suscripción: {e}")
+        return jsonify({"success": False}), 500
+
+# ============================
+# FUNCIÓN PARA ENVIAR NOTIFICACIONES PUSH
+# ============================
+from pywebpush import webpush, WebPushException
+
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_EMAIL = os.environ.get("VAPID_EMAIL", "admin@dixon.cl")
+
+def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
+    """Envía notificaciones push a todos los dispositivos suscritos"""
+    if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
+        logger.warning("⚠️ VAPID keys no configuradas")
+        return
+    
+    suscripciones = cargar_suscripciones()
+    if not suscripciones:
+        logger.info("ℹ️ No hay suscripciones push")
+        return
+    
+    data = {
+        "title": titulo,
+        "body": mensaje,
+        "url": url,
+        "id": id
+    }
+    
+    enviados = 0
+    for sub in suscripciones:
+        try:
+            webpush(
+                subscription_info=sub,
+                data=json.dumps(data),
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims={
+                    "sub": f"mailto:{VAPID_EMAIL}"
+                }
+            )
+            enviados += 1
+        except WebPushException as e:
+            logger.error(f"Error enviando push: {e}")
+    
+    logger.info(f"📱 Notificaciones enviadas a {enviados} dispositivos")
+    return enviados
 
 # ============================
 # CONFIGURACIÓN DE LOGS PERSISTENTES
