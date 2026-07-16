@@ -340,6 +340,9 @@ def agregar_pago():
 # ============================
 # 8. PROCESAR PAGO (PASO 1 - PAGO EXPRESS)
 # ============================
+# ============================
+# 8. PROCESAR PAGO (PASO 1 - PAGO EXPRESS)
+# ============================
 @pago_bp.route('/pagar/<int:id_reg>', methods=['POST'])
 def pagar(id_reg):
     data = request.json
@@ -363,9 +366,17 @@ def pagar(id_reg):
     pago = PagoService.procesar_pago(id_reg, data)
     if pago:
         print(f"✅ Pago procesado - forma_pago: {pago.forma_pago}")
+        
+        # ✅ NOTIFICACIÓN PUSH - PAGO EXPRESS
+        enviar_notificacion_push(
+            titulo="💰 Pago Express",
+            mensaje=f"Cliente: {pago.nombre}\nMonto: ${pago.monto:,.0f}\nForma: {pago.forma_pago}",
+            url=f"/pago_exitoso/{id_reg}",
+            id=id_reg
+        )
+        
         return jsonify({"success": True, "pago": pago.to_dict()})
     return jsonify({"success": False, "error": "Error al procesar"}), 500
-
 
 # ============================
 # 9. PENDIENTES DE VALIDACIÓN
@@ -1447,7 +1458,7 @@ def validar_flota(id_reg):
         
         # ✅ Verificar que existe y está pendiente
         cur.execute("""
-            SELECT id, estado_pago FROM pagos 
+            SELECT id, estado_pago, flota, nombre FROM pagos 
             WHERE id = %s AND estado_pago = 'pendiente'
         """, (id_reg,))
         registro = cur.fetchone()
@@ -1456,6 +1467,8 @@ def validar_flota(id_reg):
             cur.close()
             conn.close()
             return jsonify({"error": "Registro no encontrado o ya está pagado"}), 404
+        
+        id_registro, estado, flota, nombre_cliente = registro
         
         # ✅ Actualizar a pagado
         cur.execute("""
@@ -1471,6 +1484,13 @@ def validar_flota(id_reg):
         conn.commit()
         cur.close()
         conn.close()
+        
+        # ✅ NOTIFICACIÓN PUSH - FLOTA PAGADA
+        enviar_notificacion_push(
+            titulo="✅ Flota Pagada",
+            mensaje=f"Flota: {flota or 'Sin flota'}\nCliente: {nombre_cliente}\nMonto: ${monto_pagado:,.0f}",
+            url="/flotas_pendientes"
+        )
         
         return jsonify({"success": True})
     except Exception as e:
@@ -1566,7 +1586,7 @@ def validar_flota_completa(nombre_flota):
         
         # ✅ Obtener todos los servicios pendientes de esta flota
         cur.execute("""
-            SELECT id, monto FROM pagos 
+            SELECT id, monto, nombre FROM pagos 
             WHERE flota = %s 
             AND estado = 'pagado' 
             AND estado_pago = 'pendiente'
@@ -1581,6 +1601,7 @@ def validar_flota_completa(nombre_flota):
         
         # ✅ Calcular total
         total_pagado = sum(float(s[1] or 0) for s in servicios)
+        cantidad_servicios = len(servicios)
         
         # ✅ Marcar TODOS como pagados
         cur.execute("""
@@ -1598,10 +1619,17 @@ def validar_flota_completa(nombre_flota):
         cur.close()
         conn.close()
         
+        # ✅ NOTIFICACIÓN PUSH - FLOTA COMPLETA
+        enviar_notificacion_push(
+            titulo="✅ Flota Completa Pagada",
+            mensaje=f"Flota: {nombre_flota}\nServicios: {cantidad_servicios}\nTotal: ${total_pagado:,.0f}",
+            url="/flotas_pendientes"
+        )
+        
         return jsonify({
             "success": True, 
             "total_pagado": total_pagado,
-            "servicios_actualizados": len(servicios)
+            "servicios_actualizados": cantidad_servicios
         })
     except Exception as e:
         print(f"❌ Error en validar_flota_completa: {e}")
