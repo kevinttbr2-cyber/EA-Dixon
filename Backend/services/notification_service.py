@@ -4,8 +4,38 @@ import logging
 import psycopg2
 import base64
 from pywebpush import webpush, WebPushException
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 
 logger = logging.getLogger(__name__)
+
+def convertir_clave_privada_a_pem(private_key_b64):
+    """
+    Convierte una clave VAPID privada de Base64 URL-safe a PEM.
+    Esta es la función clave para que pywebpush funcione correctamente.
+    """
+    try:
+        # Agregar padding si es necesario
+        padding = '=' * (4 - (len(private_key_b64) % 4)) if len(private_key_b64) % 4 else ''
+        key_bytes = base64.urlsafe_b64decode(private_key_b64 + padding)
+        
+        # Crear clave privada EC
+        private_key = ec.derive_private_key(
+            int.from_bytes(key_bytes[:32], byteorder='big'),
+            ec.SECP256R1()
+        )
+        
+        # Convertir a PEM
+        pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        
+        return pem.decode('utf-8')
+    except Exception as e:
+        logger.error(f"❌ Error convirtiendo clave a PEM: {e}")
+        return None
 
 def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
     """Envía notificaciones push a todos los dispositivos suscritos"""
@@ -27,14 +57,13 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
         print("❌ VAPID keys no configuradas")
         return 0
     
-    # ✅ CONVERTIR CLAVE PRIVADA AL FORMATO CORRECTO
-    try:
-        # pywebpush espera la clave privada en Base64 URL-safe SIN padding
-        private_key = VAPID_PRIVATE_KEY.strip()
-        print(f"✅ Clave privada formateada: {private_key[:20]}...")
-    except Exception as e:
-        print(f"❌ Error formateando clave: {e}")
+    # ✅ CONVERTIR CLAVE PRIVADA A PEM
+    private_key_pem = convertir_clave_privada_a_pem(VAPID_PRIVATE_KEY)
+    if not private_key_pem:
+        print("❌ No se pudo convertir la clave privada a PEM")
         return 0
+    
+    print("✅ Clave privada convertida a PEM correctamente")
     
     # Cargar suscripciones desde Neon
     try:
@@ -85,11 +114,11 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
         try:
             print(f"📤 Enviando notificación {idx}/{len(suscripciones)}...")
             
-            # ✅ PASAR LA CLAVE PRIVADA DIRECTAMENTE COMO STRING
+            # ✅ PASAR LA CLAVE PRIVADA EN FORMATO PEM
             webpush(
                 subscription_info=sub,
                 data=json.dumps(data),
-                vapid_private_key=private_key,  # ✅ String directo
+                vapid_private_key=private_key_pem,  # ✅ Formato PEM
                 vapid_claims={
                     "sub": f"mailto:{VAPID_EMAIL}"
                 },
