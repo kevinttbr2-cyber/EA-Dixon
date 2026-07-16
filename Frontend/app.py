@@ -9,16 +9,30 @@ from datetime import datetime, timedelta
 import io
 import time
 import locale
-import logging
-from logging.handlers import RotatingFileHandler
-
 # ============================
 # CONFIGURACIÓN DE LOGS PERSISTENTES
 # ============================
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+import sys
+
+# ✅ DETECTAR ENTORNO (Vercel o local)
+IS_VERCEL = os.environ.get('VERCEL_ENV') == 'production' or os.environ.get('VERCEL')
+
+# ✅ Usar /tmp en Vercel, o ./logs en local
+if IS_VERCEL:
+    LOG_DIR = '/tmp/logs'
+else:
+    LOG_DIR = 'logs'
+
 # Crear carpeta logs si no existe
-LOG_DIR = 'logs'
 if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
+    try:
+        os.makedirs(LOG_DIR)
+    except OSError:
+        # Si no se puede crear, usar logs en consola solamente
+        LOG_DIR = None
 
 # Configurar logger principal
 logger = logging.getLogger('dixon_app')
@@ -28,30 +42,39 @@ logger.setLevel(logging.DEBUG)
 if logger.hasHandlers():
     logger.handlers.clear()
 
-# Handler para archivo (con rotación)
-file_handler = RotatingFileHandler(
-    os.path.join(LOG_DIR, 'dixon_app.log'),
-    maxBytes=10485760,  # 10 MB
-    backupCount=5       # Mantener 5 archivos de backup
-)
-file_handler.setLevel(logging.DEBUG)
+# Handler para archivo (con rotación) - solo si se pudo crear el directorio
+if LOG_DIR:
+    try:
+        file_handler = RotatingFileHandler(
+            os.path.join(LOG_DIR, 'dixon_app.log'),
+            maxBytes=10485760,  # 10 MB
+            backupCount=5       # Mantener 5 archivos de backup
+        )
+        file_handler.setLevel(logging.DEBUG)
+        file_formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        file_handler.setFormatter(file_formatter)
+        logger.addHandler(file_handler)
+    except Exception as e:
+        print(f"⚠️ No se pudo crear archivo de logs: {e}")
 
-# Handler para consola (para desarrollo)
-console_handler = logging.StreamHandler()
+# Handler para consola (siempre disponible)
+console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-
-# Formato de los logs
-formatter = logging.Formatter(
+console_formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
-file_handler.setFormatter(formatter)
-console_handler.setFormatter(formatter)
-
-# Agregar handlers al logger
-logger.addHandler(file_handler)
+console_handler.setFormatter(console_formatter)
 logger.addHandler(console_handler)
 
+# ✅ En Vercel, todos los logs van a la consola (que Vercel captura)
+if IS_VERCEL:
+    logger.info("🚀 Aplicación corriendo en Vercel - Logs en consola")
+else:
+    logger.info(f"📁 Logs guardados en: {LOG_DIR}")
 # ============================
 # CONFIGURACIÓN DE LA APP
 # ============================
