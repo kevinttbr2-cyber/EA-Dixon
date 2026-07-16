@@ -305,22 +305,6 @@ def estado():
 # ============================
 # AGREGAR CLIENTE
 # ============================
-@app.route('/agregar_cliente')
-@login_required
-def agregar_cliente():
-    try:
-        resp_marcas = requests.get(f"{BACKEND_URL}/api/marcas", timeout=10)
-        marcas = resp_marcas.json() if resp_marcas.status_code == 200 else []
-        resp_flotas = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=10)
-        flotas = resp_flotas.json() if resp_flotas.status_code == 200 else []
-    except Exception as e:
-        logger.error(f"Error en /agregar_cliente: {e}")
-        marcas = []
-        flotas = []
-    
-    hoy = datetime.now().strftime('%Y-%m-%d')
-    return render_template("agregar_cliente.html", marcas=marcas, flotas=flotas, hoy=hoy)
-
 @app.route('/agregar', methods=['POST'])
 @login_required
 def agregar():
@@ -368,6 +352,25 @@ def agregar():
             return redirect("/agregar_cliente")
         
         logger.info(f"✅ Cliente agregado exitosamente por '{usuario}': '{nombre}', patente: '{patente}'")
+        
+        # ✅ ENVIAR NOTIFICACIÓN LLAMANDO AL BACKEND
+        try:
+            notif_resp = requests.post(
+                f"{BACKEND_URL}/api/enviar_notificacion",
+                json={
+                    "titulo": "📋 Nuevo Cliente",
+                    "mensaje": f"{nombre}\nPatente: {patente}\nRegistrado por: {usuario}",
+                    "url": "/estado"
+                },
+                timeout=5
+            )
+            if notif_resp.status_code == 200:
+                logger.info("✅ Notificación enviada correctamente")
+            else:
+                logger.warning(f"⚠️ Respuesta de notificación: {notif_resp.text}")
+        except Exception as e:
+            logger.error(f"⚠️ Error al enviar notificación: {e}")
+        
         flash('✅ Cliente registrado correctamente', 'success')
     except Exception as e:
         logger.error(f"⚠️ Error en /agregar: {str(e)}")
