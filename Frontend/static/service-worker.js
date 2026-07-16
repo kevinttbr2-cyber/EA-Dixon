@@ -1,18 +1,3 @@
-const CACHE_NAME = 'dixon-v1';
-const urlsToCache = ['/', '/estado', '/static/theme.css'];
-
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-    );
-    self.skipWaiting();
-});
-
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request))
-    );
-});
 // ============================
 // SERVICE WORKER CON NOTIFICACIONES PUSH
 // ============================
@@ -130,13 +115,10 @@ self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request)
             .then(response => {
-                // Si está en caché, devolverlo
                 if (response) {
                     return response;
                 }
-                // Si no, buscar en la red
                 return fetch(event.request).catch(() => {
-                    // Si offline, mostrar página de offline
                     return caches.match('/offline');
                 });
             })
