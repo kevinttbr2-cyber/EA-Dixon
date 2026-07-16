@@ -7,9 +7,61 @@ import hmac
 import hashlib
 from datetime import datetime, timedelta
 import io
-import os
 import time
-import locale  # ✅ AGREGAR
+import locale
+import logging
+from logging.handlers import RotatingFileHandler
+
+# ============================
+# CONFIGURACIÓN DE LOGS PERSISTENTES
+# ============================
+# Crear carpeta logs si no existe
+LOG_DIR = 'logs'
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+
+# Configurar logger principal
+logger = logging.getLogger('dixon_app')
+logger.setLevel(logging.DEBUG)
+
+# Limpiar handlers existentes para evitar duplicados
+if logger.hasHandlers():
+    logger.handlers.clear()
+
+# Handler para archivo (con rotación)
+file_handler = RotatingFileHandler(
+    os.path.join(LOG_DIR, 'dixon_app.log'),
+    maxBytes=10485760,  # 10 MB
+    backupCount=5       # Mantener 5 archivos de backup
+)
+file_handler.setLevel(logging.DEBUG)
+
+# Handler para consola (para desarrollo)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+# Formato de los logs
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Agregar handlers al logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+# ============================
+# CONFIGURACIÓN DE LA APP
+# ============================
+app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
+PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
+
+# Configurar logger de Flask con los mismos handlers
+app.logger.handlers = logger.handlers
+app.logger.setLevel(logger.level)
 
 # ============================
 # CONFIGURAR IDIOMA A ESPAÑOL
@@ -24,10 +76,6 @@ except:
 
 os.environ['TZ'] = 'America/Santiago'
 time.tzset()
-
-app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "clave_frontend_segura")
-PDF_SECRET_KEY = os.environ.get("PDF_SECRET_KEY", "dixon_pdf_2025")
 
 app.jinja_env.filters['strftime'] = lambda date, fmt: date.strftime(fmt) if date else ''
 # URL del backend en Railway
@@ -87,7 +135,7 @@ def inject_globals():
         meses_cortos = {1: 'Ene', 2: 'Feb', 3: 'Mar', 4: 'Abr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dic'}
         return f"{dias_cortos.get(fecha.weekday(), '')} {fecha.day} {meses_cortos.get(fecha.month, '')}"
     
-    # ✅ OBTENER CONTEO DE FLOTAS PENDIENTES
+    # OBTENER CONTEO DE FLOTAS PENDIENTES
     flotas_pendientes_count = 0
     try:
         import requests
@@ -102,7 +150,7 @@ def inject_globals():
         backend_url=BACKEND_URL,
         fecha_espanol=fecha_espanol,
         fecha_corta_espanol=fecha_corta_espanol,
-        flotas_pendientes_count=flotas_pendientes_count  # ✅ AGREGADO
+        flotas_pendientes_count=flotas_pendientes_count
     )
 
 @app.route('/')
@@ -116,9 +164,14 @@ def login():
     error = None
     if 'csrf_token' not in session:
         session['csrf_token'] = secrets.token_hex(32)
+    
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        ip = request.remote_addr
+        
+        logger.info(f"🔐 Intento de login: usuario '{username}' desde IP {ip}")
+        
         try:
             resp = requests.post(f"{BACKEND_URL}/api/login", json={"username": username, "password": password}, timeout=10)
             if resp.status_code == 200:
@@ -126,27 +179,38 @@ def login():
                 session["usuario"] = data['user']['username']
                 session["rol"] = data['user']['rol']
                 session["nombre_completo"] = data['user'].get('nombre_completo', username)
+                logger.info(f"✅ Login exitoso: '{username}' desde IP {ip}, rol: {session['rol']}")
                 return redirect("/estado")
             else:
+                logger.warning(f"❌ Login fallido: usuario '{username}' desde IP {ip} - Contraseña incorrecta")
                 error = "❌ Usuario o contraseña incorrectos"
         except Exception as e:
-            print(f"Error en /login: {e}")
+            logger.error(f"⚠️ Error en login: usuario '{username}' desde IP {ip} - {str(e)}")
             error = "⚠️ Error de conexión con el servidor"
+    
     return render_template("login.html", csrf_token=session['csrf_token'], error=error)
 
 @app.route('/logout')
 def logout():
+    usuario = session.get('usuario')
+    logger.info(f"🚪 Usuario '{usuario}' cerró sesión")
     session.clear()
     return redirect("/login")
 
 @app.route('/estado')
 @login_required
 def estado():
+    usuario = session.get('usuario')
+    logger.info(f"📋 Usuario '{usuario}' accedió a /estado")
+    
     try:
         resp = requests.get(f"{BACKEND_URL}/api/estado", timeout=10)
         data = resp.json() if resp.status_code == 200 else {"pendientes": [], "pagados_hoy": []}
-    except:
+        logger.debug(f"📊 /estado: {len(data.get('pendientes', []))} pendientes, {len(data.get('pagados_hoy', []))} pagados hoy")
+    except Exception as e:
+        logger.error(f"❌ Error en /estado para usuario '{usuario}': {str(e)}")
         data = {"pendientes": [], "pagados_hoy": []}
+    
     return render_template("estado.html", 
                           registros=data.get('pendientes', []) + data.get('pagados_hoy', []),
                           pendientes_mes=len(data.get('pendientes', [])),
@@ -163,7 +227,7 @@ def agregar_cliente():
         resp_marcas = requests.get(f"{BACKEND_URL}/api/marcas", timeout=10)
         marcas = resp_marcas.json() if resp_marcas.status_code == 200 else []
         
-        # 🔥 CARGAR FLOTAS DISPONIBLES
+        # CARGAR FLOTAS DISPONIBLES
         resp_flotas = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=10)
         flotas = resp_flotas.json() if resp_flotas.status_code == 200 else []
     except Exception as e:
@@ -177,18 +241,19 @@ def agregar_cliente():
 @app.route('/agregar', methods=['POST'])
 @login_required
 def agregar():
-    # ✅ Obtener datos
+    usuario = session.get('usuario')
     nombre = request.form.get('nombre', '').strip()
     patente = request.form.get('patente', '').strip().upper()
+
+    logger.info(f"📝 Usuario '{usuario}' agregando cliente: '{nombre}', patente: '{patente}'")
     
-    # ✅ VALIDACIÓN: Verificar si ya existe un registro en los últimos 5 minutos
+    # Obtener flota
+    flota = request.form.get('flota', '').strip()
+    if flota == '__nueva__':
+        flota = request.form.get('flota_nueva', '').strip()
+    
+    # VALIDACIÓN: Verificar si ya existe un registro en los últimos 5 minutos
     try:
-        # Obtener flota
-        flota = request.form.get('flota', '').strip()
-        if flota == '__nueva__':
-            flota = request.form.get('flota_nueva', '').strip()
-        
-        # Verificar duplicado en backend
         resp_verificar = requests.get(
             f"{BACKEND_URL}/api/verificar_duplicado",
             params={"nombre": nombre, "patente": patente},
@@ -196,13 +261,13 @@ def agregar():
         )
         
         if resp_verificar.status_code == 200 and resp_verificar.json().get('duplicado', False):
+            logger.warning(f"⚠️ Intento de duplicado: usuario '{usuario}' intentó agregar '{nombre}' - '{patente}'")
             flash('⚠️ Ya existe un registro con estos datos en los últimos 5 minutos. Si es un error, intenta de nuevo.', 'warning')
             return redirect("/agregar_cliente")
     except Exception as e:
-        print(f"⚠️ Error al verificar duplicado: {e}")
-        # Si falla la verificación, continuar de todas formas
+        logger.warning(f"⚠️ Error al verificar duplicado para '{nombre}': {str(e)}")
     
-    # ✅ Construir data
+    # Construir data
     data = {
         'nombre': nombre,
         'patente': patente,
@@ -213,17 +278,19 @@ def agregar():
         'kilometraje': int(request.form.get('kilometraje', 0) or 0),
         'anio': int(request.form.get('anio', 0) or 0),
         'flota': flota if flota else None,
-        'usuario': session.get('usuario')
+        'usuario': usuario
     }
     
     try:
         resp = requests.post(f"{BACKEND_URL}/api/agregar", json=data, timeout=10)
         if resp.status_code != 200:
-            print(f"Error al agregar: {resp.text}")
+            logger.error(f"❌ Error al agregar cliente para usuario '{usuario}': {resp.text}")
             flash('❌ Error al registrar el cliente. Intenta de nuevo.', 'error')
             return redirect("/agregar_cliente")
+        else:
+            logger.info(f"✅ Cliente agregado exitosamente por '{usuario}': '{nombre}', patente: '{patente}'")
     except Exception as e:
-        print(f"Error en /agregar: {e}")
+        logger.error(f"⚠️ Error en /agregar para usuario '{usuario}': {str(e)}")
         flash('⚠️ Error de conexión. Intenta de nuevo.', 'error')
         return redirect("/agregar_cliente")
     
@@ -233,38 +300,46 @@ def agregar():
 @app.route('/pagar/<int:id_reg>', methods=['GET', 'POST'])
 @login_required
 def pagar(id_reg):
-    print(f"🔍 ID recibido: {id_reg}")
+    usuario = session.get('usuario')
+    logger.info(f"💰 Usuario '{usuario}' iniciando pago para registro ID {id_reg}")
+    
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
-        print(f"📡 Status: {resp.status_code}")
         if resp.status_code != 200:
+            logger.error(f"❌ Registro ID {id_reg} no encontrado para usuario '{usuario}'")
             return f"Registro {id_reg} no encontrado en backend", 404
         registro = resp.json()
     except Exception as e:
-        print(f"❌ Error: {e}")
+        logger.error(f"⚠️ Error al obtener registro ID {id_reg} para '{usuario}': {str(e)}")
         return "Error de conexión", 500
     
     if request.method == 'POST':
+        monto = float(request.form.get('monto', 0))
+        forma_pago = request.form.get('forma_pago', 'efectivo')
+        
+        logger.info(f"💳 Usuario '{usuario}' procesando pago ID {id_reg}: monto ${monto}, forma: {forma_pago}")
+        
         data = {
-            'monto': float(request.form.get('monto', 0)),
+            'monto': monto,
             'observaciones_pago': request.form.get('observaciones_pago', ''),
             'diagnostico': request.form.get('diagnostico', ''),
             'reparacion': request.form.get('reparacion', 'Reparación realizada'),
             'resultado': request.form.get('resultado', 'reparado'),
             'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
             'atendido_por': session.get('nombre_completo', session.get('usuario')),
-            'forma_pago': request.form.get('forma_pago', 'efectivo')
+            'forma_pago': forma_pago
         }
+        
         try:
             resp = requests.post(f"{BACKEND_URL}/api/pagar/{id_reg}", json=data, timeout=10)
-            print(f"📥 Respuesta pago: {resp.status_code} - {resp.text}")
             if resp.status_code == 200:
-                # 🔥 REDIRIGIR A PÁGINA DE ÉXITO
+                logger.info(f"✅ Pago ID {id_reg} completado por '{usuario}' - monto: ${monto}")
                 return redirect(f"/pago_exitoso/{id_reg}")
             else:
+                logger.error(f"❌ Error en pago ID {id_reg} por '{usuario}': {resp.text}")
                 return f"Error al procesar el pago: {resp.text}", 500
         except Exception as e:
-            print(f"❌ Error en POST pago: {e}")
+            logger.error(f"⚠️ Error en pago ID {id_reg} por '{usuario}': {str(e)}")
             return "Error de conexión al procesar el pago", 500
     
     return render_template("pagar.html", id=id_reg, registro=registro)
@@ -272,23 +347,28 @@ def pagar(id_reg):
 @app.route('/pago_exitoso/<int:id_reg>')
 @login_required
 def pago_exitoso(id_reg):
+    usuario = session.get('usuario')
+    logger.info(f"📄 Usuario '{usuario}' viendo pago exitoso ID {id_reg}")
+    
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         registro = resp.json() if resp.status_code == 200 else {}
         firma = generar_firma_pdf(id_reg)
-        registro['firma'] = firma  # ← AGREGAR LA FIRMA
+        registro['firma'] = firma
         url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
     except Exception as e:
-        print(f"Error en /pago_exitoso: {e}")
+        logger.error(f"❌ Error en /pago_exitoso ID {id_reg} para '{usuario}': {str(e)}")
         registro = {}
         url_pdf = ""
     return render_template("pago_exitoso.html", registro=registro, url_pdf=url_pdf)
-    
+
 @app.route('/cambiar_password', methods=['GET', 'POST'])
 @login_required
 def cambiar_password():
+    usuario = session.get('usuario')
     error = None
     success = None
+    
     if request.method == 'POST':
         password_actual = request.form.get('password_actual')
         password_nueva = request.form.get('password_nueva')
@@ -303,65 +383,78 @@ def cambiar_password():
         else:
             try:
                 data = {
-                    'username': session.get('usuario'),
+                    'username': usuario,
                     'password_actual': password_actual,
                     'password_nueva': password_nueva
                 }
                 resp = requests.post(f"{BACKEND_URL}/api/cambiar_password", json=data, timeout=10)
                 if resp.status_code == 200:
                     success = "✅ Contraseña actualizada correctamente"
+                    logger.info(f"🔑 Usuario '{usuario}' cambió su contraseña")
                 else:
                     error = resp.json().get('error', '❌ Error al cambiar contraseña')
             except Exception as e:
-                print(f"Error en /cambiar_password: {e}")
+                logger.error(f"⚠️ Error en /cambiar_password para '{usuario}': {str(e)}")
                 error = "⚠️ Error de conexión con el servidor"
+    
     return render_template("cambiar_password.html", error=error, success=success)
 
 @app.route('/pendientes_validacion')
 @login_required
 @role_required(['admin'])
 def pendientes_validacion():
+    usuario = session.get('usuario')
+    logger.info(f"📊 Usuario '{usuario}' accedió a /pendientes_validacion")
+    
     try:
         resp = requests.get(f"{BACKEND_URL}/api/pendientes_validacion", timeout=10)
         if resp.status_code == 200:
             data = resp.json()
-            # ✅ FILTRAR: Solo trabajos (excluir ventas directas)
             pendientes = [p for p in data.get('pendientes', []) if p.get('tipo_venta') != 'directa']
             validados = [v for v in data.get('validados', []) if v.get('tipo_venta') != 'directa']
             total_pagado = data.get('total_pagado', 0)
+            logger.debug(f"📊 Pendientes: {len(pendientes)}, Validados: {len(validados)}")
         else:
             pendientes = []
             validados = []
             total_pagado = 0
     except Exception as e:
-        print(f"Error en /pendientes_validacion: {e}")
+        logger.error(f"❌ Error en /pendientes_validacion para '{usuario}': {str(e)}")
         pendientes = []
         validados = []
         total_pagado = 0
+    
     return render_template("pendientes_validacion.html", pendientes=pendientes, validados=validados, total_pagado=total_pagado)
 
 @app.route('/validar_pago/<int:id_reg>', methods=['GET', 'POST'])
 @login_required
 @role_required(['admin', 'operador'])
 def validar_pago(id_reg):
+    usuario = session.get('usuario')
+    logger.info(f"📊 Usuario '{usuario}' iniciando validación para registro ID {id_reg}")
+    
     if session.get('rol') not in ['admin']:
+        logger.warning(f"⚠️ Usuario '{usuario}' sin permisos para validar ID {id_reg}")
         return "No tienes permisos para validar pagos", 403
     
     try:
         resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=10)
         if resp.status_code != 200:
+            logger.error(f"❌ Registro ID {id_reg} no encontrado para validación")
             return "Registro no encontrado", 404
         registro = resp.json()
     except Exception as e:
-        print(f"Error en /validar_pago: {e}")
+        logger.error(f"⚠️ Error al obtener registro ID {id_reg} para '{usuario}': {str(e)}")
         return "Error de conexión", 500
     
-    # ✅ VALIDACIÓN: Venta directa no necesita validación
+    # VALIDACIÓN: Venta directa no necesita validación
     if registro.get('tipo_venta') == 'directa':
+        logger.info(f"ℹ️ Venta directa ID {id_reg} no requiere validación")
         flash('⚠️ Las ventas directas no requieren validación de costos.', 'warning')
         return redirect("/estado")
     
     if registro.get('estado') != 'pagado':
+        logger.warning(f"⚠️ Intento de validar registro ID {id_reg} que no está pagado")
         return "Este pago no está pagado", 400
     
     try:
@@ -370,7 +463,11 @@ def validar_pago(id_reg):
     except:
         usuarios = []
     
+    error = None
+    
     if request.method == 'POST':
+        logger.info(f"📝 Usuario '{usuario}' enviando validación para ID {id_reg}")
+        
         validado_por = request.form.get('validado_por', '').strip()
         if not validado_por:
             validado_por = session.get('nombre_completo', session.get('usuario'))
@@ -387,28 +484,30 @@ def validar_pago(id_reg):
                 })
         
         data = {
-        'costo_repuestos': float(request.form.get('costo_repuestos', 0)),  # ← NOMBRE CORRECTO
-        'costo_mano_obra_real': float(request.form.get('costo_mano_obra', 0)),
-        'costo_diagnostico_real': float(request.form.get('costo_diagnostico', 0)),
-        'ganancia_neta': float(request.form.get('ganancia_neta', 0)),
-        'observaciones_pago': request.form.get('observaciones_costos', ''),
-        'validado_por': validado_por,
-        'diagnostico': request.form.get('diagnostico', ''),
-        'reparacion': request.form.get('reparacion', 'Reparación realizada'),
-        'resultado': request.form.get('resultado', 'reparado'),
-        'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
-        'detalles_repuestos': detalles_repuestos,
-        'estado_ot': request.form.get('estado_ot', 'Pendiente')
-    }
+            'costo_repuestos': float(request.form.get('costo_repuestos', 0)),
+            'costo_mano_obra_real': float(request.form.get('costo_mano_obra', 0)),
+            'costo_diagnostico_real': float(request.form.get('costo_diagnostico', 0)),
+            'ganancia_neta': float(request.form.get('ganancia_neta', 0)),
+            'observaciones_pago': request.form.get('observaciones_costos', ''),
+            'validado_por': validado_por,
+            'diagnostico': request.form.get('diagnostico', ''),
+            'reparacion': request.form.get('reparacion', 'Reparación realizada'),
+            'resultado': request.form.get('resultado', 'reparado'),
+            'tiempo_estimado': request.form.get('tiempo_estimado', '00:00:00'),
+            'detalles_repuestos': detalles_repuestos,
+            'estado_ot': request.form.get('estado_ot', 'Pendiente')
+        }
         
         try:
             resp = requests.post(f"{BACKEND_URL}/api/validar_pago/{id_reg}", json=data, timeout=10)
             if resp.status_code == 200:
+                logger.info(f"✅ Validación completada para ID {id_reg} por '{usuario}'")
                 return redirect(f"/pago_validado/{id_reg}")
             else:
                 error = resp.json().get('error', 'Error al validar')
+                logger.error(f"❌ Error en validación ID {id_reg} por '{usuario}': {error}")
         except Exception as e:
-            print(f"Error en /validar_pago POST: {e}")
+            logger.error(f"⚠️ Error en /validar_pago POST ID {id_reg} por '{usuario}': {str(e)}")
             error = "Error de conexión"
         
         return render_template("validar_pago.html", id=id_reg, registro=registro, usuarios=usuarios, error=error)
