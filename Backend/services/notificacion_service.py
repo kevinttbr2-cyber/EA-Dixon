@@ -1,4 +1,4 @@
-# backend/services/notification_service.py (o notificacion_service.py)
+# backend/services/notification_service.py
 import os
 import json
 import logging
@@ -9,13 +9,21 @@ logger = logging.getLogger(__name__)
 
 def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
     """Envía notificaciones push a todos los dispositivos suscritos"""
+    
+    # ✅ OBTENER CLAVES DE VARIABLES DE ENTORNO
     VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
     VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
     VAPID_EMAIL = os.environ.get("VAPID_EMAIL", "admin@dixon.cl")
     
+    # ✅ VERIFICAR QUE LAS CLAVES EXISTEN
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
-        logger.warning("⚠️ VAPID keys no configuradas")
+        logger.error("❌ VAPID keys no configuradas en el backend")
+        logger.error(f"  - VAPID_PUBLIC_KEY: {'✅' if VAPID_PUBLIC_KEY else '❌'}")
+        logger.error(f"  - VAPID_PRIVATE_KEY: {'✅' if VAPID_PRIVATE_KEY else '❌'}")
         return 0
+    
+    logger.info(f"✅ VAPID keys configuradas correctamente")
+    logger.info(f"  - Public Key: {VAPID_PUBLIC_KEY[:20]}...")
     
     # Cargar suscripciones desde Neon
     try:
@@ -65,7 +73,7 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id=None):
                 vapid_claims={"sub": f"mailto:{VAPID_EMAIL}"}
             )
             enviados += 1
-            logger.info(f"✅ Notificación enviada a: {sub['endpoint'][:50]}...")
+            logger.info(f"✅ Notificación enviada a dispositivo {enviados}")
         except WebPushException as e:
             logger.error(f"❌ Error enviando push: {e}")
             if hasattr(e, 'response') and e.response:
