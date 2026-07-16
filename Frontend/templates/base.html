@@ -125,10 +125,11 @@
      NOTIFICACIONES PUSH
      ============================ -->
 <script>
+// ✅ VAPID PUBLIC KEY (HARDCODEADA PARA PRUEBA)
 const VAPID_PUBLIC_KEY = 'BDM_STZXB-GT2q4XvnqW_MC4mQvPO71eSpdRIA61Rd0rk9v3l83eLKa3cXSxLlsSK0Lfu-eF3ttpbMfLwQEPr-4';
 
 if ('Notification' in window && 'serviceWorker' in navigator) {
-    // Solicitar permiso
+    // ✅ Solicitar permiso
     if (Notification.permission === 'default') {
         Notification.requestPermission().then(permission => {
             if (permission === 'granted') {
@@ -142,7 +143,6 @@ if ('Notification' in window && 'serviceWorker' in navigator) {
         suscribirsePush();
     }
 
-    // ✅ SUSCRIBIRSE A NOTIFICACIONES PUSH
     async function suscribirsePush() {
         if (Notification.permission !== 'granted') return;
         if (!VAPID_PUBLIC_KEY) {
