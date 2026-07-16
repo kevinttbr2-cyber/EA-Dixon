@@ -120,5 +120,50 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     {% block scripts %}{% endblock %}
+    <!-- ============================
+     PERMISO DE NOTIFICACIONES
+     ============================ -->
+<script>
+// ✅ SOLICITAR PERMISO DE NOTIFICACIONES
+if ('Notification' in window && 'serviceWorker' in navigator) {
+    // Solicitar permiso al cargar la página
+    if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('✅ Notificaciones permitidas');
+            } else {
+                console.log('❌ Notificaciones denegadas');
+            }
+        });
+    }
+
+    // ✅ Suscribirse a notificaciones push
+    async function suscribirsePush() {
+        if (Notification.permission !== 'granted') return;
+        
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: 'TU_VAPID_PUBLIC_KEY'
+            });
+            
+            // Guardar suscripción en el backend
+            await fetch('/api/guardar_suscripcion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(subscription)
+            });
+        } catch (error) {
+            console.error('Error al suscribirse:', error);
+        }
+    }
+
+    // Iniciar suscripción cuando el usuario interactúa
+    document.addEventListener('click', function() {
+        suscribirsePush();
+    }, { once: true });
+}
+</script>
 </body>
 </html>
