@@ -325,26 +325,6 @@ def inject_globals():
         flotas_pendientes_count=flotas_pendientes_count,
         vapid_public_key=vapid_public_key  # ✅ NUEVO
     )
-@app.after_request
-def add_security_headers(response):
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    response.headers['Content-Security-Policy'] = (
-        "default-src 'self'; "
-        "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://code.jquery.com 'unsafe-inline'; "
-        "style-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'; "
-        "img-src 'self' data:; "
-        "font-src 'self' https://cdnjs.cloudflare.com; "
-        # ✅ AGREGAR connect-src CON CDN
-        "connect-src 'self' https://ea-dixon-production.up.railway.app https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-        "frame-ancestors 'none'; "
-        "form-action 'self'; "
-        "base-uri 'self'; "
-        "upgrade-insecure-requests"
-    )
-    return response
 
 # ============================
 # RUTAS PRINCIPALES
