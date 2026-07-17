@@ -66,6 +66,64 @@
         background: var(--accent-red) !important;
         box-shadow: 0 4px 16px rgba(231, 76, 60, 0.3);
     }
+
+    /* ============================================
+       ESTILOS PARA MODALES
+       ============================================ */
+    .modal-dixon {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+        overflow-y: auto;
+        padding: 20px 0;
+    }
+    .modal-dixon.active {
+        display: flex;
+    }
+    .modal-dixon .modal-content {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 24px 28px;
+        max-width: 550px;
+        width: 95%;
+        max-height: 95vh;
+        overflow-y: auto;
+        margin: auto;
+        box-shadow: var(--shadow-hover);
+    }
+    .modal-dixon .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        border-bottom: 1px solid var(--border-subtle);
+        padding-bottom: 12px;
+    }
+    .modal-dixon .modal-header h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+    }
+    .modal-dixon .modal-header .close-btn {
+        background: transparent;
+        border: none;
+        color: var(--accent-red);
+        font-size: 24px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .modal-dixon .modal-header .close-btn:hover {
+        transform: scale(1.1);
+    }
 </style>
 
 <div class="base-container">
@@ -283,71 +341,15 @@
 </div>
 
 <!-- ============================================
-     MODAL: AGREGAR REPUESTO
-     ============================================ -->
-<div id="modalAgregarRepuesto" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #00ff66;border-radius:16px;padding:25px 30px;max-width:550px;width:95%;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="color:#00ff66;margin:0;font-size:20px;">➕ Agregar Repuesto</h3>
-            <button onclick="cerrarModalAgregar()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <form id="formAgregarRepuesto">
-            <div class="mb-3">
-                <label style="color:#90e0a0;font-size:13px;">Nombre del repuesto *</label>
-                <input type="text" name="nombre" id="inputNombreRepuesto" class="form-control" required>
-            </div>
-            
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">📦 Stock inicial</label>
-                    <input type="number" name="stock" id="inputStockRepuesto" class="form-control" value="1" min="0">
-                </div>
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">💰 Costo Proveedor ($) *</label>
-                    <input type="number" name="costo_proveedor" id="inputCostoProveedor" class="form-control" step="0.01" required>
-                </div>
-            </div>
-            
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">📈 Margen de Ganancia (%)</label>
-                    <input type="number" name="margen_ganancia" id="inputMargenGanancia" class="form-control" step="0.1" value="30">
-                </div>
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">🏢 Proveedor</label>
-                    <input type="text" name="proveedor" id="inputProveedorRepuesto" class="form-control" placeholder="Opcional">
-                </div>
-            </div>
-            
-            <!-- Preview -->
-            <div style="background:rgba(0,255,102,0.06);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(0,255,102,0.10);">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="color:#888;font-size:12px;">💰 Precio Venta Final:</span>
-                    <span id="previewCostoVenta" style="color:#00ff66;font-weight:700;font-size:20px;">$0</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
-                    <span style="color:#888;font-size:11px;">📈 Margen calculado:</span>
-                    <span id="previewMargen" style="color:#4fc3f7;font-weight:600;font-size:14px;">0%</span>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100" style="background:#00ff66 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;">
-                💾 Guardar repuesto
-            </button>
-        </form>
-    </div>
-</div>
-
-<!-- ============================================
      MODAL: ESCANEAR PRODUCTO
      ============================================ -->
-<div id="modalEscanerProducto" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #ffcc00;border-radius:16px;padding:25px 30px;max-width:550px;width:95%;max-height:95vh;overflow-y:auto;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="color:#ffcc00;margin:0;font-size:20px;">
+<div id="modalEscanerProducto" class="modal-dixon">
+    <div class="modal-content" style="border: 2px solid #ffcc00;">
+        <div class="modal-header">
+            <h3 style="color: #ffcc00;">
                 <i class="fa-solid fa-camera"></i> Escanear Producto
             </h3>
-            <button onclick="cerrarModalEscaner()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;">
+            <button class="close-btn" onclick="cerrarModalEscaner()">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -357,8 +359,8 @@
                 <i class="fa-solid fa-info-circle" style="color:#ffcc00;"></i> 
                 Escanea el código de barras de un producto. El sistema identificará:<br>
                 <span style="color:#fff;">🔹 Nombre del producto</span><br>
-                <span style="color:#ffcc00;">💰 Costo proveedor</span><br>
-                <span style="color:#4fc3f7;">📈 Margen</span>
+                <span style="color:#ffcc00;">💰 Costo proveedor (precio de compra)</span><br>
+                <span style="color:#4fc3f7;">📈 Margen calculado automáticamente</span>
             </p>
         </div>
         
@@ -426,13 +428,13 @@
 <!-- ============================================
      MODAL: REPORTE DE STOCK BAJO
      ============================================ -->
-<div id="modalReporteStock" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #ff6b6b;border-radius:16px;padding:25px 30px;max-width:500px;width:95%;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="color:#ff6b6b;margin:0;font-size:20px;">
+<div id="modalReporteStock" class="modal-dixon">
+    <div class="modal-content" style="border: 2px solid #ff6b6b;">
+        <div class="modal-header">
+            <h3 style="color: #ff6b6b;">
                 <i class="fa-solid fa-triangle-exclamation"></i> Reporte de Stock Bajo
             </h3>
-            <button onclick="cerrarModalReporte()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;">
+            <button class="close-btn" onclick="cerrarModalReporte()">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -534,17 +536,135 @@
 </div>
 
 <!-- ============================================
-     MODAL: IMPORTAR PRODUCTOS
+     MODAL: AGREGAR REPUESTO
      ============================================ -->
-<div id="modalImportarProductos" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #4fc3f7;border-radius:16px;padding:25px 30px;max-width:600px;width:95%;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="color:#4fc3f7;margin:0;font-size:20px;">📂 Importar Productos</h3>
-            <button onclick="cerrarModalImportarProductos()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;">
+<div id="modalAgregarRepuesto" class="modal-dixon">
+    <div class="modal-content" style="border: 2px solid #00ff66;">
+        <div class="modal-header">
+            <h3 style="color: #00ff66;">➕ Agregar Repuesto</h3>
+            <button class="close-btn" onclick="cerrarModalAgregar()">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <!-- [MANTENER EL MISMO CÓDIGO DE IMPORTACIÓN QUE YA TIENES] -->
+        <form id="formAgregarRepuesto">
+            <div class="mb-3">
+                <label style="color:#90e0a0;font-size:13px;">Nombre del repuesto *</label>
+                <input type="text" name="nombre" id="inputNombreRepuesto" class="form-control" required>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">📦 Stock inicial</label>
+                    <input type="number" name="stock" id="inputStockRepuesto" class="form-control" value="1" min="0">
+                </div>
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">💰 Costo Proveedor ($) *</label>
+                    <input type="number" name="costo_proveedor" id="inputCostoProveedor" class="form-control" step="0.01" required>
+                </div>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">📈 Margen de Ganancia (%)</label>
+                    <input type="number" name="margen_ganancia" id="inputMargenGanancia" class="form-control" step="0.1" value="30">
+                </div>
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">🏢 Proveedor</label>
+                    <input type="text" name="proveedor" id="inputProveedorRepuesto" class="form-control" placeholder="Opcional">
+                </div>
+            </div>
+            
+            <!-- Preview -->
+            <div style="background:rgba(0,255,102,0.06);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(0,255,102,0.10);">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="color:#888;font-size:12px;">💰 Precio Venta Final:</span>
+                    <span id="previewCostoVenta" style="color:#00ff66;font-weight:700;font-size:20px;">$0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                    <span style="color:#888;font-size:11px;">📈 Margen calculado:</span>
+                    <span id="previewMargen" style="color:#4fc3f7;font-weight:600;font-size:14px;">0%</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" style="background:#00ff66 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;">
+                💾 Guardar repuesto
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================
+     MODAL: EDITAR REPUESTO
+     ============================================ -->
+<div id="modalEditarRepuesto" class="modal-dixon">
+    <div class="modal-content" style="border: 2px solid #4fc3f7;">
+        <div class="modal-header">
+            <h3 style="color: #4fc3f7;">✏️ Editar Repuesto</h3>
+            <button class="close-btn" onclick="cerrarModalEditar()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <form id="formEditarRepuesto">
+            <input type="hidden" name="id" id="editRepuestoId">
+            <div class="mb-3">
+                <label style="color:#90e0a0;font-size:13px;">Nombre del repuesto *</label>
+                <input type="text" name="nombre" id="editNombreRepuesto" class="form-control" required>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">📦 Stock</label>
+                    <input type="number" name="stock" id="editStockRepuesto" class="form-control" min="0">
+                </div>
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">💰 Costo Proveedor ($)</label>
+                    <input type="number" name="costo_proveedor" id="editCostoProveedor" class="form-control" step="0.01">
+                </div>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">📈 Margen de Ganancia (%)</label>
+                    <input type="number" name="margen_ganancia" id="editMargenGanancia" class="form-control" step="0.1" readonly style="background:rgba(255,255,255,0.03);">
+                    <small style="color:#666;font-size:10px;">Se recalcula automáticamente</small>
+                </div>
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">🏢 Proveedor</label>
+                    <input type="text" name="proveedor" id="editProveedorRepuesto" class="form-control" placeholder="Opcional">
+                </div>
+            </div>
+            
+            <!-- Preview -->
+            <div style="background:rgba(0,255,102,0.06);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(0,255,102,0.10);">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="color:#888;font-size:12px;">💰 Precio Venta Final:</span>
+                    <span id="editPreviewCostoVenta" style="color:#00ff66;font-weight:700;font-size:20px;">$0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                    <span style="color:#888;font-size:11px;">📈 Margen calculado:</span>
+                    <span id="editPreviewMargen" style="color:#4fc3f7;font-weight:600;font-size:14px;">0%</span>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100" style="background:#4fc3f7 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;">
+                💾 Guardar cambios
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================
+     MODAL: IMPORTAR PRODUCTOS
+     ============================================ -->
+<div id="modalImportarProductos" class="modal-dixon">
+    <div class="modal-content" style="border: 2px solid #4fc3f7; max-width: 600px;">
+        <div class="modal-header">
+            <h3 style="color: #4fc3f7;">📂 Importar Productos</h3>
+            <button class="close-btn" onclick="cerrarModalImportarProductos()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
         <div style="margin-bottom:15px;padding:12px;background:rgba(79,195,247,0.06);border-radius:8px;border:1px solid rgba(79,195,247,0.15);">
             <p style="color:#888;font-size:12px;margin:0 0 8px 0;">
                 <i class="fa-solid fa-info-circle" style="color:#4fc3f7;"></i> 
@@ -641,90 +761,35 @@
     </div>
 </div>
 
-<!-- ============================================
-     MODAL: EDITAR REPUESTO
-     ============================================ -->
-<div id="modalEditarRepuesto" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #4fc3f7;border-radius:16px;padding:25px 30px;max-width:550px;width:95%;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="color:#4fc3f7;margin:0;font-size:20px;">✏️ Editar Repuesto</h3>
-            <button onclick="cerrarModalEditar()" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <form id="formEditarRepuesto">
-            <input type="hidden" name="id" id="editRepuestoId">
-            <div class="mb-3">
-                <label style="color:#90e0a0;font-size:13px;">Nombre del repuesto *</label>
-                <input type="text" name="nombre" id="editNombreRepuesto" class="form-control" required>
-            </div>
-            
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">📦 Stock</label>
-                    <input type="number" name="stock" id="editStockRepuesto" class="form-control" min="0">
-                </div>
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">💰 Costo Proveedor ($)</label>
-                    <input type="number" name="costo_proveedor" id="editCostoProveedor" class="form-control" step="0.01">
-                </div>
-            </div>
-            
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">📈 Margen de Ganancia (%)</label>
-                    <input type="number" name="margen_ganancia" id="editMargenGanancia" class="form-control" step="0.1" readonly style="background:rgba(255,255,255,0.03);">
-                    <small style="color:#666;font-size:10px;">Se recalcula automáticamente</small>
-                </div>
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">🏢 Proveedor</label>
-                    <input type="text" name="proveedor" id="editProveedorRepuesto" class="form-control" placeholder="Opcional">
-                </div>
-            </div>
-            
-            <!-- Preview -->
-            <div style="background:rgba(0,255,102,0.06);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(0,255,102,0.10);">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="color:#888;font-size:12px;">💰 Precio Venta Final:</span>
-                    <span id="editPreviewCostoVenta" style="color:#00ff66;font-weight:700;font-size:20px;">$0</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
-                    <span style="color:#888;font-size:11px;">📈 Margen calculado:</span>
-                    <span id="editPreviewMargen" style="color:#4fc3f7;font-weight:600;font-size:14px;">0%</span>
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary w-100" style="background:#4fc3f7 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;">
-                💾 Guardar cambios
-            </button>
-        </form>
-    </div>
-</div>
-
 <script>
-const API_URL = 'https://ea-dixon-production.up.railway.app';
+const API_URL = '{{ backend_url }}';
 
 // ============================================
 // VARIABLES GLOBALES
 // ============================================
-let scannerActivo = false;
-let codeReader = null;
+let scanner = null;
+let escanerProductoActivo = false;
 let datosProductos = [];
 let productoEscanerData = null;
 
 // ============================================
-// FUNCIONES DE ESCÁNER PARA REPUESTOS
+// FUNCIONES DE ESCÁNER (html5-qrcode)
 // ============================================
 
-function cargarZXing() {
+function cargarHtml5QrCode() {
     return new Promise((resolve, reject) => {
-        if (typeof ZXing !== 'undefined') {
-            console.log('✅ ZXing ya cargado');
+        if (typeof Html5Qrcode !== 'undefined') {
+            console.log('✅ html5-qrcode ya cargado');
             resolve();
             return;
         }
         const script = document.createElement('script');
-        script.src = 'https://unpkg.com/@zxing/library@0.19.2/umd/index.min.js';
-        script.onload = () => { console.log('✅ ZXing cargado'); resolve(); };
-        script.onerror = () => reject(new Error('Error cargando ZXing'));
+        script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+        script.onload = () => {
+            console.log('✅ html5-qrcode cargado correctamente');
+            resolve();
+        };
+        script.onerror = () => reject(new Error('Error cargando html5-qrcode'));
         document.head.appendChild(script);
     });
 }
@@ -744,10 +809,9 @@ async function solicitarPermisoCamara() {
 // ============================================
 // ESCANEAR PRODUCTO PARA REPUESTOS
 // ============================================
-let escanerProductoActivo = false;
 
 function abrirModalEscanerProducto() {
-    document.getElementById('modalEscanerProducto').style.display = 'flex';
+    document.getElementById('modalEscanerProducto').classList.add('active');
     document.getElementById('datosProductoEscaner').style.display = 'none';
     document.getElementById('videoContainerRepuestos').classList.remove('active');
     document.getElementById('videoElementRepuestos').style.display = 'none';
@@ -759,7 +823,7 @@ function abrirModalEscanerProducto() {
 
 function cerrarModalEscaner() {
     detenerEscannerRepuestos();
-    document.getElementById('modalEscanerProducto').style.display = 'none';
+    document.getElementById('modalEscanerProducto').classList.remove('active');
 }
 
 async function iniciarEscannerRepuestos() {
@@ -775,35 +839,43 @@ async function iniciarEscannerRepuestos() {
     }
 
     try {
-        await cargarZXing();
-        if (typeof ZXing === 'undefined') throw new Error('ZXing no disponible');
+        await cargarHtml5QrCode();
+        
+        const videoContainer = document.getElementById('videoContainerRepuestos');
+        videoContainer.classList.add('active');
+        
+        const config = {
+            fps: 10,
+            qrbox: { width: 300, height: 150 },
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.PDF_417,
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.DATA_MATRIX,
+                Html5QrcodeSupportedFormats.CODE_39
+            ]
+        };
 
-        const video = document.getElementById('videoElementRepuestos');
-        document.getElementById('videoContainerRepuestos').classList.add('active');
-        video.style.display = 'block';
-
-        codeReader = new ZXing.BrowserPDF417Reader();
-        let deviceId = undefined;
-        try {
-            const devices = await ZXing.BrowserPDF417Reader.listVideoInputDevices();
-            if (devices && devices.length > 0) {
-                deviceId = devices[devices.length - 1].deviceId;
-            }
-        } catch (e) {
-            console.warn('⚠️ Usando cámara por defecto');
-        }
+        scanner = new Html5Qrcode('videoContainerRepuestos');
 
         escanerProductoActivo = true;
         document.getElementById('btnEscanearProducto').textContent = '⏹️ Detener';
         document.getElementById('btnEscanearProducto').classList.add('activo');
 
-        await codeReader.decodeFromVideoDevice(deviceId, 'videoElementRepuestos', (result, error) => {
-            if (result) {
-                procesarProductoEscaner(result.getText());
-                detenerEscannerRepuestos();
-            }
-        });
+        await scanner.start(
+            { facingMode: "environment" },
+            config,
+            onScanProductoSuccess,
+            onScanProductoError
+        );
+        
+        console.log('✅ Escáner de productos iniciado');
+
     } catch (error) {
+        console.error('❌ Error al iniciar el escáner:', error);
         alert('❌ Error al iniciar el escáner: ' + error.message);
         detenerEscannerRepuestos();
     }
@@ -812,17 +884,29 @@ async function iniciarEscannerRepuestos() {
 async function detenerEscannerRepuestos() {
     escanerProductoActivo = false;
     document.getElementById('videoContainerRepuestos').classList.remove('active');
-    document.getElementById('videoElementRepuestos').style.display = 'none';
-    if (document.getElementById('videoElementRepuestos').srcObject) {
-        document.getElementById('videoElementRepuestos').srcObject.getTracks().forEach(t => t.stop());
-        document.getElementById('videoElementRepuestos').srcObject = null;
+    
+    if (scanner) {
+        try {
+            await scanner.stop();
+            await scanner.clear();
+        } catch (e) {
+            console.warn('⚠️ Error al detener escáner:', e);
+        }
+        scanner = null;
     }
-    if (codeReader) { 
-        try { await codeReader.reset(); } catch(e) {} 
-        codeReader = null; 
-    }
+    
     document.getElementById('btnEscanearProducto').textContent = '📸 Escanear Código de Barras';
     document.getElementById('btnEscanearProducto').classList.remove('activo');
+}
+
+function onScanProductoSuccess(decodedText, decodedResult) {
+    console.log('📄 Producto escaneado:', decodedText);
+    procesarProductoEscaner(decodedText);
+    detenerEscannerRepuestos();
+}
+
+function onScanProductoError(error) {
+    // No mostrar errores para no saturar
 }
 
 function procesarProductoEscaner(texto) {
@@ -924,10 +1008,13 @@ async function guardarProductoEscaner() {
     
     // Verificar si el producto ya existe
     let productoExistente = null;
+    let precioVentaActual = 0;
     document.querySelectorAll('.fila-repuesto-lista').forEach(fila => {
         const nombreTabla = fila.querySelector('td:nth-child(2)')?.textContent.trim().toLowerCase();
         if (nombreTabla === nombre.toLowerCase()) {
             productoExistente = fila.dataset.id;
+            const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
+            precioVentaActual = parseFloat(precioText) || 0;
         }
     });
     
@@ -938,19 +1025,11 @@ async function guardarProductoEscaner() {
             `📦 Stock actual: ${document.querySelector(`.fila-repuesto-lista[data-id="${productoExistente}"] td:nth-child(3)`)?.textContent || 0}\n` +
             `💰 Nuevo costo proveedor: $${costo.toLocaleString()}\n` +
             `📦 Nuevo stock: ${stock}\n\n` +
-            `¿Actualizar STOCK y COSTO PROVEEDOR?\n\n` +
-            `⚠️ El PRECIO DE VENTA NO se modificará.`
+            `💰 Precio Venta Actual: $${precioVentaActual.toLocaleString()} (NO se modificará)\n\n` +
+            `¿Actualizar STOCK y COSTO PROVEEDOR?`
         );
         
         if (!confirmar) return;
-        
-        // Obtener el precio venta actual (NO modificarlo)
-        let precioVentaActual = 0;
-        const fila = document.querySelector(`.fila-repuesto-lista[data-id="${productoExistente}"]`);
-        if (fila) {
-            const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
-            precioVentaActual = parseFloat(precioText) || 0;
-        }
         
         try {
             const resp = await fetch(`${API_URL}/api/repuestos/${productoExistente}`, {
@@ -962,8 +1041,7 @@ async function guardarProductoEscaner() {
                     stock: stock,
                     proveedor: proveedor || 'Importado',
                     margen_ganancia: margen,
-                    // NO ENVIAMOS costo_venta_final para que NO se modifique
-                    costo_venta_final: precioVentaActual
+                    costo_venta_final: precioVentaActual // MANTENER PRECIO VENTA ACTUAL
                 })
             });
             const result = await resp.json();
@@ -1033,12 +1111,12 @@ document.getElementById('btnEscanearProducto').addEventListener('click', functio
 // ============================================
 
 function abrirModalReporte() {
-    document.getElementById('modalReporteStock').style.display = 'flex';
+    document.getElementById('modalReporteStock').classList.add('active');
     cargarProveedoresReporte();
 }
 
 function cerrarModalReporte() {
-    document.getElementById('modalReporteStock').style.display = 'none';
+    document.getElementById('modalReporteStock').classList.remove('active');
 }
 
 function cargarProveedoresReporte() {
@@ -1124,9 +1202,262 @@ function enviarPorGmail() {
 }
 
 // ============================================
-// FUNCIONES DE IMPORTACIÓN (YA EXISTENTES)
+// FUNCIONES DE MODALES
 // ============================================
-// [Mantén las funciones que ya tenías de importación]
+
+function abrirModalAgregar() {
+    document.getElementById('modalAgregarRepuesto').classList.add('active');
+    document.getElementById('inputNombreRepuesto').focus();
+    document.getElementById('inputCostoProveedor').value = '';
+    document.getElementById('inputMargenGanancia').value = '30';
+    document.getElementById('inputProveedorRepuesto').value = '';
+    document.getElementById('inputStockRepuesto').value = '1';
+    calcularCostoVenta();
+}
+
+function cerrarModalAgregar() {
+    document.getElementById('modalAgregarRepuesto').classList.remove('active');
+    document.getElementById('formAgregarRepuesto').reset();
+    document.getElementById('previewCostoVenta').textContent = '$0';
+    document.getElementById('previewMargen').textContent = '0%';
+}
+
+function cerrarModalEditar() {
+    document.getElementById('modalEditarRepuesto').classList.remove('active');
+    document.getElementById('formEditarRepuesto').reset();
+    document.getElementById('editPreviewCostoVenta').textContent = '$0';
+    document.getElementById('editPreviewMargen').textContent = '0%';
+}
+
+function abrirModalImportarProductos() {
+    document.getElementById('modalImportarProductos').classList.add('active');
+    document.getElementById('previewProductos').style.display = 'none';
+    document.getElementById('btnImportarProductos').style.display = 'none';
+    document.getElementById('resultadoImportacion').style.display = 'none';
+    document.getElementById('fileInputProductos').value = '';
+    datosProductos = [];
+}
+
+function cerrarModalImportarProductos() {
+    document.getElementById('modalImportarProductos').classList.remove('active');
+}
+
+// ============================================
+// FUNCIONES DE IMPORTACIÓN
+// ============================================
+
+function handleDropProductos(e) {
+    e.preventDefault();
+    const dropZone = document.getElementById('dropZoneProductos');
+    dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        procesarArchivoProductos(files[0]);
+    }
+}
+
+function handleDragOverProductos(e) {
+    e.preventDefault();
+    document.getElementById('dropZoneProductos').style.borderColor = '#4fc3f7';
+}
+
+function handleDragLeaveProductos(e) {
+    e.preventDefault();
+    document.getElementById('dropZoneProductos').style.borderColor = 'rgba(79,195,247,0.3)';
+}
+
+function handleFileSelectProductos(e) {
+    const file = e.target.files[0];
+    if (file) {
+        procesarArchivoProductos(file);
+    }
+}
+
+function procesarArchivoProductos(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+            
+            if (jsonData.length === 0) {
+                alert('⚠️ El archivo está vacío');
+                return;
+            }
+            
+            datosProductos = jsonData.map(row => {
+                const nombre = row['Producto'] || row['nombre'] || '';
+                const costo = parseFloat(row['Costo Proveedor'] || row['costo_proveedor'] || 0);
+                const precioVenta = parseFloat(row['Precio Venta'] || row['precio_venta'] || 0);
+                const proveedor = row['Proveedor'] || row['proveedor'] || 'Importado';
+                
+                let margenFinal = 0;
+                if (costo > 0 && precioVenta > 0) {
+                    const iva = 1.19;
+                    const costoConIva = costo * iva;
+                    margenFinal = ((precioVenta / costoConIva) - 1) * 100;
+                    margenFinal = Math.round(margenFinal * 10) / 10;
+                }
+                
+                return { 
+                    nombre: String(nombre).trim(), 
+                    costo: costo,
+                    precio_venta: precioVenta,
+                    margen: margenFinal,
+                    proveedor: proveedor || 'Importado'
+                };
+            }).filter(item => item.nombre && item.costo > 0 && item.precio_venta > 0);
+            
+            if (datosProductos.length === 0) {
+                alert('⚠️ No hay datos válidos para importar');
+                return;
+            }
+            
+            mostrarPreviewProductos(datosProductos);
+            
+        } catch (error) {
+            alert('❌ Error al leer el archivo: ' + error.message);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function mostrarPreviewProductos(datos) {
+    const previewBody = document.getElementById('previewBodyProductos');
+    const previewContainer = document.getElementById('previewProductos');
+    const btnImportar = document.getElementById('btnImportarProductos');
+    const contador = document.getElementById('contadorProductos');
+    
+    previewBody.innerHTML = '';
+    const mostrar = datos.slice(0, 10);
+    mostrar.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+        tr.innerHTML = `
+            <td style="padding:4px 6px;color:#666;">${index + 1}</td>
+            <td style="padding:4px 6px;color:#fff;">${item.nombre}</td>
+            <td style="padding:4px 6px;color:#ffcc00;">$${item.costo.toLocaleString('es-CL')}</td>
+            <td style="padding:4px 6px;color:#00ff66;">$${item.precio_venta.toLocaleString('es-CL')}</td>
+            <td style="padding:4px 6px;color:#4fc3f7;">${item.margen}%</td>
+        `;
+        previewBody.appendChild(tr);
+    });
+    
+    if (datos.length > 10) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="5" style="padding:6px;text-align:center;color:#666;">... y ${datos.length - 10} más</td>`;
+        previewBody.appendChild(tr);
+    }
+    
+    contador.textContent = `${datos.length} registros`;
+    previewContainer.style.display = 'block';
+    btnImportar.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datos.length} productos`;
+    btnImportar.style.display = 'block';
+}
+
+async function importarProductos() {
+    if (datosProductos.length === 0) {
+        alert('⚠️ No hay datos para importar');
+        return;
+    }
+    
+    if (!confirm(`📊 ¿Importar ${datosProductos.length} productos?\n\nSe agregarán a la lista de repuestos.`)) {
+        return;
+    }
+    
+    const btn = document.getElementById('btnImportarProductos');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
+    
+    let importados = 0;
+    let errores = [];
+    let exitosos = [];
+    
+    for (const item of datosProductos) {
+        try {
+            const resp = await fetch(`${API_URL}/api/repuestos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: item.nombre,
+                    costo_proveedor: item.costo,
+                    margen_ganancia: item.margen,
+                    proveedor: item.proveedor || 'Importado',
+                    costo_venta_final: item.precio_venta
+                })
+            });
+            const result = await resp.json();
+            if (result.success) {
+                importados++;
+                exitosos.push(item.nombre);
+            } else {
+                errores.push({
+                    nombre: item.nombre,
+                    error: result.error || 'Error desconocido'
+                });
+            }
+        } catch (error) {
+            errores.push({
+                nombre: item.nombre,
+                error: 'Error de conexión'
+            });
+        }
+    }
+    
+    mostrarResultadoImportacion(importados, exitosos, errores);
+    
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datosProductos.length} productos`;
+    
+    if (errores.length === 0) {
+        alert(`✅ Importación completada!\n\n📊 ${importados} importados correctamente`);
+    } else {
+        alert(`⚠️ Importación completada con errores\n\n✅ ${importados} importados\n❌ ${errores.length} con errores\n\nRevisa el informe abajo.`);
+    }
+    
+    if (importados > 0) {
+        setTimeout(() => location.reload(), 3000);
+    }
+}
+
+function mostrarResultadoImportacion(importados, exitosos, errores) {
+    const resultadoDiv = document.getElementById('resultadoImportacion');
+    const contenido = document.getElementById('resultadoContenido');
+    
+    resultadoDiv.style.display = 'block';
+    
+    let html = `<div style="font-weight:700;font-size:16px;margin-bottom:10px;">📊 RESULTADO DE IMPORTACIÓN</div>`;
+    html += `<div style="color:#00ff66;margin-bottom:8px;">✅ ${importados} productos importados correctamente</div>`;
+    
+    if (errores.length > 0) {
+        html += `<div style="color:#ff6b6b;margin-bottom:8px;">❌ ${errores.length} productos con errores:</div>`;
+        html += `<div style="max-height:150px;overflow-y:auto;font-size:12px;">`;
+        html += `<table style="width:100%;border-collapse:collapse;font-size:12px;">`;
+        html += `<tr><th style="text-align:left;padding:4px 6px;color:#90e0a0;">Producto</th><th style="text-align:left;padding:4px 6px;color:#90e0a0;">Error</th></tr>`;
+        
+        errores.forEach(item => {
+            html += `<tr>`;
+            html += `<td style="padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.05);">${item.nombre}</td>`;
+            html += `<td style="padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.05);color:#ff6b6b;">${item.error}</td>`;
+            html += `</tr>`;
+        });
+        
+        html += `</table>`;
+        html += `</div>`;
+    }
+    
+    if (exitosos.length > 0 && exitosos.length <= 10) {
+        html += `<div style="margin-top:8px;color:#888;font-size:12px;">✅ ${exitosos.join(', ')}</div>`;
+    } else if (exitosos.length > 10) {
+        html += `<div style="margin-top:8px;color:#888;font-size:12px;">✅ ${exitosos.length} productos importados (los primeros 10: ${exitosos.slice(0,10).join(', ')}...)</div>`;
+    }
+    
+    contenido.innerHTML = html;
+    resultadoDiv.style.border = errores.length > 0 ? '1px solid #ff6b6b' : '1px solid #00ff66';
+    resultadoDiv.style.background = errores.length > 0 ? 'rgba(255,68,68,0.05)' : 'rgba(0,255,102,0.05)';
+}
 
 // ============================================
 // DOMContentLoaded
@@ -1211,26 +1542,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.getElementById('editCostoProveedor').addEventListener('input', calcularCostoVentaEdit);
-    document.getElementById('editMargenGanancia').addEventListener('input', calcularCostoVentaEdit);
 
-    // Agregar repuesto
-    window.abrirModalAgregar = function() {
-        document.getElementById('modalAgregarRepuesto').style.display = 'flex';
-        document.getElementById('inputNombreRepuesto').focus();
-        document.getElementById('inputCostoProveedor').value = '';
-        document.getElementById('inputMargenGanancia').value = '30';
-        document.getElementById('inputProveedorRepuesto').value = '';
-        document.getElementById('inputStockRepuesto').value = '1';
-        calcularCostoVenta();
-    };
-
-    window.cerrarModalAgregar = function() {
-        document.getElementById('modalAgregarRepuesto').style.display = 'none';
-        document.getElementById('formAgregarRepuesto').reset();
-        document.getElementById('previewCostoVenta').textContent = '$0';
-        document.getElementById('previewMargen').textContent = '0%';
-    };
-
+    // Formulario agregar
     document.getElementById('formAgregarRepuesto').addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -1281,40 +1594,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(() => alert('❌ Error de conexión'));
     });
 
-    // Editar repuesto
-    document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = this.dataset.id;
-            const fila = this.closest('.fila-repuesto-lista');
-            
-            const nombre = fila.querySelector('td:nth-child(2)').textContent.trim();
-            const stockText = fila.querySelector('td:nth-child(3)').textContent.trim();
-            const stock = parseInt(stockText) || 0;
-            const costoText = fila.querySelector('td:nth-child(4)').textContent.replace(/[$,⚠️]/g, '').trim();
-            const costo = parseFloat(costoText) || 0;
-            const margenText = fila.querySelector('td:nth-child(5)').textContent.replace('%', '').trim();
-            const margen = parseFloat(margenText) || 0;
-            const proveedor = fila.querySelector('td:nth-child(7)').textContent.trim();
-            
-            document.getElementById('editRepuestoId').value = id;
-            document.getElementById('editNombreRepuesto').value = nombre;
-            document.getElementById('editCostoProveedor').value = costo;
-            document.getElementById('editMargenGanancia').value = margen;
-            document.getElementById('editProveedorRepuesto').value = proveedor === '-' ? '' : proveedor;
-            document.getElementById('editStockRepuesto').value = stock;
-            
-            document.getElementById('modalEditarRepuesto').style.display = 'flex';
-            calcularCostoVentaEdit();
-        });
-    });
-
-    window.cerrarModalEditar = function() {
-        document.getElementById('modalEditarRepuesto').style.display = 'none';
-        document.getElementById('formEditarRepuesto').reset();
-        document.getElementById('editPreviewCostoVenta').textContent = '$0';
-        document.getElementById('editPreviewMargen').textContent = '0%';
-    };
-
+    // Formulario editar
     document.getElementById('formEditarRepuesto').addEventListener('submit', function(e) {
         e.preventDefault();
         const id = document.getElementById('editRepuestoId').value;
@@ -1365,6 +1645,33 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(() => alert('❌ Error de conexión'));
     });
 
+    // Editar botones
+    document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const fila = this.closest('.fila-repuesto-lista');
+            
+            const nombre = fila.querySelector('td:nth-child(2)').textContent.trim();
+            const stockText = fila.querySelector('td:nth-child(3)').textContent.trim();
+            const stock = parseInt(stockText) || 0;
+            const costoText = fila.querySelector('td:nth-child(4)').textContent.replace(/[$,⚠️]/g, '').trim();
+            const costo = parseFloat(costoText) || 0;
+            const margenText = fila.querySelector('td:nth-child(5)').textContent.replace('%', '').trim();
+            const margen = parseFloat(margenText) || 0;
+            const proveedor = fila.querySelector('td:nth-child(7)').textContent.trim();
+            
+            document.getElementById('editRepuestoId').value = id;
+            document.getElementById('editNombreRepuesto').value = nombre;
+            document.getElementById('editCostoProveedor').value = costo;
+            document.getElementById('editMargenGanancia').value = margen;
+            document.getElementById('editProveedorRepuesto').value = proveedor === '-' ? '' : proveedor;
+            document.getElementById('editStockRepuesto').value = stock;
+            
+            document.getElementById('modalEditarRepuesto').classList.add('active');
+            calcularCostoVentaEdit();
+        });
+    });
+
     // Eliminar repuesto
     document.querySelectorAll('.btn-eliminar-repuesto-lista').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -1398,11 +1705,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
-// ============================================
-// FUNCIONES DE IMPORTACIÓN (MANTENER)
-// ============================================
-// [Mantén las funciones de importación que ya tenías]
 </script>
 
 {% endblock %}
