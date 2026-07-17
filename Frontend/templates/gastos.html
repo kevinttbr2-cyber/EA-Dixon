@@ -101,10 +101,10 @@
 </div>
 
 <!-- ============================================
-     MODAL: NUEVO GASTO
+     MODAL: NUEVO GASTO (CON ESCÁNER)
      ============================================ -->
 <div id="modalNuevoGasto" class="modal-dixon" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0;">
-    <div class="modal-content" style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:24px 28px;max-width:500px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;box-shadow:var(--shadow-hover);">
+    <div class="modal-content" style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:24px 28px;max-width:550px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;box-shadow:var(--shadow-hover);">
         <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border-subtle);padding-bottom:12px;">
             <h3 style="color:var(--accent-yellow);margin:0;font-size:22px;font-weight:700;">
                 <span class="material-symbols-rounded" style="font-size:28px;vertical-align:middle;">add_circle</span>
@@ -114,7 +114,22 @@
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
+        
         <form id="formNuevoGasto">
+            <!-- 🔥 NUEVO: BOTÓN ESCANEAR FACTURA -->
+            <div style="margin-bottom:16px;">
+                <button type="button" id="btnEscanear" class="btn btn-primary" style="width:100%;background:var(--accent-blue) !important;box-shadow:0 4px 16px rgba(52,152,219,0.3);">
+                    <span class="material-symbols-rounded" style="font-size:20px;vertical-align:middle;">scan</span>
+                    📸 Escanear Factura / Boleta
+                </button>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:center;">
+                    Apunta la cámara al código de barras PDF417 de la factura o boleta
+                </div>
+            </div>
+
+            <!-- Video oculto para la cámara -->
+            <video id="videoElement" style="display:none;width:100%;max-height:300px;border-radius:var(--radius-sm);background:var(--bg-primary);"></video>
+
             <!-- Categoría -->
             <div style="margin-bottom:12px;">
                 <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:4px;">Categoría *</label>
@@ -128,10 +143,12 @@
                 </select>
             </div>
 
-            <!-- Monto -->
+            <!-- Monto (con botón de escáner integrado) -->
             <div style="margin-bottom:12px;">
                 <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:4px;">Monto ($) *</label>
-                <input type="number" id="gasto_monto" step="0.01" min="0" required placeholder="0" style="width:100%;padding:10px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);">
+                <div style="display:flex;gap:8px;">
+                    <input type="number" id="gasto_monto" step="0.01" min="0" required placeholder="0" style="flex:1;padding:10px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);">
+                </div>
             </div>
 
             <!-- Método de Pago -->
@@ -152,6 +169,18 @@
                 <input type="text" id="gasto_descripcion" placeholder="Ej: Pago luz mes de julio" style="width:100%;padding:10px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);">
             </div>
 
+            <!-- Proveedor / RUT (autocompletado por escáner) -->
+            <div style="margin-bottom:12px;">
+                <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:4px;">Proveedor / RUT</label>
+                <input type="text" id="gasto_proveedor" placeholder="Se autocompleta al escanear" style="width:100%;padding:10px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);">
+            </div>
+
+            <!-- Folio (autocompletado por escáner) -->
+            <div style="margin-bottom:12px;">
+                <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:4px;">Folio</label>
+                <input type="text" id="gasto_folio" placeholder="Se autocompleta al escanear" style="width:100%;padding:10px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);">
+            </div>
+
             <!-- Botones -->
             <div style="display:flex;gap:10px;margin-top:16px;">
                 <button type="submit" class="btn btn-primary" style="flex:1;">
@@ -168,6 +197,195 @@
 
 <script>
 const API_URL = '{{ backend_url }}';
+let scannerActivo = false;
+let codeReader = null;
+
+// ============================================
+// FUNCIONES DEL ESCÁNER (PDF417)
+// ============================================
+
+// Cargar librería ZXing dinámicamente
+function cargarZXing() {
+    return new Promise((resolve, reject) => {
+        if (typeof ZXing !== 'undefined') {
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/@zxing/library@0.19.2/umd/index.min.js';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Error cargando la librería ZXing'));
+        document.head.appendChild(script);
+    });
+}
+
+// Iniciar escáner
+async function iniciarEscanner() {
+    if (scannerActivo) {
+        await detenerEscanner();
+        return;
+    }
+
+    try {
+        // Cargar la librería ZXing
+        await cargarZXing();
+        console.log('✅ Librería ZXing cargada');
+
+        const video = document.getElementById('videoElement');
+        video.style.display = 'block';
+
+        // Crear lector especializado en PDF417
+        codeReader = new ZXing.BrowserPDF417Reader();
+
+        // Configurar el lector para usar la cámara trasera
+        const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+        const deviceId = devices.length > 0 ? devices[0].deviceId : undefined;
+
+        // Iniciar decodificación
+        scannerActivo = true;
+        document.getElementById('btnEscanear').textContent = '⏹️ Detener Escáner';
+        document.getElementById('btnEscanear').style.background = 'var(--accent-red) !important';
+
+        await codeReader.decodeFromVideoDevice(
+            deviceId,
+            'videoElement',
+            (result, error) => {
+                if (result) {
+                    const textoCompleto = result.getText();
+                    console.log('📄 Texto escaneado:', textoCompleto);
+                    procesarDatosFactura(textoCompleto);
+                    detenerEscanner();
+                }
+                if (error && !(error instanceof ZXing.NotFoundException)) {
+                    console.log('🔍 Buscando código...');
+                }
+            }
+        );
+
+    } catch (error) {
+        console.error('❌ Error al iniciar el escáner:', error);
+        alert('❌ No se pudo acceder a la cámara. Verifica los permisos.');
+        detenerEscanner();
+    }
+}
+
+// Detener escáner
+async function detenerEscanner() {
+    scannerActivo = false;
+    const video = document.getElementById('videoElement');
+    video.style.display = 'none';
+
+    if (codeReader) {
+        try {
+            await codeReader.reset();
+            codeReader = null;
+        } catch (e) {
+            console.log('⚠️ Error al resetear el lector:', e);
+        }
+    }
+
+    const btn = document.getElementById('btnEscanear');
+    btn.textContent = '📸 Escanear Factura / Boleta';
+    btn.style.background = 'var(--accent-blue) !important';
+}
+
+// Procesar datos extraídos del código PDF417
+function procesarDatosFactura(texto) {
+    console.log('🔍 Procesando texto escaneado...');
+
+    // Extraer campos comunes en facturas/boletas chilenas
+    const campos = {
+        monto: null,
+        fecha: null,
+        proveedor: null,
+        rut: null,
+        folio: null
+    };
+
+    // Buscar Monto Total (formato SII)
+    let montoMatch = texto.match(/MontoTotal[^\d]*([\d.,]+)/i);
+    if (!montoMatch) {
+        montoMatch = texto.match(/Total[^\d]*([\d.,]+)/i);
+    }
+    if (!montoMatch) {
+        montoMatch = texto.match(/Neto[^\d]*([\d.,]+)/i);
+    }
+    if (montoMatch) {
+        campos.monto = parseFloat(montoMatch[1].replace(/[.,]/g, (match) => match === '.' ? '' : '.'));
+        document.getElementById('gasto_monto').value = campos.monto;
+        console.log('💰 Monto encontrado:', campos.monto);
+    }
+
+    // Buscar Fecha
+    let fechaMatch = texto.match(/FechaEmision[^\d]*(\d{2}[-/]\d{2}[-/]\d{4})/i);
+    if (!fechaMatch) {
+        fechaMatch = texto.match(/Fecha[^\d]*(\d{2}[-/]\d{2}[-/]\d{4})/i);
+    }
+    if (fechaMatch) {
+        const fechaStr = fechaMatch[1];
+        const partes = fechaStr.split(/[-/]/);
+        if (partes.length === 3) {
+            const fechaFormateada = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            campos.fecha = fechaFormateada;
+            console.log('📅 Fecha encontrada:', fechaFormateada);
+        }
+    }
+
+    // Buscar Proveedor / Razón Social
+    let proveedorMatch = texto.match(/RazónSocial[^:]*:\s*([^\n]+)/i);
+    if (!proveedorMatch) {
+        proveedorMatch = texto.match(/Nombre[^:]*:\s*([^\n]+)/i);
+    }
+    if (!proveedorMatch) {
+        proveedorMatch = texto.match(/Cliente[^:]*:\s*([^\n]+)/i);
+    }
+    if (proveedorMatch) {
+        campos.proveedor = proveedorMatch[1].trim();
+        document.getElementById('gasto_proveedor').value = campos.proveedor;
+        console.log('🏢 Proveedor encontrado:', campos.proveedor);
+    }
+
+    // Buscar RUT
+    let rutMatch = texto.match(/RUT[^:]*:\s*([\d.-]+)/i);
+    if (!rutMatch) {
+        rutMatch = texto.match(/Rut[^:]*:\s*([\d.-]+)/i);
+    }
+    if (rutMatch) {
+        campos.rut = rutMatch[1].trim();
+        if (!campos.proveedor) {
+            document.getElementById('gasto_proveedor').value = campos.rut;
+        }
+        console.log('🆔 RUT encontrado:', campos.rut);
+    }
+
+    // Buscar Folio
+    let folioMatch = texto.match(/Folio[^:]*:\s*(\d+)/i);
+    if (folioMatch) {
+        campos.folio = folioMatch[1].trim();
+        document.getElementById('gasto_folio').value = campos.folio;
+        console.log('📄 Folio encontrado:', campos.folio);
+    }
+
+    // Si se encontró el monto, mostrar mensaje de éxito
+    if (campos.monto) {
+        alert(`✅ Datos cargados automáticamente:\n💰 Monto: $${campos.monto.toLocaleString()}\n${campos.proveedor ? '🏢 Proveedor: ' + campos.proveedor : ''}\n${campos.folio ? '📄 Folio: ' + campos.folio : ''}`);
+    } else {
+        alert('⚠️ No se pudo extraer el monto automáticamente. Por favor, ingrésalo manualmente.');
+    }
+
+    // Detener el escáner después de procesar
+    detenerEscanner();
+}
+
+// ============================================
+// EVENTOS DEL FORMULARIO
+// ============================================
+
+// Botón de escanear
+document.getElementById('btnEscanear').addEventListener('click', async function(e) {
+    e.preventDefault();
+    await iniciarEscanner();
+});
 
 // Mostrar ayuda según método de pago
 document.getElementById('gasto_metodo_pago').addEventListener('change', function() {
@@ -185,11 +403,14 @@ document.getElementById('gasto_metodo_pago').addEventListener('change', function
 function abrirModalGasto() {
     document.getElementById('modalNuevoGasto').style.display = 'flex';
     document.getElementById('formNuevoGasto').reset();
+    // Restaurar el video a su estado inicial
+    detenerEscanner();
 }
 
 // Cerrar modal
 function cerrarModalGasto() {
     document.getElementById('modalNuevoGasto').style.display = 'none';
+    detenerEscanner();
 }
 
 // Enviar formulario
@@ -201,6 +422,8 @@ document.getElementById('formNuevoGasto').addEventListener('submit', async funct
         monto: parseFloat(document.getElementById('gasto_monto').value) || 0,
         metodo_pago: document.getElementById('gasto_metodo_pago').value,
         descripcion: document.getElementById('gasto_descripcion').value,
+        proveedor: document.getElementById('gasto_proveedor').value,
+        folio: document.getElementById('gasto_folio').value,
         fecha: new Date().toISOString().split('T')[0],
         hora: new Date().toTimeString().slice(0, 8),
         registrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
@@ -256,6 +479,11 @@ document.getElementById('modalNuevoGasto').addEventListener('click', function(e)
         cerrarModalGasto();
     }
 });
+
+// ============================================
+// DETENER ESCÁNER AL CERRAR EL MODAL
+// ============================================
+// El escáner se detiene automáticamente al cerrar el modal
 </script>
 
 {% endblock %}
