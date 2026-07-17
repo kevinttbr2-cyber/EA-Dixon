@@ -235,7 +235,7 @@
             </div>
         </div>
 
-        <!-- FILTROS (MODERNOS) -->
+        <!-- FILTROS -->
         <div class="filtros-gastos">
             <button class="filtro-gasto active" onclick="filtrarGastos('todos', this)">
                 Todos
@@ -431,18 +431,19 @@
                 <div class="scan-overlay"></div>
                 <div class="scan-text">🔄 Escaneando...</div>
             </div>
+            
             <!-- Selector de modo de escaneo -->
-<div style="display: flex; gap: 8px; margin-bottom: 10px;">
-    <button type="button" id="scan_auto" class="btn btn-sm btn-primary scan-mode-btn active" onclick="setScanMode('auto')" style="flex:1;">
-        🔄 Automático
-    </button>
-    <button type="button" id="scan_factura" class="btn btn-sm btn-secondary scan-mode-btn" onclick="setScanMode('factura')" style="flex:1;">
-        📄 Factura
-    </button>
-    <button type="button" id="scan_producto" class="btn btn-sm btn-secondary scan-mode-btn" onclick="setScanMode('producto')" style="flex:1;">
-        📦 Producto
-    </button>
-</div>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <button type="button" id="scan_auto" class="btn btn-sm btn-primary scan-mode-btn active" onclick="setScanMode('auto')" style="flex:1;">
+                    🔄 Automático
+                </button>
+                <button type="button" id="scan_factura" class="btn btn-sm btn-secondary scan-mode-btn" onclick="setScanMode('factura')" style="flex:1;">
+                    📄 Factura
+                </button>
+                <button type="button" id="scan_producto" class="btn btn-sm btn-secondary scan-mode-btn" onclick="setScanMode('producto')" style="flex:1;">
+                    📦 Producto
+                </button>
+            </div>
 
             <!-- Categoría -->
             <div style="margin-bottom:10px;">
@@ -573,43 +574,68 @@ let empleadosPlanilla = [];
 let proveedoresLista = [];
 
 // ============================================
-// TABS
-// ============================================
-function cambiarTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    const tabMap = {
-        'gastos': 'tabGastos',
-        'proveedores': 'tabProveedores',
-        'sueldos': 'tabSueldos'
-    };
-    document.getElementById(tabMap[tab]).classList.add('active');
-    document.querySelector(`.tab-btn[onclick*="${tab}"]`).classList.add('active');
-    
-    if (tab === 'proveedores') cargarProveedores();
-    if (tab === 'sueldos') cargarPlanilla();
-}
-
-// ============================================
-// ESCÁNER INTELIGENTE (Facturas + Productos)
+// ESCÁNER INTELIGENTE (Facturas + Productos) - CORREGIDO
 // ============================================
 
-let scanMode = 'auto'; // 'auto', 'factura', 'producto'
+let scanMode = 'auto';
 let scanner = null;
 
-// Configurar modo de escaneo
-function setScanMode(mode) {
-    scanMode = mode;
-    document.querySelectorAll('.scan-mode-btn').forEach(btn => {
-        btn.classList.remove('active');
+// ============================================
+// CARGAR LIBRERÍA html5-qrcode
+// ============================================
+function cargarHtml5QrCode() {
+    return new Promise((resolve, reject) => {
+        if (typeof Html5Qrcode !== 'undefined') {
+            console.log('✅ html5-qrcode ya cargado');
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+        script.onload = () => {
+            console.log('✅ html5-qrcode cargado correctamente');
+            resolve();
+        };
+        script.onerror = () => reject(new Error('Error cargando html5-qrcode'));
+        document.head.appendChild(script);
     });
-    document.getElementById('scan_' + mode).classList.add('active');
 }
 
-// Iniciar escáner inteligente
-async function iniciarEscannerInteligente() {
+// ============================================
+// SOLICITAR PERMISO DE CÁMARA
+// ============================================
+async function solicitarPermisoCamara() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+        });
+        stream.getTracks().forEach(track => track.stop());
+        console.log('✅ Permiso de cámara concedido');
+        return true;
+    } catch (error) {
+        console.error('❌ Permiso de cámara denegado:', error);
+        return false;
+    }
+}
+
+// ============================================
+// INICIAR ESCÁNER
+// ============================================
+async function iniciarEscanner() {
     if (scanner) {
         await detenerEscanner();
+        return;
+    }
+
+    // Verificar si es dispositivo móvil
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!isMobile) {
+        alert('📱 El escáner funciona mejor en dispositivos móviles.\n\nSi estás en computador, usa la cámara web.');
+    }
+
+    const tienePermiso = await solicitarPermisoCamara();
+    if (!tienePermiso) {
+        alert('⚠️ Para escanear facturas, necesitas permitir el acceso a la cámara.');
         return;
     }
 
@@ -621,7 +647,8 @@ async function iniciarEscannerInteligente() {
         
         const config = {
             fps: 10,
-            qrbox: { width: 300, height: 150 },
+            qrbox: { width: 280, height: 120 },
+            aspectRatio: 1.0,
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.PDF_417,
                 Html5QrcodeSupportedFormats.QR_CODE,
@@ -647,41 +674,69 @@ async function iniciarEscannerInteligente() {
             onScanError
         );
         
-        console.log('✅ Escáner inteligente iniciado');
+        console.log('✅ Escáner iniciado correctamente');
 
     } catch (error) {
         console.error('❌ Error al iniciar el escáner:', error);
-        alert('❌ Error al iniciar el escáner: ' + error.message);
+        
+        let mensaje = '❌ Error al iniciar el escáner:\n\n';
+        if (error.message && error.message.includes('Permission denied')) {
+            mensaje += 'No se pudo acceder a la cámara. Verifica los permisos en tu navegador.';
+        } else if (error.message && error.message.includes('not a function')) {
+            mensaje += 'Error de compatibilidad. Por favor, actualiza la página e intenta nuevamente.';
+        } else {
+            mensaje += error.message || 'Error desconocido';
+        }
+        alert(mensaje);
         detenerEscanner();
     }
 }
 
-// Procesar escaneo exitoso
-async function onScanSuccess(decodedText, decodedResult) {
+// ============================================
+// DETENER ESCÁNER
+// ============================================
+async function detenerEscanner() {
+    if (scanner) {
+        try {
+            await scanner.stop();
+            await scanner.clear();
+        } catch (e) {
+            console.warn('⚠️ Error al detener escáner:', e);
+        }
+        scanner = null;
+    }
+    
+    document.getElementById('videoContainer').classList.remove('active');
+    document.getElementById('btnEscanear').textContent = '📸 Escanear Factura / Boleta';
+    document.getElementById('btnEscanear').classList.remove('activo');
+}
+
+// ============================================
+// ESCANEO EXITOSO
+// ============================================
+function onScanSuccess(decodedText, decodedResult) {
     console.log('📄 Texto escaneado:', decodedText);
     
     // Determinar el tipo de documento
     const tipo = detectarTipoDocumento(decodedText);
     
     if (tipo === 'factura') {
-        // Procesar como factura
         const datos = extraerDatosFactura(decodedText);
         if (datos && datos.monto) {
-            // Rellenar formulario de gastos
             document.getElementById('gasto_categoria').value = 'Repuestos';
             document.getElementById('gasto_monto').value = datos.monto;
             document.getElementById('gasto_proveedor').value = datos.proveedor || '';
             document.getElementById('gasto_folio').value = datos.folio || '';
             document.getElementById('gasto_descripcion').value = `Factura ${datos.folio || ''} - ${datos.proveedor || ''}`;
             alert(`✅ Factura procesada: $${datos.monto.toLocaleString()}\n🏢 ${datos.proveedor || 'Proveedor'}`);
-            detenerEscanner();
+        } else {
+            alert('⚠️ No se pudo extraer el monto de la factura. Ingresa los datos manualmente.');
         }
+        detenerEscanner();
         
     } else if (tipo === 'producto') {
-        // Procesar como producto para stock
         const producto = extraerDatosProducto(decodedText);
         if (producto && producto.nombre && producto.precio) {
-            // Confirmar antes de agregar al stock
             const confirmar = confirm(
                 `📦 Nuevo producto detectado:\n\n` +
                 `🔹 Nombre: ${producto.nombre}\n` +
@@ -689,23 +744,21 @@ async function onScanSuccess(decodedText, decodedResult) {
                 `🔹 Proveedor: ${producto.proveedor || 'No especificado'}\n\n` +
                 `¿Agregar al stock de repuestos?`
             );
-            
             if (confirmar) {
                 await agregarProductoAlStock(producto);
             }
-            detenerEscanner();
+        } else {
+            alert('⚠️ No se pudo extraer la información del producto.');
         }
+        detenerEscanner();
         
     } else {
-        // No se pudo identificar
         const opcion = confirm(
             `🤔 No se pudo identificar el tipo de documento.\n\n` +
             `Texto escaneado:\n${decodedText.slice(0, 100)}...\n\n` +
             `¿Quieres procesarlo como factura?`
         );
-        
         if (opcion) {
-            // Intentar procesar como factura
             const datos = extraerDatosFactura(decodedText);
             if (datos && datos.monto) {
                 document.getElementById('gasto_monto').value = datos.monto;
@@ -718,40 +771,52 @@ async function onScanSuccess(decodedText, decodedResult) {
 }
 
 // ============================================
+// ERROR DE ESCANEO (ignorar)
+// ============================================
+function onScanError(error) {
+    // No mostrar errores para no saturar la consola
+}
+
+// ============================================
+// CONFIGURAR MODO DE ESCANEO
+// ============================================
+function setScanMode(mode) {
+    scanMode = mode;
+    document.querySelectorAll('.scan-mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById('scan_' + mode).classList.add('active');
+}
+
+// ============================================
 // DETECCIÓN DE TIPO DE DOCUMENTO
 // ============================================
 function detectarTipoDocumento(texto) {
     const textoLower = texto.toLowerCase();
     
-    // Palabras clave de factura
     const facturaKeywords = ['monto', 'total', 'rut', 'razón social', 'folio', 'factura', 'boleta', 'dte', 'sii'];
     let facturaScore = 0;
     facturaKeywords.forEach(kw => {
         if (textoLower.includes(kw)) facturaScore++;
     });
     
-    // Palabras clave de producto
     const productoKeywords = ['producto', 'código', 'precio', 'cantidad', 'stock', 'inventario', 'unidad', 'kg', 'lt'];
     let productoScore = 0;
     productoKeywords.forEach(kw => {
         if (textoLower.includes(kw)) productoScore++;
     });
     
-    // Si tiene "MontoTotal" o "RUT", es casi seguro una factura
     if (textoLower.includes('montototal') || textoLower.includes('rut')) {
         return 'factura';
     }
     
-    // Si tiene "producto" y "precio", es probablemente un producto
     if (textoLower.includes('producto') && textoLower.includes('precio')) {
         return 'producto';
     }
     
-    // Decidir por puntaje
     if (facturaScore > productoScore) return 'factura';
     if (productoScore > facturaScore) return 'producto';
     
-    // Por defecto, preguntar al usuario
     return 'unknown';
 }
 
@@ -761,23 +826,19 @@ function detectarTipoDocumento(texto) {
 function extraerDatosFactura(texto) {
     const datos = { monto: null, proveedor: null, folio: null, fecha: null };
     
-    // Monto
     let match = texto.match(/MontoTotal[^\d]*([\d.,]+)/i);
     if (!match) match = texto.match(/Total[^\d]*([\d.,]+)/i);
     if (match) {
         datos.monto = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.'));
     }
     
-    // Proveedor
     match = texto.match(/RazónSocial[^:]*:\s*([^\n]+)/i);
     if (!match) match = texto.match(/Nombre[^:]*:\s*([^\n]+)/i);
     if (match) datos.proveedor = match[1].trim();
     
-    // Folio
     match = texto.match(/Folio[^:]*:\s*(\d+)/i);
     if (match) datos.folio = match[1].trim();
     
-    // Fecha
     match = texto.match(/Fecha[^:]*:\s*([\d-]+)/i);
     if (match) datos.fecha = match[1].trim();
     
@@ -790,10 +851,8 @@ function extraerDatosFactura(texto) {
 function extraerDatosProducto(texto) {
     const producto = { nombre: null, precio: 0, proveedor: null, cantidad: 1, codigo: null };
     
-    // Nombre
     let match = texto.match(/(?:Producto|Nombre|Item|Descripción)[^:]*:\s*([^\n]+)/i);
     if (!match) {
-        // Buscar líneas que parezcan productos
         const lineas = texto.split('\n');
         for (const linea of lineas) {
             if (linea.trim().length > 3 && !linea.match(/^\d/)) {
@@ -805,7 +864,6 @@ function extraerDatosProducto(texto) {
         producto.nombre = match[1].trim();
     }
     
-    // Precio
     match = texto.match(/(?:Precio|Valor|Costo)[^:]*[:=]\s*\$?\s*([\d.,]+)/i);
     if (!match) match = texto.match(/([\d.,]+)\s*$/);
     if (match) {
@@ -813,15 +871,12 @@ function extraerDatosProducto(texto) {
         producto.precio = parseFloat(precioStr) || 0;
     }
     
-    // Proveedor
     match = texto.match(/(?:Proveedor|Marca)[^:]*:\s*([^\n]+)/i);
     if (match) producto.proveedor = match[1].trim();
     
-    // Cantidad
     match = texto.match(/(?:Cantidad|Qty)[^:]*:\s*(\d+)/i);
     if (match) producto.cantidad = parseInt(match[1]) || 1;
     
-    // Código
     match = texto.match(/(?:Código|Code)[^:]*:\s*([^\n]+)/i);
     if (match) producto.codigo = match[1].trim();
     
@@ -844,8 +899,7 @@ async function agregarProductoAlStock(producto) {
         const result = await resp.json();
         if (result.success) {
             alert(`✅ ${result.mensaje}`);
-            // Recargar la lista de repuestos si está visible
-            if (document.getElementById('tabRepuestos').classList.contains('active')) {
+            if (document.getElementById('tabRepuestos') && document.getElementById('tabRepuestos').classList.contains('active')) {
                 cargarRepuestos();
             }
         } else {
@@ -855,6 +909,24 @@ async function agregarProductoAlStock(producto) {
         console.error('Error:', error);
         alert('❌ Error de conexión');
     }
+}
+
+// ============================================
+// TABS
+// ============================================
+function cambiarTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    const tabMap = {
+        'gastos': 'tabGastos',
+        'proveedores': 'tabProveedores',
+        'sueldos': 'tabSueldos'
+    };
+    document.getElementById(tabMap[tab]).classList.add('active');
+    document.querySelector(`.tab-btn[onclick*="${tab}"]`).classList.add('active');
+    
+    if (tab === 'proveedores') cargarProveedores();
+    if (tab === 'sueldos') cargarPlanilla();
 }
 
 // ============================================
