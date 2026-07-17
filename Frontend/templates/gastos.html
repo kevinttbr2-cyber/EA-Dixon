@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Gastos - Dixon{% endblock %}
+
+{% block content %}
+
+<div class="base-container">
+
+    <!-- HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
+        <h2 style="color: var(--text-primary); font-weight: 700; margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--accent-yellow);">payments</span>
+            Gestión de Gastos
+        </h2>
+        <button onclick="abrirModalGasto()" class="btn btn-primary">
+            <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">add</span>
+            Nuevo Gasto
+        </button>
+    </div>
+
+    <!-- RESUMEN -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
+        <div class="card" style="border-left: 3px solid var(--accent-blue); padding: 12px 16px;">
+            <div style="font-size: 12px; color: var(--text-muted);">Total Gastos</div>
+            <div style="font-size: 20px; font-weight: 700;">${{ total_gastos|default(0)|int }}</div>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--accent-green); padding: 12px 16px;">
+            <div style="font-size: 12px; color: var(--text-muted);">💵 Efectivo</div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--accent-green);">${{ gastos_efectivo|default(0)|int }}</div>
+        </div>
+        <div class="card" style="border-left: 3px solid var(--accent-yellow); padding: 12px 16px;">
+            <div style="font-size: 12px; color: var(--text-muted);">🏦 Transferencia</div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--accent-yellow);">${{ gastos_transferencia|default(0)|int }}</div>
+        </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+        <button class="filtro-card-registro active-total" onclick="filtrarGastos('todos')" style="cursor:pointer;">
+            <span class="numero">{{ gastos|length }}</span>
+            <span class="etiqueta">Todos</span>
+        </button>
+        <button class="filtro-card-registro" onclick="filtrarGastos('efectivo')" style="border-color: rgba(46, 204, 113, 0.3); cursor:pointer;">
+            <span class="numero" style="color: var(--accent-green);">{{ gastos_efectivo_count|default(0) }}</span>
+            <span class="etiqueta">💵 Efectivo</span>
+        </button>
+        <button class="filtro-card-registro" onclick="filtrarGastos('transferencia')" style="border-color: rgba(52, 152, 219, 0.3); cursor:pointer;">
+            <span class="numero" style="color: var(--accent-blue);">{{ gastos_transferencia_count|default(0) }}</span>
+            <span class="etiqueta">🏦 Transferencia</span>
+        </button>
+    </div>
+
+    <!-- LISTA DE GASTOS -->
+    <div id="listaGastos">
+        {% for g in gastos %}
+        <div class="card" data-metodo="{{ g.metodo_pago }}" style="padding: 14px 16px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <span class="badge" style="
+                            background: {% if g.categoria == 'Arriendo' %}rgba(52,152,219,0.15); color:#3498db;
+                            {% elif g.categoria == 'Servicios Públicos' %}rgba(46,204,113,0.15); color:#2ecc71;
+                            {% elif g.categoria == 'Impuestos' %}rgba(231,76,60,0.15); color:#e74c3c;
+                            {% elif g.categoria == 'Alimentación' %}rgba(241,196,15,0.15); color:#f1c40f;
+                            {% elif g.categoria == 'Herramientas' %}rgba(155,89,182,0.15); color:#9b59b6;
+                            {% else %}rgba(255,255,255,0.05); color:#b0b5bf;{% endif %}
+                            padding: 2px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+                        ">
+                            {{ g.categoria }}
+                        </span>
+                        <span style="font-size: 14px; font-weight: 600;">${{ g.monto|int }}</span>
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">
+                        {{ g.descripcion or 'Sin descripción' }}
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 12px;">
+                        {% if g.metodo_pago == 'efectivo' %}
+                        <span style="color: var(--accent-green);">💵 Efectivo</span>
+                        {% else %}
+                        <span style="color: var(--accent-blue);">🏦 Transferencia</span>
+                        {% endif %}
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                        {{ g.fecha }} {{ g.hora[:5] if g.hora else '' }}
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                        por: {{ g.registrado_por or 'Sistema' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+            <span class="material-symbols-rounded" style="font-size: 56px; color: var(--text-muted); display: block; margin-bottom: 10px;">receipt_long</span>
+            <p style="font-size: 16px;">No hay gastos registrados hoy</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ============================================
+     MODAL: NUEVO GASTO
+     ============================================ -->
+<div id="modalNuevoGasto" class="modal-dixon" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0;">
+    <div class="modal-content" style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:24px 28px;max-width:500px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;box-shadow:var(--shadow-hover);">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border-subtle);padding-bottom:12px;">
+            <h3 style="color:var(--accent-yellow);margin:0;font-size:22px;font-weight:700;">
+                <span class="material-symbols-rounded" style="font-size:28px;vertical-align:middle;">add_circle</span>
+                Registrar Gasto
+            </h3>
+            <button onclick="cerrarModalGasto()" style="background:transparent;border:none;color:var(--accent-red);font-size:28px;cursor:pointer;">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+        <form id="formNuevoGasto">
+            <!-- Categoría -->
+            <div style="margin-bottom:12px;">
+                <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:4px;">Categoría *</label>
+                <select id="gasto_categoria" required style="width:100%;padding:10px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);">
+                    <option value="Arriendo">🏢 Arriendo</option>
+                    <option value="Servicios Públicos">💡 Servicios Públicos (Agua/Luz)</option>
+                    <option value="Impuestos">📄 Impuestos/Patente</option>
+                    <option value="Alimentación">🍽️ Alimentación</option>
+                    <option value="Herramientas">🔧 Herramientas</option>
+                    <option value="Otros">📦 Otros</option>
+                </select>
+            </div>
+
+            <!-- Monto -->
+            <div style="margin-bottom:12px;">
+                <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:4px;">Monto ($) *</label>
+                <input type="number" id="gasto_monto" step="0.01" min="0" required placeholder="0" style="width:100%;padding:10px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);">
+            </div>
+
+            <!-- Método de Pago -->
+            <div style="margin-bottom:12px;">
+                <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:4px;">Método de Pago *</label>
+                <select id="gasto_metodo_pago" required style="width:100%;padding:10px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);">
+                    <option value="efectivo">💵 Efectivo (resta de caja)</option>
+                    <option value="transferencia">🏦 Transferencia (no resta de caja)</option>
+                </select>
+                <div id="metodo_ayuda" style="font-size:11px;color:var(--accent-yellow);margin-top:4px;">
+                    ⚠️ Si pagas en efectivo, este dinero se restará de tu caja del día.
+                </div>
+            </div>
+
+            <!-- Descripción -->
+            <div style="margin-bottom:12px;">
+                <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:4px;">Descripción</label>
+                <input type="text" id="gasto_descripcion" placeholder="Ej: Pago luz mes de julio" style="width:100%;padding:10px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);">
+            </div>
+
+            <!-- Botones -->
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button type="submit" class="btn btn-primary" style="flex:1;">
+                    <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">save</span>
+                    Registrar Gasto
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalGasto()">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const API_URL = '{{ backend_url }}';
+
+// Mostrar ayuda según método de pago
+document.getElementById('gasto_metodo_pago').addEventListener('change', function() {
+    const ayuda = document.getElementById('metodo_ayuda');
+    if (this.value === 'efectivo') {
+        ayuda.innerHTML = '⚠️ Este gasto se restará de tu caja física del día.';
+        ayuda.style.color = 'var(--accent-yellow)';
+    } else {
+        ayuda.innerHTML = 'ℹ️ Este gasto NO se resta de tu caja física, solo afecta la ganancia neta.';
+        ayuda.style.color = 'var(--accent-blue)';
+    }
+});
+
+// Abrir modal
+function abrirModalGasto() {
+    document.getElementById('modalNuevoGasto').style.display = 'flex';
+    document.getElementById('formNuevoGasto').reset();
+}
+
+// Cerrar modal
+function cerrarModalGasto() {
+    document.getElementById('modalNuevoGasto').style.display = 'none';
+}
+
+// Enviar formulario
+document.getElementById('formNuevoGasto').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const data = {
+        categoria: document.getElementById('gasto_categoria').value,
+        monto: parseFloat(document.getElementById('gasto_monto').value) || 0,
+        metodo_pago: document.getElementById('gasto_metodo_pago').value,
+        descripcion: document.getElementById('gasto_descripcion').value,
+        fecha: new Date().toISOString().split('T')[0],
+        hora: new Date().toTimeString().slice(0, 8),
+        registrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
+    };
+    
+    if (data.monto <= 0) {
+        alert('⚠️ El monto debe ser mayor a 0');
+        return;
+    }
+    
+    try {
+        const resp = await fetch(`${API_URL}/api/gastos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await resp.json();
+        if (result.success) {
+            alert('✅ Gasto registrado correctamente');
+            cerrarModalGasto();
+            location.reload();
+        } else {
+            alert('❌ Error: ' + (result.error || 'Desconocido'));
+        }
+    } catch(e) {
+        console.error('Error:', e);
+        alert('❌ Error de conexión');
+    }
+});
+
+// Filtrar gastos
+function filtrarGastos(metodo) {
+    document.querySelectorAll('#listaGastos .card').forEach(card => {
+        if (metodo === 'todos') {
+            card.style.display = '';
+        } else {
+            card.style.display = card.dataset.metodo === metodo ? '' : 'none';
+        }
+    });
+}
+
+// Cerrar modal con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModalGasto();
+    }
+});
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('modalNuevoGasto').addEventListener('click', function(e) {
+    if (e.target === this) {
+        cerrarModalGasto();
+    }
+});
+</script>
+
+{% endblock %}
