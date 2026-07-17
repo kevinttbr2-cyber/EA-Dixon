@@ -797,6 +797,10 @@
             </div>
         </div>
 
+        <div id="resultadoImportacion" style="display:none;margin-top:15px;padding:12px;border-radius:8px;max-height:250px;overflow-y:auto;">
+            <div id="resultadoContenido"></div>
+        </div>
+
         <div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">
             <button onclick="cerrarModalImportarProductos()" style="
                 background:rgba(255,255,255,0.05);
@@ -825,8 +829,10 @@
         </div>
     </div>
 </div>
+
 <script>
 const API_URL = '{{ backend_url }}';
+console.log('🔍 API_URL:', API_URL);
 
 // ============================================
 // VARIABLES GLOBALES
@@ -876,19 +882,32 @@ async function solicitarPermisoCamara() {
 // ============================================
 
 function abrirModalEscanerProducto() {
-    document.getElementById('modalEscanerProducto').classList.add('active');
-    document.getElementById('datosProductoEscaner').style.display = 'none';
-    document.getElementById('videoContainerRepuestos').classList.remove('active');
-    document.getElementById('videoElementRepuestos').style.display = 'none';
-    document.getElementById('btnEscanearProducto').textContent = '📸 Escanear Código de Barras';
-    document.getElementById('btnEscanearProducto').classList.remove('activo');
+    const modal = document.getElementById('modalEscanerProducto');
+    if (modal) modal.classList.add('active');
+    
+    const datos = document.getElementById('datosProductoEscaner');
+    if (datos) datos.style.display = 'none';
+    
+    const videoContainer = document.getElementById('videoContainerRepuestos');
+    if (videoContainer) videoContainer.classList.remove('active');
+    
+    const video = document.getElementById('videoElementRepuestos');
+    if (video) video.style.display = 'none';
+    
+    const btn = document.getElementById('btnEscanearProducto');
+    if (btn) {
+        btn.textContent = '📸 Escanear Código de Barras';
+        btn.classList.remove('activo');
+    }
+    
     productoEscanerData = null;
     limpiarDatosEscaner();
 }
 
 function cerrarModalEscaner() {
     detenerEscannerRepuestos();
-    document.getElementById('modalEscanerProducto').classList.remove('active');
+    const modal = document.getElementById('modalEscanerProducto');
+    if (modal) modal.classList.remove('active');
 }
 
 async function iniciarEscannerRepuestos() {
@@ -907,7 +926,7 @@ async function iniciarEscannerRepuestos() {
         await cargarHtml5QrCode();
         
         const videoContainer = document.getElementById('videoContainerRepuestos');
-        videoContainer.classList.add('active');
+        if (videoContainer) videoContainer.classList.add('active');
         
         const config = {
             fps: 10,
@@ -927,8 +946,11 @@ async function iniciarEscannerRepuestos() {
         scanner = new Html5Qrcode('videoContainerRepuestos');
 
         escanerProductoActivo = true;
-        document.getElementById('btnEscanearProducto').textContent = '⏹️ Detener';
-        document.getElementById('btnEscanearProducto').classList.add('activo');
+        const btn = document.getElementById('btnEscanearProducto');
+        if (btn) {
+            btn.textContent = '⏹️ Detener';
+            btn.classList.add('activo');
+        }
 
         await scanner.start(
             { facingMode: "environment" },
@@ -948,7 +970,8 @@ async function iniciarEscannerRepuestos() {
 
 async function detenerEscannerRepuestos() {
     escanerProductoActivo = false;
-    document.getElementById('videoContainerRepuestos').classList.remove('active');
+    const videoContainer = document.getElementById('videoContainerRepuestos');
+    if (videoContainer) videoContainer.classList.remove('active');
     
     if (scanner) {
         try {
@@ -960,8 +983,11 @@ async function detenerEscannerRepuestos() {
         scanner = null;
     }
     
-    document.getElementById('btnEscanearProducto').textContent = '📸 Escanear Código de Barras';
-    document.getElementById('btnEscanearProducto').classList.remove('activo');
+    const btn = document.getElementById('btnEscanearProducto');
+    if (btn) {
+        btn.textContent = '📸 Escanear Código de Barras';
+        btn.classList.remove('activo');
+    }
 }
 
 function onScanProductoSuccess(decodedText, decodedResult) {
@@ -1019,29 +1045,48 @@ function procesarProductoEscaner(texto) {
     
     productoEscanerData = { nombre, costo, margen, proveedor, codigo };
     
-    document.getElementById('scan_nombre').value = nombre;
-    document.getElementById('scan_costo_proveedor').value = costo;
-    document.getElementById('scan_margen').value = margen;
-    document.getElementById('scan_proveedor').value = proveedor || '';
-    document.getElementById('scan_codigo').value = codigo || '';
-    document.getElementById('scan_stock').value = 1;
+    const scanNombre = document.getElementById('scan_nombre');
+    if (scanNombre) scanNombre.value = nombre;
+    
+    const scanCosto = document.getElementById('scan_costo_proveedor');
+    if (scanCosto) scanCosto.value = costo;
+    
+    const scanMargen = document.getElementById('scan_margen');
+    if (scanMargen) scanMargen.value = margen;
+    
+    const scanProveedor = document.getElementById('scan_proveedor');
+    if (scanProveedor) scanProveedor.value = proveedor || '';
+    
+    const scanCodigo = document.getElementById('scan_codigo');
+    if (scanCodigo) scanCodigo.value = codigo || '';
+    
+    const scanStock = document.getElementById('scan_stock');
+    if (scanStock) scanStock.value = 1;
     
     const iva = 1.19;
     const costoConIva = costo * iva;
     const precioVenta = costoConIva * (1 + (margen / 100));
-    document.getElementById('scan_precio_venta').textContent = '$' + Math.floor(precioVenta).toLocaleString();
     
-    document.getElementById('datosProductoEscaner').style.display = 'block';
+    const scanPrecio = document.getElementById('scan_precio_venta');
+    if (scanPrecio) scanPrecio.textContent = '$' + Math.floor(precioVenta).toLocaleString();
+    
+    const datos = document.getElementById('datosProductoEscaner');
+    if (datos) datos.style.display = 'block';
 }
 
 function limpiarDatosEscaner() {
-    document.getElementById('scan_nombre').value = '';
-    document.getElementById('scan_costo_proveedor').value = '';
-    document.getElementById('scan_margen').value = '';
-    document.getElementById('scan_proveedor').value = '';
-    document.getElementById('scan_codigo').value = '';
-    document.getElementById('scan_stock').value = 1;
-    document.getElementById('scan_precio_venta').textContent = '$0';
+    const fields = ['scan_nombre', 'scan_costo_proveedor', 'scan_margen', 'scan_proveedor', 'scan_codigo'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    
+    const scanStock = document.getElementById('scan_stock');
+    if (scanStock) scanStock.value = 1;
+    
+    const scanPrecio = document.getElementById('scan_precio_venta');
+    if (scanPrecio) scanPrecio.textContent = '$0';
+    
     productoEscanerData = null;
 }
 
@@ -1051,12 +1096,12 @@ async function guardarProductoEscaner() {
         return;
     }
     
-    const nombre = document.getElementById('scan_nombre').value.trim();
-    const costo = parseFloat(document.getElementById('scan_costo_proveedor').value) || 0;
-    const margen = parseFloat(document.getElementById('scan_margen').value) || 30;
-    const proveedor = document.getElementById('scan_proveedor').value.trim();
-    const stock = parseInt(document.getElementById('scan_stock').value) || 1;
-    const codigo = document.getElementById('scan_codigo').value.trim();
+    const nombre = document.getElementById('scan_nombre')?.value.trim() || '';
+    const costo = parseFloat(document.getElementById('scan_costo_proveedor')?.value || 0);
+    const margen = parseFloat(document.getElementById('scan_margen')?.value || 30);
+    const proveedor = document.getElementById('scan_proveedor')?.value.trim() || '';
+    const stock = parseInt(document.getElementById('scan_stock')?.value || 1);
+    const codigo = document.getElementById('scan_codigo')?.value.trim() || '';
     
     if (!nombre || costo === 0) {
         alert('⚠️ El nombre y el costo proveedor son obligatorios');
@@ -1155,10 +1200,13 @@ async function guardarProductoEscaner() {
     }
 }
 
-document.getElementById('btnEscanearProducto').addEventListener('click', function(e) {
-    e.preventDefault();
-    iniciarEscannerRepuestos();
-});
+const btnEscanear = document.getElementById('btnEscanearProducto');
+if (btnEscanear) {
+    btnEscanear.addEventListener('click', function(e) {
+        e.preventDefault();
+        iniciarEscannerRepuestos();
+    });
+}
 
 // ============================================
 // CATEGORÍAS - CARGAR PARA EDITAR
@@ -1168,6 +1216,8 @@ async function cargarCategoriasEnEditar() {
         const resp = await fetch(`${API_URL}/api/subcategorias_repuestos`);
         const subcategorias = await resp.json();
         const select = document.getElementById('editCategoriaRepuesto');
+        if (!select) return;
+        
         select.innerHTML = '<option value="">Sin categoría</option>';
         
         const grouped = {};
@@ -1215,16 +1265,20 @@ function filtrarPorCategoria(categoria, btn) {
 // ============================================
 
 function abrirModalReporte() {
-    document.getElementById('modalReporteStock').classList.add('active');
+    const modal = document.getElementById('modalReporteStock');
+    if (modal) modal.classList.add('active');
     cargarProveedoresReporte();
 }
 
 function cerrarModalReporte() {
-    document.getElementById('modalReporteStock').classList.remove('active');
+    const modal = document.getElementById('modalReporteStock');
+    if (modal) modal.classList.remove('active');
 }
 
 function cargarProveedoresReporte() {
     const select = document.getElementById('filtroProveedorReporte');
+    if (!select) return;
+    
     const proveedores = new Set();
     document.querySelectorAll('.fila-repuesto-lista').forEach(fila => {
         const proveedor = fila.querySelector('td:nth-child(7)')?.textContent.trim();
@@ -1240,17 +1294,19 @@ function cargarProveedoresReporte() {
 }
 
 async function generarReportePDF() {
-    const proveedor = document.getElementById('filtroProveedorReporte').value;
-    const stockMinimo = parseInt(document.getElementById('stockMinimoReporte').value) || 5;
+    const proveedor = document.getElementById('filtroProveedorReporte')?.value || 'todos';
+    const stockMinimo = parseInt(document.getElementById('stockMinimoReporte')?.value || 5);
     
     if (stockMinimo < 1) {
         alert('⚠️ El stock mínimo debe ser al menos 1');
         return;
     }
     
-    const btn = event.target;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
+    const btn = event?.target;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
+    }
     
     try {
         const resp = await fetch(`${API_URL}/api/reporte_stock_bajo`, {
@@ -1264,13 +1320,11 @@ async function generarReportePDF() {
         
         if (!resp.ok) {
             const error = await resp.json();
-            if (error.error) {
-                alert(`⚠️ ${error.error}`);
-            } else {
-                alert('❌ Error al generar el reporte');
+            alert('⚠️ ' + (error.error || 'Error al generar el reporte'));
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Generar PDF';
             }
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Generar PDF';
             return;
         }
         
@@ -1291,18 +1345,20 @@ async function generarReportePDF() {
         console.error('Error:', error);
         alert('❌ Error de conexión');
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Generar PDF';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Generar PDF';
+        }
     }
 }
 
 function enviarPorGmail() {
-    const email = document.getElementById('emailProveedor').value.trim();
+    const email = document.getElementById('emailProveedor')?.value.trim();
     if (!email) {
         alert('⚠️ Ingresa el correo del proveedor');
         return;
     }
-    alert(`📧 Envío automático por Gmail a ${email}\n\nEsta funcionalidad estará disponible próximamente.\n\nSe enviará el reporte de stock bajo automáticamente.`);
+    alert(`📧 Envío automático por Gmail a ${email}\n\nEsta funcionalidad estará disponible próximamente.`);
 }
 
 // ============================================
@@ -1310,40 +1366,90 @@ function enviarPorGmail() {
 // ============================================
 
 function abrirModalAgregar() {
-    document.getElementById('modalAgregarRepuesto').classList.add('active');
-    document.getElementById('inputNombreRepuesto').focus();
-    document.getElementById('inputCostoProveedor').value = '';
-    document.getElementById('inputMargenGanancia').value = '30';
-    document.getElementById('inputProveedorRepuesto').value = '';
-    document.getElementById('inputStockRepuesto').value = '1';
+    const modal = document.getElementById('modalAgregarRepuesto');
+    if (modal) modal.classList.add('active');
+    
+    const inputNombre = document.getElementById('inputNombreRepuesto');
+    if (inputNombre) inputNombre.focus();
+    
+    const inputCosto = document.getElementById('inputCostoProveedor');
+    if (inputCosto) inputCosto.value = '';
+    
+    const inputMargen = document.getElementById('inputMargenGanancia');
+    if (inputMargen) inputMargen.value = '30';
+    
+    const inputProveedor = document.getElementById('inputProveedorRepuesto');
+    if (inputProveedor) inputProveedor.value = '';
+    
+    const inputStock = document.getElementById('inputStockRepuesto');
+    if (inputStock) inputStock.value = '1';
+    
     calcularCostoVenta();
 }
 
 function cerrarModalAgregar() {
-    document.getElementById('modalAgregarRepuesto').classList.remove('active');
-    document.getElementById('formAgregarRepuesto').reset();
-    document.getElementById('previewCostoVenta').textContent = '$0';
-    document.getElementById('previewMargen').textContent = '0%';
+    const modal = document.getElementById('modalAgregarRepuesto');
+    if (modal) modal.classList.remove('active');
+    
+    const form = document.getElementById('formAgregarRepuesto');
+    if (form) form.reset();
+    
+    const previewCosto = document.getElementById('previewCostoVenta');
+    if (previewCosto) previewCosto.textContent = '$0';
+    
+    const previewMargen = document.getElementById('previewMargen');
+    if (previewMargen) previewMargen.textContent = '0%';
 }
 
 function cerrarModalEditar() {
-    document.getElementById('modalEditarRepuesto').classList.remove('active');
-    document.getElementById('formEditarRepuesto').reset();
-    document.getElementById('editPreviewCostoVenta').textContent = '$0';
-    document.getElementById('editPreviewMargen').textContent = '0%';
+    const modal = document.getElementById('modalEditarRepuesto');
+    if (modal) modal.classList.remove('active');
+    
+    const form = document.getElementById('formEditarRepuesto');
+    if (form) form.reset();
+    
+    const previewCosto = document.getElementById('editPreviewCostoVenta');
+    if (previewCosto) previewCosto.textContent = '$0';
+    
+    const previewMargen = document.getElementById('editPreviewMargen');
+    if (previewMargen) previewMargen.textContent = '0%';
 }
 
+// ============================================
+// FUNCIONES DE IMPORTACIÓN - CORREGIDAS CON VERIFICACIONES
+// ============================================
+
 function abrirModalImportarProductos() {
-    document.getElementById('modalImportarProductos').classList.add('active');
-    document.getElementById('previewProductos').style.display = 'none';
-    document.getElementById('btnImportarProductos').style.display = 'none';
-    document.getElementById('resultadoImportacion').style.display = 'none';
-    document.getElementById('fileInputProductos').value = '';
+    console.log('📂 Abriendo modal importar');
+    
+    const modal = document.getElementById('modalImportarProductos');
+    if (!modal) {
+        console.error('❌ Modal no encontrado');
+        return;
+    }
+    modal.classList.add('active');
+    
+    const preview = document.getElementById('previewProductos');
+    if (preview) preview.style.display = 'none';
+    
+    const btnImportar = document.getElementById('btnImportarProductos');
+    if (btnImportar) btnImportar.style.display = 'none';
+    
+    const resultado = document.getElementById('resultadoImportacion');
+    if (resultado) resultado.style.display = 'none';
+    
+    const fileInput = document.getElementById('fileInputProductos');
+    if (fileInput) fileInput.value = '';
+    
     datosProductos = [];
 }
 
 function cerrarModalImportarProductos() {
-    document.getElementById('modalImportarProductos').classList.remove('active');
+    console.log('📂 Cerrando modal importar');
+    const modal = document.getElementById('modalImportarProductos');
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 // ============================================
@@ -1353,7 +1459,8 @@ function cerrarModalImportarProductos() {
 function handleDropProductos(e) {
     e.preventDefault();
     const dropZone = document.getElementById('dropZoneProductos');
-    dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
+    if (dropZone) dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
+    
     const files = e.dataTransfer.files;
     if (files.length > 0) {
         procesarArchivoProductos(files[0]);
@@ -1362,12 +1469,14 @@ function handleDropProductos(e) {
 
 function handleDragOverProductos(e) {
     e.preventDefault();
-    document.getElementById('dropZoneProductos').style.borderColor = '#4fc3f7';
+    const dropZone = document.getElementById('dropZoneProductos');
+    if (dropZone) dropZone.style.borderColor = '#4fc3f7';
 }
 
 function handleDragLeaveProductos(e) {
     e.preventDefault();
-    document.getElementById('dropZoneProductos').style.borderColor = 'rgba(79,195,247,0.3)';
+    const dropZone = document.getElementById('dropZoneProductos');
+    if (dropZone) dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
 }
 
 function handleFileSelectProductos(e) {
@@ -1389,7 +1498,8 @@ function procesarArchivoProductos(file) {
     
     if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/)) {
         alert('⚠️ Formato no válido. Por favor, sube un archivo .xlsx, .xls o .csv');
-        document.getElementById('fileInputProductos').value = '';
+        const fileInput = document.getElementById('fileInputProductos');
+        if (fileInput) fileInput.value = '';
         return;
     }
     
@@ -1427,47 +1537,36 @@ function procesarArchivoProductos(file) {
             const columnas = Object.keys(jsonData[0]);
             console.log('📂 4. Columnas encontradas:', columnas);
             
-            // ================================================================
-            // ✅ BUSCAR COLUMNAS DE FORMA FLEXIBLE (sin importar mayúsculas)
-            // ================================================================
-            
-            // Buscar columna de PRODUCTO (acepta: Producto, producto, Nombre, nombre)
+            // Buscar columnas de forma flexible
             const colProducto = columnas.find(col => 
                 col.toLowerCase() === 'producto' || 
                 col.toLowerCase() === 'nombre'
             );
             
-            // Buscar columna de COSTO PROVEEDOR
             const colCosto = columnas.find(col => 
                 col.toLowerCase() === 'costo proveedor' || 
                 col.toLowerCase() === 'costo_proveedor'
             );
             
-            // Buscar columna de PRECIO VENTA
             const colPrecio = columnas.find(col => 
                 col.toLowerCase() === 'precio venta' || 
                 col.toLowerCase() === 'precio_venta'
             );
             
-            // Buscar columna de PROVEEDOR
             const colProveedor = columnas.find(col => 
                 col.toLowerCase() === 'proveedor'
             );
             
-            // Buscar columna de CATEGORÍA
             const colCategoria = columnas.find(col => 
                 col.toLowerCase() === 'categoría' || 
                 col.toLowerCase() === 'categoria'
             );
             
-            // Buscar columna de SUBCATEGORÍA
             const colSubcategoria = columnas.find(col => 
                 col.toLowerCase() === 'subcategoría' || 
-                col.toLowerCase() === 'subcategoria' ||
-                col.toLowerCase() === 'subcategoría'
+                col.toLowerCase() === 'subcategoria'
             );
             
-            // Buscar columna de STOCK
             const colStock = columnas.find(col => 
                 col.toLowerCase() === 'stock'
             );
@@ -1483,26 +1582,22 @@ function procesarArchivoProductos(file) {
             
             // Verificar columnas obligatorias
             if (!colProducto) {
-                alert('⚠️ No se encontró la columna "Producto" o "Nombre".\n\n' +
-                      'Columnas encontradas: ' + columnas.join(', '));
+                alert('⚠️ No se encontró la columna "Producto" o "Nombre".\n\nColumnas encontradas: ' + columnas.join(', '));
                 return;
             }
             
             if (!colCosto) {
-                alert('⚠️ No se encontró la columna "Costo Proveedor".\n\n' +
-                      'Columnas encontradas: ' + columnas.join(', '));
+                alert('⚠️ No se encontró la columna "Costo Proveedor".\n\nColumnas encontradas: ' + columnas.join(', '));
                 return;
             }
             
             if (!colPrecio) {
-                alert('⚠️ No se encontró la columna "Precio Venta".\n\n' +
-                      'Columnas encontradas: ' + columnas.join(', '));
+                alert('⚠️ No se encontró la columna "Precio Venta".\n\nColumnas encontradas: ' + columnas.join(', '));
                 return;
             }
             
             // Procesar datos
             datosProductos = jsonData.map(row => {
-                // Leer usando los nombres de columna encontrados
                 const nombre = String(row[colProducto] || '').trim();
                 const costo = parseFloat(row[colCosto] || 0);
                 const precioVenta = parseFloat(row[colPrecio] || 0);
@@ -1534,10 +1629,7 @@ function procesarArchivoProductos(file) {
             console.log('📂 6. Productos procesados:', datosProductos.length);
             
             if (datosProductos.length === 0) {
-                alert('⚠️ No hay datos válidos para importar.\n\n' +
-                      'Asegúrate de que:\n' +
-                      '- Los nombres no estén vacíos\n' +
-                      '- Costo y Precio sean números mayores a 0');
+                alert('⚠️ No hay datos válidos para importar.\n\nAsegúrate de que:\n- Los nombres no estén vacíos\n- Costo y Precio sean números mayores a 0');
                 return;
             }
             
@@ -1546,13 +1638,15 @@ function procesarArchivoProductos(file) {
         } catch (error) {
             console.error('❌ Error:', error);
             alert('❌ Error al leer el archivo: ' + error.message);
-            document.getElementById('fileInputProductos').value = '';
+            const fileInput = document.getElementById('fileInputProductos');
+            if (fileInput) fileInput.value = '';
         }
     };
     
     reader.onerror = function() {
         alert('❌ Error al leer el archivo');
-        document.getElementById('fileInputProductos').value = '';
+        const fileInput = document.getElementById('fileInputProductos');
+        if (fileInput) fileInput.value = '';
     };
     
     reader.readAsArrayBuffer(file);
@@ -1603,15 +1697,20 @@ function mostrarPreviewProductos(datos) {
         previewBody.appendChild(tr);
     }
     
-    contador.textContent = `${datos.length} registros`;
-    previewContainer.style.display = 'block';
-    btnImportar.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datos.length} productos`;
-    btnImportar.style.display = 'block';
+    if (contador) contador.textContent = `${datos.length} registros`;
+    if (previewContainer) previewContainer.style.display = 'block';
+    if (btnImportar) {
+        btnImportar.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datos.length} productos`;
+        btnImportar.style.display = 'block';
+    }
     
     console.log('📊 4. Preview mostrado correctamente ✅');
 }
 
 async function importarProductos() {
+    console.log('🚀 Iniciando importación...');
+    console.log('📦 Datos a importar:', datosProductos.length);
+    
     if (datosProductos.length === 0) {
         alert('⚠️ No hay datos para importar');
         return;
@@ -1622,19 +1721,34 @@ async function importarProductos() {
     }
     
     const btn = document.getElementById('btnImportarProductos');
+    if (!btn) {
+        console.error('❌ Botón importar no encontrado');
+        return;
+    }
+    
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
     
     try {
-        const resp = await fetch(`${API_URL}/api/repuestos/importar`, {
+        const url = `${API_URL}/api/repuestos/importar`;
+        console.log('🌐 URL:', url);
+        
+        const resp = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                productos: datosProductos
-            })
+            body: JSON.stringify({ productos: datosProductos })
         });
         
+        console.log('📡 Status:', resp.status);
+        
+        if (!resp.ok) {
+            const errorText = await resp.text();
+            console.error('❌ Error response:', errorText);
+            throw new Error(`Error ${resp.status}: ${errorText}`);
+        }
+        
         const result = await resp.json();
+        console.log('📡 Respuesta:', result);
         
         if (result.success) {
             let mensaje = `✅ Importación completada!\n\n📊 ${result.importados || 0} importados correctamente`;
@@ -1658,7 +1772,7 @@ async function importarProductos() {
             alert('❌ Error: ' + (result.error || 'Desconocido'));
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ Error:', error);
         alert('❌ Error de conexión: ' + error.message);
     } finally {
         btn.disabled = false;
@@ -1670,6 +1784,8 @@ async function importarProductos() {
 // DOMContentLoaded
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM cargado correctamente');
+    
     // Buscador
     const buscador = document.getElementById('buscadorRepuestos');
     const btnBuscar = document.getElementById('btnBuscarRepuesto');
@@ -1677,26 +1793,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const filas = document.querySelectorAll('.fila-repuesto-lista');
 
     function filtrarTabla() {
-        const texto = buscador.value.toLowerCase().trim();
+        const texto = buscador?.value.toLowerCase().trim() || '';
         filas.forEach(fila => {
             const nombre = fila.querySelector('td:nth-child(2)')?.textContent || '';
             fila.style.display = nombre.toLowerCase().includes(texto) ? '' : 'none';
         });
     }
 
-    btnBuscar.addEventListener('click', filtrarTabla);
-    buscador.addEventListener('keyup', function(e) {
-        if (e.key === 'Enter') filtrarTabla();
-        filtrarTabla();
-    });
-    btnLimpiar.addEventListener('click', function() {
-        buscador.value = '';
-        filtrarTabla();
-    });
+    if (btnBuscar) btnBuscar.addEventListener('click', filtrarTabla);
+    if (buscador) {
+        buscador.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') filtrarTabla();
+            filtrarTabla();
+        });
+    }
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', function() {
+            if (buscador) buscador.value = '';
+            filtrarTabla();
+        });
+    }
 
     // Ordenar tabla
     window.ordenarTabla = function(columna) {
         const tbody = document.querySelector('#tablaRepuestos tbody');
+        if (!tbody) return;
+        
         const filasArray = Array.from(tbody.querySelectorAll('.fila-repuesto-lista'));
         filasArray.sort((a, b) => {
             let valA, valB;
@@ -1725,187 +1847,217 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Calcular precio venta en agregar
     function calcularCostoVenta() {
-        const costoProveedor = parseFloat(document.getElementById('inputCostoProveedor').value) || 0;
-        const margen = parseFloat(document.getElementById('inputMargenGanancia').value) || 0;
+        const inputCosto = document.getElementById('inputCostoProveedor');
+        const inputMargen = document.getElementById('inputMargenGanancia');
+        const previewCosto = document.getElementById('previewCostoVenta');
+        const previewMargen = document.getElementById('previewMargen');
+        
+        if (!inputCosto || !inputMargen) return;
+        
+        const costoProveedor = parseFloat(inputCosto.value) || 0;
+        const margen = parseFloat(inputMargen.value) || 0;
         const iva = 1.19;
         const costoConIva = costoProveedor * iva;
         const costoFinal = costoConIva * (1 + (margen / 100));
-        document.getElementById('previewCostoVenta').textContent = '$' + Math.floor(costoFinal).toLocaleString();
-        document.getElementById('previewMargen').textContent = margen + '%';
+        
+        if (previewCosto) previewCosto.textContent = '$' + Math.floor(costoFinal).toLocaleString();
+        if (previewMargen) previewMargen.textContent = margen + '%';
     }
 
-    document.getElementById('inputCostoProveedor').addEventListener('input', calcularCostoVenta);
-    document.getElementById('inputMargenGanancia').addEventListener('input', calcularCostoVenta);
+    const inputCosto = document.getElementById('inputCostoProveedor');
+    const inputMargen = document.getElementById('inputMargenGanancia');
+    if (inputCosto) inputCosto.addEventListener('input', calcularCostoVenta);
+    if (inputMargen) inputMargen.addEventListener('input', calcularCostoVenta);
 
     // Calcular en editar
     function calcularCostoVentaEdit() {
-        const costoProveedor = parseFloat(document.getElementById('editCostoProveedor').value) || 0;
-        const margen = parseFloat(document.getElementById('editMargenGanancia').value) || 0;
+        const inputCosto = document.getElementById('editCostoProveedor');
+        const previewCosto = document.getElementById('editPreviewCostoVenta');
+        const previewMargen = document.getElementById('editPreviewMargen');
+        
+        if (!inputCosto) return;
+        
+        const costoProveedor = parseFloat(inputCosto.value) || 0;
+        const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
         const iva = 1.19;
         const costoConIva = costoProveedor * iva;
         const costoFinal = costoConIva * (1 + (margen / 100));
-        document.getElementById('editPreviewCostoVenta').textContent = '$' + Math.floor(costoFinal).toLocaleString();
-        document.getElementById('editPreviewMargen').textContent = margen + '%';
+        
+        if (previewCosto) previewCosto.textContent = '$' + Math.floor(costoFinal).toLocaleString();
+        if (previewMargen) previewMargen.textContent = margen + '%';
     }
 
-    document.getElementById('editCostoProveedor').addEventListener('input', calcularCostoVentaEdit);
+    const editCosto = document.getElementById('editCostoProveedor');
+    if (editCosto) editCosto.addEventListener('input', calcularCostoVentaEdit);
 
     // Formulario agregar
-    document.getElementById('formAgregarRepuesto').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const nombre = document.getElementById('inputNombreRepuesto').value.trim();
-        const costoProveedor = parseFloat(document.getElementById('inputCostoProveedor').value) || 0;
-        const margen = parseFloat(document.getElementById('inputMargenGanancia').value) || 0;
-        const proveedor = document.getElementById('inputProveedorRepuesto').value.trim();
-        const stock = parseInt(document.getElementById('inputStockRepuesto').value) || 1;
-        
-        if (!nombre) {
-            alert('⚠️ El nombre del repuesto es obligatorio');
-            return;
-        }
-        
-        if (costoProveedor <= 0) {
-            alert('⚠️ El costo proveedor debe ser mayor a 0');
-            return;
-        }
-        
-        const iva = 1.19;
-        const costoConIva = costoProveedor * iva;
-        const costoFinal = Math.floor(costoConIva * (1 + (margen / 100)));
-        
-        const data = {
-            nombre: nombre,
-            costo_proveedor: costoProveedor,
-            margen_ganancia: margen,
-            proveedor: proveedor || 'Importado',
-            costo_venta_final: costoFinal,
-            stock: stock
-        };
-        
-        fetch(`${API_URL}/api/repuestos`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(r => r.json())
-        .then(resp => {
-            if (resp.success) {
-                alert('✅ Repuesto agregado correctamente');
-                cerrarModalAgregar();
-                location.reload();
-            } else {
-                alert('❌ Error: ' + (resp.error || 'Desconocido'));
+    const formAgregar = document.getElementById('formAgregarRepuesto');
+    if (formAgregar) {
+        formAgregar.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('inputNombreRepuesto')?.value.trim() || '';
+            const costoProveedor = parseFloat(document.getElementById('inputCostoProveedor')?.value || 0);
+            const margen = parseFloat(document.getElementById('inputMargenGanancia')?.value || 0);
+            const proveedor = document.getElementById('inputProveedorRepuesto')?.value.trim() || '';
+            const stock = parseInt(document.getElementById('inputStockRepuesto')?.value || 1);
+            
+            if (!nombre) {
+                alert('⚠️ El nombre del repuesto es obligatorio');
+                return;
             }
-        })
-        .catch(() => alert('❌ Error de conexión'));
-    });
+            
+            if (costoProveedor <= 0) {
+                alert('⚠️ El costo proveedor debe ser mayor a 0');
+                return;
+            }
+            
+            const iva = 1.19;
+            const costoConIva = costoProveedor * iva;
+            const costoFinal = Math.floor(costoConIva * (1 + (margen / 100)));
+            
+            const data = {
+                nombre: nombre,
+                costo_proveedor: costoProveedor,
+                margen_ganancia: margen,
+                proveedor: proveedor || 'Importado',
+                costo_venta_final: costoFinal,
+                stock: stock
+            };
+            
+            fetch(`${API_URL}/api/repuestos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(resp => {
+                if (resp.success) {
+                    alert('✅ Repuesto agregado correctamente');
+                    cerrarModalAgregar();
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + (resp.error || 'Desconocido'));
+                }
+            })
+            .catch(() => alert('❌ Error de conexión'));
+        });
+    }
 
     // Formulario editar
-    document.getElementById('formEditarRepuesto').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const id = document.getElementById('editRepuestoId').value;
-        const nombre = document.getElementById('editNombreRepuesto').value.trim();
-        const costoProveedor = parseFloat(document.getElementById('editCostoProveedor').value) || 0;
-        const proveedor = document.getElementById('editProveedorRepuesto').value.trim();
-        const stock = parseInt(document.getElementById('editStockRepuesto').value) || 0;
-        
-        let margen = parseFloat(document.getElementById('editMargenGanancia').value) || 0;
-        
-        if (!nombre) {
-            alert('⚠️ El nombre del repuesto es obligatorio');
-            return;
-        }
-        
-        let precioVentaActual = 0;
-        const fila = document.querySelector(`.fila-repuesto-lista[data-id="${id}"]`);
-        if (fila) {
-            const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
-            precioVentaActual = parseFloat(precioText) || 0;
-        }
-        
-        const data = {
-            nombre: nombre,
-            costo_proveedor: costoProveedor,
-            margen_ganancia: margen,
-            proveedor: proveedor || 'Importado',
-            stock: stock,
-            costo_venta_final: precioVentaActual
-        };
-        
-        // Agregar categoría si está seleccionada
-        const categoriaId = document.getElementById('editCategoriaRepuesto').value;
-        if (categoriaId) {
-            data.subcategoria_id = parseInt(categoriaId);
-        }
-        
-        fetch(`${API_URL}/api/repuestos/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(r => r.json())
-        .then(resp => {
-            if (resp.success) {
-                alert('✅ Repuesto actualizado correctamente');
-                cerrarModalEditar();
-                location.reload();
-            } else {
-                alert('❌ Error: ' + (resp.error || 'Desconocido'));
+    const formEditar = document.getElementById('formEditarRepuesto');
+    if (formEditar) {
+        formEditar.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editRepuestoId')?.value;
+            const nombre = document.getElementById('editNombreRepuesto')?.value.trim() || '';
+            const costoProveedor = parseFloat(document.getElementById('editCostoProveedor')?.value || 0);
+            const proveedor = document.getElementById('editProveedorRepuesto')?.value.trim() || '';
+            const stock = parseInt(document.getElementById('editStockRepuesto')?.value || 0);
+            const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
+            
+            if (!nombre) {
+                alert('⚠️ El nombre del repuesto es obligatorio');
+                return;
             }
-        })
-        .catch(() => alert('❌ Error de conexión'));
-    });
+            
+            let precioVentaActual = 0;
+            const fila = document.querySelector(`.fila-repuesto-lista[data-id="${id}"]`);
+            if (fila) {
+                const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
+                precioVentaActual = parseFloat(precioText) || 0;
+            }
+            
+            const data = {
+                nombre: nombre,
+                costo_proveedor: costoProveedor,
+                margen_ganancia: margen,
+                proveedor: proveedor || 'Importado',
+                stock: stock,
+                costo_venta_final: precioVentaActual
+            };
+            
+            const categoriaId = document.getElementById('editCategoriaRepuesto')?.value;
+            if (categoriaId) {
+                data.subcategoria_id = parseInt(categoriaId);
+            }
+            
+            fetch(`${API_URL}/api/repuestos/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(resp => {
+                if (resp.success) {
+                    alert('✅ Repuesto actualizado correctamente');
+                    cerrarModalEditar();
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + (resp.error || 'Desconocido'));
+                }
+            })
+            .catch(() => alert('❌ Error de conexión'));
+        });
+    }
 
     // Editar botones
     document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
         btn.addEventListener('click', async function() {
             const id = this.dataset.id;
             const fila = this.closest('.fila-repuesto-lista');
+            if (!fila) return;
             
-            const nombre = fila.querySelector('td:nth-child(2)').textContent.trim();
-            const stockText = fila.querySelector('td:nth-child(3)').textContent.trim();
+            const nombre = fila.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+            const stockText = fila.querySelector('td:nth-child(3)')?.textContent.trim() || '0';
             const stock = parseInt(stockText) || 0;
-            const costoText = fila.querySelector('td:nth-child(4)').textContent.replace(/[$,⚠️]/g, '').trim();
+            const costoText = fila.querySelector('td:nth-child(4)')?.textContent.replace(/[$,⚠️]/g, '').trim() || '0';
             const costo = parseFloat(costoText) || 0;
-            const margenText = fila.querySelector('td:nth-child(5)').textContent.replace('%', '').trim();
+            const margenText = fila.querySelector('td:nth-child(5)')?.textContent.replace('%', '').trim() || '0';
             const margen = parseFloat(margenText) || 0;
-            const proveedor = fila.querySelector('td:nth-child(7)').textContent.trim();
+            const proveedor = fila.querySelector('td:nth-child(7)')?.textContent.trim() || '';
             const categoriaText = fila.querySelector('td:nth-child(8)')?.textContent.trim() || '';
             
-            document.getElementById('editRepuestoId').value = id;
-            document.getElementById('editNombreRepuesto').value = nombre;
-            document.getElementById('editCostoProveedor').value = costo;
-            document.getElementById('editMargenGanancia').value = margen;
-            document.getElementById('editProveedorRepuesto').value = proveedor === '-' ? '' : proveedor;
-            document.getElementById('editStockRepuesto').value = stock;
+            const editId = document.getElementById('editRepuestoId');
+            const editNombre = document.getElementById('editNombreRepuesto');
+            const editCosto = document.getElementById('editCostoProveedor');
+            const editMargen = document.getElementById('editMargenGanancia');
+            const editProveedor = document.getElementById('editProveedorRepuesto');
+            const editStock = document.getElementById('editStockRepuesto');
             
-            // Cargar categorías si no están cargadas
+            if (editId) editId.value = id;
+            if (editNombre) editNombre.value = nombre;
+            if (editCosto) editCosto.value = costo;
+            if (editMargen) editMargen.value = margen;
+            if (editProveedor) editProveedor.value = proveedor === '-' ? '' : proveedor;
+            if (editStock) editStock.value = stock;
+            
             if (!categoriasCargadas) {
                 await cargarCategoriasEnEditar();
             }
             
-            // Seleccionar categoría actual
             const select = document.getElementById('editCategoriaRepuesto');
-            let categoriaEncontrada = false;
-            for (let opt of select.options) {
-                if (opt.text === categoriaText) {
-                    opt.selected = true;
-                    categoriaEncontrada = true;
-                    break;
-                }
-            }
-            if (!categoriaEncontrada && categoriaText && categoriaText !== 'Sin categoría') {
-                // Buscar por nombre de categoría
+            if (select) {
+                let categoriaEncontrada = false;
                 for (let opt of select.options) {
-                    if (opt.label === categoriaText || opt.parentElement?.label === categoriaText) {
+                    if (opt.text === categoriaText) {
                         opt.selected = true;
+                        categoriaEncontrada = true;
                         break;
+                    }
+                }
+                if (!categoriaEncontrada && categoriaText && categoriaText !== 'Sin categoría') {
+                    for (let opt of select.options) {
+                        if (opt.label === categoriaText || opt.parentElement?.label === categoriaText) {
+                            opt.selected = true;
+                            break;
+                        }
                     }
                 }
             }
             
-            document.getElementById('modalEditarRepuesto').classList.add('active');
+            const modal = document.getElementById('modalEditarRepuesto');
+            if (modal) modal.classList.add('active');
             calcularCostoVentaEdit();
         });
     });
@@ -1931,14 +2083,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Cerrar modales al hacer clic fuera
-    document.querySelectorAll('#modalAgregarRepuesto, #modalEditarRepuesto, #modalImportarProductos, #modalEscanerProducto, #modalReporteStock').forEach(modal => {
+    document.querySelectorAll('.modal-dixon').forEach(modal => {
         modal.addEventListener('click', function(e) {
             if (e.target === this) {
-                if (this.id === 'modalAgregarRepuesto') cerrarModalAgregar();
-                else if (this.id === 'modalEditarRepuesto') cerrarModalEditar();
-                else if (this.id === 'modalImportarProductos') cerrarModalImportarProductos();
-                else if (this.id === 'modalEscanerProducto') cerrarModalEscaner();
-                else if (this.id === 'modalReporteStock') cerrarModalReporte();
+                this.classList.remove('active');
             }
         });
     });
@@ -1947,6 +2095,5 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarCategoriasEnEditar();
 });
 </script>
-
 
 {% endblock %}
