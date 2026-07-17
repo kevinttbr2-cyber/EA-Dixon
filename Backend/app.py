@@ -1,10 +1,17 @@
-import os 
-from flask import Flask, jsonify, make_response, request
+# ============================================
+# AGREGAR ESTAS IMPORTACIONES AL INICIO
+# ============================================
+import os
+from flask import Flask, jsonify, make_response, request, send_file
 from flask_cors import CORS
 from config import Config
 from routes import auth_bp, pago_bp, catalogo_bp, flota_bp, pdf_bp, auditoria_bp
 from services.auth_service import AuthService
 import time
+import math      # ← NUEVO
+import json      # ← NUEVO
+import re        # ← NUEVO
+from datetime import datetime  # ← NUEVO
 
 # Establecer zona horaria a Chile (UTC-3)
 os.environ['TZ'] = 'America/Santiago'
