@@ -1,189 +1,205 @@
 {% if session.get("usuario") %}
-<nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-        <!-- Botón para colapsar en móvil -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+<nav class="navbar navbar-custom navbar-expand-lg">
+    <div class="container-fluid px-0">
+        <a class="navbar-brand" href="/estado">
+            <img src="{{ url_for('static', filename='images/dixon-navbar.png') }}" alt="Dixon" class="logo-img">
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
             <span class="navbar-toggler-icon"></span>
         </button>
         
-        <!-- Logo / Brand -->
-        <a class="navbar-brand" href="/estado">
-            <span class="logo-icon">D</span>
-            <span class="brand-title">Dixon</span>
-        </a>
-        
-        <!-- Items del navbar (colapsable) -->
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
                 
-                <!-- ============================
-                DROPDOWN: INICIO / ESTADO
-                ============================ -->
+                {% if session.get("usuario") %}
+                
+                <!-- ====================
+                ESTADO (directo)
+                ==================== -->
                 <li class="nav-item">
                     <a class="nav-link {% if request.path == '/estado' %}active{% endif %}" href="/estado">
-                        <span class="material-symbols-rounded" style="font-size: 20px; vertical-align: middle;">dashboard</span>
+                        <span class="material-symbols-rounded">dashboard</span>
                         Estado
                         {% if flotas_pendientes_count > 0 %}
-                        <span class="badge bg-danger rounded-pill ms-1" style="font-size: 10px;">{{ flotas_pendientes_count }}</span>
+                        <span class="badge-count">{{ flotas_pendientes_count }}</span>
                         {% endif %}
                     </a>
                 </li>
-
-                <!-- ============================
-                DROPDOWN: FINANZAS (NUEVO)
-                ============================ -->
+                
+                <!-- ====================
+                FINANZAS (dropdown con Balance, Balance Ventas, Dashboard, Gastos, Cierre de Caja)
+                ==================== -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="menuFinanzas" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="material-symbols-rounded" style="font-size: 20px; vertical-align: middle;">account_balance</span>
+                        <span class="material-symbols-rounded">account_balance</span>
                         Finanzas
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="menuFinanzas">
+                        <!-- Balance Total -->
                         <li>
                             <a class="dropdown-item" href="/balance">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">balance</span>
-                                Balance General
+                                <span class="material-symbols-rounded">balance</span>
+                                Balance Total
                             </a>
                         </li>
+                        <!-- Balance Ventas -->
                         <li>
                             <a class="dropdown-item" href="/balance_ventas">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">point_of_sale</span>
+                                <span class="material-symbols-rounded">point_of_sale</span>
                                 Balance Ventas
                             </a>
-                         <li>
-                             <a href="/gastos" class="drawer-item {% if request.path == '/gastos' %}active{% endif %}">
-                                <span class="material-symbols-rounded">payments</span>
-                                Gastos
-                            </a>
-                         </li>   
                         </li>
-                        <li><hr class="dropdown-divider"></li>
+                        <!-- Dashboard -->
                         <li>
                             <a class="dropdown-item" href="/dashboard">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">analytics</span>
+                                <span class="material-symbols-rounded">analytics</span>
                                 Dashboard
                             </a>
                         </li>
+                        <!-- Separador -->
+                        <li><hr class="dropdown-divider"></li>
+                        <!-- Gastos (NUEVO) -->
+                        <li>
+                            <a class="dropdown-item" href="/gastos">
+                                <span class="material-symbols-rounded">payments</span>
+                                Gastos
+                            </a>
+                        </li>
+                        <!-- Cierre de Caja (NUEVO) -->
+                        <li>
+                            <a class="dropdown-item" href="/cierre_caja">
+                                <span class="material-symbols-rounded">receipt_long</span>
+                                Cierre de Caja
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 {% endif %}
-
-                <!-- ============================
-                DROPDOWN: GESTIÓN (Registros, Flotas, Repuestos, etc.)
-                ============================ -->
+                
+                <!-- ====================
+                GESTIÓN (dropdown con Registros, Flotas, Flotas Pendientes, Repuestos, Auditoría)
+                ==================== -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="material-symbols-rounded" style="font-size: 20px; vertical-align: middle;">settings</span>
+                        <span class="material-symbols-rounded">settings</span>
                         Gestión
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="menuGestion">
+                        <!-- Registros -->
                         <li>
                             <a class="dropdown-item" href="/registros">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">history</span>
+                                <span class="material-symbols-rounded">history</span>
                                 Registros
                             </a>
                         </li>
+                        <!-- Flotas -->
                         <li>
                             <a class="dropdown-item" href="/flotas">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">directions_car</span>
+                                <span class="material-symbols-rounded">directions_car</span>
                                 Flotas
                             </a>
                         </li>
+                        <!-- Flotas Pendientes (con badge) -->
                         <li>
-                            <a class="dropdown-item" href="/flotas_pendientes" style="position:relative;">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">pending_actions</span>
+                            <a class="dropdown-item" href="/flotas_pendientes">
+                                <span class="material-symbols-rounded">pending_actions</span>
                                 Flotas Pendientes
                                 {% if flotas_pendientes_count > 0 %}
-                                <span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 10px;">{{ flotas_pendientes_count }}</span>
+                                <span class="badge-count">{{ flotas_pendientes_count }}</span>
                                 {% endif %}
                             </a>
                         </li>
+                        <!-- Separador -->
                         <li><hr class="dropdown-divider"></li>
+                        <!-- Repuestos -->
                         <li>
                             <a class="dropdown-item" href="/repuestos">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">inventory_2</span>
+                                <span class="material-symbols-rounded">inventory_2</span>
                                 Repuestos
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item" href="/pendientes_validacion">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">verified</span>
-                                Validar Pagos
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
+                        <!-- Auditoría -->
                         <li>
                             <a class="dropdown-item" href="/auditoria_descargas">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">download</span>
-                                Auditoría / Descargas
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/ver_logs">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">terminal</span>
-                                Ver Logs
+                                <span class="material-symbols-rounded">download</span>
+                                Auditoría
                             </a>
                         </li>
                     </ul>
                 </li>
                 {% endif %}
-            <a href="/cierre_caja" class="drawer-item {% if request.path == '/cierre_caja' %}active{% endif %}">
-            <span class="material-symbols-rounded">receipt_long</span>
-            Cierre de Caja
-            </a>
-
-                <!-- ============================
-                DROPDOWN: USUARIOS (SOLO ADMIN)
-                ============================ -->
+                
+                <!-- ====================
+                VALIDAR PAGOS (directo)
+                ==================== -->
+                {% if session.get("rol") in ["admin", "operador"] %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/pendientes_validacion' %}active{% endif %}" href="/pendientes_validacion">
+                        <span class="material-symbols-rounded">verified</span>
+                        Validar Pagos
+                    </a>
+                </li>
+                {% endif %}
+                
+                <!-- ====================
+                USUARIOS (dropdown - solo admin)
+                ==================== -->
                 {% if session.get("rol") == "admin" %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="material-symbols-rounded" style="font-size: 20px; vertical-align: middle;">people</span>
+                        <span class="material-symbols-rounded">people</span>
                         Usuarios
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="menuUsuarios">
                         <li>
                             <a class="dropdown-item" href="/register">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">person_add</span>
+                                <span class="material-symbols-rounded">person_add</span>
                                 Crear Usuario
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="/usuarios">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">group</span>
+                                <span class="material-symbols-rounded">group</span>
                                 Lista de Usuarios
                             </a>
                         </li>
                     </ul>
                 </li>
                 {% endif %}
-
-                <!-- ============================
-                DROPDOWN: PERFIL / CONFIGURACIÓN
-                ============================ -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="menuPerfil" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="material-symbols-rounded" style="font-size: 20px; vertical-align: middle;">account_circle</span>
-                        {{ session.get('nombre_completo', session.get('usuario')) }}
+                
+                <!-- ====================
+                LOGS (directo - solo admin)
+                ==================== -->
+                {% if session.get("rol") == "admin" %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/ver_logs' %}active{% endif %}" href="/ver_logs">
+                        <span class="material-symbols-rounded">terminal</span>
+                        Logs
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuPerfil">
-                        <li>
-                            <a class="dropdown-item" href="/cambiar_password">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">lock</span>
-                                Cambiar Contraseña
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item text-danger" href="/logout">
-                                <span class="material-symbols-rounded" style="font-size: 18px;">logout</span>
-                                Cerrar Sesión
-                            </a>
-                        </li>
-                    </ul>
                 </li>
-
+                {% endif %}
+                
+                <!-- ====================
+                PERFIL + SALIR
+                ==================== -->
+                <li class="nav-item">
+                    <span class="user-name">
+                        <span class="material-symbols-rounded" style="font-size: 16px;">account_circle</span>
+                        {{ session.get('nombre_completo', session.get('usuario')) }}
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link logout-link" href="/logout">
+                        <span class="material-symbols-rounded">logout</span>
+                        Salir
+                    </a>
+                </li>
+                
+                {% endif %}
+                
             </ul>
         </div>
     </div>
