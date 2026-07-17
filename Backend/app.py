@@ -263,6 +263,19 @@ def test_notificacion():
         }), 500
 
 
+# ============================
+# CREAR ADMIN AL INICIAR
+# ============================
+AuthService.crear_admin()
+
+
+# ================================================================
+# ================================================================
+# ==================== NUEVAS RUTAS AGREGADAS ====================
+# ================================================================
+# ================================================================
+
+
 # ============================================
 # RUTAS PARA GESTIÓN DE GASTOS Y CIERRE DE CAJA
 # ============================================
@@ -319,7 +332,7 @@ def registrar_gasto():
 
 
 # ============================================
-# 2. OBTENER GASTOS POR FECHA
+# OBTENER GASTOS POR FECHA
 # ============================================
 @app.route('/api/gastos', methods=['GET'])
 def obtener_gastos():
@@ -350,7 +363,7 @@ def obtener_gastos():
 
 
 # ============================================
-# 3. INICIAR CIERRE DE CAJA
+# INICIAR CIERRE DE CAJA
 # ============================================
 @app.route('/api/cierre_caja', methods=['POST'])
 def iniciar_cierre_caja():
@@ -402,7 +415,7 @@ def iniciar_cierre_caja():
 
 
 # ============================================
-# 4. OBTENER CIERRE DE CAJA
+# OBTENER CIERRE DE CAJA
 # ============================================
 @app.route('/api/cierre_caja/<fecha>', methods=['GET'])
 def obtener_cierre_caja(fecha):
@@ -457,7 +470,7 @@ def obtener_cierre_caja(fecha):
 
 
 # ============================================
-# 5. CERRAR CAJA DEL DÍA
+# CERRAR CAJA DEL DÍA
 # ============================================
 @app.route('/api/cierre_caja/<fecha>/cerrar', methods=['POST'])
 def cerrar_caja(fecha):
@@ -551,7 +564,7 @@ def cerrar_caja(fecha):
 
 
 # ============================================
-# 6. HISTORIAL DE CIERRES
+# HISTORIAL DE CIERRES
 # ============================================
 @app.route('/api/historial_cierres', methods=['GET'])
 def historial_cierres():
@@ -835,7 +848,7 @@ def obtener_empleados_activos():
 
 
 # ============================================
-# PROCESAR PRODUCTO DESDE ESCÁNER
+# PROCESAR PRODUCTO DESDE ESCÁNER (ÚNICA VERSIÓN)
 # ============================================
 @app.route('/api/repuestos/from_scan', methods=['POST'])
 def procesar_producto_escaner():
@@ -1386,11 +1399,6 @@ def registrar_gasto_interno(data):
         print(f"❌ Error en registrar_gasto_interno: {e}")
         return False
 
-
-# ============================
-# CREAR ADMIN AL INICIAR
-# ============================
-AuthService.crear_admin()
 
 # ============================
 # INICIAR
