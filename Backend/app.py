@@ -256,6 +256,318 @@ def test_notificacion():
             "success": False,
             "error": str(e)
         }), 500
+# ============================================
+# RUTAS PARA GESTIÓN DE GASTOS Y CIERRE DE CAJA
+# ============================================
+
+# ============================================
+# 1. REGISTRAR GASTO
+# ============================================
+@app.route('/api/gastos', methods=['POST'])
+def registrar_gasto():
+    """Registra un nuevo gasto (efectivo o transferencia)"""
+    try:
+        data = request.json
+        
+        # Validar datos obligatorios
+        if not data.get('categoria') or not data.get('monto'):
+            return jsonify({"error": "Categoría y monto son obligatorios"}), 400
+        
+        # Obtener conexión a la base de datos
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Insertar gasto
+        cur.execute("""
+            INSERT INTO gastos 
+            (categoria, monto, metodo_pago, descripcion, fecha, hora, registrado_por)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
+            data.get('categoria'),
+            float(data.get('monto', 0)),
+            data.get('metodo_pago', 'efectivo'),
+            data.get('descripcion', ''),
+            data.get('fecha'),
+            data.get('hora'),
+            data.get('registrado_por', 'Sistema')
+        ))
+        
+        id_gasto = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        print(f"✅ Gasto registrado ID: {id_gasto}")
+        return jsonify({"success": True, "id": id_gasto})
+        
+    except Exception as e:
+        print(f"❌ Error en registrar_gasto: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# 2. OBTENER GASTOS POR FECHA
+# ============================================
+@app.route('/api/gastos', methods=['GET'])
+def obtener_gastos():
+    """Obtiene todos los gastos de una fecha específica"""
+    try:
+        fecha = request.args.get('fecha')
+        if not fecha:
+            return jsonify({"error": "Fecha requerida"}), 400
+        
+        from database import get_cursor
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT * FROM gastos 
+            WHERE fecha = %s 
+            ORDER BY hora DESC
+        """, (fecha,))
+        
+        gastos = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        
+        return jsonify(gastos)
+        
+    except Exception as e:
+        print(f"❌ Error en obtener_gastos: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# 3. INICIAR CIERRE DE CAJA
+# ============================================
+@app.route('/api/cierre_caja', methods=['POST'])
+def iniciar_cierre_caja():
+    """Crea o actualiza el cierre de caja del día"""
+    try:
+        data = request.json
+        fecha = data.get('fecha')
+        efectivo_inicial = float(data.get('efectivo_inicial', 0))
+        
+        if not fecha:
+            return jsonify({"error": "Fecha requerida"}), 400
+        
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Verificar si ya existe cierre para hoy
+        cur.execute("SELECT id FROM cierres_caja WHERE fecha = %s", (fecha,))
+        existente = cur.fetchone()
+        
+        if existente:
+            # Actualizar si ya existe
+            cur.execute("""
+                UPDATE cierres_caja 
+                SET efectivo_inicial = %s, 
+                    estado = 'abierto',
+                    updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                WHERE fecha = %s
+                RETURNING id
+            """, (efectivo_inicial, fecha))
+        else:
+            # Crear nuevo
+            cur.execute("""
+                INSERT INTO cierres_caja (fecha, efectivo_inicial, estado)
+                VALUES (%s, %s, 'abierto')
+                RETURNING id
+            """, (fecha, efectivo_inicial))
+        
+        id_cierre = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True, "id": id_cierre})
+        
+    except Exception as e:
+        print(f"❌ Error en iniciar_cierre_caja: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# 4. OBTENER CIERRE DE CAJA
+# ============================================
+@app.route('/api/cierre_caja/<fecha>', methods=['GET'])
+def obtener_cierre_caja(fecha):
+    """Obtiene los datos del cierre de caja para una fecha"""
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        
+        # Obtener cierre
+        cur.execute("SELECT * FROM cierres_caja WHERE fecha = %s", (fecha,))
+        cierre = cur.fetchone()
+        
+        if not cierre:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "No hay cierre para esta fecha"}), 404
+        
+        cierre_dict = dict(cierre)
+        
+        # Calcular ventas en efectivo del día
+        cur.execute("""
+            SELECT COALESCE(SUM(monto), 0) as total
+            FROM pagos 
+            WHERE fecha = %s AND forma_pago = 'efectivo' AND estado = 'pagado'
+        """, (fecha,))
+        ventas_efectivo = cur.fetchone()[0] or 0
+        
+        # Calcular gastos en efectivo del día
+        cur.execute("""
+            SELECT COALESCE(SUM(monto), 0) as total
+            FROM gastos 
+            WHERE fecha = %s AND metodo_pago = 'efectivo'
+        """, (fecha,))
+        gastos_efectivo = cur.fetchone()[0] or 0
+        
+        # Calcular efectivo esperado
+        efectivo_esperado = float(cierre_dict.get('efectivo_inicial', 0)) + float(ventas_efectivo) - float(gastos_efectivo)
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "cierre": cierre_dict,
+            "ventas_efectivo": ventas_efectivo,
+            "gastos_efectivo": gastos_efectivo,
+            "efectivo_esperado": efectivo_esperado
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en obtener_cierre_caja: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# 5. CERRAR CAJA DEL DÍA
+# ============================================
+@app.route('/api/cierre_caja/<fecha>/cerrar', methods=['POST'])
+def cerrar_caja(fecha):
+    """Cierra la caja del día con el efectivo real contado"""
+    try:
+        data = request.json
+        efectivo_real = float(data.get('efectivo_real', 0))
+        observaciones = data.get('observaciones', '')
+        cerrado_por = data.get('cerrado_por', 'Sistema')
+        
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Obtener cierre
+        cur.execute("SELECT * FROM cierres_caja WHERE fecha = %s AND estado = 'abierto'", (fecha,))
+        cierre = cur.fetchone()
+        
+        if not cierre:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "No hay cierre abierto para esta fecha"}), 404
+        
+        cierre_dict = dict(cierre)
+        
+        # Recalcular
+        cur.execute("""
+            SELECT COALESCE(SUM(monto), 0) as total
+            FROM pagos 
+            WHERE fecha = %s AND forma_pago = 'efectivo' AND estado = 'pagado'
+        """, (fecha,))
+        ventas_efectivo = cur.fetchone()[0] or 0
+        
+        cur.execute("""
+            SELECT COALESCE(SUM(monto), 0) as total
+            FROM gastos 
+            WHERE fecha = %s AND metodo_pago = 'efectivo'
+        """, (fecha,))
+        gastos_efectivo = cur.fetchone()[0] or 0
+        
+        efectivo_esperado = float(cierre_dict['efectivo_inicial']) + float(ventas_efectivo) - float(gastos_efectivo)
+        diferencia = float(efectivo_real) - float(efectivo_esperado)
+        
+        # Actualizar cierre
+        cur.execute("""
+            UPDATE cierres_caja 
+            SET ventas_efectivo = %s,
+                gastos_efectivo = %s,
+                efectivo_esperado = %s,
+                efectivo_real = %s,
+                diferencia = %s,
+                estado = 'cerrado',
+                cerrado_por = %s,
+                cerrado_en = NOW() AT TIME ZONE 'America/Santiago',
+                observaciones = %s
+            WHERE fecha = %s AND estado = 'abierto'
+        """, (
+            ventas_efectivo,
+            gastos_efectivo,
+            efectivo_esperado,
+            efectivo_real,
+            diferencia,
+            cerrado_por,
+            observaciones,
+            fecha
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        mensaje = "✅ Caja cerrada correctamente"
+        if diferencia > 0:
+            mensaje += f" (Sobrante: ${diferencia:,.0f})"
+        elif diferencia < 0:
+            mensaje += f" (Faltante: ${abs(diferencia):,.0f})"
+        else:
+            mensaje += " - ¡Caja perfectamente cuadrada!"
+        
+        return jsonify({
+            "success": True,
+            "mensaje": mensaje,
+            "efectivo_esperado": efectivo_esperado,
+            "efectivo_real": efectivo_real,
+            "diferencia": diferencia
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en cerrar_caja: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# 6. HISTORIAL DE CIERRES
+# ============================================
+@app.route('/api/historial_cierres', methods=['GET'])
+def historial_cierres():
+    """Obtiene el historial de cierres de caja"""
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT * FROM cierres_caja 
+            WHERE estado = 'cerrado'
+            ORDER BY fecha DESC
+            LIMIT 30
+        """)
+        
+        historial = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        
+        return jsonify(historial)
+        
+    except Exception as e:
+        print(f"❌ Error en historial_cierres: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 
 # ============================
