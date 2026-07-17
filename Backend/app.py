@@ -1496,6 +1496,175 @@ def obtener_repuestos_por_categoria(categoria_nombre):
     except Exception as e:
         print(f"❌ Error en obtener_repuestos_por_categoria: {e}")
         return jsonify([])
+# ============================================
+# IMPORTAR PRODUCTOS CON CATEGORÍAS
+# ============================================
+@app.route('/api/repuestos/importar', methods=['POST'])
+def importar_repuestos():
+    """
+    Importa productos desde Excel con categorías y subcategorías
+    Columnas esperadas: Producto, Costo Proveedor, Precio Venta, Proveedor, Categoría, Subcategoría
+    """
+    try:
+        data = request.json
+        productos = data.get('productos', [])
+        
+        if not productos:
+            return jsonify({"error": "No hay productos para importar"}), 400
+        
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        importados = 0
+        errores = []
+        exitosos = []
+        
+        for item in productos:
+            nombre = item.get('nombre', '').strip()
+            costo_proveedor = float(item.get('costo', 0))
+            precio_venta = float(item.get('precio_venta', 0))
+            proveedor = item.get('proveedor', 'Importado').strip()
+            categoria_nombre = item.get('categoria', '').strip()
+            subcategoria_nombre = item.get('subcategoria', '').strip()
+            stock = int(item.get('stock', 0))
+            
+            # Validar campos obligatorios
+            if not nombre or costo_proveedor <= 0 or precio_venta <= 0:
+                errores.append({
+                    "nombre": nombre or 'Sin nombre',
+                    "error": "Faltan datos obligatorios (Producto, Costo o Precio)"
+                })
+                continue
+            
+            # ============================================
+            # 1. Gestionar CATEGORÍA
+            # ============================================
+            categoria_id = None
+            if categoria_nombre:
+                cur.execute("SELECT id FROM categorias_repuestos WHERE nombre = %s", (categoria_nombre,))
+                result = cur.fetchone()
+                if result:
+                    categoria_id = result[0]
+                else:
+                    cur.execute("""
+                        INSERT INTO categorias_repuestos (nombre, descripcion)
+                        VALUES (%s, %s)
+                        RETURNING id
+                    """, (categoria_nombre, f'Categoría importada: {categoria_nombre}'))
+                    categoria_id = cur.fetchone()[0]
+            
+            # ============================================
+            # 2. Gestionar SUBCATEGORÍA
+            # ============================================
+            subcategoria_id = None
+            if subcategoria_nombre and categoria_id:
+                cur.execute("""
+                    SELECT id FROM subcategorias_repuestos 
+                    WHERE nombre = %s AND categoria_id = %s
+                """, (subcategoria_nombre, categoria_id))
+                result = cur.fetchone()
+                if result:
+                    subcategoria_id = result[0]
+                else:
+                    cur.execute("""
+                        INSERT INTO subcategorias_repuestos (categoria_id, nombre)
+                        VALUES (%s, %s)
+                        RETURNING id
+                    """, (categoria_id, subcategoria_nombre))
+                    subcategoria_id = cur.fetchone()[0]
+            elif subcategoria_nombre and not categoria_id:
+                cur.execute("""
+                    INSERT INTO categorias_repuestos (nombre, descripcion)
+                    VALUES (%s, %s)
+                    RETURNING id
+                """, (subcategoria_nombre, f'Categoría creada desde subcategoría: {subcategoria_nombre}'))
+                categoria_id = cur.fetchone()[0]
+                cur.execute("""
+                    INSERT INTO subcategorias_repuestos (categoria_id, nombre)
+                    VALUES (%s, %s)
+                    RETURNING id
+                """, (categoria_id, subcategoria_nombre))
+                subcategoria_id = cur.fetchone()[0]
+            
+            # ============================================
+            # 3. Calcular margen
+            # ============================================
+            margen = 30
+            if costo_proveedor > 0 and precio_venta > 0:
+                iva = 1.19
+                costo_con_iva = costo_proveedor * iva
+                margen = ((precio_venta / costo_con_iva) - 1) * 100
+                margen = round(margen, 1)
+            
+            # ============================================
+            # 4. Insertar o actualizar REPUESTO
+            # ============================================
+            cur.execute("SELECT id FROM repuestos WHERE LOWER(nombre) = LOWER(%s)", (nombre,))
+            existente = cur.fetchone()
+            
+            if existente:
+                cur.execute("""
+                    UPDATE repuestos 
+                    SET costo_proveedor = %s,
+                        costo_venta_final = %s,
+                        margen_ganancia = %s,
+                        proveedor = %s,
+                        stock = stock + %s,
+                        subcategoria_id = %s,
+                        categoria_nombre = %s,
+                        updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                    WHERE id = %s
+                """, (
+                    costo_proveedor,
+                    precio_venta,
+                    margen,
+                    proveedor,
+                    stock,
+                    subcategoria_id,
+                    categoria_nombre or subcategoria_nombre,
+                    existente[0]
+                ))
+                exitosos.append(f"{nombre} (actualizado)")
+            else:
+                cur.execute("""
+                    INSERT INTO repuestos 
+                    (nombre, costo_proveedor, costo_venta_final, margen_ganancia, proveedor, 
+                     subcategoria_id, categoria_nombre, stock, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 
+                            NOW() AT TIME ZONE 'America/Santiago',
+                            NOW() AT TIME ZONE 'America/Santiago')
+                    RETURNING id
+                """, (
+                    nombre,
+                    costo_proveedor,
+                    precio_venta,
+                    margen,
+                    proveedor,
+                    subcategoria_id,
+                    categoria_nombre or subcategoria_nombre,
+                    stock
+                ))
+                exitosos.append(nombre)
+            
+            importados += 1
+            conn.commit()
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "importados": importados,
+            "exitosos": exitosos,
+            "errores": errores
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en importar_repuestos: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 # ============================
 # CREAR ADMIN AL INICIAR
