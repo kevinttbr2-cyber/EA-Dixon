@@ -124,6 +124,58 @@
     .modal-dixon .modal-header .close-btn:hover {
         transform: scale(1.1);
     }
+
+    /* ============================================
+       ESTILOS PARA CATEGORÍAS
+       ============================================ */
+    .categoria-badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 600;
+        margin: 2px;
+    }
+    .categoria-badge.iluminacion { background: rgba(241, 196, 15, 0.15); color: #f1c40f; }
+    .categoria-badge.electricos { background: rgba(52, 152, 219, 0.15); color: #3498db; }
+    .categoria-badge.arranque-carga { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+    .categoria-badge.audio-accesorios { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
+    .categoria-badge.mantenimiento { background: rgba(26, 188, 156, 0.15); color: #1abc9c; }
+    .categoria-badge.herramientas { background: rgba(230, 126, 34, 0.15); color: #e67e22; }
+    .categoria-badge.interior { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
+    .categoria-badge.sin-categoria { background: rgba(255,255,255,0.05); color: #6b7078; }
+
+    /* Filtro de categorías */
+    .filtro-categorias {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.02);
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+    .filtro-categorias .cat-btn {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: var(--transition);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+    }
+    .filtro-categorias .cat-btn:hover {
+        background: var(--bg-hover);
+        color: var(--text-primary);
+    }
+    .filtro-categorias .cat-btn.active {
+        border-color: var(--accent-green);
+        background: var(--accent-green-subtle);
+        color: var(--accent-green);
+    }
 </style>
 
 <div class="base-container">
@@ -221,6 +273,19 @@
         </span>
     </div>
 
+    <!-- FILTRO POR CATEGORÍAS -->
+    <div class="filtro-categorias">
+        <button class="cat-btn active" onclick="filtrarPorCategoria('todos', this)">📋 Todos</button>
+        <button class="cat-btn" onclick="filtrarPorCategoria('Iluminación', this)" style="border-color: rgba(241, 196, 15, 0.3);">💡 Iluminación</button>
+        <button class="cat-btn" onclick="filtrarPorCategoria('Eléctricos', this)" style="border-color: rgba(52, 152, 219, 0.3);">⚡ Eléctricos</button>
+        <button class="cat-btn" onclick="filtrarPorCategoria('Arranque y Carga', this)" style="border-color: rgba(46, 204, 113, 0.3);">🔧 Arranque/Carga</button>
+        <button class="cat-btn" onclick="filtrarPorCategoria('Audio y Accesorios', this)" style="border-color: rgba(155, 89, 182, 0.3);">🎵 Audio</button>
+        <button class="cat-btn" onclick="filtrarPorCategoria('Mantenimiento', this)" style="border-color: rgba(26, 188, 156, 0.3);">🧹 Mantenimiento</button>
+        <button class="cat-btn" onclick="filtrarPorCategoria('Herramientas', this)" style="border-color: rgba(230, 126, 34, 0.3);">🔩 Herramientas</button>
+        <button class="cat-btn" onclick="filtrarPorCategoria('Interior', this)" style="border-color: rgba(255, 107, 107, 0.3);">🚗 Interior</button>
+        <button class="cat-btn" onclick="filtrarPorCategoria('sin_categoria', this)" style="border-color: rgba(255,255,255,0.1);">📦 Sin categoría</button>
+    </div>
+
     <!-- BUSCADOR -->
     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);">
         <input type="text" id="buscadorRepuestos" placeholder="Buscar repuesto..." style="
@@ -259,7 +324,7 @@
 
     <!-- TABLA DE REPUESTOS -->
     <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(0, 255, 102, 0.15); background: #141414;">
-        <table class="table table-dark table-hover table-bordered mb-0" id="tablaRepuestos" style="font-size: 13px; min-width: 1000px; width: 100%;">
+        <table class="table table-dark table-hover table-bordered mb-0" id="tablaRepuestos" style="font-size: 13px; min-width: 1100px; width: 100%;">
             <thead style="background: #2a6d44 !important; color: #ffffff !important;">
                 <tr>
                     <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(0)">ID ↕</th>
@@ -269,12 +334,14 @@
                     <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(4)">Margen (%)</th>
                     <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(5)">💰 Precio Venta ↕</th>
                     <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(6)">Proveedor</th>
+                    <th style="padding: 8px 10px; text-align: center; cursor: pointer;" onclick="ordenarTabla(7)">📂 Categoría ↕</th>
                     <th style="padding: 8px 10px; text-align: center;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for r in repuestos %}
                 <tr data-id="{{ r.id }}" class="fila-repuesto-lista" 
+                    data-categoria="{{ r.categoria_nombre or 'sin_categoria' }}"
                     style="{% if r.costo_proveedor_pendiente and r.costo_proveedor == 0 %}background: rgba(255, 0, 0, 0.08); border-left: 3px solid #ff6b6b;{% endif %}
                            {% if r.stock is defined and r.stock <= 5 and r.stock > 0 %}background: rgba(255, 200, 0, 0.06); border-left: 3px solid #ffcc00;{% endif %}">
                     <td style="padding: 6px 8px; text-align: center;">
@@ -301,6 +368,15 @@
                         ${{ "{:,.0f}".format(r.costo_venta_final|float) }}
                     </td>
                     <td style="padding: 6px 8px; text-align: center;">{{ r.proveedor or '-' }}</td>
+                    <td style="padding: 6px 8px; text-align: center;">
+                        {% if r.categoria_nombre %}
+                        <span class="categoria-badge {{ r.categoria_nombre|lower|replace(' ', '-')|replace('ó', 'o')|replace('é', 'e')|replace('í', 'i')|replace('ú', 'u')|replace('ñ', 'n') }}">
+                            {{ r.categoria_nombre }}
+                        </span>
+                        {% else %}
+                        <span class="categoria-badge sin-categoria">Sin categoría</span>
+                        {% endif %}
+                    </td>
                     <td style="padding: 6px 8px; text-align: center; display: flex; gap: 4px; justify-content: center;">
                         <button class="btn-editar-repuesto" data-id="{{ r.id }}" style="
                             background: {% if r.costo_proveedor_pendiente and r.costo_proveedor == 0 %}rgba(255,107,107,0.20){% else %}rgba(79,195,247,0.12){% endif %};
@@ -328,7 +404,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="8" style="text-align: center; color: #666; padding: 40px 0;">
+                    <td colspan="9" style="text-align: center; color: #666; padding: 40px 0;">
                         <i class="fa-solid fa-box-open" style="font-size: 48px; color: #00ff66; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
                         <p style="font-size: 16px;">No hay repuestos registrados</p>
                         <p style="color: #888; font-size: 13px;">Haz clic en "Agregar repuesto" para crear uno</p>
@@ -594,7 +670,7 @@
 </div>
 
 <!-- ============================================
-     MODAL: EDITAR REPUESTO
+     MODAL: EDITAR REPUESTO (CON CATEGORÍAS)
      ============================================ -->
 <div id="modalEditarRepuesto" class="modal-dixon">
     <div class="modal-content" style="border: 2px solid #4fc3f7;">
@@ -632,6 +708,22 @@
                     <label style="color:#90e0a0;font-size:13px;">🏢 Proveedor</label>
                     <input type="text" name="proveedor" id="editProveedorRepuesto" class="form-control" placeholder="Opcional">
                 </div>
+            </div>
+            
+            <!-- CATEGORÍA (NUEVO) -->
+            <div class="mb-3">
+                <label style="color:#90e0a0;font-size:13px;">📂 Categoría</label>
+                <select id="editCategoriaRepuesto" class="form-control" style="
+                    background: rgba(0,0,0,0.40);
+                    color: #fff;
+                    border: 1px solid rgba(0,255,102,0.20);
+                    border-radius: 8px;
+                    padding: 8px 12px;
+                    font-size: 13px;
+                    width: 100%;
+                ">
+                    <option value="">Sin categoría</option>
+                </select>
             </div>
             
             <!-- Preview -->
@@ -771,6 +863,7 @@ let scanner = null;
 let escanerProductoActivo = false;
 let datosProductos = [];
 let productoEscanerData = null;
+let categoriasCargadas = false;
 
 // ============================================
 // FUNCIONES DE ESCÁNER (html5-qrcode)
@@ -912,10 +1005,8 @@ function onScanProductoError(error) {
 function procesarProductoEscaner(texto) {
     console.log('📄 Producto escaneado:', texto);
     
-    // Extraer datos del producto
     let nombre = null, costo = 0, margen = 30, proveedor = null, codigo = null;
     
-    // Buscar nombre
     let match = texto.match(/(?:Producto|Nombre|Item|Descripción)[^:]*:\s*([^\n]+)/i);
     if (!match) {
         const lineas = texto.split('\n');
@@ -929,7 +1020,6 @@ function procesarProductoEscaner(texto) {
         nombre = match[1].trim();
     }
     
-    // Buscar costo (COSTO PROVEEDOR - NO PRECIO VENTA)
     match = texto.match(/(?:Costo|Valor|Precio)[^:]*[:=]\s*\$?\s*([\d.,]+)/i);
     if (match) {
         costo = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.'));
@@ -941,15 +1031,12 @@ function procesarProductoEscaner(texto) {
         }
     }
     
-    // Buscar proveedor
     match = texto.match(/(?:Proveedor|Marca)[^:]*:\s*([^\n]+)/i);
     if (match) proveedor = match[1].trim();
     
-    // Buscar código
     match = texto.match(/(?:Código|Code)[^:]*:\s*([^\n]+)/i);
     if (match) codigo = match[1].trim();
     
-    // Buscar margen (si existe en el texto)
     match = texto.match(/(?:Margen)[^:]*:\s*([\d.]+)/i);
     if (match) margen = parseFloat(match[1]) || 30;
     
@@ -958,7 +1045,6 @@ function procesarProductoEscaner(texto) {
         return;
     }
     
-    // Mostrar datos en el formulario
     productoEscanerData = { nombre, costo, margen, proveedor, codigo };
     
     document.getElementById('scan_nombre').value = nombre;
@@ -968,7 +1054,6 @@ function procesarProductoEscaner(texto) {
     document.getElementById('scan_codigo').value = codigo || '';
     document.getElementById('scan_stock').value = 1;
     
-    // Calcular precio venta
     const iva = 1.19;
     const costoConIva = costo * iva;
     const precioVenta = costoConIva * (1 + (margen / 100));
@@ -1006,7 +1091,6 @@ async function guardarProductoEscaner() {
         return;
     }
     
-    // Verificar si el producto ya existe
     let productoExistente = null;
     let precioVentaActual = 0;
     document.querySelectorAll('.fila-repuesto-lista').forEach(fila => {
@@ -1019,7 +1103,6 @@ async function guardarProductoEscaner() {
     });
     
     if (productoExistente) {
-        // ACTUALIZAR: SOLO STOCK Y COSTO PROVEEDOR (NO PRECIO VENTA)
         const confirmar = confirm(
             `⚠️ El producto "${nombre}" ya existe en el sistema.\n\n` +
             `📦 Stock actual: ${document.querySelector(`.fila-repuesto-lista[data-id="${productoExistente}"] td:nth-child(3)`)?.textContent || 0}\n` +
@@ -1041,7 +1124,7 @@ async function guardarProductoEscaner() {
                     stock: stock,
                     proveedor: proveedor || 'Importado',
                     margen_ganancia: margen,
-                    costo_venta_final: precioVentaActual // MANTENER PRECIO VENTA ACTUAL
+                    costo_venta_final: precioVentaActual
                 })
             });
             const result = await resp.json();
@@ -1056,7 +1139,6 @@ async function guardarProductoEscaner() {
             alert('❌ Error de conexión');
         }
     } else {
-        // NUEVO PRODUCTO: Crear completo
         const iva = 1.19;
         const costoConIva = costo * iva;
         const precioVenta = Math.floor(costoConIva * (1 + (margen / 100)));
@@ -1105,6 +1187,56 @@ document.getElementById('btnEscanearProducto').addEventListener('click', functio
     e.preventDefault();
     iniciarEscannerRepuestos();
 });
+
+// ============================================
+// CATEGORÍAS - CARGAR PARA EDITAR
+// ============================================
+async function cargarCategoriasEnEditar() {
+    try {
+        const resp = await fetch(`${API_URL}/api/subcategorias_repuestos`);
+        const subcategorias = await resp.json();
+        const select = document.getElementById('editCategoriaRepuesto');
+        select.innerHTML = '<option value="">Sin categoría</option>';
+        
+        const grouped = {};
+        subcategorias.forEach(s => {
+            if (!grouped[s.categoria_nombre]) grouped[s.categoria_nombre] = [];
+            grouped[s.categoria_nombre].push(s);
+        });
+        
+        for (const [categoria, items] of Object.entries(grouped)) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = categoria;
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.nombre;
+                optgroup.appendChild(opt);
+            });
+            select.appendChild(optgroup);
+        }
+        categoriasCargadas = true;
+    } catch(e) {
+        console.error('Error cargando categorías:', e);
+    }
+}
+
+// ============================================
+// FILTRAR POR CATEGORÍA
+// ============================================
+function filtrarPorCategoria(categoria, btn) {
+    document.querySelectorAll('.filtro-categorias .cat-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    
+    document.querySelectorAll('.fila-repuesto-lista').forEach(fila => {
+        const categoriaFila = fila.dataset.categoria || 'sin_categoria';
+        if (categoria === 'todos') {
+            fila.style.display = '';
+        } else {
+            fila.style.display = categoriaFila === categoria ? '' : 'none';
+        }
+    });
+}
 
 // ============================================
 // REPORTE DE STOCK BAJO
@@ -1610,7 +1742,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Mantener el precio venta actual
         let precioVentaActual = 0;
         const fila = document.querySelector(`.fila-repuesto-lista[data-id="${id}"]`);
         if (fila) {
@@ -1624,8 +1755,14 @@ document.addEventListener('DOMContentLoaded', function() {
             margen_ganancia: margen,
             proveedor: proveedor || 'Importado',
             stock: stock,
-            costo_venta_final: precioVentaActual // MANTENER PRECIO VENTA ACTUAL
+            costo_venta_final: precioVentaActual
         };
+        
+        // Agregar categoría si está seleccionada
+        const categoriaId = document.getElementById('editCategoriaRepuesto').value;
+        if (categoriaId) {
+            data.subcategoria_id = parseInt(categoriaId);
+        }
         
         fetch(`${API_URL}/api/repuestos/${id}`, {
             method: 'PUT',
@@ -1647,7 +1784,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Editar botones
     document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', async function() {
             const id = this.dataset.id;
             const fila = this.closest('.fila-repuesto-lista');
             
@@ -1659,6 +1796,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const margenText = fila.querySelector('td:nth-child(5)').textContent.replace('%', '').trim();
             const margen = parseFloat(margenText) || 0;
             const proveedor = fila.querySelector('td:nth-child(7)').textContent.trim();
+            const categoriaText = fila.querySelector('td:nth-child(8)')?.textContent.trim() || '';
             
             document.getElementById('editRepuestoId').value = id;
             document.getElementById('editNombreRepuesto').value = nombre;
@@ -1666,6 +1804,31 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('editMargenGanancia').value = margen;
             document.getElementById('editProveedorRepuesto').value = proveedor === '-' ? '' : proveedor;
             document.getElementById('editStockRepuesto').value = stock;
+            
+            // Cargar categorías si no están cargadas
+            if (!categoriasCargadas) {
+                await cargarCategoriasEnEditar();
+            }
+            
+            // Seleccionar categoría actual
+            const select = document.getElementById('editCategoriaRepuesto');
+            let categoriaEncontrada = false;
+            for (let opt of select.options) {
+                if (opt.text === categoriaText) {
+                    opt.selected = true;
+                    categoriaEncontrada = true;
+                    break;
+                }
+            }
+            if (!categoriaEncontrada && categoriaText && categoriaText !== 'Sin categoría') {
+                // Buscar por nombre de categoría
+                for (let opt of select.options) {
+                    if (opt.label === categoriaText || opt.parentElement?.label === categoriaText) {
+                        opt.selected = true;
+                        break;
+                    }
+                }
+            }
             
             document.getElementById('modalEditarRepuesto').classList.add('active');
             calcularCostoVentaEdit();
@@ -1704,6 +1867,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // Cargar categorías al inicio para editar
+    cargarCategoriasEnEditar();
 });
 </script>
 
