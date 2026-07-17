@@ -21,7 +21,7 @@
     
     <style>
         /* ============================
-           ESTILOS GLOBALES (inline para evitar conflictos)
+           ESTILOS GLOBALES
            ============================ */
         :root {
             --bg-primary: #121214;
@@ -61,12 +61,12 @@
         }
 
         /* ============================
-           NAVBAR (inline para evitar conflictos)
+           NAVBAR
            ============================ */
         .navbar-custom {
             background: var(--bg-secondary) !important;
             border-bottom: 1px solid var(--border-subtle) !important;
-            padding: 10px 20px !important;
+            padding: 8px 20px !important;
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3) !important;
             position: fixed !important;
             top: 0 !important;
@@ -75,6 +75,7 @@
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
+            flex-wrap: wrap !important;
         }
 
         .navbar-custom .brand {
@@ -87,37 +88,30 @@
             font-size: 18px;
         }
 
-        .navbar-custom .brand .logo {
-            width: 36px;
-            height: 36px;
-            background: var(--accent-green);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--bg-primary);
-            font-weight: 900;
-            font-size: 18px;
+        .navbar-custom .brand .logo-img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
         }
 
         .navbar-custom .nav-links {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
             flex-wrap: wrap;
         }
 
         .navbar-custom .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             transition: var(--transition);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
 
         .navbar-custom .nav-links a:hover {
@@ -132,8 +126,8 @@
 
         .navbar-custom .nav-links .user-name {
             color: var(--text-primary);
-            padding: 6px 14px;
-            font-size: 14px;
+            padding: 6px 12px;
+            font-size: 13px;
             font-weight: 500;
         }
 
@@ -154,6 +148,10 @@
             font-weight: 700;
             line-height: 18px;
             margin-left: 2px;
+        }
+
+        .navbar-custom .nav-links .material-symbols-rounded {
+            font-size: 18px;
         }
 
         /* Botón hamburguesa */
@@ -295,6 +293,13 @@
         /* ============================
            RESPONSIVE
            ============================ */
+        @media (max-width: 992px) {
+            .navbar-custom .nav-links a {
+                font-size: 12px;
+                padding: 4px 10px;
+            }
+        }
+
         @media (max-width: 768px) {
             .navbar-custom .menu-toggle {
                 display: block;
@@ -304,12 +309,17 @@
                 flex-direction: column;
                 width: 100%;
                 padding: 12px 0;
-                gap: 4px;
+                gap: 2px;
             }
             .navbar-custom .nav-links.open {
                 display: flex;
             }
             .navbar-custom .nav-links a {
+                width: 100%;
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+            .navbar-custom .nav-links .user-name {
                 width: 100%;
                 padding: 10px 14px;
             }
@@ -340,10 +350,8 @@
             .navbar-custom .brand {
                 font-size: 15px;
             }
-            .navbar-custom .brand .logo {
-                width: 30px;
-                height: 30px;
-                font-size: 14px;
+            .navbar-custom .brand .logo-img {
+                height: 32px;
             }
         }
     </style>
@@ -357,7 +365,8 @@
     ============================ -->
     <nav class="navbar-custom">
         <a class="brand" href="/estado">
-            <span class="logo">D</span>
+            <!-- LOGO ORIGINAL DE DIXON -->
+            <img src="{{ url_for('static', filename='images/dixon-navbar.png') }}" alt="Dixon" class="logo-img">
             <span>Dixon Automotriz</span>
         </a>
         
@@ -367,35 +376,91 @@
         
         <div class="nav-links" id="navLinks">
             {% if session.get("usuario") %}
+                <!-- ESTADO -->
                 <a href="/estado" class="{% if request.path == '/estado' %}active{% endif %}">
-                    <span class="material-symbols-rounded" style="font-size: 18px;">dashboard</span>
+                    <span class="material-symbols-rounded">dashboard</span>
                     Estado
                     {% if flotas_pendientes_count > 0 %}
                     <span class="badge-count">{{ flotas_pendientes_count }}</span>
                     {% endif %}
                 </a>
                 
+                <!-- REGISTROS (solo admin/operador) -->
                 {% if session.get("rol") in ["admin", "operador"] %}
-                <a href="/balance" class="{% if request.path == '/balance' %}active{% endif %}">
-                    <span class="material-symbols-rounded" style="font-size: 18px;">account_balance</span>
-                    Finanzas
+                <a href="/registros" class="{% if request.path == '/registros' %}active{% endif %}">
+                    <span class="material-symbols-rounded">history</span>
+                    Registros
                 </a>
+                {% endif %}
+                
+                <!-- FLOTAS (solo admin/operador) -->
+                {% if session.get("rol") in ["admin", "operador"] %}
                 <a href="/flotas" class="{% if request.path == '/flotas' %}active{% endif %}">
-                    <span class="material-symbols-rounded" style="font-size: 18px;">directions_car</span>
+                    <span class="material-symbols-rounded">directions_car</span>
                     Flotas
                 </a>
                 {% endif %}
                 
+                <!-- FLOTAS PENDIENTES (solo admin/operador) -->
+                {% if session.get("rol") in ["admin", "operador"] %}
+                <a href="/flotas_pendientes" class="{% if request.path == '/flotas_pendientes' %}active{% endif %}">
+                    <span class="material-symbols-rounded">pending_actions</span>
+                    Flotas Pend.
+                    {% if flotas_pendientes_count > 0 %}
+                    <span class="badge-count">{{ flotas_pendientes_count }}</span>
+                    {% endif %}
+                </a>
+                {% endif %}
+                
+                <!-- FINANZAS (solo admin/operador) -->
+                {% if session.get("rol") in ["admin", "operador"] %}
+                <a href="/balance" class="{% if request.path == '/balance' %}active{% endif %}">
+                    <span class="material-symbols-rounded">account_balance</span>
+                    Finanzas
+                </a>
+                {% endif %}
+                
+                <!-- DASHBOARD (solo admin) -->
+                {% if session.get("rol") == "admin" %}
+                <a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}">
+                    <span class="material-symbols-rounded">analytics</span>
+                    Dashboard
+                </a>
+                {% endif %}
+                
+                <!-- USUARIOS (solo admin) -->
                 {% if session.get("rol") == "admin" %}
                 <a href="/usuarios" class="{% if request.path == '/usuarios' %}active{% endif %}">
-                    <span class="material-symbols-rounded" style="font-size: 18px;">people</span>
+                    <span class="material-symbols-rounded">people</span>
                     Usuarios
                 </a>
                 {% endif %}
                 
-                <span class="user-name">{{ session.get('nombre_completo', session.get('usuario')) }}</span>
+                <!-- VENTA RÁPIDA (solo admin/operador) -->
+                {% if session.get("rol") in ["admin", "operador"] %}
+                <a href="/venta_rapida" class="{% if request.path == '/venta_rapida' %}active{% endif %}">
+                    <span class="material-symbols-rounded">bolt</span>
+                    Venta
+                </a>
+                {% endif %}
+                
+                <!-- VALIDAR PAGOS (solo admin/operador) -->
+                {% if session.get("rol") in ["admin", "operador"] %}
+                <a href="/pendientes_validacion" class="{% if request.path == '/pendientes_validacion' %}active{% endif %}">
+                    <span class="material-symbols-rounded">verified</span>
+                    Validar
+                </a>
+                {% endif %}
+                
+                <!-- Usuario -->
+                <span class="user-name">
+                    <span class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">account_circle</span>
+                    {{ session.get('nombre_completo', session.get('usuario')) }}
+                </span>
+                
+                <!-- Salir -->
                 <a href="/logout" class="logout">
-                    <span class="material-symbols-rounded" style="font-size: 18px;">logout</span>
+                    <span class="material-symbols-rounded">logout</span>
                     Salir
                 </a>
             {% endif %}
