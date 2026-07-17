@@ -708,6 +708,93 @@ def registrar_planilla():
     except Exception as e:
         print(f"❌ Error en registrar_planilla: {e}")
         return jsonify({"error": str(e)}), 500
+# ============================================
+# ELIMINAR EMPLEADO
+# ============================================
+@app.route('/api/empleados/<int:id_empleado>', methods=['DELETE'])
+def eliminar_empleado(id_empleado):
+    """Elimina un empleado (borrado lógico)"""
+    try:
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Verificar si existe
+        cur.execute("SELECT id FROM empleados WHERE id = %s", (id_empleado,))
+        if not cur.fetchone():
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Empleado no encontrado"}), 404
+        
+        # Eliminar (borrado lógico)
+        cur.execute("""
+            UPDATE empleados 
+            SET activo = FALSE, 
+                updated_at = NOW() AT TIME ZONE 'America/Santiago'
+            WHERE id = %s
+        """, (id_empleado,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True, "mensaje": "Empleado eliminado correctamente"})
+        
+    except Exception as e:
+        print(f"❌ Error en eliminar_empleado: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# ELIMINAR EMPLEADO DE LA PLANILLA (borrado físico)
+# ============================================
+@app.route('/api/planilla_sueldos/empleado/<int:id_empleado>', methods=['DELETE'])
+def eliminar_empleado_planilla(id_empleado):
+    """Elimina un empleado de la planilla actual (borrado físico)"""
+    try:
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Verificar si existe en la planilla
+        cur.execute("""
+            SELECT id FROM planilla_sueldos 
+            WHERE empleado_id = %s AND mes = %s AND anio = %s
+        """, (
+            id_empleado, 
+            datetime.now().month, 
+            datetime.now().year
+        ))
+        
+        if cur.fetchone():
+            # Eliminar de la planilla
+            cur.execute("""
+                DELETE FROM planilla_sueldos 
+                WHERE empleado_id = %s AND mes = %s AND anio = %s
+            """, (
+                id_empleado, 
+                datetime.now().month, 
+                datetime.now().year
+            ))
+            conn.commit()
+        
+        # También podemos desactivar al empleado
+        cur.execute("""
+            UPDATE empleados 
+            SET activo = FALSE,
+                updated_at = NOW() AT TIME ZONE 'America/Santiago'
+            WHERE id = %s
+        """, (id_empleado,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True, "mensaje": "Empleado eliminado de la planilla"})
+        
+    except Exception as e:
+        print(f"❌ Error en eliminar_empleado_planilla: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # ============================
