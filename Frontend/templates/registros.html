@@ -6,10 +6,9 @@
 
 <style>
 /* ============================================
-   ESTILOS MODERNOS PARA REGISTROS
+   FILTROS MODERNOS CON COLORES SUTILES
    ============================================ */
 
-/* Filtros */
 .filtros-grid-registros {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
@@ -50,17 +49,56 @@
     color: var(--text-secondary) !important;
 }
 
+/* ============================================
+   ESTADOS DE FILTRO CON COLORES SUTILES
+   ============================================ */
+
+/* TOTAL - Blanco/Gris */
 .filtro-card-registro.active-total {
     border-color: var(--text-secondary) !important;
     background: var(--bg-hover) !important;
 }
+.filtro-card-registro.active-total .numero {
+    color: var(--text-primary) !important;
+}
 
-.filtro-card-registro.active-pagados {
-    border-color: var(--accent-green) !important;
+/* HOY - AZUL SUTIL */
+.filtro-card-registro.active-hoy {
+    border-color: rgba(52, 152, 219, 0.4) !important;
+    background: rgba(52, 152, 219, 0.06) !important;
+}
+.filtro-card-registro.active-hoy .numero {
+    color: #3498db !important;
+}
+.filtro-card-registro.active-hoy .etiqueta {
+    color: #3498db !important;
+    opacity: 0.8 !important;
+}
+
+/* 7 DÍAS - VERDE SUTIL */
+.filtro-card-registro.active-7d {
+    border-color: rgba(46, 204, 113, 0.4) !important;
     background: rgba(46, 204, 113, 0.06) !important;
 }
-.filtro-card-registro.active-pagados .numero {
-    color: var(--accent-green) !important;
+.filtro-card-registro.active-7d .numero {
+    color: #2ecc71 !important;
+}
+.filtro-card-registro.active-7d .etiqueta {
+    color: #2ecc71 !important;
+    opacity: 0.8 !important;
+}
+
+/* 1 MES - AMARILLO SUTIL */
+.filtro-card-registro.active-mes {
+    border-color: rgba(241, 196, 15, 0.4) !important;
+    background: rgba(241, 196, 15, 0.06) !important;
+}
+.filtro-card-registro.active-mes .numero {
+    color: #f1c40f !important;
+}
+.filtro-card-registro.active-mes .etiqueta {
+    color: #f1c40f !important;
+    opacity: 0.8 !important;
 }
 
 /* Barra de búsqueda */
