@@ -795,6 +795,26 @@ def eliminar_empleado_planilla(id_empleado):
     except Exception as e:
         print(f"❌ Error en eliminar_empleado_planilla: {e}")
         return jsonify({"error": str(e)}), 500
+# ============================================
+# OBTENER EMPLEADOS ACTIVOS
+# ============================================
+@app.route('/api/empleados/activos', methods=['GET'])
+def obtener_empleados_activos():
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT * FROM empleados 
+            WHERE activo = TRUE 
+            ORDER BY nombre
+        """)
+        empleados = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(empleados)
+    except Exception as e:
+        print(f"❌ Error en obtener_empleados_activos: {e}")
+        return jsonify([])
 
 
 # ============================
