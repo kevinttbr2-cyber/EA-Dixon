@@ -757,22 +757,31 @@
             </button>
         </div>
         
-        <div style="margin-bottom:15px;padding:12px;background:rgba(79,195,247,0.06);border-radius:8px;border:1px solid rgba(79,195,247,0.15);">
-            <p style="color:#888;font-size:12px;margin:0 0 8px 0;">
-                <i class="fa-solid fa-info-circle" style="color:#4fc3f7;"></i> 
-                El archivo Excel debe tener estas columnas:
-            </p>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;color:#aaa;">
-                <span>1. <strong style="color:#fff;">Producto</strong> *</span>
-                <span style="color:#666;">Ej: "Filtro de aceite"</span>
-                <span>2. <strong style="color:#fff;">Costo Proveedor</strong> *</span>
-                <span style="color:#666;">Ej: 15000</span>
-                <span>3. <strong style="color:#fff;">Precio Venta</strong> *</span>
-                <span style="color:#666;">Ej: 23205</span>
-                <span>4. <strong style="color:#fff;">Proveedor</strong></span>
-                <span style="color:#666;">Ej: "Bosch" (opcional)</span>
-            </div>
-        </div>
+       <div style="margin-bottom:15px;padding:12px;background:rgba(79,195,247,0.06);border-radius:8px;border:1px solid rgba(79,195,247,0.15);">
+    <p style="color:#888;font-size:12px;margin:0 0 8px 0;">
+        <i class="fa-solid fa-info-circle" style="color:#4fc3f7;"></i> 
+        El archivo Excel debe tener estas columnas (en este orden):
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;color:#aaa;">
+        <span>1. <strong style="color:#fff;">Producto</strong> *</span>
+        <span style="color:#666;">Ej: "Filtro de aceite"</span>
+        <span>2. <strong style="color:#fff;">Costo Proveedor</strong> *</span>
+        <span style="color:#666;">Ej: 15000</span>
+        <span>3. <strong style="color:#fff;">Precio Venta</strong> *</span>
+        <span style="color:#666;">Ej: 23205</span>
+        <span>4. <strong style="color:#fff;">Proveedor</strong></span>
+        <span style="color:#666;">Ej: "Bosch" (opcional)</span>
+        <span style="color:#4fc3f7;">5. <strong style="color:#4fc3f7;">Categoría</strong></span>
+        <span style="color:#666;">Ej: "Iluminación"</span>
+        <span style="color:#9b59b6;">6. <strong style="color:#9b59b6;">Subcategoría</strong></span>
+        <span style="color:#666;">Ej: "Ampolletas"</span>
+        <span style="color:#ff6b6b;">7. <strong style="color:#ff6b6b;">Stock</strong></span>
+        <span style="color:#666;">Ej: 10 (opcional, por defecto 0)</span>
+    </div>
+    <div style="margin-top:6px;padding:8px;background:rgba(255,255,255,0.03);border-radius:4px;">
+        <span style="color:#888;font-size:11px;">💡 El margen se calculará automáticamente con 1 decimal</span>
+    </div>
+</div>
 
         <div style="border:2px dashed rgba(79,195,247,0.3);border-radius:12px;padding:20px;text-align:center;cursor:pointer;" 
              id="dropZoneProductos"
@@ -806,17 +815,34 @@
             </div>
             <div style="overflow-x:auto;max-height:150px;overflow-y:auto;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
                 <table style="width:100%;font-size:12px;border-collapse:collapse;">
-                    <thead style="background:rgba(79,195,247,0.1);position:sticky;top:0;">
-                        <tr>
-                            <th style="padding:4px 6px;color:#4fc3f7;">#</th>
-                            <th style="padding:4px 6px;color:#4fc3f7;">Producto</th>
-                            <th style="padding:4px 6px;color:#4fc3f7;">Costo</th>
-                            <th style="padding:4px 6px;color:#4fc3f7;">Precio Venta</th>
-                            <th style="padding:4px 6px;color:#4fc3f7;">Margen</th>
-                        </tr>
-                    </thead>
-                    <tbody id="previewBodyProductos"></tbody>
-                </table>
+    <thead style="background:rgba(79,195,247,0.1);position:sticky;top:0;">
+        <tr>
+            <th style="padding:4px 6px;color:#4fc3f7;">#</th>
+            <th style="padding:4px 6px;color:#4fc3f7;">Producto</th>
+            <th style="padding:4px 6px;color:#4fc3f7;">Costo</th>
+            <th style="padding:4px 6px;color:#4fc3f7;">Precio Venta</th>
+            <th style="padding:4px 6px;color:#4fc3f7;">Margen</th>
+            <th style="padding:4px 6px;color:#f1c40f;">Categoría</th>
+            <th style="padding:4px 6px;color:#9b59b6;">Subcategoría</th>
+            <th style="padding:4px 6px;color:#ff6b6b;">📦 Stock</th>
+        </tr>
+    </thead>
+    <tbody id="previewBodyProductos"></tbody>
+</table><table style="width:100%;font-size:12px;border-collapse:collapse;">
+    <thead style="background:rgba(79,195,247,0.1);position:sticky;top:0;">
+        <tr>
+            <th style="padding:4px 6px;color:#4fc3f7;">#</th>
+            <th style="padding:4px 6px;color:#4fc3f7;">Producto</th>
+            <th style="padding:4px 6px;color:#4fc3f7;">Costo</th>
+            <th style="padding:4px 6px;color:#4fc3f7;">Precio Venta</th>
+            <th style="padding:4px 6px;color:#4fc3f7;">Margen</th>
+            <th style="padding:4px 6px;color:#f1c40f;">Categoría</th>
+            <th style="padding:4px 6px;color:#9b59b6;">Subcategoría</th>
+            <th style="padding:4px 6px;color:#ff6b6b;">📦 Stock</th>
+        </tr>
+    </thead>
+    <tbody id="previewBodyProductos"></tbody>
+</table>
             </div>
         </div>
 
@@ -1498,7 +1524,7 @@ async function importarProductos() {
         return;
     }
     
-    if (!confirm(`📊 ¿Importar ${datosProductos.length} productos?\n\nSe agregarán a la lista de repuestos.`)) {
+    if (!confirm(`📊 ¿Importar ${datosProductos.length} productos?\n\nSe agregarán a la lista de repuestos con sus categorías y stock.`)) {
         return;
     }
     
@@ -1506,40 +1532,43 @@ async function importarProductos() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
     
-    let importados = 0;
-    let errores = [];
-    let exitosos = [];
-    
-    for (const item of datosProductos) {
-        try {
-            const resp = await fetch(`${API_URL}/api/repuestos`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nombre: item.nombre,
-                    costo_proveedor: item.costo,
-                    margen_ganancia: item.margen,
-                    proveedor: item.proveedor || 'Importado',
-                    costo_venta_final: item.precio_venta
-                })
-            });
-            const result = await resp.json();
-            if (result.success) {
-                importados++;
-                exitosos.push(item.nombre);
-            } else {
-                errores.push({
-                    nombre: item.nombre,
-                    error: result.error || 'Error desconocido'
-                });
+    try {
+        const resp = await fetch(`${API_URL}/api/repuestos/importar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productos: datosProductos
+            })
+        });
+        
+        const result = await resp.json();
+        
+        if (result.success) {
+            let mensaje = `✅ Importación completada!\n\n📊 ${result.importados} importados correctamente`;
+            
+            if (result.actualizados && result.actualizados > 0) {
+                mensaje += `\n📝 ${result.actualizados} actualizados (stock sumado)`;
             }
-        } catch (error) {
-            errores.push({
-                nombre: item.nombre,
-                error: 'Error de conexión'
-            });
+            
+            if (result.errores && result.errores.length > 0) {
+                mensaje += `\n\n⚠️ ${result.errores.length} errores`;
+                console.log('Errores:', result.errores);
+            }
+            
+            alert(mensaje);
+            cerrarModalImportarProductos();
+            location.reload();
+        } else {
+            alert('❌ Error: ' + (result.error || 'Desconocido'));
         }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datosProductos.length} productos`;
     }
+}
     
     mostrarResultadoImportacion(importados, exitosos, errores);
     
