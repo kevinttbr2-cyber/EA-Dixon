@@ -18,418 +18,403 @@
 }
 
 .filtro-card {
-    background: #1e1e24;
-    border: 1px solid #2e3138;
-    border-radius: 12px;
-    padding: 12px 16px;
-    text-align: center;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    cursor: pointer;
+    background: #1e1e24 !important;
+    border: 2px solid #2e3138 !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
 }
 
 .filtro-card:hover {
-    transform: translateY(-2px);
-    border-color: #6b7078;
+    transform: translateY(-2px) !important;
+    border-color: #6b7078 !important;
 }
 
 .filtro-card .numero {
-    font-size: 28px;
-    font-weight: 800;
-    display: block;
-    line-height: 1.2;
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    display: block !important;
+    line-height: 1.2 !important;
 }
 
 .filtro-card .etiqueta {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    opacity: 0.6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    opacity: 0.6 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
 }
 
 .filtro-card .etiqueta .material-symbols-rounded {
-    font-size: 16px;
+    font-size: 16px !important;
 }
 
-/* ============================
-   FILTRO TOTAL
-   ============================ */
+/* FILTRO TOTAL */
 .filtro-card.active-total {
-    border-color: #b0b5bf;
-    background: #2a2a32;
+    border-color: #b0b5bf !important;
+    background: #2a2a32 !important;
 }
 .filtro-card.active-total .numero {
-    color: #f5f5f5;
+    color: #f5f5f5 !important;
 }
 
-/* ============================
-   FILTRO PAGADOS - VERDE
-   ============================ */
+/* FILTRO PAGADOS - VERDE */
 .filtro-card.active-pagados {
-    border-color: #2ecc71 !important;
-    background: rgba(46, 204, 113, 0.08) !important;
+    border-color: #00ff00 !important;
+    background: rgba(0, 255, 0, 0.08) !important;
 }
 .filtro-card.active-pagados .numero {
-    color: #2ecc71 !important;
+    color: #00ff00 !important;
 }
 .filtro-card.active-pagados .etiqueta {
-    color: #2ecc71 !important;
+    color: #00ff00 !important;
     opacity: 1 !important;
 }
 
-/* ============================
-   FILTRO PENDIENTES - ROJO
-   ============================ */
+/* FILTRO PENDIENTES - ROJO */
 .filtro-card.active-pendientes {
-    border-color: #e74c3c !important;
-    background: rgba(231, 76, 60, 0.08) !important;
+    border-color: #ff0000 !important;
+    background: rgba(255, 0, 0, 0.08) !important;
 }
 .filtro-card.active-pendientes .numero {
-    color: #e74c3c !important;
+    color: #ff0000 !important;
 }
 .filtro-card.active-pendientes .etiqueta {
-    color: #e74c3c !important;
+    color: #ff0000 !important;
     opacity: 1 !important;
 }
 
 /* Buscador */
 .buscador-wrapper {
-    position: relative;
-    margin-bottom: 20px;
+    position: relative !important;
+    margin-bottom: 20px !important;
 }
 
 .buscador-wrapper .search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6b7078;
-    pointer-events: none;
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #6b7078 !important;
+    pointer-events: none !important;
 }
 
 .buscador-wrapper input {
-    width: 100%;
-    padding: 14px 16px 14px 48px;
-    background: #26262e;
-    border: 2px solid transparent;
-    border-radius: 12px;
-    color: #f5f5f5;
-    font-size: 15px;
-    transition: all 0.3s ease;
-    font-family: inherit;
+    width: 100% !important;
+    padding: 14px 16px 14px 48px !important;
+    background: #26262e !important;
+    border: 2px solid transparent !important;
+    border-radius: 12px !important;
+    color: #f5f5f5 !important;
+    font-size: 15px !important;
+    transition: all 0.3s ease !important;
+    font-family: inherit !important;
 }
 
 .buscador-wrapper input:focus {
-    outline: none;
-    border-color: #2ecc71;
-    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.1);
+    outline: none !important;
+    border-color: #00ff00 !important;
+    box-shadow: 0 0 0 4px rgba(0, 255, 0, 0.1) !important;
 }
 
 .buscador-wrapper input::placeholder {
-    color: #6b7078;
+    color: #6b7078 !important;
 }
 
 /* Alerta flotas */
 .flota-alert {
-    background: rgba(241, 196, 15, 0.06);
-    border: 1px solid rgba(241, 196, 15, 0.15);
-    border-radius: 12px;
-    padding: 12px 18px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
+    background: rgba(255, 200, 0, 0.06) !important;
+    border: 1px solid rgba(255, 200, 0, 0.15) !important;
+    border-radius: 12px !important;
+    padding: 12px 18px !important;
+    margin-bottom: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
 }
 
 .flota-alert .info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
 }
 
 .flota-alert .info .icon {
-    color: #f1c40f;
-    font-size: 24px;
+    color: #ffcc00 !important;
+    font-size: 24px !important;
 }
 
 .flota-alert .info .text {
-    color: #b0b5bf;
-    font-size: 14px;
+    color: #b0b5bf !important;
+    font-size: 14px !important;
 }
 
 .flota-alert .info .text strong {
-    color: #f1c40f;
+    color: #ffcc00 !important;
 }
 
 .flota-alert .badge-count {
-    background: #f1c40f;
-    color: #121214;
-    border-radius: 50px;
-    padding: 0 14px;
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 26px;
+    background: #ffcc00 !important;
+    color: #121214 !important;
+    border-radius: 50px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 26px !important;
 }
 
 .flota-alert .btn-ver {
-    color: #f1c40f;
-    font-size: 13px;
-    text-decoration: none;
-    background: rgba(241, 196, 15, 0.08);
-    padding: 4px 18px;
-    border-radius: 50px;
-    border: 1px solid rgba(241, 196, 15, 0.12);
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    color: #ffcc00 !important;
+    font-size: 13px !important;
+    text-decoration: none !important;
+    background: rgba(255, 200, 0, 0.08) !important;
+    padding: 4px 18px !important;
+    border-radius: 50px !important;
+    border: 1px solid rgba(255, 200, 0, 0.12) !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
 }
 
 .flota-alert .btn-ver:hover {
-    background: rgba(241, 196, 15, 0.15);
+    background: rgba(255, 200, 0, 0.15) !important;
 }
 
 /* ============================
    TARJETAS DE TRABAJO
    ============================ */
 .card-trabajo {
-    border-radius: 12px;
-    padding: 16px 18px;
-    margin-bottom: 12px;
-    transition: all 0.3s ease;
-    border: 1px solid #2e3138;
-    border-left-width: 4px;
+    border-radius: 12px !important;
+    padding: 16px 18px !important;
+    margin-bottom: 12px !important;
+    transition: all 0.3s ease !important;
+    border: 1px solid #2e3138 !important;
+    border-left-width: 4px !important;
 }
 
 .card-trabajo:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
 }
 
 /* ============================
-   PAGADOS - FONDO VERDE SUTIL
+   PAGADOS - FONDO VERDE
    ============================ */
 .card-trabajo.pagado {
-    background: rgba(46, 204, 113, 0.06) !important;
-    border-left: 4px solid #2ecc71 !important;
+    background: rgba(0, 255, 0, 0.08) !important;
+    border-left: 4px solid #00ff00 !important;
 }
 
 /* ============================
-   PENDIENTES - FONDO ROJO SUTIL
+   PENDIENTES - FONDO ROJO
    ============================ */
 .card-trabajo.pendiente {
-    background: rgba(231, 76, 60, 0.06) !important;
-    border-left: 4px solid #e74c3c !important;
+    background: rgba(255, 0, 0, 0.08) !important;
+    border-left: 4px solid #ff0000 !important;
 }
 
 .card-trabajo .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 4px;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-bottom: 4px !important;
 }
 
 .card-trabajo .header .nombre {
-    font-size: 18px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    color: #f5f5f5;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    color: #f5f5f5 !important;
 }
 
-/* ============================
-   ICONO DE ESTADO
-   ============================ */
 .card-trabajo .header .nombre .estado-icon-pagado {
-    color: #2ecc71 !important;
-    font-size: 18px;
+    color: #00ff00 !important;
+    font-size: 18px !important;
 }
 
 .card-trabajo .header .nombre .estado-icon-pendiente {
-    color: #e74c3c !important;
-    font-size: 18px;
+    color: #ff0000 !important;
+    font-size: 18px !important;
 }
 
-/* ============================
-   BADGES
-   ============================ */
 .card-trabajo .header .nombre .badge-directa {
-    background: rgba(52, 152, 219, 0.12);
-    color: #3498db;
-    border: 1px solid rgba(52, 152, 219, 0.15);
-    font-size: 10px;
-    padding: 0 10px;
-    border-radius: 20px;
-    line-height: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
+    background: rgba(52, 152, 219, 0.12) !important;
+    color: #3498db !important;
+    border: 1px solid rgba(52, 152, 219, 0.15) !important;
+    font-size: 10px !important;
+    padding: 0 10px !important;
+    border-radius: 20px !important;
+    line-height: 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 2px !important;
 }
 
 .card-trabajo .header .nombre .badge-flota {
-    background: rgba(241, 196, 15, 0.10);
-    color: #f1c40f;
-    border: 1px solid rgba(241, 196, 15, 0.12);
-    font-size: 10px;
-    padding: 0 10px;
-    border-radius: 20px;
-    line-height: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
+    background: rgba(255, 200, 0, 0.10) !important;
+    color: #ffcc00 !important;
+    border: 1px solid rgba(255, 200, 0, 0.12) !important;
+    font-size: 10px !important;
+    padding: 0 10px !important;
+    border-radius: 20px !important;
+    line-height: 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 2px !important;
 }
 
 .card-trabajo .header .telefono {
-    color: #b0b5bf;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    color: #b0b5bf !important;
+    font-size: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
 }
 
 .card-trabajo .header .telefono .material-symbols-rounded {
-    font-size: 16px;
+    font-size: 16px !important;
 }
 
 .card-trabajo .detalles {
-    margin-top: 4px;
-    font-size: 13px;
-    color: #b0b5bf;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 16px;
+    margin-top: 4px !important;
+    font-size: 13px !important;
+    color: #b0b5bf !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px 16px !important;
 }
 
 .card-trabajo .detalles strong {
-    color: #b0b5bf;
+    color: #b0b5bf !important;
 }
 
 .card-trabajo .detalles .producto-tag {
-    background: #121214;
-    padding: 0 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    display: inline-block;
-    margin: 2px;
-    color: #b0b5bf;
+    background: #121214 !important;
+    padding: 0 10px !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    display: inline-block !important;
+    margin: 2px !important;
+    color: #b0b5bf !important;
 }
 
 .card-trabajo .detalles .producto-tag .precio {
-    color: #f1c40f;
+    color: #ffcc00 !important;
 }
 
 .card-trabajo .pie {
-    margin-top: 10px;
-    font-size: 13px;
-    color: #b0b5bf;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 16px;
-    align-items: center;
+    margin-top: 10px !important;
+    font-size: 13px !important;
+    color: #b0b5bf !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px 16px !important;
+    align-items: center !important;
 }
 
-/* ============================
-   TEXTO DE ESTADO
-   ============================ */
 .card-trabajo .pie .estado-texto-pagado {
-    color: #2ecc71 !important;
-    font-weight: 600;
+    color: #00ff00 !important;
+    font-weight: 600 !important;
 }
 
 .card-trabajo .pie .estado-texto-pendiente {
-    color: #e74c3c !important;
-    font-weight: 600;
+    color: #ff0000 !important;
+    font-weight: 600 !important;
 }
 
 .card-trabajo .pie .monto {
-    color: #f5f5f5;
-    font-weight: 600;
+    color: #f5f5f5 !important;
+    font-weight: 600 !important;
 }
 
 .card-trabajo .btn-accion {
-    margin-top: 12px;
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    text-decoration: none;
+    margin-top: 12px !important;
+    width: 100% !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
 }
 
 .card-trabajo .btn-accion.primary {
-    background: #2ecc71;
-    color: #121214;
+    background: #00ff00 !important;
+    color: #121214 !important;
 }
 
 .card-trabajo .btn-accion.primary:hover {
-    background: #27ae60;
-    transform: translateY(-2px);
+    background: #00cc00 !important;
+    transform: translateY(-2px) !important;
 }
 
 .card-trabajo .btn-accion.blue {
-    background: #3498db;
-    color: #121214;
+    background: #3498db !important;
+    color: #121214 !important;
 }
 
 .card-trabajo .btn-accion.blue:hover {
-    background: #2980b9;
-    transform: translateY(-2px);
+    background: #2980b9 !important;
+    transform: translateY(-2px) !important;
 }
 
 .card-trabajo .btn-accion.secondary {
-    background: #2a2a32;
-    color: #f5f5f5;
-    border: 1px solid #2e3138;
+    background: #2a2a32 !important;
+    color: #f5f5f5 !important;
+    border: 1px solid #2e3138 !important;
 }
 
 .card-trabajo .btn-accion.secondary:hover {
-    background: #2a2a32;
-    transform: translateY(-2px);
+    background: #2a2a32 !important;
+    transform: translateY(-2px) !important;
 }
 
 .card-trabajo .btn-accion .material-symbols-rounded {
-    font-size: 18px;
+    font-size: 18px !important;
 }
 
 /* Empty state */
 .empty-state {
-    text-align: center;
-    padding: 60px 20px;
+    text-align: center !important;
+    padding: 60px 20px !important;
 }
 
 .empty-state .icon {
-    font-size: 56px;
-    color: #6b7078;
+    font-size: 56px !important;
+    color: #6b7078 !important;
 }
 
 .empty-state h4 {
-    color: #b0b5bf;
-    font-weight: 400;
-    margin-top: 12px;
-    font-size: 18px;
+    color: #b0b5bf !important;
+    font-weight: 400 !important;
+    margin-top: 12px !important;
+    font-size: 18px !important;
 }
 
 .empty-state p {
-    color: #6b7078;
-    font-size: 14px;
+    color: #6b7078 !important;
+    font-size: 14px !important;
 }
 
 /* ============================
@@ -437,56 +422,56 @@
    ============================ */
 @media (max-width: 768px) {
     .filtros-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
     }
     .filtro-card {
-        padding: 8px 10px;
+        padding: 8px 10px !important;
     }
     .filtro-card .numero {
-        font-size: 22px;
+        font-size: 22px !important;
     }
     .filtro-card .etiqueta {
-        font-size: 9px;
+        font-size: 9px !important;
     }
     .card-trabajo {
-        padding: 14px 16px;
+        padding: 14px 16px !important;
     }
     .card-trabajo .header .nombre {
-        font-size: 16px;
+        font-size: 16px !important;
     }
     .flota-alert {
-        padding: 10px 14px;
+        padding: 10px 14px !important;
     }
     .empty-state {
-        padding: 40px 16px;
+        padding: 40px 16px !important;
     }
 }
 
 @media (max-width: 480px) {
     .filtros-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 4px;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 4px !important;
     }
     .filtro-card {
-        padding: 6px 8px;
+        padding: 6px 8px !important;
     }
     .filtro-card .numero {
-        font-size: 18px;
+        font-size: 18px !important;
     }
     .filtro-card .etiqueta {
-        font-size: 8px;
+        font-size: 8px !important;
     }
     .buscador-wrapper input {
-        padding: 12px 12px 12px 42px;
-        font-size: 14px;
+        padding: 12px 12px 12px 42px !important;
+        font-size: 14px !important;
     }
     .card-trabajo .detalles {
-        font-size: 12px;
-        gap: 2px 10px;
+        font-size: 12px !important;
+        gap: 2px 10px !important;
     }
     .card-trabajo .pie {
-        font-size: 12px;
+        font-size: 12px !important;
     }
 }
 </style>
@@ -528,16 +513,16 @@
         <span class="etiqueta">Total</span>
     </a>
     <a href="?estado=pagado" class="filtro-card {% if estado == 'pagado' %}active-pagados{% endif %}">
-        <span class="numero">{{ pagados_mes or 0 }}</span>
-        <span class="etiqueta">
-            <span class="material-symbols-rounded">check_circle</span>
+        <span class="numero" style="color: #00ff00 !important;">{{ pagados_mes or 0 }}</span>
+        <span class="etiqueta" style="color: #00ff00 !important;">
+            <span class="material-symbols-rounded" style="color: #00ff00 !important;">check_circle</span>
             Pagados
         </span>
     </a>
     <a href="?estado=pendiente" class="filtro-card {% if estado == 'pendiente' %}active-pendientes{% endif %}">
-        <span class="numero">{{ pendientes_mes or 0 }}</span>
-        <span class="etiqueta">
-            <span class="material-symbols-rounded">pending</span>
+        <span class="numero" style="color: #ff0000 !important;">{{ pendientes_mes or 0 }}</span>
+        <span class="etiqueta" style="color: #ff0000 !important;">
+            <span class="material-symbols-rounded" style="color: #ff0000 !important;">pending</span>
             Pendientes
         </span>
     </a>
@@ -559,15 +544,16 @@
     <div class="card-trabajo {% if r.estado == 'pagado' %}pagado{% else %}pendiente{% endif %} registro-item" 
          data-nombre="{{ r.nombre|lower }}" 
          data-patente="{{ r.patente|lower if r.patente else '' }}"
-         data-flota="{{ r.flota|lower if r.flota else '' }}">
+         data-flota="{{ r.flota|lower if r.flota else '' }}"
+         style="{% if r.estado == 'pagado' %}background: rgba(0, 255, 0, 0.08) !important; border-left: 4px solid #00ff00 !important;{% else %}background: rgba(255, 0, 0, 0.08) !important; border-left: 4px solid #ff0000 !important;{% endif %}">
 
         <div class="header">
             <div class="nombre">
-                <!-- ICONO DE ESTADO CON COLORES FORZADOS -->
+                <!-- ICONO DE ESTADO CON COLORES DIRECTOS -->
                 {% if r.estado == 'pagado' %}
-                <span class="estado-icon-pagado material-symbols-rounded">check_circle</span>
+                <span class="material-symbols-rounded" style="color: #00ff00 !important; font-size: 18px;">check_circle</span>
                 {% else %}
-                <span class="estado-icon-pendiente material-symbols-rounded">pending</span>
+                <span class="material-symbols-rounded" style="color: #ff0000 !important; font-size: 18px;">pending</span>
                 {% endif %}
                 {{ r.nombre }}
                 
@@ -632,11 +618,10 @@
             </div>
             <div>
                 <strong>Estado:</strong>
-                <!-- TEXTO DE ESTADO CON COLORES FORZADOS -->
                 {% if r.estado == 'pagado' %}
-                <span class="estado-texto-pagado">PAGADO</span>
+                <span style="color: #00ff00 !important; font-weight: 600;">PAGADO</span>
                 {% else %}
-                <span class="estado-texto-pendiente">PENDIENTE</span>
+                <span style="color: #ff0000 !important; font-weight: 600;">PENDIENTE</span>
                 {% endif %}
             </div>
             {% if r.monto %}
