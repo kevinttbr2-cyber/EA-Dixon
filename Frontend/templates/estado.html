@@ -6,10 +6,10 @@
 
 <style>
 /* ============================
-   ESTILOS ESPECÍFICOS PARA ESTADO
+   ESTILOS ESPECÍFICOS PARA ESTADO (inline)
    ============================ */
 
-/* Contenedor de filtros */
+/* Filtros */
 .filtros-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -18,19 +18,19 @@
 }
 
 .filtro-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
+    background: #1e1e24;
+    border: 1px solid #2e3138;
+    border-radius: 12px;
     padding: 12px 16px;
     text-align: center;
     text-decoration: none;
-    transition: var(--transition);
+    transition: all 0.3s ease;
     cursor: pointer;
 }
 
 .filtro-card:hover {
     transform: translateY(-2px);
-    border-color: var(--text-muted);
+    border-color: #6b7078;
 }
 
 .filtro-card .numero {
@@ -55,34 +55,31 @@
     font-size: 16px;
 }
 
-/* Estados de filtros */
 .filtro-card.active-total {
-    border-color: var(--text-secondary);
-    background: var(--bg-hover);
+    border-color: #b0b5bf;
+    background: #2a2a32;
 }
 .filtro-card.active-total .numero {
-    color: var(--text-primary);
+    color: #f5f5f5;
 }
 
 .filtro-card.active-pagados {
-    border-color: var(--accent-green);
+    border-color: #2ecc71;
     background: rgba(46, 204, 113, 0.06);
 }
 .filtro-card.active-pagados .numero {
-    color: var(--accent-green);
+    color: #2ecc71;
 }
 
 .filtro-card.active-pendientes {
-    border-color: var(--accent-yellow);
+    border-color: #f1c40f;
     background: rgba(241, 196, 15, 0.06);
 }
 .filtro-card.active-pendientes .numero {
-    color: var(--accent-yellow);
+    color: #f1c40f;
 }
 
-/* ============================
-   BUSCADOR MODERNO
-   ============================ */
+/* Buscador */
 .buscador-wrapper {
     position: relative;
     margin-bottom: 20px;
@@ -93,39 +90,37 @@
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--text-muted);
+    color: #6b7078;
     pointer-events: none;
 }
 
 .buscador-wrapper input {
     width: 100%;
     padding: 14px 16px 14px 48px;
-    background: var(--bg-input);
+    background: #26262e;
     border: 2px solid transparent;
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
+    border-radius: 12px;
+    color: #f5f5f5;
     font-size: 15px;
-    transition: var(--transition);
+    transition: all 0.3s ease;
     font-family: inherit;
 }
 
 .buscador-wrapper input:focus {
     outline: none;
-    border-color: var(--accent-green);
+    border-color: #2ecc71;
     box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.1);
 }
 
 .buscador-wrapper input::placeholder {
-    color: var(--text-muted);
+    color: #6b7078;
 }
 
-/* ============================
-   ALERTA FLOTAS PENDIENTES
-   ============================ */
+/* Alerta flotas */
 .flota-alert {
     background: rgba(241, 196, 15, 0.06);
     border: 1px solid rgba(241, 196, 15, 0.15);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     padding: 12px 18px;
     margin-bottom: 20px;
     display: flex;
@@ -143,22 +138,22 @@
 }
 
 .flota-alert .info .icon {
-    color: var(--accent-yellow);
+    color: #f1c40f;
     font-size: 24px;
 }
 
 .flota-alert .info .text {
-    color: var(--text-secondary);
+    color: #b0b5bf;
     font-size: 14px;
 }
 
 .flota-alert .info .text strong {
-    color: var(--accent-yellow);
+    color: #f1c40f;
 }
 
 .flota-alert .badge-count {
-    background: var(--accent-yellow);
-    color: var(--bg-primary);
+    background: #f1c40f;
+    color: #121214;
     border-radius: 50px;
     padding: 0 14px;
     font-size: 13px;
@@ -167,14 +162,14 @@
 }
 
 .flota-alert .btn-ver {
-    color: var(--accent-yellow);
+    color: #f1c40f;
     font-size: 13px;
     text-decoration: none;
     background: rgba(241, 196, 15, 0.08);
     padding: 4px 18px;
     border-radius: 50px;
     border: 1px solid rgba(241, 196, 15, 0.12);
-    transition: var(--transition);
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -184,31 +179,29 @@
     background: rgba(241, 196, 15, 0.15);
 }
 
-/* ============================
-   TARJETAS DE TRABAJO
-   ============================ */
+/* Tarjetas */
 .card-trabajo {
-    background: var(--bg-card);
-    border-radius: var(--radius-md);
+    background: #1e1e24;
+    border-radius: 12px;
     padding: 16px 18px;
     margin-bottom: 12px;
-    border-left: 4px solid var(--accent-green);
-    transition: var(--transition);
-    border: 1px solid var(--border-subtle);
+    border-left: 4px solid #2ecc71;
+    transition: all 0.3s ease;
+    border: 1px solid #2e3138;
     border-left-width: 4px;
 }
 
 .card-trabajo:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
 .card-trabajo.pendiente {
-    border-left-color: var(--accent-yellow);
+    border-left-color: #f1c40f;
 }
 
 .card-trabajo.pagado {
-    border-left-color: var(--accent-green);
+    border-left-color: #2ecc71;
 }
 
 .card-trabajo .header {
@@ -227,7 +220,7 @@
     align-items: center;
     gap: 6px;
     flex-wrap: wrap;
-    color: var(--text-primary);
+    color: #f5f5f5;
 }
 
 .card-trabajo .header .nombre .estado-icon {
@@ -236,7 +229,7 @@
 
 .card-trabajo .header .nombre .badge-directa {
     background: rgba(52, 152, 219, 0.12);
-    color: var(--accent-blue);
+    color: #3498db;
     border: 1px solid rgba(52, 152, 219, 0.15);
     font-size: 10px;
     padding: 0 10px;
@@ -249,7 +242,7 @@
 
 .card-trabajo .header .nombre .badge-flota {
     background: rgba(241, 196, 15, 0.10);
-    color: var(--accent-yellow);
+    color: #f1c40f;
     border: 1px solid rgba(241, 196, 15, 0.12);
     font-size: 10px;
     padding: 0 10px;
@@ -261,7 +254,7 @@
 }
 
 .card-trabajo .header .telefono {
-    color: var(--text-secondary);
+    color: #b0b5bf;
     font-size: 13px;
     display: flex;
     align-items: center;
@@ -275,34 +268,34 @@
 .card-trabajo .detalles {
     margin-top: 4px;
     font-size: 13px;
-    color: var(--text-secondary);
+    color: #b0b5bf;
     display: flex;
     flex-wrap: wrap;
     gap: 4px 16px;
 }
 
 .card-trabajo .detalles strong {
-    color: var(--text-secondary);
+    color: #b0b5bf;
 }
 
 .card-trabajo .detalles .producto-tag {
-    background: var(--bg-input);
+    background: #121214;
     padding: 0 10px;
     border-radius: 4px;
     font-size: 12px;
     display: inline-block;
     margin: 2px;
-    color: var(--text-secondary);
+    color: #b0b5bf;
 }
 
 .card-trabajo .detalles .producto-tag .precio {
-    color: var(--accent-yellow);
+    color: #f1c40f;
 }
 
 .card-trabajo .pie {
     margin-top: 10px;
     font-size: 13px;
-    color: var(--text-secondary);
+    color: #b0b5bf;
     display: flex;
     flex-wrap: wrap;
     gap: 4px 16px;
@@ -314,29 +307,28 @@
 }
 
 .card-trabajo .pie .estado-texto.pendiente {
-    color: var(--accent-yellow);
+    color: #f1c40f;
 }
 
 .card-trabajo .pie .estado-texto.pagado {
-    color: var(--accent-green);
+    color: #2ecc71;
 }
 
 .card-trabajo .pie .monto {
-    color: var(--text-primary);
+    color: #f5f5f5;
     font-weight: 600;
 }
 
-/* Botón de acción */
 .card-trabajo .btn-accion {
     margin-top: 12px;
     width: 100%;
     padding: 10px;
-    border-radius: var(--radius-sm);
+    border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
     border: none;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -345,18 +337,18 @@
 }
 
 .card-trabajo .btn-accion.primary {
-    background: var(--accent-green);
-    color: var(--bg-primary);
+    background: #2ecc71;
+    color: #121214;
 }
 
 .card-trabajo .btn-accion.primary:hover {
-    background: var(--accent-green-dark);
+    background: #27ae60;
     transform: translateY(-2px);
 }
 
 .card-trabajo .btn-accion.blue {
-    background: var(--accent-blue);
-    color: var(--bg-primary);
+    background: #3498db;
+    color: #121214;
 }
 
 .card-trabajo .btn-accion.blue:hover {
@@ -365,13 +357,13 @@
 }
 
 .card-trabajo .btn-accion.secondary {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
+    background: #2a2a32;
+    color: #f5f5f5;
+    border: 1px solid #2e3138;
 }
 
 .card-trabajo .btn-accion.secondary:hover {
-    background: var(--bg-hover);
+    background: #2a2a32;
     transform: translateY(-2px);
 }
 
@@ -379,9 +371,7 @@
     font-size: 18px;
 }
 
-/* ============================
-   EMPTY STATE
-   ============================ */
+/* Empty state */
 .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -389,18 +379,18 @@
 
 .empty-state .icon {
     font-size: 56px;
-    color: var(--text-muted);
+    color: #6b7078;
 }
 
 .empty-state h4 {
-    color: var(--text-secondary);
+    color: #b0b5bf;
     font-weight: 400;
     margin-top: 12px;
     font-size: 18px;
 }
 
 .empty-state p {
-    color: var(--text-muted);
+    color: #6b7078;
     font-size: 14px;
 }
 
@@ -414,35 +404,35 @@
 
 .empty-state .acciones .btn {
     padding: 12px 24px;
-    border-radius: var(--radius-sm);
+    border-radius: 8px;
     font-weight: 600;
     text-decoration: none;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: var(--transition);
+    transition: all 0.3s ease;
     border: none;
     cursor: pointer;
 }
 
 .empty-state .acciones .btn-primary {
-    background: var(--accent-green);
-    color: var(--bg-primary);
+    background: #2ecc71;
+    color: #121214;
 }
 
 .empty-state .acciones .btn-primary:hover {
-    background: var(--accent-green-dark);
+    background: #27ae60;
     transform: translateY(-2px);
 }
 
 .empty-state .acciones .btn-secondary {
-    background: var(--bg-card);
-    color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
+    background: #1e1e24;
+    color: #f5f5f5;
+    border: 1px solid #2e3138;
 }
 
 .empty-state .acciones .btn-secondary:hover {
-    background: var(--bg-hover);
+    background: #2a2a32;
     transform: translateY(-2px);
 }
 
@@ -450,52 +440,37 @@
     font-size: 20px;
 }
 
-/* ============================
-   RESPONSIVE
-   ============================ */
+/* Responsive */
 @media (max-width: 768px) {
     .filtros-grid {
         grid-template-columns: repeat(3, 1fr);
         gap: 6px;
     }
-    
     .filtro-card {
         padding: 8px 10px;
     }
-    
     .filtro-card .numero {
         font-size: 22px;
     }
-    
     .filtro-card .etiqueta {
         font-size: 9px;
     }
-    
     .card-trabajo {
         padding: 14px 16px;
     }
-    
     .card-trabajo .header .nombre {
         font-size: 16px;
     }
-    
     .flota-alert {
         padding: 10px 14px;
     }
-    
-    .flota-alert .info .text {
-        font-size: 13px;
-    }
-    
     .empty-state {
         padding: 40px 16px;
     }
-    
     .empty-state .acciones {
         flex-direction: column;
         align-items: center;
     }
-    
     .empty-state .acciones .btn {
         width: 100%;
         justify-content: center;
@@ -507,29 +482,23 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 4px;
     }
-    
     .filtro-card {
         padding: 6px 8px;
     }
-    
     .filtro-card .numero {
         font-size: 18px;
     }
-    
     .filtro-card .etiqueta {
         font-size: 8px;
     }
-    
     .buscador-wrapper input {
         padding: 12px 12px 12px 42px;
         font-size: 14px;
     }
-    
     .card-trabajo .detalles {
         font-size: 12px;
         gap: 2px 10px;
     }
-    
     .card-trabajo .pie {
         font-size: 12px;
     }
@@ -559,13 +528,13 @@
 <!-- ============================
    TÍTULO
    ============================ -->
-<h2 class="text-center mb-4" style="font-weight: 700; font-size: 24px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+<h2 class="text-center mb-4" style="font-weight: 700; font-size: 24px; display: flex; align-items: center; justify-content: center; gap: 10px; color: #f5f5f5;">
     <span class="material-symbols-rounded" style="font-size: 28px;">dashboard</span>
     Lista de Trabajo
 </h2>
 
 <!-- ============================
-   FILTROS (TOTAL, PAGADOS, PENDIENTES)
+   FILTROS
    ============================ -->
 <div class="filtros-grid">
     <a href="?estado=todos" class="filtro-card {% if not estado or estado == 'todos' %}active-total{% endif %}">
@@ -589,7 +558,7 @@
 </div>
 
 <!-- ============================
-   BUSCADOR MODERNO
+   BUSCADOR
    ============================ -->
 <div class="buscador-wrapper">
     <span class="search-icon material-symbols-rounded">search</span>
@@ -597,7 +566,7 @@
 </div>
 
 <!-- ============================
-   TARJETAS DE TRABAJO
+   LISTA DE TRABAJOS
    ============================ -->
 <div id="lista-trabajos">
     {% for r in registros %}
@@ -606,13 +575,12 @@
          data-patente="{{ r.patente|lower if r.patente else '' }}"
          data-flota="{{ r.flota|lower if r.flota else '' }}">
 
-        <!-- Header: Nombre + Teléfono -->
         <div class="header">
             <div class="nombre">
                 {% if r.estado == 'pagado' %}
-                <span class="estado-icon material-symbols-rounded" style="color: var(--accent-green);">check_circle</span>
+                <span class="estado-icon material-symbols-rounded" style="color: #2ecc71;">check_circle</span>
                 {% else %}
-                <span class="estado-icon material-symbols-rounded" style="color: var(--accent-yellow);">pending</span>
+                <span class="estado-icon material-symbols-rounded" style="color: #f1c40f;">pending</span>
                 {% endif %}
                 {{ r.nombre }}
                 
@@ -639,10 +607,8 @@
             {% endif %}
         </div>
 
-        <!-- Detalles según tipo -->
         <div class="detalles">
             {% if not r.marca or r.marca == '' %}
-                <!-- VENTA DIRECTA -->
                 <div style="width: 100%;">
                     <strong>Productos:</strong> 
                     {% if r.detalles_repuestos %}
@@ -660,7 +626,6 @@
                     <strong>Forma de Pago:</strong> {{ r.forma_pago or 'No especificada' }}
                 </div>
             {% else %}
-                <!-- TRABAJO -->
                 <div><strong>Marca:</strong> {{ r.marca or '-' }}</div>
                 <div><strong>Modelo:</strong> {{ r.modelo or '-' }}</div>
                 <div><strong>Patente:</strong> {{ r.patente or '-' }}</div>
@@ -670,13 +635,12 @@
             {% endif %}
         </div>
 
-        <!-- Pie: Fecha, Estado, Monto -->
         <div class="pie">
             <div>
                 <strong>Fecha:</strong> 
                 {{ r.fecha[:10] if r.fecha else '' }}
                 {% if r.hora %}
-                <span style="color: var(--text-muted);">· {{ r.hora[:5] if r.hora else '' }}</span>
+                <span style="color: #6b7078;">· {{ r.hora[:5] if r.hora else '' }}</span>
                 {% endif %}
             </div>
             <div>
@@ -694,12 +658,11 @@
             {% if r.atendido_por %}
             <div>
                 <strong>Atendido por:</strong>
-                <span style="color: var(--text-muted);">{{ r.atendido_por }}</span>
+                <span style="color: #6b7078;">{{ r.atendido_por }}</span>
             </div>
             {% endif %}
         </div>
 
-        <!-- Botón de acción -->
         <div>
             {% if r.estado == 'pendiente' %}
                 {% if not r.marca or r.marca == '' %}
@@ -746,32 +709,20 @@
 {% endif %}
 
 <!-- ============================
-   SCRIPT PARA BUSCADOR Y FILTROS
+   SCRIPT PARA BUSCADOR
    ============================ -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const buscador = document.getElementById('buscador');
-    
     if (buscador) {
         buscador.addEventListener('input', function() {
             const texto = this.value.toLowerCase().trim();
-            const items = document.querySelectorAll('.registro-item');
-            let visibleCount = 0;
-            
-            items.forEach(function(card) {
+            document.querySelectorAll('.registro-item').forEach(function(card) {
                 const nombre = (card.dataset.nombre || '').toLowerCase();
                 const patente = (card.dataset.patente || '').toLowerCase();
                 const flota = (card.dataset.flota || '').toLowerCase();
-                const textoCompleto = card.textContent.toLowerCase();
-                
-                const coincide = texto === '' || 
-                                 nombre.includes(texto) || 
-                                 patente.includes(texto) || 
-                                 flota.includes(texto) ||
-                                 textoCompleto.includes(texto);
-                
+                const coincide = texto === '' || nombre.includes(texto) || patente.includes(texto) || flota.includes(texto) || card.textContent.toLowerCase().includes(texto);
                 card.style.display = coincide ? '' : 'none';
-                if (coincide) visibleCount++;
             });
         });
     }
