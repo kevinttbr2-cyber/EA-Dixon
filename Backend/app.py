@@ -1370,7 +1370,132 @@ def obtener_gastos_balance():
     except Exception as e:
         print(f"❌ Error en obtener_gastos_balance: {e}")
         return jsonify([])
+# ============================================
+# RUTAS PARA CATEGORÍAS DE REPUESTOS
+# ============================================
 
+# Obtener todas las categorías
+@app.route('/api/categorias_repuestos', methods=['GET'])
+def obtener_categorias_repuestos():
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT c.*, 
+                   (SELECT COUNT(*) FROM subcategorias_repuestos WHERE categoria_id = c.id) as subcategorias_count
+            FROM categorias_repuestos c 
+            ORDER BY c.nombre
+        """)
+        categorias = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(categorias)
+    except Exception as e:
+        print(f"❌ Error en obtener_categorias_repuestos: {e}")
+        return jsonify([])
+
+# Obtener subcategorías por categoría
+@app.route('/api/subcategorias_repuestos/<int:categoria_id>', methods=['GET'])
+def obtener_subcategorias_repuestos(categoria_id):
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT * FROM subcategorias_repuestos 
+            WHERE categoria_id = %s 
+            ORDER BY nombre
+        """, (categoria_id,))
+        subcategorias = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(subcategorias)
+    except Exception as e:
+        print(f"❌ Error en obtener_subcategorias_repuestos: {e}")
+        return jsonify([])
+
+# Obtener todas las subcategorías
+@app.route('/api/subcategorias_repuestos', methods=['GET'])
+def obtener_todas_subcategorias_repuestos():
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT s.*, c.nombre as categoria_nombre 
+            FROM subcategorias_repuestos s
+            JOIN categorias_repuestos c ON c.id = s.categoria_id
+            ORDER BY c.nombre, s.nombre
+        """)
+        subcategorias = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(subcategorias)
+    except Exception as e:
+        print(f"❌ Error en obtener_todas_subcategorias_repuestos: {e}")
+        return jsonify([])
+
+# Asignar categoría a un repuesto
+@app.route('/api/repuestos/<int:id_repuesto>/categoria', methods=['PUT'])
+def asignar_categoria_repuesto(id_repuesto):
+    try:
+        data = request.json
+        subcategoria_id = data.get('subcategoria_id')
+        
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        if subcategoria_id:
+            # Obtener nombre de la categoría
+            cur.execute("""
+                SELECT c.nombre 
+                FROM subcategorias_repuestos s
+                JOIN categorias_repuestos c ON c.id = s.categoria_id
+                WHERE s.id = %s
+            """, (subcategoria_id,))
+            result = cur.fetchone()
+            categoria_nombre = result[0] if result else None
+            
+            cur.execute("""
+                UPDATE repuestos 
+                SET subcategoria_id = %s, categoria_nombre = %s,
+                    updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                WHERE id = %s
+            """, (subcategoria_id, categoria_nombre, id_repuesto))
+        else:
+            cur.execute("""
+                UPDATE repuestos 
+                SET subcategoria_id = NULL, categoria_nombre = NULL,
+                    updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                WHERE id = %s
+            """, (id_repuesto,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"❌ Error en asignar_categoria_repuesto: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# Obtener repuestos por categoría
+@app.route('/api/repuestos/categoria/<categoria_nombre>', methods=['GET'])
+def obtener_repuestos_por_categoria(categoria_nombre):
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT * FROM repuestos 
+            WHERE categoria_nombre = %s 
+            ORDER BY nombre
+        """, (categoria_nombre,))
+        repuestos = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(repuestos)
+    except Exception as e:
+        print(f"❌ Error en obtener_repuestos_por_categoria: {e}")
+        return jsonify([])
 
 # ============================
 # CREAR ADMIN AL INICIAR
