@@ -1,103 +1,117 @@
 {% extends "base.html" %}
+
+{% block title %}Estado - Dixon Automotriz{% endblock %}
+
 {% block content %}
 
 <!-- ============================
-     ALERTA DE FLOTAS PENDIENTES (ARRIBA DE TODO)
-     ============================ -->
+   ALERTA DE FLOTAS PENDIENTES
+   ============================ -->
 {% if flotas_pendientes_count > 0 %}
-<div style="
-    background: rgba(255,200,0,0.08);
-    border: 1px solid rgba(255,200,0,0.20);
-    border-radius: 10px;
-    padding: 10px 16px;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-">
-    <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 20px;">🚛</span>
-        <span style="color: #ffcc00; font-size: 14px; font-weight: 500;">
-            <strong>{{ flotas_pendientes_count }}</strong> flota{% if flotas_pendientes_count > 1 %}s{% endif %} pendiente{% if flotas_pendientes_count > 1 %}s{% endif %} de cobro
+<div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-2" 
+     style="background: rgba(241, 196, 15, 0.08); border: 1px solid rgba(241, 196, 15, 0.2); border-radius: var(--radius-md); padding: 12px 18px;">
+    <div class="d-flex align-items-center gap-3">
+        <span class="material-symbols-rounded" style="font-size: 24px; color: var(--accent-yellow);">pending_actions</span>
+        <span style="color: var(--text-primary); font-size: 14px;">
+            <strong style="color: var(--accent-yellow);">{{ flotas_pendientes_count }}</strong> 
+            flota{% if flotas_pendientes_count > 1 %}s{% endif %} pendiente{% if flotas_pendientes_count > 1 %}s{% endif %} de cobro
         </span>
-        <span style="
-            background: #ffcc00;
-            color: #000;
-            border-radius: 20px;
-            padding: 0px 12px;
-            font-size: 13px;
-            font-weight: 700;
-        ">{{ flotas_pendientes_count }}</span>
+        <span class="badge" style="background: var(--accent-yellow); color: var(--bg-primary); font-weight: 700; padding: 2px 12px;">
+            {{ flotas_pendientes_count }}
+        </span>
     </div>
-    <a href="/flotas_pendientes" style="
-        color: #ffcc00;
-        font-size: 13px;
-        text-decoration: none;
-        background: rgba(255,200,0,0.10);
-        padding: 4px 14px;
-        border-radius: 20px;
-        border: 1px solid rgba(255,200,0,0.15);
-        transition: all 0.3s ease;
-    ">
-        Ver todas <i class="fa-solid fa-arrow-right"></i>
+    <a href="/flotas_pendientes" class="btn btn-sm" 
+       style="background: rgba(241, 196, 15, 0.1); color: var(--accent-yellow); border: 1px solid rgba(241, 196, 15, 0.2); border-radius: 50px; padding: 4px 16px; transition: var(--transition);">
+        Ver todas
+        <span class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">arrow_forward</span>
     </a>
 </div>
 {% endif %}
 
 <!-- ============================
-     TÍTULO
-     ============================ -->
-<h2 style="color:#00ff66; font-weight:700; text-align:center; margin-bottom:20px;">📋 Lista de Trabajo</h2>
+   TÍTULO
+   ============================ -->
+<h2 class="text-center mb-4" style="font-weight: 700; font-size: 24px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+    <span class="material-symbols-rounded" style="font-size: 28px;">dashboard</span>
+    Lista de Trabajo
+</h2>
 
 <!-- ============================
-     FILTROS
-     ============================ -->
+   FILTROS
+   ============================ -->
 <div class="d-flex justify-content-center gap-2 flex-wrap mb-4">
-    <a href="/estado?estado=todos" class="filtro-card active-total">
+    <a href="/estado?estado=todos" class="filtro-card active-total" style="text-decoration: none;">
         <div class="etiqueta">Total</div>
         <div class="numero">{{ (pendientes_mes or 0) + (pagados_mes or 0) }}</div>
     </a>
-    <a href="/estado?estado=pagado" class="filtro-card active-pagados">
-        <div class="etiqueta"><i class="fa-regular fa-circle-check"></i> Pagados</div>
+    <a href="/estado?estado=pagado" class="filtro-card active-pagados" style="text-decoration: none;">
+        <div class="etiqueta">
+            <span class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">check_circle</span>
+            Pagados
+        </div>
         <div class="numero">{{ pagados_mes or 0 }}</div>
     </a>
-    <a href="/estado?estado=pendiente" class="filtro-card active-pendientes">
-        <div class="etiqueta"><i class="fa-regular fa-clock"></i> Pendientes</div>
+    <a href="/estado?estado=pendiente" class="filtro-card active-pendientes" style="text-decoration: none;">
+        <div class="etiqueta">
+            <span class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">pending</span>
+            Pendientes
+        </div>
         <div class="numero">{{ pendientes_mes or 0 }}</div>
     </a>
 </div>
 
 <!-- ============================
-     BUSCADOR
-     ============================ -->
-<input type="text" id="buscador" class="form-control mb-3" placeholder="Buscar...">
+   BUSCADOR
+   ============================ -->
+<div class="input-group mb-4" style="background: var(--bg-input); border-radius: var(--radius-sm); border: 2px solid transparent; transition: var(--transition);">
+    <span class="input-group-text" style="background: transparent; border: none; color: var(--text-muted); padding-right: 8px;">
+        <span class="material-symbols-rounded">search</span>
+    </span>
+    <input type="text" id="buscador" class="form-control" placeholder="Buscar por cliente, patente, flota..." 
+           style="background: transparent; border: none; box-shadow: none; padding-left: 4px;">
+</div>
 
 <!-- ============================
-     TARJETAS DE TRABAJO
-     ============================ -->
+   TARJETAS DE TRABAJO
+   ============================ -->
 {% for r in registros %}
-<div class="card-android" style="border-left: 4px solid {% if r.estado == 'pagado' %}#00ff66{% else %}#ff6b6b{% endif %};">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;">
-        <div style="font-size:20px; font-weight:700; color:#00ff66;">
+<div class="card-android registro-item" 
+     data-nombre="{{ r.nombre|lower }}" 
+     data-patente="{{ r.patente|lower if r.patente else '' }}"
+     data-flota="{{ r.flota|lower if r.flota else '' }}"
+     style="border-left: 4px solid {% if r.estado == 'pagado' %}var(--accent-green){% else %}var(--accent-yellow){% endif %};">
+    
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-1">
+        <div style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            {% if r.estado == 'pagado' %}
+            <span class="material-symbols-rounded" style="font-size: 18px; color: var(--accent-green);">check_circle</span>
+            {% else %}
+            <span class="material-symbols-rounded" style="font-size: 18px; color: var(--accent-yellow);">pending</span>
+            {% endif %}
             {{ r.nombre }}
-            <!-- ✅ INDICADOR DE VENTA DIRECTA (por marca vacía) -->
+            
+            <!-- Badge: Venta Directa -->
             {% if not r.marca or r.marca == '' %}
-            <span style="font-size:12px; background: rgba(79,195,247,0.15); color: #4fc3f7; padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(79,195,247,0.20); margin-left: 6px;">
-                ⚡ Directa
+            <span class="badge" style="background: rgba(52, 152, 219, 0.15); color: var(--accent-blue); border: 1px solid rgba(52, 152, 219, 0.2); font-size: 10px; padding: 2px 10px;">
+                <span class="material-symbols-rounded" style="font-size: 12px; vertical-align: middle;">bolt</span>
+                Directa
             </span>
             {% endif %}
-            <!-- ✅ INDICADOR DE FLOTA -->
+            
+            <!-- Badge: Flota -->
             {% if r.flota and r.flota != '' %}
-            <span style="font-size:11px; background: rgba(255,200,0,0.12); color: #ffcc00; padding: 1px 8px; border-radius: 12px; border: 1px solid rgba(255,200,0,0.15); margin-left: 4px;">
-                🚛 {{ r.flota }}
+            <span class="badge" style="background: rgba(241, 196, 15, 0.12); color: var(--accent-yellow); border: 1px solid rgba(241, 196, 15, 0.15); font-size: 10px; padding: 2px 10px;">
+                <span class="material-symbols-rounded" style="font-size: 12px; vertical-align: middle;">directions_car</span>
+                {{ r.flota }}
             </span>
             {% endif %}
         </div>
+        
         {% if r.telefono %}
-        <div style="color:#90e0a0; font-size:14px;">
-            📞 {{ r.telefono }}
+        <div style="color: var(--text-secondary); font-size: 13px; display: flex; align-items: center; gap: 4px;">
+            <span class="material-symbols-rounded" style="font-size: 16px;">phone</span>
+            {{ r.telefono }}
         </div>
         {% endif %}
     </div>
@@ -106,62 +120,144 @@
          DATOS SEGÚN TIPO DE VENTA
          ============================ -->
     {% if not r.marca or r.marca == '' %}
-    <!-- ✅ VENTA DIRECTA: Productos + Forma de Pago -->
-    <div>
-        <strong style="color:#90e0a0;">📦 Productos:</strong> 
-        {% if r.detalles_repuestos %}
-            {% for item in r.detalles_repuestos %}
-                <span style="background: rgba(0,255,102,0.06); padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 12px; display: inline-block;">
+    <!-- VENTA DIRECTA -->
+    <div class="mt-1" style="font-size: 13px; color: var(--text-secondary);">
+        <div>
+            <strong style="color: var(--text-secondary);">Productos:</strong> 
+            {% if r.detalles_repuestos %}
+                {% for item in r.detalles_repuestos %}
+                <span style="background: var(--bg-hover); padding: 2px 10px; border-radius: 4px; margin: 2px; display: inline-block; font-size: 12px;">
                     {{ item.nombre }}
-                    <span style="color: #ffcc00;">(${{ "{:,.0f}".format(item.costo_unitario|default(0)) }})</span>
+                    <span style="color: var(--accent-yellow);">(${{ "{:,.0f}".format(item.costo_unitario|default(0)) }})</span>
                 </span>
-            {% endfor %}
-        {% else %}
-            {{ r.producto_vendido or 'Sin producto' }}
-        {% endif %}
+                {% endfor %}
+            {% else %}
+                {{ r.producto_vendido or 'Sin producto' }}
+            {% endif %}
+        </div>
+        <div class="mt-1">
+            <strong style="color: var(--text-secondary);">Forma de Pago:</strong> 
+            {{ r.forma_pago or 'No especificada' }}
+        </div>
     </div>
-    <div><strong style="color:#90e0a0;">💳 Forma de Pago:</strong> {{ r.forma_pago or 'No especificada' }}</div>
     
     {% else %}
-    <!-- ✅ TRABAJO: Datos del vehículo -->
-    <div><strong style="color:#90e0a0;">🚗 Marca:</strong> {{ r.marca or '-' }}</div>
-    <div><strong style="color:#90e0a0;">🚙 Modelo:</strong> {{ r.modelo or '-' }}</div>
-    <div><strong style="color:#90e0a0;">🔢 Patente:</strong> {{ r.patente or '-' }}</div>
+    <!-- TRABAJO: Datos del vehículo -->
+    <div class="mt-1" style="font-size: 13px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 8px 16px;">
+        <div><strong style="color: var(--text-secondary);">Marca:</strong> {{ r.marca or '-' }}</div>
+        <div><strong style="color: var(--text-secondary);">Modelo:</strong> {{ r.modelo or '-' }}</div>
+        <div><strong style="color: var(--text-secondary);">Patente:</strong> {{ r.patente or '-' }}</div>
+        {% if r.anio %}
+        <div><strong style="color: var(--text-secondary);">Año:</strong> {{ r.anio }}</div>
+        {% endif %}
+    </div>
     {% endif %}
     
     <!-- ============================
-         DATOS COMUNES
+         DATOS COMUNES Y ESTADO
          ============================ -->
-    <div><strong style="color:#90e0a0;">📅 Fecha:</strong> {{ r.fecha[:10] if r.fecha else '' }}</div>
-    <div><strong style="color:#90e0a0;">Estado:</strong>
-        {% if r.estado == 'pendiente' %}
-        <span style="color:#ff6b6b; font-weight:700;">PENDIENTE</span>
-        {% else %}
-        <span style="color:#00ff66; font-weight:700;">PAGADO</span>
+    <div class="mt-1" style="font-size: 13px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;">
+        <div>
+            <strong style="color: var(--text-secondary);">Fecha:</strong> 
+            {{ r.fecha[:10] if r.fecha else '' }}
+            {% if r.hora %}
+            <span style="color: var(--text-muted);">· {{ r.hora[:5] if r.hora else '' }}</span>
+            {% endif %}
+        </div>
+        <div>
+            <strong style="color: var(--text-secondary);">Estado:</strong>
+            {% if r.estado == 'pendiente' %}
+            <span style="color: var(--accent-yellow); font-weight: 600;">PENDIENTE</span>
+            {% else %}
+            <span style="color: var(--accent-green); font-weight: 600;">PAGADO</span>
+            {% endif %}
+        </div>
+        {% if r.monto %}
+        <div>
+            <strong style="color: var(--text-secondary);">Monto:</strong>
+            <span style="color: var(--text-primary); font-weight: 600;">${{ "{:,.0f}".format(r.monto) }}</span>
+        </div>
+        {% endif %}
+        {% if r.atendido_por %}
+        <div>
+            <strong style="color: var(--text-secondary);">Atendido por:</strong>
+            <span style="color: var(--text-muted);">{{ r.atendido_por }}</span>
+        </div>
         {% endif %}
     </div>
     
     <!-- ============================
          BOTÓN DE ACCIÓN
          ============================ -->
-    {% if r.estado == 'pendiente' %}
-        {% if not r.marca or r.marca == '' %}
-        <a href="/venta_rapida" class="btn btn-primary w-100 mt-2" style="background: #4fc3f7 !important; color: #000 !important;">
-            ⚡ Completar Venta
-        </a>
+    <div class="mt-3">
+        {% if r.estado == 'pendiente' %}
+            {% if not r.marca or r.marca == '' %}
+            <a href="/venta_rapida" class="btn btn-primary btn-sm w-100" style="background: var(--accent-blue) !important;">
+                <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">bolt</span>
+                Completar Venta
+            </a>
+            {% else %}
+            <a href="/pagar/{{ r.id }}" class="btn btn-primary btn-sm w-100">
+                <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">payments</span>
+                Pagar
+            </a>
+            {% endif %}
         {% else %}
-        <a href="/pagar/{{ r.id }}" class="btn btn-primary w-100 mt-2">💰 Pagar</a>
+            <a href="/pago_exitoso/{{ r.id }}" class="btn btn-secondary btn-sm w-100" style="background: var(--bg-hover); border: 1px solid var(--border-subtle);">
+                <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">receipt_long</span>
+                Ver Comprobante
+            </a>
         {% endif %}
-    {% endif %}
+    </div>
 </div>
 {% endfor %}
 
+<!-- ============================
+   MENSAJE CUANDO NO HAY REGISTROS
+   ============================ -->
+{% if not registros %}
+<div class="text-center py-5">
+    <span class="material-symbols-rounded" style="font-size: 48px; color: var(--text-muted);">inbox</span>
+    <h4 class="text-muted mt-2" style="font-weight: 400;">No hay registros</h4>
+    <p style="color: var(--text-muted); font-size: 14px;">
+        Comienza agregando un nuevo cliente o realizando una venta rápida.
+    </p>
+    <div class="d-flex justify-content-center gap-3 mt-3">
+        <a href="/agregar_cliente" class="btn btn-primary">
+            <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">person_add</span>
+            Agregar Cliente
+        </a>
+        <a href="/venta_rapida" class="btn btn-secondary">
+            <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">bolt</span>
+            Venta Rápida
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================
+   SCRIPT PARA BUSCADOR
+   ============================ -->
 <script>
-    document.getElementById('buscador').addEventListener('input', function() {
-        const texto = this.value.toLowerCase();
-        document.querySelectorAll('.card-android').forEach(card => {
-            card.style.display = card.innerText.toLowerCase().includes(texto) ? 'block' : 'none';
-        });
+document.getElementById('buscador').addEventListener('input', function() {
+    const texto = this.value.toLowerCase().trim();
+    const items = document.querySelectorAll('.registro-item');
+    
+    items.forEach(function(card) {
+        const nombre = card.dataset.nombre || '';
+        const patente = card.dataset.patente || '';
+        const flota = card.dataset.flota || '';
+        const textoCompleto = card.textContent.toLowerCase();
+        
+        const coincide = texto === '' || 
+                         nombre.includes(texto) || 
+                         patente.includes(texto) || 
+                         flota.includes(texto) ||
+                         textoCompleto.includes(texto);
+        
+        card.style.display = coincide ? '' : 'none';
     });
+});
 </script>
+
 {% endblock %}
