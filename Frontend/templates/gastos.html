@@ -235,6 +235,33 @@
     .modal-gasto .modal-header .close-btn:hover {
         transform: scale(1.1);
     }
+
+    @media (max-width: 768px) {
+        .tabs-gastos .tab-btn {
+            font-size: 11px;
+            padding: 8px 6px;
+        }
+        .tabs-gastos .tab-btn .material-symbols-rounded {
+            font-size: 16px;
+        }
+        .modal-gasto .modal-content {
+            padding: 16px;
+        }
+        .filtros-gastos {
+            gap: 4px;
+        }
+        .filtro-gasto {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+        .filtro-gasto .badge {
+            font-size: 9px;
+            padding: 0 6px;
+        }
+        .card {
+            padding: 10px 12px !important;
+        }
+    }
 </style>
 
 <div class="base-container">
@@ -245,7 +272,7 @@
             <span class="material-symbols-rounded" style="font-size: 28px; color: var(--accent-yellow);">payments</span>
             Gestión de Gastos
         </h2>
-        <button onclick="abrirModalGasto()" class="btn btn-primary" id="btnNuevoGasto">
+        <button onclick="abrirModalGasto()" class="btn btn-primary" id="btnNuevoGasto" style="padding: 8px 18px; font-size: 14px;">
             <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">add</span>
             Nuevo Gasto
         </button>
@@ -273,22 +300,22 @@
     <div id="tabGastos" class="tab-content active">
 
         <!-- RESUMEN -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px;">
-            <div class="card" style="border-left: 3px solid var(--accent-blue); padding: 12px 16px;">
-                <div style="font-size: 11px; color: var(--text-muted);">Total Gastos</div>
-                <div style="font-size: 22px; font-weight: 700; color: var(--text-primary);">${{ total_gastos|default(0)|int }}</div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;">
+            <div class="card" style="border-left: 3px solid var(--accent-blue); padding: 10px 12px;">
+                <div style="font-size: 10px; color: var(--text-muted);">Total Gastos</div>
+                <div style="font-size: 18px; font-weight: 700; color: var(--text-primary);">${{ total_gastos|default(0)|int }}</div>
             </div>
-            <div class="card" style="border-left: 3px solid var(--accent-green); padding: 12px 16px;">
-                <div style="font-size: 11px; color: var(--text-muted);">💵 Efectivo</div>
-                <div style="font-size: 22px; font-weight: 700; color: var(--accent-green);">${{ gastos_efectivo|default(0)|int }}</div>
+            <div class="card" style="border-left: 3px solid var(--accent-green); padding: 10px 12px;">
+                <div style="font-size: 10px; color: var(--text-muted);">💵 Efectivo</div>
+                <div style="font-size: 18px; font-weight: 700; color: var(--accent-green);">${{ gastos_efectivo|default(0)|int }}</div>
             </div>
-            <div class="card" style="border-left: 3px solid var(--accent-yellow); padding: 12px 16px;">
-                <div style="font-size: 11px; color: var(--text-muted);">🏦 Transferencia</div>
-                <div style="font-size: 22px; font-weight: 700; color: var(--accent-yellow);">${{ gastos_transferencia|default(0)|int }}</div>
+            <div class="card" style="border-left: 3px solid var(--accent-yellow); padding: 10px 12px;">
+                <div style="font-size: 10px; color: var(--text-muted);">🏦 Transferencia</div>
+                <div style="font-size: 18px; font-weight: 700; color: var(--accent-yellow);">${{ gastos_transferencia|default(0)|int }}</div>
             </div>
-            <div class="card" style="border-left: 3px solid var(--accent-red); padding: 12px 16px;">
-                <div style="font-size: 11px; color: var(--text-muted);">👨‍🔧 Sueldos</div>
-                <div style="font-size: 22px; font-weight: 700; color: var(--accent-red);">${{ gastos_sueldos|default(0)|int }}</div>
+            <div class="card" style="border-left: 3px solid var(--accent-red); padding: 10px 12px;">
+                <div style="font-size: 10px; color: var(--text-muted);">👨‍🔧 Sueldos</div>
+                <div style="font-size: 18px; font-weight: 700; color: var(--accent-red);">${{ gastos_sueldos|default(0)|int }}</div>
             </div>
         </div>
 
@@ -315,10 +342,10 @@
         <!-- LISTA DE GASTOS -->
         <div id="listaGastos">
             {% for g in gastos %}
-            <div class="card" data-metodo="{{ g.metodo_pago }}" style="padding: 12px 16px; margin-bottom: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 6px;">
+            <div class="card" data-metodo="{{ g.metodo_pago }}" style="padding: 10px 12px; margin-bottom: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 4px;">
                     <div>
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                             <span class="badge" style="
                                 background: {% if g.categoria == 'Sueldos' %}rgba(231,76,60,0.15); color:#e74c3c;
                                 {% elif g.categoria == 'Arriendo' %}rgba(52,152,219,0.15); color:#3498db;
@@ -327,39 +354,39 @@
                                 {% elif g.categoria == 'Alimentación' %}rgba(241,196,15,0.15); color:#f1c40f;
                                 {% elif g.categoria == 'Herramientas' %}rgba(155,89,182,0.15); color:#9b59b6;
                                 {% else %}rgba(255,255,255,0.05); color:#b0b5bf;{% endif %}
-                                padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 600;
+                                padding: 2px 8px; border-radius: 20px; font-size: 9px; font-weight: 600;
                             ">
                                 {{ g.categoria }}
                             </span>
-                            <span style="font-size: 15px; font-weight: 600; color: var(--text-primary);">${{ g.monto|int }}</span>
+                            <span style="font-size: 14px; font-weight: 600; color: var(--text-primary);">${{ g.monto|int }}</span>
                             {% if g.proveedor %}
-                            <span style="font-size: 12px; color: var(--text-muted);">· {{ g.proveedor }}</span>
+                            <span style="font-size: 10px; color: var(--text-muted);">· {{ g.proveedor }}</span>
                             {% endif %}
                         </div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 1px;">
                             {{ g.descripcion or 'Sin descripción' }}
                         </div>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 12px;">
+                        <div style="font-size: 10px;">
                             {% if g.metodo_pago == 'efectivo' %}
                             <span style="color: var(--accent-green);">💵 Efectivo</span>
                             {% else %}
                             <span style="color: var(--accent-blue);">🏦 Transferencia</span>
                             {% endif %}
                         </div>
-                        <div style="font-size: 10px; color: var(--text-muted);">
+                        <div style="font-size: 9px; color: var(--text-muted);">
                             {{ g.fecha }} {{ g.hora[:5] if g.hora else '' }}
                         </div>
-                        <div style="font-size: 10px; color: var(--text-muted);">
+                        <div style="font-size: 9px; color: var(--text-muted);">
                             por: {{ g.registrado_por or 'Sistema' }}
                         </div>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
-                <span class="material-symbols-rounded" style="font-size: 48px; color: var(--text-muted); display: block; margin-bottom: 8px;">receipt_long</span>
+            <div style="text-align: center; color: var(--text-muted); padding: 30px 0;">
+                <span class="material-symbols-rounded" style="font-size: 40px; color: var(--text-muted); display: block; margin-bottom: 6px;">receipt_long</span>
                 <p style="font-size: 14px;">No hay gastos registrados hoy</p>
             </div>
             {% endfor %}
@@ -371,10 +398,10 @@
          ============================================ -->
     <div id="tabProveedores" class="tab-content">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
-            <h4 style="color: var(--text-secondary); margin: 0;">Lista de Proveedores</h4>
-            <button onclick="abrirModalProveedor()" class="btn btn-sm btn-primary">
+            <h4 style="color: var(--text-secondary); margin: 0; font-size: 15px;">Lista de Proveedores</h4>
+            <button onclick="abrirModalProveedor()" class="btn btn-sm btn-primary" style="padding: 4px 12px; font-size: 12px;">
                 <span class="material-symbols-rounded" style="font-size: 16px;">add</span>
-                Nuevo Proveedor
+                Nuevo
             </button>
         </div>
         <div id="listaProveedores">
@@ -390,68 +417,68 @@
          ============================================ -->
     <div id="tabSueldos" class="tab-content">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
-            <h4 style="color: var(--text-secondary); margin: 0;">Planilla de Sueldos</h4>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button onclick="agregarEmpleadoPlanilla()" class="btn btn-sm btn-secondary">
-                    <span class="material-symbols-rounded" style="font-size: 16px;">person_add</span>
-                    Agregar Empleado
+            <h4 style="color: var(--text-secondary); margin: 0; font-size: 15px;">Planilla de Sueldos</h4>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button onclick="agregarEmpleadoPlanilla()" class="btn btn-sm btn-secondary" style="padding: 4px 10px; font-size: 11px;">
+                    <span class="material-symbols-rounded" style="font-size: 14px;">person_add</span>
+                    Agregar
                 </button>
-                <button onclick="guardarPlanilla()" class="btn btn-sm btn-primary">
-                    <span class="material-symbols-rounded" style="font-size: 16px;">save</span>
-                    Guardar Planilla
+                <button onclick="guardarPlanilla()" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 11px;">
+                    <span class="material-symbols-rounded" style="font-size: 14px;">save</span>
+                    Guardar
                 </button>
             </div>
         </div>
         <div style="overflow-x: auto;">
-            <table class="tabla-sueldos" style="width:100%;border-collapse:collapse;">
+            <table class="tabla-sueldos" style="width:100%;border-collapse:collapse;font-size:12px;">
                 <thead>
                     <tr>
-                        <th style="text-align:left;">Empleado</th>
-                        <th style="text-align:right;">Sueldo Base</th>
-                        <th style="text-align:right;">Comisión</th>
-                        <th style="text-align:right;">H. Extras</th>
-                        <th style="text-align:right;">Bonos</th>
-                        <th style="text-align:right;">Descuentos</th>
-                        <th style="text-align:right;">Neto</th>
+                        <th style="text-align:left;padding:4px 6px;">Empleado</th>
+                        <th style="text-align:right;padding:4px 6px;">Base</th>
+                        <th style="text-align:right;padding:4px 6px;">Comisión</th>
+                        <th style="text-align:right;padding:4px 6px;">Extras</th>
+                        <th style="text-align:right;padding:4px 6px;">Bonos</th>
+                        <th style="text-align:right;padding:4px 6px;">Descuentos</th>
+                        <th style="text-align:right;padding:4px 6px;">Neto</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoPlanilla"></tbody>
                 <tfoot>
                     <tr>
-                        <td style="font-weight:700;">TOTAL</td>
-                        <td id="total_base" style="text-align:right;font-weight:700;">$0</td>
-                        <td id="total_comision" style="text-align:right;font-weight:700;">$0</td>
-                        <td id="total_extras" style="text-align:right;font-weight:700;">$0</td>
-                        <td id="total_bonos" style="text-align:right;font-weight:700;">$0</td>
-                        <td id="total_descuentos" style="text-align:right;font-weight:700;">$0</td>
-                        <td id="total_neto" style="text-align:right;font-weight:700;color:var(--accent-green);">$0</td>
+                        <td style="font-weight:700;padding:4px 6px;">TOTAL</td>
+                        <td id="total_base" style="text-align:right;font-weight:700;padding:4px 6px;">$0</td>
+                        <td id="total_comision" style="text-align:right;font-weight:700;padding:4px 6px;">$0</td>
+                        <td id="total_extras" style="text-align:right;font-weight:700;padding:4px 6px;">$0</td>
+                        <td id="total_bonos" style="text-align:right;font-weight:700;padding:4px 6px;">$0</td>
+                        <td id="total_descuentos" style="text-align:right;font-weight:700;padding:4px 6px;">$0</td>
+                        <td id="total_neto" style="text-align:right;font-weight:700;padding:4px 6px;color:var(--accent-green);">$0</td>
                     </tr>
                 </tfoot>
             </table>
         </div>
-        <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-            <label style="color:var(--text-secondary);font-size:13px;">
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <label style="color:var(--text-secondary);font-size:12px;">
                 Mes: 
-                <select id="mes_planilla" style="background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:4px 8px;">
+                <select id="mes_planilla" style="background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:2px 6px;font-size:12px;">
                     {% for m in range(1,13) %}
                     <option value="{{ m }}" {% if m == mes_actual %}selected{% endif %}>{{ m }}/{{ anio_actual }}</option>
                     {% endfor %}
                 </select>
             </label>
-            <label style="color:var(--text-secondary);font-size:13px;">
+            <label style="color:var(--text-secondary);font-size:12px;">
                 Año: 
-                <select id="anio_planilla" style="background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:4px 8px;">
+                <select id="anio_planilla" style="background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:2px 6px;font-size:12px;">
                     {% for a in range(anio_actual-2, anio_actual+1) %}
                     <option value="{{ a }}" {% if a == anio_actual %}selected{% endif %}>{{ a }}</option>
                     {% endfor %}
                 </select>
             </label>
-            <button onclick="cargarPlanilla()" class="btn btn-sm btn-secondary">
-                <span class="material-symbols-rounded" style="font-size:16px;">refresh</span>
+            <button onclick="cargarPlanilla()" class="btn btn-sm btn-secondary" style="padding: 2px 10px; font-size: 11px;">
+                <span class="material-symbols-rounded" style="font-size: 14px;">refresh</span>
                 Cargar
             </button>
             <span style="color:var(--text-muted);font-size:12px;margin-left:auto;">
-                Total a pagar: <span id="totalPlanilla" style="font-weight:700;color:var(--accent-green);font-size:18px;">$0</span>
+                Total: <span id="totalPlanilla" style="font-weight:700;color:var(--accent-green);font-size:16px;">$0</span>
             </span>
         </div>
     </div>
@@ -474,7 +501,7 @@
         
         <form id="formNuevoGasto">
             <!-- BOTÓN ESCANEAR -->
-            <button type="button" id="btnEscanear" class="btn btn-primary btn-escanear" style="width:100%;margin-bottom:10px;">
+            <button type="button" id="btnEscanear" class="btn btn-primary btn-escanear" style="width:100%;margin-bottom:10px;padding:10px;">
                 <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">scan</span>
                 📸 Escanear Factura / Boleta
             </button>
@@ -490,14 +517,14 @@
             </div>
             
             <!-- Selector de modo de escaneo -->
-            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <button type="button" id="scan_auto" class="btn btn-sm btn-primary scan-mode-btn active" onclick="setScanMode('auto')" style="flex:1;">
-                    🔄 Automático
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                <button type="button" id="scan_auto" class="btn btn-sm btn-primary scan-mode-btn active" onclick="setScanMode('auto')" style="flex:1;padding:4px 6px;font-size:11px;">
+                    🔄 Auto
                 </button>
-                <button type="button" id="scan_factura" class="btn btn-sm btn-secondary scan-mode-btn" onclick="setScanMode('factura')" style="flex:1;">
+                <button type="button" id="scan_factura" class="btn btn-sm btn-secondary scan-mode-btn" onclick="setScanMode('factura')" style="flex:1;padding:4px 6px;font-size:11px;">
                     📄 Factura
                 </button>
-                <button type="button" id="scan_producto" class="btn btn-sm btn-secondary scan-mode-btn" onclick="setScanMode('producto')" style="flex:1;">
+                <button type="button" id="scan_producto" class="btn btn-sm btn-secondary scan-mode-btn" onclick="setScanMode('producto')" style="flex:1;padding:4px 6px;font-size:11px;">
                     📦 Producto
                 </button>
             </div>
@@ -555,11 +582,11 @@
 
             <!-- Botones -->
             <div style="display:flex;gap:10px;margin-top:12px;">
-                <button type="submit" class="btn btn-primary" style="flex:1;">
+                <button type="submit" class="btn btn-primary" style="flex:1;padding:10px;">
                     <span class="material-symbols-rounded" style="font-size:16px;vertical-align:middle;">save</span>
                     Registrar
                 </button>
-                <button type="button" class="btn btn-secondary" onclick="cerrarModalGasto()">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalGasto()" style="padding:10px 16px;">
                     Cancelar
                 </button>
             </div>
@@ -608,11 +635,11 @@
                 </select>
             </div>
             <div style="display:flex;gap:10px;margin-top:12px;">
-                <button type="submit" class="btn btn-primary" style="flex:1;">
+                <button type="submit" class="btn btn-primary" style="flex:1;padding:10px;">
                     <span class="material-symbols-rounded" style="font-size:16px;vertical-align:middle;">save</span>
-                    Guardar Proveedor
+                    Guardar
                 </button>
-                <button type="button" class="btn btn-secondary" onclick="cerrarModalProveedor()">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalProveedor()" style="padding:10px 16px;">
                     Cancelar
                 </button>
             </div>
@@ -656,7 +683,8 @@ function cambiarTab(tab) {
 // MODALES
 // ============================================
 function abrirModalGasto() {
-    document.getElementById('modalNuevoGasto').classList.add('active');
+    const modal = document.getElementById('modalNuevoGasto');
+    modal.classList.add('active');
     document.getElementById('formNuevoGasto').reset();
     detenerEscanner();
     cargarProveedores();
@@ -791,68 +819,22 @@ function setScanMode(mode) {
 
 function onScanSuccess(decodedText, decodedResult) {
     console.log('📄 Texto escaneado:', decodedText);
-    
-    const tipo = detectarTipoDocumento(decodedText);
-    
-    if (tipo === 'factura') {
-        const datos = extraerDatosFactura(decodedText);
-        if (datos && datos.monto) {
-            document.getElementById('gasto_categoria').value = 'Repuestos';
-            document.getElementById('gasto_monto').value = datos.monto;
-            document.getElementById('gasto_proveedor').value = datos.proveedor || '';
-            document.getElementById('gasto_folio').value = datos.folio || '';
-            document.getElementById('gasto_descripcion').value = `Factura ${datos.folio || ''} - ${datos.proveedor || ''}`;
-            alert(`✅ Factura procesada: $${datos.monto.toLocaleString()}\n🏢 ${datos.proveedor || 'Proveedor'}`);
-        } else {
-            alert('⚠️ No se pudo extraer el monto de la factura.');
-        }
-        detenerEscanner();
-    } else if (tipo === 'producto') {
-        const producto = extraerDatosProducto(decodedText);
-        if (producto && producto.nombre && producto.precio) {
-            const confirmar = confirm(
-                `📦 Nuevo producto detectado:\n\n🔹 Nombre: ${producto.nombre}\n🔹 Precio: $${producto.precio.toLocaleString()}\n🔹 Proveedor: ${producto.proveedor || 'No especificado'}\n\n¿Agregar al stock de repuestos?`
-            );
-            if (confirmar) {
-                await agregarProductoAlStock(producto);
-            }
-        } else {
-            alert('⚠️ No se pudo extraer la información del producto.');
-        }
-        detenerEscanner();
+    const datos = extraerDatosFactura(decodedText);
+    if (datos && datos.monto) {
+        document.getElementById('gasto_categoria').value = 'Repuestos';
+        document.getElementById('gasto_monto').value = datos.monto;
+        document.getElementById('gasto_proveedor').value = datos.proveedor || '';
+        document.getElementById('gasto_folio').value = datos.folio || '';
+        document.getElementById('gasto_descripcion').value = `Factura ${datos.folio || ''} - ${datos.proveedor || ''}`;
+        alert(`✅ Factura procesada: $${datos.monto.toLocaleString()}\n🏢 ${datos.proveedor || 'Proveedor'}`);
     } else {
-        const opcion = confirm(
-            `🤔 No se pudo identificar el tipo de documento.\n\nTexto escaneado:\n${decodedText.slice(0, 100)}...\n\n¿Quieres procesarlo como factura?`
-        );
-        if (opcion) {
-            const datos = extraerDatosFactura(decodedText);
-            if (datos && datos.monto) {
-                document.getElementById('gasto_monto').value = datos.monto;
-                document.getElementById('gasto_proveedor').value = datos.proveedor || '';
-                alert(`✅ Datos cargados manualmente. Completa el formulario.`);
-            }
-        }
-        detenerEscanner();
+        alert('⚠️ No se pudo extraer el monto de la factura.');
     }
+    detenerEscanner();
 }
 
 function onScanError(error) {
-    // No mostrar errores para no saturar
-}
-
-function detectarTipoDocumento(texto) {
-    const textoLower = texto.toLowerCase();
-    const facturaKeywords = ['monto', 'total', 'rut', 'razón social', 'folio', 'factura', 'boleta'];
-    let facturaScore = 0;
-    facturaKeywords.forEach(kw => { if (textoLower.includes(kw)) facturaScore++; });
-    const productoKeywords = ['producto', 'código', 'precio', 'cantidad'];
-    let productoScore = 0;
-    productoKeywords.forEach(kw => { if (textoLower.includes(kw)) productoScore++; });
-    if (textoLower.includes('montototal') || textoLower.includes('rut')) return 'factura';
-    if (textoLower.includes('producto') && textoLower.includes('precio')) return 'producto';
-    if (facturaScore > productoScore) return 'factura';
-    if (productoScore > facturaScore) return 'producto';
-    return 'unknown';
+    // No mostrar errores
 }
 
 function extraerDatosFactura(texto) {
@@ -866,39 +848,6 @@ function extraerDatosFactura(texto) {
     match = texto.match(/Fecha[^:]*:\s*([\d-]+)/i);
     if (match) { datos.fecha = match[1].trim(); }
     return datos;
-}
-
-function extraerDatosProducto(texto) {
-    const producto = { nombre: null, precio: 0, proveedor: null, cantidad: 1, codigo: null };
-    let match = texto.match(/(?:Producto|Nombre|Item|Descripción)[^:]*:\s*([^\n]+)/i);
-    if (!match) {
-        const lineas = texto.split('\n');
-        for (const linea of lineas) {
-            if (linea.trim().length > 3 && !linea.match(/^\d/)) { producto.nombre = linea.trim(); break; }
-        }
-    } else { producto.nombre = match[1].trim(); }
-    match = texto.match(/(?:Precio|Valor|Costo)[^:]*[:=]\s*\$?\s*([\d.,]+)/i) || texto.match(/([\d.,]+)\s*$/);
-    if (match) { producto.precio = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.')) || 0; }
-    match = texto.match(/(?:Proveedor|Marca)[^:]*:\s*([^\n]+)/i);
-    if (match) { producto.proveedor = match[1].trim(); }
-    match = texto.match(/(?:Cantidad|Qty)[^:]*:\s*(\d+)/i);
-    if (match) { producto.cantidad = parseInt(match[1]) || 1; }
-    match = texto.match(/(?:Código|Code)[^:]*:\s*([^\n]+)/i);
-    if (match) { producto.codigo = match[1].trim(); }
-    return producto;
-}
-
-async function agregarProductoAlStock(producto) {
-    try {
-        const resp = await fetch(`${API_URL}/api/repuestos/from_scan`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ texto: JSON.stringify(producto) })
-        });
-        const result = await resp.json();
-        if (result.success) { alert(`✅ ${result.mensaje}`); } 
-        else { alert('❌ Error: ' + (result.error || 'Desconocido')); }
-    } catch (error) { alert('❌ Error de conexión'); }
 }
 
 // ============================================
@@ -917,13 +866,13 @@ async function cargarProveedores() {
             return;
         }
         container.innerHTML = proveedoresLista.map(p => `
-            <div class="card" style="padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+            <div class="card" style="padding:10px 12px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
                 <div>
-                    <strong style="color:var(--text-primary);">${p.nombre}</strong>
-                    ${p.rut ? `<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">${p.rut}</span>` : ''}
-                    <div style="font-size:11px;color:var(--text-muted);">${p.giro || 'Repuestos'}</div>
+                    <strong style="color:var(--text-primary);font-size:13px;">${p.nombre}</strong>
+                    ${p.rut ? `<span style="color:var(--text-muted);font-size:11px;margin-left:6px;">${p.rut}</span>` : ''}
+                    <div style="font-size:10px;color:var(--text-muted);">${p.giro || 'Repuestos'}</div>
                 </div>
-                <div style="font-size:11px;color:var(--text-muted);">
+                <div style="font-size:10px;color:var(--text-muted);">
                     ${p.telefono || ''} ${p.email ? '· ' + p.email : ''}
                 </div>
             </div>
@@ -985,8 +934,8 @@ function renderPlanilla() {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px 0;">
             <span class="material-symbols-rounded" style="font-size:32px;">person_off</span>
             <p style="font-size:14px;">No hay empleados en la planilla</p>
-            <button onclick="agregarEmpleadoPlanilla()" class="btn btn-sm btn-primary" style="margin-top:8px;">
-                <span class="material-symbols-rounded" style="font-size:16px;">person_add</span> Agregar Empleado
+            <button onclick="agregarEmpleadoPlanilla()" class="btn btn-sm btn-primary" style="margin-top:8px;padding:4px 10px;font-size:11px;">
+                <span class="material-symbols-rounded" style="font-size:14px;">person_add</span> Agregar
             </button>
         </td></tr>`;
         document.getElementById('totalPlanilla').textContent = '$0';
@@ -999,17 +948,18 @@ function renderPlanilla() {
         totalExtras += e.horas_extras || 0; totalBonos += e.bonos || 0;
         totalDescuentos += e.descuentos || 0; totalNeto += neto;
         return `<tr>
-            <td>${e.nombre} <span style="color:var(--text-muted);font-size:11px;">${e.cargo || ''}</span>
-                <button onclick="eliminarEmpleadoPlanilla(${i})" style="background:transparent;border:none;color:var(--accent-red);cursor:pointer;font-size:14px;margin-left:6px;">
-                    <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
+            <td style="padding:4px 6px;">${e.nombre} 
+                <span style="color:var(--text-muted);font-size:10px;">${e.cargo || ''}</span>
+                <button onclick="eliminarEmpleadoPlanilla(${i})" style="background:transparent;border:none;color:var(--accent-red);cursor:pointer;font-size:12px;margin-left:4px;">
+                    <span class="material-symbols-rounded" style="font-size:14px;">delete</span>
                 </button>
             </td>
-            <td><input type="number" value="${e.sueldo_base||0}" onchange="actualizarPlanilla(${i},'sueldo_base',this.value)"></td>
-            <td><input type="number" value="${e.comision||0}" onchange="actualizarPlanilla(${i},'comision',this.value)"></td>
-            <td><input type="number" value="${e.horas_extras||0}" onchange="actualizarPlanilla(${i},'horas_extras',this.value)"></td>
-            <td><input type="number" value="${e.bonos||0}" onchange="actualizarPlanilla(${i},'bonos',this.value)"></td>
-            <td><input type="number" value="${e.descuentos||0}" onchange="actualizarPlanilla(${i},'descuentos',this.value)"></td>
-            <td style="text-align:right;font-weight:700;color:var(--accent-green);">$${neto.toLocaleString()}</td>
+            <td style="padding:4px 6px;"><input type="number" value="${e.sueldo_base||0}" onchange="actualizarPlanilla(${i},'sueldo_base',this.value)" style="width:70px;padding:2px 4px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:4px;font-size:11px;"></td>
+            <td style="padding:4px 6px;"><input type="number" value="${e.comision||0}" onchange="actualizarPlanilla(${i},'comision',this.value)" style="width:60px;padding:2px 4px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:4px;font-size:11px;"></td>
+            <td style="padding:4px 6px;"><input type="number" value="${e.horas_extras||0}" onchange="actualizarPlanilla(${i},'horas_extras',this.value)" style="width:60px;padding:2px 4px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:4px;font-size:11px;"></td>
+            <td style="padding:4px 6px;"><input type="number" value="${e.bonos||0}" onchange="actualizarPlanilla(${i},'bonos',this.value)" style="width:60px;padding:2px 4px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:4px;font-size:11px;"></td>
+            <td style="padding:4px 6px;"><input type="number" value="${e.descuentos||0}" onchange="actualizarPlanilla(${i},'descuentos',this.value)" style="width:60px;padding:2px 4px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:4px;font-size:11px;"></td>
+            <td style="text-align:right;font-weight:700;color:var(--accent-green);padding:4px 6px;font-size:13px;">$${neto.toLocaleString()}</td>
         </tr>`;
     }).join('');
     document.getElementById('total_base').textContent = '$' + totalBase.toLocaleString();
