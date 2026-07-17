@@ -50,6 +50,12 @@
                                 <span class="material-symbols-rounded" style="font-size: 18px;">point_of_sale</span>
                                 Balance Ventas
                             </a>
+                         <li>
+                             <a href="/gastos" class="drawer-item {% if request.path == '/gastos' %}active{% endif %}">
+                                <span class="material-symbols-rounded">payments</span>
+                                Gastos
+                            </a>
+                         </li>   
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
@@ -122,6 +128,10 @@
                     </ul>
                 </li>
                 {% endif %}
+            <a href="/cierre_caja" class="drawer-item {% if request.path == '/cierre_caja' %}active{% endif %}">
+            <span class="material-symbols-rounded">receipt_long</span>
+            Cierre de Caja
+            </a>
 
                 <!-- ============================
                 DROPDOWN: USUARIOS (SOLO ADMIN)
