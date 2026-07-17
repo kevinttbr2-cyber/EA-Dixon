@@ -1332,11 +1332,11 @@ def registrar_gasto_interno(data):
         print(f"❌ Error en registrar_gasto_interno: {e}")
         return False
 # ============================================
-# OBTENER GASTOS PARA BALANCE
+# OBTENER GASTOS PARA BALANCE (TODOS)
 # ============================================
 @app.route('/api/gastos_balance', methods=['GET'])
 def obtener_gastos_balance():
-    """Obtiene gastos operativos para el balance"""
+    """Obtiene TODOS los gastos operativos para el balance (sueldos, arriendo, etc)"""
     try:
         fecha_inicio = request.args.get('fecha_inicio')
         fecha_fin = request.args.get('fecha_fin')
@@ -1347,6 +1347,7 @@ def obtener_gastos_balance():
         from database import get_cursor
         conn, cur = get_cursor()
         
+        # ✅ TRAER TODOS LOS GASTOS SIN FILTRAR POR CATEGORÍA
         cur.execute("""
             SELECT * FROM gastos 
             WHERE fecha BETWEEN %s AND %s
