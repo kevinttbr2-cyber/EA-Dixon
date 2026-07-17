@@ -5,6 +5,7 @@ from config import Config
 from routes import auth_bp, pago_bp, catalogo_bp, flota_bp, pdf_bp, auditoria_bp
 from services.auth_service import AuthService
 import time
+import math 
 
 # Establecer zona horaria a Chile (UTC-3)
 os.environ['TZ'] = 'America/Santiago'
@@ -946,6 +947,110 @@ def extraer_datos_producto(texto):
         return None
     
     return producto
+# ============================================
+# RUTAS PARA REPUESTOS (DESDE ESCÁNER)
+# ============================================
+
+@app.route('/api/repuestos/from_scan', methods=['POST'])
+def procesar_producto_escaner():
+    """Procesa un producto escaneado y lo agrega al stock de repuestos"""
+    try:
+        data = request.json
+        texto_escaneado = data.get('texto', '')
+        
+        # Intentar parsear el JSON que viene del frontend
+        try:
+            producto_data = json.loads(texto_escaneado) if isinstance(texto_escaneado, str) else texto_escaneado
+        except:
+            producto_data = {'nombre': 'Producto escaneado', 'precio': 0}
+        
+        nombre = producto_data.get('nombre', 'Producto escaneado')
+        precio = producto_data.get('precio', 0)
+        proveedor = producto_data.get('proveedor', 'Escáner')
+        cantidad = producto_data.get('cantidad', 1)
+        codigo = producto_data.get('codigo', '')
+        
+        if not nombre or precio == 0:
+            # Intentar extraer del texto plano
+            import re
+            lineas = texto_escaneado.split('\n')
+            for linea in lineas:
+                if linea.strip() and not linea.startswith('http'):
+                    nombre = linea.strip()
+                    break
+            
+            # Buscar precio
+            match = re.search(r'([\d.,]+)\s*$', texto_escaneado)
+            if match:
+                precio = float(match.group(1).replace('.', '').replace(',', '.'))
+        
+        if not nombre or precio == 0:
+            return jsonify({"error": "No se pudo extraer información del producto. Asegúrate de que el código contenga nombre y precio."}), 400
+        
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Verificar si el repuesto ya existe
+        cur.execute("SELECT id, costo_venta_final, stock FROM repuestos WHERE nombre ILIKE %s", (nombre,))
+        existente = cur.fetchone()
+        
+        if existente:
+            # Actualizar stock y costo proveedor (NO modificar precio venta)
+            nuevo_stock = (existente[2] or 0) + cantidad
+            cur.execute("""
+                UPDATE repuestos 
+                SET stock = %s,
+                    costo_proveedor = %s,
+                    proveedor = %s,
+                    updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                WHERE id = %s
+            """, (nuevo_stock, precio, proveedor, existente[0]))
+            mensaje = f"✅ Producto actualizado: {nombre}\n📦 Nuevo stock: {nuevo_stock}\n💰 Costo proveedor: ${precio:,.0f}"
+        else:
+            # Crear nuevo repuesto
+            margen = 30
+            iva = 1.19
+            costo_con_iva = precio * iva
+            precio_venta = costo_con_iva * (1 + (margen / 100))
+            
+            cur.execute("""
+                INSERT INTO repuestos 
+                (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, stock, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, 
+                        NOW() AT TIME ZONE 'America/Santiago', 
+                        NOW() AT TIME ZONE 'America/Santiago')
+                RETURNING id
+            """, (
+                nombre,
+                precio,
+                margen,
+                math.floor(precio_venta),
+                proveedor,
+                cantidad
+            ))
+            id_repuesto = cur.fetchone()[0]
+            mensaje = f"✅ Nuevo repuesto agregado: {nombre}\n💰 Costo: ${precio:,.0f}\n💰 Precio venta: ${math.floor(precio_venta):,.0f}"
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "success": True, 
+            "mensaje": mensaje,
+            "producto": {
+                'nombre': nombre,
+                'costo_proveedor': precio,
+                'stock': cantidad
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en procesar_producto_escaner: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 # ============================
 # CREAR ADMIN AL INICIAR
