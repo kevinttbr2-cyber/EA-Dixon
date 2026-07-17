@@ -61,7 +61,7 @@
         }
 
         /* ============================
-           NAVBAR
+           NAVBAR CON DROPDOWNS
            ============================ */
         .navbar-custom {
             background: var(--bg-secondary) !important;
@@ -72,13 +72,9 @@
             top: 0 !important;
             width: 100% !important;
             z-index: 1000 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            flex-wrap: wrap !important;
         }
 
-        .navbar-custom .brand {
+        .navbar-custom .navbar-brand {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -86,25 +82,19 @@
             color: var(--text-primary);
             font-weight: 700;
             font-size: 18px;
+            padding: 0;
         }
 
-        .navbar-custom .brand .logo-img {
+        .navbar-custom .navbar-brand .logo-img {
             height: 40px;
             width: auto;
             object-fit: contain;
         }
 
-        .navbar-custom .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-
-        .navbar-custom .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            padding: 6px 12px;
+        /* Links y dropdowns */
+        .navbar-custom .nav-link {
+            color: var(--text-secondary) !important;
+            padding: 6px 14px !important;
             border-radius: 8px;
             font-size: 13px;
             font-weight: 500;
@@ -114,32 +104,17 @@
             gap: 4px;
         }
 
-        .navbar-custom .nav-links a:hover {
-            color: var(--text-primary);
+        .navbar-custom .nav-link:hover {
+            color: var(--text-primary) !important;
             background: var(--bg-hover);
         }
 
-        .navbar-custom .nav-links a.active {
-            color: var(--accent-green);
+        .navbar-custom .nav-link.active {
+            color: var(--accent-green) !important;
             background: rgba(46, 204, 113, 0.08);
         }
 
-        .navbar-custom .nav-links .user-name {
-            color: var(--text-primary);
-            padding: 6px 12px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .navbar-custom .nav-links .logout {
-            color: var(--accent-red);
-        }
-
-        .navbar-custom .nav-links .logout:hover {
-            background: rgba(231, 76, 60, 0.1);
-        }
-
-        .navbar-custom .nav-links .badge-count {
+        .navbar-custom .nav-link .badge-count {
             background: var(--accent-yellow);
             color: var(--bg-primary);
             border-radius: 50px;
@@ -150,19 +125,73 @@
             margin-left: 2px;
         }
 
-        .navbar-custom .nav-links .material-symbols-rounded {
+        .navbar-custom .nav-link .material-symbols-rounded {
             font-size: 18px;
         }
 
+        /* Dropdown menu */
+        .navbar-custom .dropdown-menu {
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border-subtle) !important;
+            border-radius: var(--radius-md) !important;
+            padding: 8px !important;
+            box-shadow: var(--shadow-hover) !important;
+            min-width: 220px !important;
+        }
+
+        .navbar-custom .dropdown-item {
+            color: var(--text-secondary) !important;
+            padding: 8px 16px !important;
+            border-radius: var(--radius-sm) !important;
+            font-size: 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            transition: var(--transition) !important;
+        }
+
+        .navbar-custom .dropdown-item:hover {
+            background: var(--bg-hover) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .navbar-custom .dropdown-item .material-symbols-rounded {
+            font-size: 18px;
+        }
+
+        .navbar-custom .dropdown-divider {
+            border-color: var(--border-subtle) !important;
+            margin: 4px 0 !important;
+        }
+
+        /* Usuario y logout */
+        .navbar-custom .user-name {
+            color: var(--text-primary) !important;
+            padding: 6px 14px !important;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .navbar-custom .logout-link {
+            color: var(--accent-red) !important;
+        }
+        .navbar-custom .logout-link:hover {
+            background: rgba(231, 76, 60, 0.1) !important;
+        }
+
         /* Botón hamburguesa */
-        .navbar-custom .menu-toggle {
-            display: none;
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 4px 8px;
+        .navbar-custom .navbar-toggler {
+            border: none !important;
+            padding: 4px 8px !important;
+        }
+        .navbar-custom .navbar-toggler:focus {
+            box-shadow: none !important;
+        }
+        .navbar-custom .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,0.7)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
         }
 
         /* ============================
@@ -294,34 +323,30 @@
            RESPONSIVE
            ============================ */
         @media (max-width: 992px) {
-            .navbar-custom .nav-links a {
+            .navbar-custom .nav-link {
                 font-size: 12px;
-                padding: 4px 10px;
+                padding: 4px 10px !important;
             }
         }
 
         @media (max-width: 768px) {
-            .navbar-custom .menu-toggle {
-                display: block;
-            }
-            .navbar-custom .nav-links {
-                display: none;
-                flex-direction: column;
-                width: 100%;
+            .navbar-custom .navbar-collapse {
                 padding: 12px 0;
-                gap: 2px;
             }
-            .navbar-custom .nav-links.open {
-                display: flex;
-            }
-            .navbar-custom .nav-links a {
-                width: 100%;
-                padding: 10px 14px;
+            .navbar-custom .nav-link {
+                padding: 10px 14px !important;
                 font-size: 14px;
-            }
-            .navbar-custom .nav-links .user-name {
                 width: 100%;
-                padding: 10px 14px;
+            }
+            .navbar-custom .dropdown-menu {
+                background: var(--bg-hover) !important;
+                border: none !important;
+                padding-left: 20px !important;
+                box-shadow: none !important;
+            }
+            .navbar-custom .user-name {
+                padding: 10px 14px !important;
+                width: 100%;
             }
             .base-container {
                 padding: 16px !important;
@@ -347,10 +372,10 @@
             .fab-label {
                 display: none;
             }
-            .navbar-custom .brand {
+            .navbar-custom .navbar-brand {
                 font-size: 15px;
             }
-            .navbar-custom .brand .logo-img {
+            .navbar-custom .navbar-brand .logo-img {
                 height: 32px;
             }
         }
@@ -361,109 +386,192 @@
 <body>
 
     <!-- ============================
-    NAVBAR (directo, sin include)
+    NAVBAR CON DROPDOWNS
     ============================ -->
-    <nav class="navbar-custom">
-        <a class="brand" href="/estado">
-            <!-- LOGO ORIGINAL DE DIXON -->
-            <img src="{{ url_for('static', filename='images/dixon-navbar.png') }}" alt="Dixon" class="logo-img">
-            <span>Dixon Automotriz</span>
-        </a>
-        
-        <button class="menu-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">
-            <span class="material-symbols-rounded">menu</span>
-        </button>
-        
-        <div class="nav-links" id="navLinks">
-            {% if session.get("usuario") %}
-                <!-- ESTADO -->
-                <a href="/estado" class="{% if request.path == '/estado' %}active{% endif %}">
-                    <span class="material-symbols-rounded">dashboard</span>
-                    Estado
-                    {% if flotas_pendientes_count > 0 %}
-                    <span class="badge-count">{{ flotas_pendientes_count }}</span>
+    <nav class="navbar navbar-custom navbar-expand-lg">
+        <div class="container-fluid px-0">
+            <!-- Logo y Brand -->
+            <a class="navbar-brand" href="/estado">
+                <img src="{{ url_for('static', filename='images/dixon-navbar.png') }}" alt="Dixon" class="logo-img">
+                <span>Dixon Automotive</span>
+            </a>
+            
+            <!-- Botón hamburguesa -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Menú colapsable -->
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+                    
+                    {% if session.get("usuario") %}
+                    
+                    <!-- ====================
+                    ESTADO
+                    ==================== -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/estado' %}active{% endif %}" href="/estado">
+                            <span class="material-symbols-rounded">dashboard</span>
+                            Estado
+                            {% if flotas_pendientes_count > 0 %}
+                            <span class="badge-count">{{ flotas_pendientes_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    
+                    <!-- ====================
+                    DROPDOWN: FINANZAS
+                    ==================== -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuFinanzas" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="material-symbols-rounded">account_balance</span>
+                            Finanzas
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="menuFinanzas">
+                            <li>
+                                <a class="dropdown-item" href="/balance">
+                                    <span class="material-symbols-rounded">balance</span>
+                                    Balance Total
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/balance_ventas">
+                                    <span class="material-symbols-rounded">point_of_sale</span>
+                                    Balance Ventas
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/dashboard">
+                                    <span class="material-symbols-rounded">analytics</span>
+                                    Dashboard
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                     {% endif %}
-                </a>
-                
-                <!-- REGISTROS (solo admin/operador) -->
-                {% if session.get("rol") in ["admin", "operador"] %}
-                <a href="/registros" class="{% if request.path == '/registros' %}active{% endif %}">
-                    <span class="material-symbols-rounded">history</span>
-                    Registros
-                </a>
-                {% endif %}
-                
-                <!-- FLOTAS (solo admin/operador) -->
-                {% if session.get("rol") in ["admin", "operador"] %}
-                <a href="/flotas" class="{% if request.path == '/flotas' %}active{% endif %}">
-                    <span class="material-symbols-rounded">directions_car</span>
-                    Flotas
-                </a>
-                {% endif %}
-                
-                <!-- FLOTAS PENDIENTES (solo admin/operador) -->
-                {% if session.get("rol") in ["admin", "operador"] %}
-                <a href="/flotas_pendientes" class="{% if request.path == '/flotas_pendientes' %}active{% endif %}">
-                    <span class="material-symbols-rounded">pending_actions</span>
-                    Flotas Pend.
-                    {% if flotas_pendientes_count > 0 %}
-                    <span class="badge-count">{{ flotas_pendientes_count }}</span>
+                    
+                    <!-- ====================
+                    DROPDOWN: GESTIÓN
+                    ==================== -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="material-symbols-rounded">settings</span>
+                            Gestión
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="menuGestion">
+                            <li>
+                                <a class="dropdown-item" href="/registros">
+                                    <span class="material-symbols-rounded">history</span>
+                                    Registros
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/flotas">
+                                    <span class="material-symbols-rounded">directions_car</span>
+                                    Flotas
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/flotas_pendientes">
+                                    <span class="material-symbols-rounded">pending_actions</span>
+                                    Flotas Pendientes
+                                    {% if flotas_pendientes_count > 0 %}
+                                    <span class="badge-count">{{ flotas_pendientes_count }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/repuestos">
+                                    <span class="material-symbols-rounded">inventory_2</span>
+                                    Repuestos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/pendientes_validacion">
+                                    <span class="material-symbols-rounded">verified</span>
+                                    Validar Pagos
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/auditoria_descargas">
+                                    <span class="material-symbols-rounded">download</span>
+                                    Auditoría
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/ver_logs">
+                                    <span class="material-symbols-rounded">terminal</span>
+                                    Ver Logs
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                     {% endif %}
-                </a>
-                {% endif %}
-                
-                <!-- FINANZAS (solo admin/operador) -->
-                {% if session.get("rol") in ["admin", "operador"] %}
-                <a href="/balance" class="{% if request.path == '/balance' %}active{% endif %}">
-                    <span class="material-symbols-rounded">account_balance</span>
-                    Finanzas
-                </a>
-                {% endif %}
-                
-                <!-- DASHBOARD (solo admin) -->
-                {% if session.get("rol") == "admin" %}
-                <a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}">
-                    <span class="material-symbols-rounded">analytics</span>
-                    Dashboard
-                </a>
-                {% endif %}
-                
-                <!-- USUARIOS (solo admin) -->
-                {% if session.get("rol") == "admin" %}
-                <a href="/usuarios" class="{% if request.path == '/usuarios' %}active{% endif %}">
-                    <span class="material-symbols-rounded">people</span>
-                    Usuarios
-                </a>
-                {% endif %}
-                
-                <!-- VENTA RÁPIDA (solo admin/operador) -->
-                {% if session.get("rol") in ["admin", "operador"] %}
-                <a href="/venta_rapida" class="{% if request.path == '/venta_rapida' %}active{% endif %}">
-                    <span class="material-symbols-rounded">bolt</span>
-                    Venta
-                </a>
-                {% endif %}
-                
-                <!-- VALIDAR PAGOS (solo admin/operador) -->
-                {% if session.get("rol") in ["admin", "operador"] %}
-                <a href="/pendientes_validacion" class="{% if request.path == '/pendientes_validacion' %}active{% endif %}">
-                    <span class="material-symbols-rounded">verified</span>
-                    Validar
-                </a>
-                {% endif %}
-                
-                <!-- Usuario -->
-                <span class="user-name">
-                    <span class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">account_circle</span>
-                    {{ session.get('nombre_completo', session.get('usuario')) }}
-                </span>
-                
-                <!-- Salir -->
-                <a href="/logout" class="logout">
-                    <span class="material-symbols-rounded">logout</span>
-                    Salir
-                </a>
-            {% endif %}
+                    
+                    <!-- ====================
+                    VENTA RÁPIDA (directo)
+                    ==================== -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/venta_rapida' %}active{% endif %}" href="/venta_rapida">
+                            <span class="material-symbols-rounded">bolt</span>
+                            Venta
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- ====================
+                    USUARIOS (solo admin)
+                    ==================== -->
+                    {% if session.get("rol") == "admin" %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="material-symbols-rounded">people</span>
+                            Usuarios
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="menuUsuarios">
+                            <li>
+                                <a class="dropdown-item" href="/register">
+                                    <span class="material-symbols-rounded">person_add</span>
+                                    Crear Usuario
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/usuarios">
+                                    <span class="material-symbols-rounded">group</span>
+                                    Lista de Usuarios
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- ====================
+                    PERFIL + SALIR
+                    ==================== -->
+                    <li class="nav-item">
+                        <span class="user-name">
+                            <span class="material-symbols-rounded" style="font-size: 16px;">account_circle</span>
+                            {{ session.get('nombre_completo', session.get('usuario')) }}
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link logout-link" href="/logout">
+                            <span class="material-symbols-rounded">logout</span>
+                            Salir
+                        </a>
+                    </li>
+                    
+                    {% endif %}
+                    
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -519,13 +627,6 @@
                 .then(function(reg) { console.log('✅ Service Worker registrado'); })
                 .catch(function(err) { console.log('❌ Service Worker error:', err); });
         }
-
-        // Cerrar menú al hacer clic en un enlace (móvil)
-        document.querySelectorAll('.nav-links a').forEach(function(link) {
-            link.addEventListener('click', function() {
-                document.getElementById('navLinks').classList.remove('open');
-            });
-        });
     </script>
     
     {% block extra_js %}{% endblock %}
