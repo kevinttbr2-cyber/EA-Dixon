@@ -738,28 +738,35 @@
         </a>
     </div>
 
-    <!-- FILTROS -->
-    <div class="filtros-grid-registros">
-        <a href="?filtro=todos" class="filtro-card-registro {% if filtro == 'todos' %}active-total{% endif %}">
-            <span class="numero">{{ registros|length }}</span>
-            <span class="etiqueta">Todos</span>
-        </a>
-        <a href="?filtro=hoy" class="filtro-card-registro {% if filtro == 'hoy' %}active-pagados{% endif %}">
-            <span class="numero">{{ registros_hoy|length }}</span>
-            <span class="etiqueta">
-                <span class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">today</span>
-                Hoy
-            </span>
-        </a>
-        <a href="?filtro=7d" class="filtro-card-registro {% if filtro == '7d' %}active-pagados{% endif %}">
-            <span class="numero">{{ registros_7d|length }}</span>
-            <span class="etiqueta">7 días</span>
-        </a>
-        <a href="?filtro=mes" class="filtro-card-registro {% if filtro == 'mes' %}active-pagados{% endif %}">
-            <span class="numero">{{ registros_mes|length }}</span>
-            <span class="etiqueta">1 Mes</span>
-        </a>
-    </div>
+   <!-- FILTROS -->
+<div class="filtros-grid-registros">
+    <!-- TODOS -->
+    <a href="?filtro=todos" class="filtro-card-registro {% if filtro == 'todos' %}active-total{% endif %}">
+        <span class="numero">{{ registros|length }}</span>
+        <span class="etiqueta">Todos</span>
+    </a>
+    
+    <!-- HOY - AZUL -->
+    <a href="?filtro=hoy" class="filtro-card-registro {% if filtro == 'hoy' %}active-hoy{% endif %}">
+        <span class="numero">{{ registros_hoy|length }}</span>
+        <span class="etiqueta">
+            <span class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">today</span>
+            Hoy
+        </span>
+    </a>
+    
+    <!-- 7 DÍAS - VERDE -->
+    <a href="?filtro=7d" class="filtro-card-registro {% if filtro == '7d' %}active-7d{% endif %}">
+        <span class="numero">{{ registros_7d|length }}</span>
+        <span class="etiqueta">7 días</span>
+    </a>
+    
+    <!-- 1 MES - AMARILLO -->
+    <a href="?filtro=mes" class="filtro-card-registro {% if filtro == 'mes' %}active-mes{% endif %}">
+        <span class="numero">{{ registros_mes|length }}</span>
+        <span class="etiqueta">1 Mes</span>
+    </a>
+</div>
 
     <!-- BUSCADOR + ACCIONES -->
     <div class="buscador-wrapper-registros">
