@@ -72,11 +72,11 @@
 }
 
 .filtro-card.active-pendientes {
-    border-color: #f1c40f;
-    background: rgba(241, 196, 15, 0.06);
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.06);
 }
 .filtro-card.active-pendientes .numero {
-    color: #f1c40f;
+    color: #e74c3c;
 }
 
 /* Buscador */
@@ -179,9 +179,10 @@
     background: rgba(241, 196, 15, 0.15);
 }
 
-/* Tarjetas */
+/* ============================
+   TARJETAS DE TRABAJO
+   ============================ */
 .card-trabajo {
-    background: #1e1e24;
     border-radius: 12px;
     padding: 16px 18px;
     margin-bottom: 12px;
@@ -196,14 +197,25 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
-.card-trabajo.pendiente {
-    border-left-color: #f1c40f;
-}
-
+/* ============================
+   PAGADOS - FONDO VERDE SUTIL
+   ============================ */
 .card-trabajo.pagado {
+    background: rgba(46, 204, 113, 0.06) !important;
     border-left-color: #2ecc71;
 }
 
+/* ============================
+   PENDIENTES - FONDO ROJO SUTIL
+   ============================ */
+.card-trabajo.pendiente {
+    background: rgba(231, 76, 60, 0.06) !important;
+    border-left-color: #e74c3c;
+}
+
+/* ============================
+   ELEMENTOS DENTRO DE LA TARJETA
+   ============================ */
 .card-trabajo .header {
     display: flex;
     justify-content: space-between;
@@ -307,7 +319,7 @@
 }
 
 .card-trabajo .pie .estado-texto.pendiente {
-    color: #f1c40f;
+    color: #e74c3c;
 }
 
 .card-trabajo .pie .estado-texto.pagado {
@@ -528,7 +540,7 @@
                 {% if r.estado == 'pagado' %}
                 <span class="estado-icon material-symbols-rounded" style="color: #2ecc71;">check_circle</span>
                 {% else %}
-                <span class="estado-icon material-symbols-rounded" style="color: #f1c40f;">pending</span>
+                <span class="estado-icon material-symbols-rounded" style="color: #e74c3c;">pending</span>
                 {% endif %}
                 {{ r.nombre }}
                 
@@ -643,7 +655,6 @@
     <span class="icon material-symbols-rounded">inbox</span>
     <h4>No hay registros</h4>
     <p>Comienza agregando un nuevo cliente o realizando una venta rápida.</p>
-    <!-- ELIMINADOS LOS BOTONES DE AQUÍ -->
 </div>
 {% endif %}
 
