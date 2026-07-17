@@ -353,8 +353,8 @@
             <label style="color:var(--text-secondary);font-size:13px;">
                 Año: 
                 <select id="anio_planilla" style="background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:4px 8px;">
-                    {% for a in range(anio_actual-2, anio_actual+1) %}
-                    <option value="{{ a }}" {% if a == anio_actual %}selected{% endif %}>{{ a }}</option>
+                  {% for a in range(anio_actual-2, anio_actual+1) %}
+                  <option value="{{ a }}" {% if a == anio_actual %}selected{% endif %}>{{ a }}</option>
                     {% endfor %}
                 </select>
             </label>
