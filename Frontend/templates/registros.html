@@ -64,7 +64,7 @@
 
 /* HOY - AZUL SUTIL */
 .filtro-card-registro.active-hoy {
-    border-color: rgba(52, 152, 219, 0.4) !important;
+    border-color: rgba(52, 152, 219, 0.5) !important;
     background: rgba(52, 152, 219, 0.06) !important;
 }
 .filtro-card-registro.active-hoy .numero {
@@ -77,7 +77,7 @@
 
 /* 7 DÍAS - VERDE SUTIL */
 .filtro-card-registro.active-7d {
-    border-color: rgba(46, 204, 113, 0.4) !important;
+    border-color: rgba(46, 204, 113, 0.5) !important;
     background: rgba(46, 204, 113, 0.06) !important;
 }
 .filtro-card-registro.active-7d .numero {
@@ -90,7 +90,7 @@
 
 /* 1 MES - AMARILLO SUTIL */
 .filtro-card-registro.active-mes {
-    border-color: rgba(241, 196, 15, 0.4) !important;
+    border-color: rgba(241, 196, 15, 0.5) !important;
     background: rgba(241, 196, 15, 0.06) !important;
 }
 .filtro-card-registro.active-mes .numero {
@@ -274,14 +274,13 @@
     font-weight: 600 !important;
 }
 
-/* Contenedor del dropdown */
+/* DROPDOWN 3 PUNTOS - SIEMPRE POR ENCIMA */
 .dropdown-3p {
     position: relative !important;
     display: inline-block !important;
     z-index: 9999999 !important;
 }
 
-/* Botón de 3 puntos */
 .dropdown-3p .btn-3p {
     background: transparent !important;
     border: none !important;
@@ -301,7 +300,6 @@
     background: var(--bg-hover) !important;
 }
 
-/* Menú desplegable */
 .dropdown-3p .menu-3p {
     display: none !important;
     position: absolute !important;
@@ -315,7 +313,6 @@
     min-width: 190px !important;
     box-shadow: var(--shadow-hover) !important;
     z-index: 9999999 !important;
-    /* Asegurar que no sea recortado */
     overflow: visible !important;
 }
 
@@ -323,7 +320,6 @@
     display: block !important;
 }
 
-/* Items del menú */
 .dropdown-3p .menu-3p button,
 .dropdown-3p .menu-3p a {
     display: flex !important;
@@ -349,7 +345,6 @@
     color: var(--text-primary) !important;
 }
 
-/* Colores especiales */
 .dropdown-3p .menu-3p .text-danger {
     color: var(--accent-red) !important;
 }
@@ -372,12 +367,27 @@
     margin: 4px 0 !important;
 }
 
-/* Versión hacia arriba (para móvil) */
 .dropdown-3p.dropup .menu-3p {
     top: auto !important;
     bottom: 100% !important;
     margin-top: 0 !important;
     margin-bottom: 4px !important;
+}
+
+/* Para que la tabla no recorte el dropdown */
+.tabla-registros tbody td:last-child {
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 9999999 !important;
+}
+
+.tabla-registros tbody tr {
+    overflow: visible !important;
+    position: relative !important;
+}
+
+.tabla-wrapper {
+    overflow: visible !important;
 }
 
 /* ============================================
@@ -738,35 +748,28 @@
         </a>
     </div>
 
-   <!-- FILTROS -->
-<div class="filtros-grid-registros">
-    <!-- TODOS -->
-    <a href="?filtro=todos" class="filtro-card-registro {% if filtro == 'todos' %}active-total{% endif %}">
-        <span class="numero">{{ registros|length }}</span>
-        <span class="etiqueta">Todos</span>
-    </a>
-    
-    <!-- HOY - AZUL -->
-    <a href="?filtro=hoy" class="filtro-card-registro {% if filtro == 'hoy' %}active-hoy{% endif %}">
-        <span class="numero">{{ registros_hoy|length }}</span>
-        <span class="etiqueta">
-            <span class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">today</span>
-            Hoy
-        </span>
-    </a>
-    
-    <!-- 7 DÍAS - VERDE -->
-    <a href="?filtro=7d" class="filtro-card-registro {% if filtro == '7d' %}active-7d{% endif %}">
-        <span class="numero">{{ registros_7d|length }}</span>
-        <span class="etiqueta">7 días</span>
-    </a>
-    
-    <!-- 1 MES - AMARILLO -->
-    <a href="?filtro=mes" class="filtro-card-registro {% if filtro == 'mes' %}active-mes{% endif %}">
-        <span class="numero">{{ registros_mes|length }}</span>
-        <span class="etiqueta">1 Mes</span>
-    </a>
-</div>
+    <!-- FILTROS -->
+    <div class="filtros-grid-registros">
+        <a href="?filtro=todos" class="filtro-card-registro {% if filtro == 'todos' %}active-total{% endif %}">
+            <span class="numero">{{ registros_all|length if registros_all is defined else registros|length }}</span>
+            <span class="etiqueta">Todos</span>
+        </a>
+        <a href="?filtro=hoy" class="filtro-card-registro {% if filtro == 'hoy' %}active-hoy{% endif %}">
+            <span class="numero">{{ registros_hoy|length }}</span>
+            <span class="etiqueta">
+                <span class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">today</span>
+                Hoy
+            </span>
+        </a>
+        <a href="?filtro=7d" class="filtro-card-registro {% if filtro == '7d' %}active-7d{% endif %}">
+            <span class="numero">{{ registros_7d|length }}</span>
+            <span class="etiqueta">7 días</span>
+        </a>
+        <a href="?filtro=mes" class="filtro-card-registro {% if filtro == 'mes' %}active-mes{% endif %}">
+            <span class="numero">{{ registros_mes|length }}</span>
+            <span class="etiqueta">1 Mes</span>
+        </a>
+    </div>
 
     <!-- BUSCADOR + ACCIONES -->
     <div class="buscador-wrapper-registros">
@@ -994,7 +997,7 @@
 </div>
 
 <!-- ============================================
-   MODALES MODERNOS
+   MODALES Y SCRIPTS (MANTENER LOS MISMOS)
    ============================================ -->
 
 <!-- MODAL DETALLE -->
