@@ -1,263 +1,533 @@
-{% extends "base.html" %}
-
-{% block title %}Estado - Dixon Automotriz{% endblock %}
-
-{% block content %}
-
-<!-- ============================
-   ALERTA DE FLOTAS PENDIENTES
-   ============================ -->
-{% if flotas_pendientes_count > 0 %}
-<div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-2" 
-     style="background: rgba(241, 196, 15, 0.08); border: 1px solid rgba(241, 196, 15, 0.2); border-radius: var(--radius-md); padding: 12px 18px;">
-    <div class="d-flex align-items-center gap-3">
-        <span class="material-symbols-rounded" style="font-size: 24px; color: var(--accent-yellow);">pending_actions</span>
-        <span style="color: var(--text-primary); font-size: 14px;">
-            <strong style="color: var(--accent-yellow);">{{ flotas_pendientes_count }}</strong> 
-            flota{% if flotas_pendientes_count > 1 %}s{% endif %} pendiente{% if flotas_pendientes_count > 1 %}s{% endif %} de cobro
-        </span>
-        <span class="badge" style="background: var(--accent-yellow); color: var(--bg-primary); font-weight: 700; padding: 2px 12px;">
-            {{ flotas_pendientes_count }}
-        </span>
-    </div>
-    <a href="/flotas_pendientes" class="btn btn-sm" 
-       style="background: rgba(241, 196, 15, 0.1); color: var(--accent-yellow); border: 1px solid rgba(241, 196, 15, 0.2); border-radius: 50px; padding: 4px 16px; transition: var(--transition);">
-        Ver todas
-        <span class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">arrow_forward</span>
-    </a>
-</div>
-{% endif %}
-
-<!-- ============================
-   TÍTULO
-   ============================ -->
-<h2 class="text-center mb-4" style="font-weight: 700; font-size: 24px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-    <span class="material-symbols-rounded" style="font-size: 28px;">dashboard</span>
-    Lista de Trabajo
-</h2>
-
-<!-- ============================
-   FILTROS
-   ============================ -->
-<div class="d-flex justify-content-center gap-2 flex-wrap mb-4">
-    <a href="/estado?estado=todos" class="filtro-card active-total" style="text-decoration: none;">
-        <div class="etiqueta">Total</div>
-        <div class="numero">{{ (pendientes_mes or 0) + (pagados_mes or 0) }}</div>
-    </a>
-    <a href="/estado?estado=pagado" class="filtro-card active-pagados" style="text-decoration: none;">
-        <div class="etiqueta">
-            <span class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">check_circle</span>
-            Pagados
-        </div>
-        <div class="numero">{{ pagados_mes or 0 }}</div>
-    </a>
-    <a href="/estado?estado=pendiente" class="filtro-card active-pendientes" style="text-decoration: none;">
-        <div class="etiqueta">
-            <span class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">pending</span>
-            Pendientes
-        </div>
-        <div class="numero">{{ pendientes_mes or 0 }}</div>
-    </a>
-</div>
-
-<!-- ============================
-   BUSCADOR
-   ============================ -->
-<div class="input-group mb-4" style="background: var(--bg-input); border-radius: var(--radius-sm); border: 2px solid transparent; transition: var(--transition);">
-    <span class="input-group-text" style="background: transparent; border: none; color: var(--text-muted); padding-right: 8px;">
-        <span class="material-symbols-rounded">search</span>
-    </span>
-    <input type="text" id="buscador" class="form-control" placeholder="Buscar por cliente, patente, flota..." 
-           style="background: transparent; border: none; box-shadow: none; padding-left: 4px;">
-</div>
-
-<!-- ============================
-   TARJETAS DE TRABAJO
-   ============================ -->
-{% for r in registros %}
-<div class="card-android registro-item" 
-     data-nombre="{{ r.nombre|lower }}" 
-     data-patente="{{ r.patente|lower if r.patente else '' }}"
-     data-flota="{{ r.flota|lower if r.flota else '' }}"
-     style="border-left: 4px solid {% if r.estado == 'pagado' %}var(--accent-green){% else %}var(--accent-yellow){% endif %};">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+    <title>Dixon Electricidad Automotriz</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2ecc71">
     
-    <!-- Encabezado -->
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-1">
-        <div style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-            {% if r.estado == 'pagado' %}
-            <span class="material-symbols-rounded" style="font-size: 18px; color: var(--accent-green);">check_circle</span>
-            {% else %}
-            <span class="material-symbols-rounded" style="font-size: 18px; color: var(--accent-yellow);">pending</span>
-            {% endif %}
-            {{ r.nombre }}
-            
-            <!-- Badge: Venta Directa -->
-            {% if not r.marca or r.marca == '' %}
-            <span class="badge" style="background: rgba(52, 152, 219, 0.15); color: var(--accent-blue); border: 1px solid rgba(52, 152, 219, 0.2); font-size: 10px; padding: 2px 10px;">
-                <span class="material-symbols-rounded" style="font-size: 12px; vertical-align: middle;">bolt</span>
-                Directa
-            </span>
-            {% endif %}
-            
-            <!-- Badge: Flota -->
-            {% if r.flota and r.flota != '' %}
-            <span class="badge" style="background: rgba(241, 196, 15, 0.12); color: var(--accent-yellow); border: 1px solid rgba(241, 196, 15, 0.15); font-size: 10px; padding: 2px 10px;">
-                <span class="material-symbols-rounded" style="font-size: 12px; vertical-align: middle;">directions_car</span>
-                {{ r.flota }}
-            </span>
-            {% endif %}
-        </div>
-        
-        {% if r.telefono %}
-        <div style="color: var(--text-secondary); font-size: 13px; display: flex; align-items: center; gap: 4px;">
-            <span class="material-symbols-rounded" style="font-size: 16px;">phone</span>
-            {{ r.telefono }}
-        </div>
-        {% endif %}
-    </div>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
+    <!-- Google Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ============================
+           ESTILOS GLOBALES (inline para evitar conflictos)
+           ============================ */
+        :root {
+            --bg-primary: #121214;
+            --bg-secondary: #181a1f;
+            --bg-card: #1e1e24;
+            --bg-hover: #2a2a32;
+            --text-primary: #f5f5f5;
+            --text-secondary: #b0b5bf;
+            --text-muted: #6b7078;
+            --accent-green: #2ecc71;
+            --accent-green-dark: #27ae60;
+            --accent-yellow: #f1c40f;
+            --accent-red: #e74c3c;
+            --accent-blue: #3498db;
+            --border-subtle: #2e3138;
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg-primary) !important;
+            color: var(--text-primary) !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            min-height: 100vh;
+            padding-top: 76px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ============================
+           NAVBAR (inline para evitar conflictos)
+           ============================ */
+        .navbar-custom {
+            background: var(--bg-secondary) !important;
+            border-bottom: 1px solid var(--border-subtle) !important;
+            padding: 10px 20px !important;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3) !important;
+            position: fixed !important;
+            top: 0 !important;
+            width: 100% !important;
+            z-index: 1000 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+        }
+
+        .navbar-custom .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .navbar-custom .brand .logo {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-green);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg-primary);
+            font-weight: 900;
+            font-size: 18px;
+        }
+
+        .navbar-custom .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .navbar-custom .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .navbar-custom .nav-links a:hover {
+            color: var(--text-primary);
+            background: var(--bg-hover);
+        }
+
+        .navbar-custom .nav-links a.active {
+            color: var(--accent-green);
+            background: rgba(46, 204, 113, 0.08);
+        }
+
+        .navbar-custom .nav-links .user-name {
+            color: var(--text-primary);
+            padding: 6px 14px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .navbar-custom .nav-links .logout {
+            color: var(--accent-red);
+        }
+
+        .navbar-custom .nav-links .logout:hover {
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .navbar-custom .nav-links .badge-count {
+            background: var(--accent-yellow);
+            color: var(--bg-primary);
+            border-radius: 50px;
+            padding: 0 8px;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 18px;
+            margin-left: 2px;
+        }
+
+        /* Botón hamburguesa */
+        .navbar-custom .menu-toggle {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        /* ============================
+           CONTENEDOR PRINCIPAL
+           ============================ */
+        .base-container {
+            background: var(--bg-secondary) !important;
+            border-radius: var(--radius-lg) !important;
+            padding: 24px 28px !important;
+            border: 1px solid var(--border-subtle) !important;
+            box-shadow: var(--shadow-card) !important;
+            max-width: 1200px !important;
+            margin: 0 auto 40px !important;
+        }
+
+        /* ============================
+           ALERTAS
+           ============================ */
+        .alert {
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid transparent;
+        }
+        .alert-success {
+            background: rgba(46, 204, 113, 0.12);
+            color: var(--accent-green);
+            border-color: rgba(46, 204, 113, 0.25);
+        }
+        .alert-danger {
+            background: rgba(231, 76, 60, 0.12);
+            color: var(--accent-red);
+            border-color: rgba(231, 76, 60, 0.25);
+        }
+        .alert-warning {
+            background: rgba(241, 196, 15, 0.12);
+            color: var(--accent-yellow);
+            border-color: rgba(241, 196, 15, 0.25);
+        }
+        .alert-info {
+            background: rgba(52, 152, 219, 0.12);
+            color: var(--accent-blue);
+            border-color: rgba(52, 152, 219, 0.25);
+        }
+        .alert .btn-close {
+            filter: invert(1);
+            opacity: 0.5;
+        }
+
+        /* ============================
+           BOTONES FLOTANTES (FAB)
+           ============================ */
+        .fab-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+            z-index: 50;
+        }
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            font-weight: 700;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .fab-primary {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+        }
+        .fab-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(46, 204, 113, 0.4);
+        }
+
+        .fab-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 20px;
+            border: 1px solid var(--border-subtle);
+        }
+        .fab-secondary:hover {
+            background: var(--bg-hover);
+            transform: scale(1.05);
+        }
+
+        .fab-label {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            box-shadow: var(--shadow-card);
+            opacity: 0;
+            transform: translateX(20px);
+            transition: var(--transition);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .fab-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .fab-item:hover .fab-label {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* ============================
+           RESPONSIVE
+           ============================ */
+        @media (max-width: 768px) {
+            .navbar-custom .menu-toggle {
+                display: block;
+            }
+            .navbar-custom .nav-links {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                padding: 12px 0;
+                gap: 4px;
+            }
+            .navbar-custom .nav-links.open {
+                display: flex;
+            }
+            .navbar-custom .nav-links a {
+                width: 100%;
+                padding: 10px 14px;
+            }
+            .base-container {
+                padding: 16px !important;
+                margin: 0 8px 30px !important;
+            }
+            .fab {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fab-container {
+                bottom: 16px;
+                right: 16px;
+            }
+            .fab {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+            .fab-label {
+                display: none;
+            }
+            .navbar-custom .brand {
+                font-size: 15px;
+            }
+            .navbar-custom .brand .logo {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
     <!-- ============================
-         DATOS SEGÚN TIPO DE VENTA
-         ============================ -->
-    {% if not r.marca or r.marca == '' %}
-    <!-- VENTA DIRECTA -->
-    <div class="mt-1" style="font-size: 13px; color: var(--text-secondary);">
-        <div>
-            <strong style="color: var(--text-secondary);">Productos:</strong> 
-            {% if r.detalles_repuestos %}
-                {% for item in r.detalles_repuestos %}
-                <span style="background: var(--bg-hover); padding: 2px 10px; border-radius: 4px; margin: 2px; display: inline-block; font-size: 12px;">
-                    {{ item.nombre }}
-                    <span style="color: var(--accent-yellow);">(${{ "{:,.0f}".format(item.costo_unitario|default(0)) }})</span>
-                </span>
+    NAVBAR (directo, sin include)
+    ============================ -->
+    <nav class="navbar-custom">
+        <a class="brand" href="/estado">
+            <span class="logo">D</span>
+            <span>Dixon Automotriz</span>
+        </a>
+        
+        <button class="menu-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">
+            <span class="material-symbols-rounded">menu</span>
+        </button>
+        
+        <div class="nav-links" id="navLinks">
+            {% if session.get("usuario") %}
+                <a href="/estado" class="{% if request.path == '/estado' %}active{% endif %}">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">dashboard</span>
+                    Estado
+                    {% if flotas_pendientes_count > 0 %}
+                    <span class="badge-count">{{ flotas_pendientes_count }}</span>
+                    {% endif %}
+                </a>
+                
+                {% if session.get("rol") in ["admin", "operador"] %}
+                <a href="/balance" class="{% if request.path == '/balance' %}active{% endif %}">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">account_balance</span>
+                    Finanzas
+                </a>
+                <a href="/flotas" class="{% if request.path == '/flotas' %}active{% endif %}">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">directions_car</span>
+                    Flotas
+                </a>
+                {% endif %}
+                
+                {% if session.get("rol") == "admin" %}
+                <a href="/usuarios" class="{% if request.path == '/usuarios' %}active{% endif %}">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">people</span>
+                    Usuarios
+                </a>
+                {% endif %}
+                
+                <span class="user-name">{{ session.get('nombre_completo', session.get('usuario')) }}</span>
+                <a href="/logout" class="logout">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">logout</span>
+                    Salir
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- ============================
+    CONTENIDO PRINCIPAL
+    ============================ -->
+    <div class="base-container">
+        <!-- Mostrar mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <span class="material-symbols-rounded" style="font-size: 20px;">
+                            {% if category == 'success' %}check_circle{% elif category == 'error' %}error{% elif category == 'warning' %}warning{% else %}info{% endif %}
+                        </span>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 {% endfor %}
-            {% else %}
-                {{ r.producto_vendido or 'Sin producto' }}
             {% endif %}
-        </div>
-        <div class="mt-1">
-            <strong style="color: var(--text-secondary);">Forma de Pago:</strong> 
-            {{ r.forma_pago or 'No especificada' }}
-        </div>
-    </div>
-    
-    {% else %}
-    <!-- TRABAJO: Datos del vehículo -->
-    <div class="mt-1" style="font-size: 13px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 8px 16px;">
-        <div><strong style="color: var(--text-secondary);">Marca:</strong> {{ r.marca or '-' }}</div>
-        <div><strong style="color: var(--text-secondary);">Modelo:</strong> {{ r.modelo or '-' }}</div>
-        <div><strong style="color: var(--text-secondary);">Patente:</strong> {{ r.patente or '-' }}</div>
-        {% if r.anio %}
-        <div><strong style="color: var(--text-secondary);">Año:</strong> {{ r.anio }}</div>
-        {% endif %}
-    </div>
-    {% endif %}
-    
-    <!-- ============================
-         DATOS COMUNES Y ESTADO
-         ============================ -->
-    <div class="mt-1" style="font-size: 13px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;">
-        <div>
-            <strong style="color: var(--text-secondary);">Fecha:</strong> 
-            {{ r.fecha[:10] if r.fecha else '' }}
-            {% if r.hora %}
-            <span style="color: var(--text-muted);">· {{ r.hora[:5] if r.hora else '' }}</span>
-            {% endif %}
-        </div>
-        <div>
-            <strong style="color: var(--text-secondary);">Estado:</strong>
-            {% if r.estado == 'pendiente' %}
-            <span style="color: var(--accent-yellow); font-weight: 600;">PENDIENTE</span>
-            {% else %}
-            <span style="color: var(--accent-green); font-weight: 600;">PAGADO</span>
-            {% endif %}
-        </div>
-        {% if r.monto %}
-        <div>
-            <strong style="color: var(--text-secondary);">Monto:</strong>
-            <span style="color: var(--text-primary); font-weight: 600;">${{ "{:,.0f}".format(r.monto) }}</span>
-        </div>
-        {% endif %}
-        {% if r.atendido_por %}
-        <div>
-            <strong style="color: var(--text-secondary);">Atendido por:</strong>
-            <span style="color: var(--text-muted);">{{ r.atendido_por }}</span>
-        </div>
-        {% endif %}
-    </div>
-    
-    <!-- ============================
-         BOTÓN DE ACCIÓN
-         ============================ -->
-    <div class="mt-3">
-        {% if r.estado == 'pendiente' %}
-            {% if not r.marca or r.marca == '' %}
-            <a href="/venta_rapida" class="btn btn-primary btn-sm w-100" style="background: var(--accent-blue) !important;">
-                <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">bolt</span>
-                Completar Venta
-            </a>
-            {% else %}
-            <a href="/pagar/{{ r.id }}" class="btn btn-primary btn-sm w-100">
-                <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">payments</span>
-                Pagar
-            </a>
-            {% endif %}
-        {% else %}
-            <a href="/pago_exitoso/{{ r.id }}" class="btn btn-secondary btn-sm w-100" style="background: var(--bg-hover); border: 1px solid var(--border-subtle);">
-                <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">receipt_long</span>
-                Ver Comprobante
-            </a>
-        {% endif %}
-    </div>
-</div>
-{% endfor %}
-
-<!-- ============================
-   MENSAJE CUANDO NO HAY REGISTROS
-   ============================ -->
-{% if not registros %}
-<div class="text-center py-5">
-    <span class="material-symbols-rounded" style="font-size: 48px; color: var(--text-muted);">inbox</span>
-    <h4 class="text-muted mt-2" style="font-weight: 400;">No hay registros</h4>
-    <p style="color: var(--text-muted); font-size: 14px;">
-        Comienza agregando un nuevo cliente o realizando una venta rápida.
-    </p>
-    <div class="d-flex justify-content-center gap-3 mt-3">
-        <a href="/agregar_cliente" class="btn btn-primary">
-            <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">person_add</span>
-            Agregar Cliente
-        </a>
-        <a href="/venta_rapida" class="btn btn-secondary">
-            <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">bolt</span>
-            Venta Rápida
-        </a>
-    </div>
-</div>
-{% endif %}
-
-<!-- ============================
-   SCRIPT PARA BUSCADOR
-   ============================ -->
-<script>
-document.getElementById('buscador').addEventListener('input', function() {
-    const texto = this.value.toLowerCase().trim();
-    const items = document.querySelectorAll('.registro-item');
-    
-    items.forEach(function(card) {
-        const nombre = card.dataset.nombre || '';
-        const patente = card.dataset.patente || '';
-        const flota = card.dataset.flota || '';
-        const textoCompleto = card.textContent.toLowerCase();
+        {% endwith %}
         
-        const coincide = texto === '' || 
-                         nombre.includes(texto) || 
-                         patente.includes(texto) || 
-                         flota.includes(texto) ||
-                         textoCompleto.includes(texto);
-        
-        card.style.display = coincide ? '' : 'none';
-    });
-});
-</script>
+        {% block content %}{% endblock %}
+    </div>
 
-{% endblock %}
+    <!-- ============================
+    BOTONES FLOTANTES
+    ============================ -->
+    <div class="fab-container">
+        <div class="fab-item">
+            <span class="fab-label">Venta Rápida</span>
+            <a href="/venta_rapida" class="fab fab-secondary">
+                <span class="material-symbols-rounded" style="font-size: 24px;">bolt</span>
+            </a>
+        </div>
+        <div class="fab-item">
+            <span class="fab-label">Agregar Cliente</span>
+            <a href="/agregar_cliente" class="fab fab-primary">
+                <span class="material-symbols-rounded" style="font-size: 28px;">add</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ============================
+    SCRIPTS
+    ============================ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function(reg) { console.log('✅ Service Worker registrado'); })
+                .catch(function(err) { console.log('❌ Service Worker error:', err); });
+        }
+
+        // Cerrar menú al hacer clic en un enlace (móvil)
+        document.querySelectorAll('.nav-links a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                document.getElementById('navLinks').classList.remove('open');
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Notificaciones Push -->
+    <script>
+    let VAPID_PUBLIC_KEY = '{{ vapid_public_key }}';
+    if (!VAPID_PUBLIC_KEY || VAPID_PUBLIC_KEY === '' || VAPID_PUBLIC_KEY === '{{ vapid_public_key }}') {
+        VAPID_PUBLIC_KEY = 'BJMiQjYynySFnvgwsForqgTnewTNLvH-kJgqKtMEWZ8LfPFkYOdpC0GhN4isHbydoYd-uc_LDs30SvqyuMyPwTY';
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+        if (!base64String) return null;
+        try {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        } catch (error) {
+            console.error('❌ Error convirtiendo clave:', error);
+            return null;
+        }
+    }
+
+    async function suscribirsePush() {
+        if (!('Notification' in window) || Notification.permission !== 'granted' || !VAPID_PUBLIC_KEY) return;
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            let subscription = await registration.pushManager.getSubscription();
+            if (subscription) return subscription;
+            
+            const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+            if (!applicationServerKey) return;
+            
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: applicationServerKey
+            });
+            
+            await fetch('/api/guardar_suscripcion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(subscription)
+            });
+            console.log('✅ Suscripción push guardada');
+            return subscription;
+        } catch (error) {
+            console.error('❌ Error en suscripción push:', error);
+        }
+    }
+
+    if ('Notification' in window && 'serviceWorker' in navigator) {
+        if (Notification.permission === 'default') {
+            Notification.requestPermission().then(function(permission) {
+                if (permission === 'granted') {
+                    navigator.serviceWorker.ready.then(() => setTimeout(suscribirsePush, 1000));
+                }
+            });
+        } else if (Notification.permission === 'granted') {
+            navigator.serviceWorker.ready.then(() => setTimeout(suscribirsePush, 500));
+        }
+    }
+    </script>
+
+</body>
+</html>
