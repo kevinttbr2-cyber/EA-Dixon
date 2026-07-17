@@ -5,21 +5,23 @@
 {% block content %}
 
 <style>
-/* ============================
-   ESTILOS ESPECÍFICOS PARA ESTADO
-   ============================ */
+/* ============================================================
+   ESTILOS QUE PREVALECEN SOBRE theme.css
+   Usamos selectores más específicos + !important
+   ============================================================ */
 
-.filtros-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
+/* Contenedor de filtros */
+div.filtros-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 20px !important;
 }
 
-/* ============================================================
-   FILTRO - CLASE NUEVA SIN CONFLICTOS CON BOOTSTRAP
-   ============================================================ */
-.filtro-card-dixon {
+/* Tarjeta de filtro */
+a.filtro-card-dixon,
+a.filtro-card-dixon:link,
+a.filtro-card-dixon:visited {
     background: #1e1e24 !important;
     border: 3px solid #2e3138 !important;
     border-radius: 12px !important;
@@ -29,14 +31,14 @@
     transition: all 0.3s ease !important;
     cursor: pointer !important;
     display: block !important;
+    color: #f5f5f5 !important;
 }
 
-.filtro-card-dixon:hover {
+a.filtro-card-dixon:hover {
     transform: translateY(-2px) !important;
-    border-color: #6b7078 !important;
 }
 
-.filtro-card-dixon .numero {
+a.filtro-card-dixon .numero {
     font-size: 28px !important;
     font-weight: 800 !important;
     display: block !important;
@@ -44,7 +46,7 @@
     color: #f5f5f5 !important;
 }
 
-.filtro-card-dixon .etiqueta {
+a.filtro-card-dixon .etiqueta {
     font-size: 11px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
@@ -56,41 +58,43 @@
     color: #b0b5bf !important;
 }
 
-.filtro-card-dixon .etiqueta .material-symbols-rounded {
+a.filtro-card-dixon .etiqueta .material-symbols-rounded {
     font-size: 16px !important;
 }
 
 /* ============================================================
-   FILTRO TOTAL
+   ESTADOS DE FILTRO
    ============================================================ */
-.filtro-card-dixon.active-total {
+a.filtro-card-dixon.active-total,
+a.filtro-card-dixon.active-total:link,
+a.filtro-card-dixon.active-total:visited {
     border-color: #b0b5bf !important;
     background: #2a2a32 !important;
 }
 
-/* ============================================================
-   FILTRO PAGADOS - BORDE VERDE
-   ============================================================ */
-.filtro-card-dixon.active-pagados {
-    border-color: #2ecc71 !important;
-    background: rgba(46, 204, 113, 0.08) !important;
+a.filtro-card-dixon.active-pagados,
+a.filtro-card-dixon.active-pagados:link,
+a.filtro-card-dixon.active-pagados:visited {
+    border-color: #00ff00 !important;
+    background: rgba(0, 255, 0, 0.08) !important;
+}
+
+a.filtro-card-dixon.active-pendientes,
+a.filtro-card-dixon.active-pendientes:link,
+a.filtro-card-dixon.active-pendientes:visited {
+    border-color: #ff0000 !important;
+    background: rgba(255, 0, 0, 0.08) !important;
 }
 
 /* ============================================================
-   FILTRO PENDIENTES - BORDE ROJO
+   BUSCADOR
    ============================================================ */
-.filtro-card-dixon.active-pendientes {
-    border-color: #e74c3c !important;
-    background: rgba(231, 76, 60, 0.08) !important;
-}
-
-/* Buscador */
-.buscador-wrapper {
+div.buscador-wrapper {
     position: relative !important;
     margin-bottom: 20px !important;
 }
 
-.buscador-wrapper .search-icon {
+div.buscador-wrapper .search-icon {
     position: absolute !important;
     left: 14px !important;
     top: 50% !important;
@@ -99,7 +103,7 @@
     pointer-events: none !important;
 }
 
-.buscador-wrapper input {
+div.buscador-wrapper input {
     width: 100% !important;
     padding: 14px 16px 14px 48px !important;
     background: #26262e !important;
@@ -111,18 +115,20 @@
     font-family: inherit !important;
 }
 
-.buscador-wrapper input:focus {
+div.buscador-wrapper input:focus {
     outline: none !important;
     border-color: #2ecc71 !important;
     box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.1) !important;
 }
 
-.buscador-wrapper input::placeholder {
+div.buscador-wrapper input::placeholder {
     color: #6b7078 !important;
 }
 
-/* Alerta flotas */
-.flota-alert {
+/* ============================================================
+   ALERTA FLOTAS
+   ============================================================ */
+div.flota-alert {
     background: rgba(241, 196, 15, 0.06) !important;
     border: 1px solid rgba(241, 196, 15, 0.15) !important;
     border-radius: 12px !important;
@@ -135,28 +141,28 @@
     gap: 10px !important;
 }
 
-.flota-alert .info {
+div.flota-alert .info {
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
     flex-wrap: wrap !important;
 }
 
-.flota-alert .info .icon {
+div.flota-alert .info .icon {
     color: #f1c40f !important;
     font-size: 24px !important;
 }
 
-.flota-alert .info .text {
+div.flota-alert .info .text {
     color: #b0b5bf !important;
     font-size: 14px !important;
 }
 
-.flota-alert .info .text strong {
+div.flota-alert .info .text strong {
     color: #f1c40f !important;
 }
 
-.flota-alert .badge-count {
+div.flota-alert .badge-count {
     background: #f1c40f !important;
     color: #121214 !important;
     border-radius: 50px !important;
@@ -166,7 +172,7 @@
     line-height: 26px !important;
 }
 
-.flota-alert .btn-ver {
+div.flota-alert .btn-ver {
     color: #f1c40f !important;
     font-size: 13px !important;
     text-decoration: none !important;
@@ -180,14 +186,14 @@
     gap: 4px !important;
 }
 
-.flota-alert .btn-ver:hover {
+div.flota-alert .btn-ver:hover {
     background: rgba(241, 196, 15, 0.15) !important;
 }
 
-/* ============================
+/* ============================================================
    TARJETAS DE TRABAJO
-   ============================ */
-.card-trabajo {
+   ============================================================ */
+div.card-trabajo {
     border-radius: 12px !important;
     padding: 16px 18px !important;
     margin-bottom: 12px !important;
@@ -196,24 +202,22 @@
     border-left-width: 4px !important;
 }
 
-.card-trabajo:hover {
+div.card-trabajo:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
 }
 
-/* PAGADOS - VERDE */
-.card-trabajo.pagado {
-    background: rgba(46, 204, 113, 0.06) !important;
-    border-left: 4px solid #2ecc71 !important;
+div.card-trabajo.pagado {
+    background: rgba(0, 255, 0, 0.06) !important;
+    border-left: 4px solid #00ff00 !important;
 }
 
-/* PENDIENTES - ROJO */
-.card-trabajo.pendiente {
-    background: rgba(231, 76, 60, 0.06) !important;
-    border-left: 4px solid #e74c3c !important;
+div.card-trabajo.pendiente {
+    background: rgba(255, 0, 0, 0.06) !important;
+    border-left: 4px solid #ff0000 !important;
 }
 
-.card-trabajo .header {
+div.card-trabajo .header {
     display: flex !important;
     justify-content: space-between !important;
     align-items: flex-start !important;
@@ -222,7 +226,7 @@
     margin-bottom: 4px !important;
 }
 
-.card-trabajo .header .nombre {
+div.card-trabajo .header .nombre {
     font-size: 18px !important;
     font-weight: 700 !important;
     display: flex !important;
@@ -232,17 +236,17 @@
     color: #f5f5f5 !important;
 }
 
-.card-trabajo .header .nombre .estado-icon-pagado {
-    color: #2ecc71 !important;
+div.card-trabajo .header .nombre .estado-icon-pagado {
+    color: #00ff00 !important;
     font-size: 18px !important;
 }
 
-.card-trabajo .header .nombre .estado-icon-pendiente {
-    color: #e74c3c !important;
+div.card-trabajo .header .nombre .estado-icon-pendiente {
+    color: #ff0000 !important;
     font-size: 18px !important;
 }
 
-.card-trabajo .header .nombre .badge-directa {
+div.card-trabajo .header .nombre .badge-directa {
     background: rgba(52, 152, 219, 0.12) !important;
     color: #3498db !important;
     border: 1px solid rgba(52, 152, 219, 0.15) !important;
@@ -255,7 +259,7 @@
     gap: 2px !important;
 }
 
-.card-trabajo .header .nombre .badge-flota {
+div.card-trabajo .header .nombre .badge-flota {
     background: rgba(241, 196, 15, 0.10) !important;
     color: #f1c40f !important;
     border: 1px solid rgba(241, 196, 15, 0.12) !important;
@@ -268,7 +272,7 @@
     gap: 2px !important;
 }
 
-.card-trabajo .header .telefono {
+div.card-trabajo .header .telefono {
     color: #b0b5bf !important;
     font-size: 13px !important;
     display: flex !important;
@@ -276,11 +280,11 @@
     gap: 4px !important;
 }
 
-.card-trabajo .header .telefono .material-symbols-rounded {
+div.card-trabajo .header .telefono .material-symbols-rounded {
     font-size: 16px !important;
 }
 
-.card-trabajo .detalles {
+div.card-trabajo .detalles {
     margin-top: 4px !important;
     font-size: 13px !important;
     color: #b0b5bf !important;
@@ -289,11 +293,11 @@
     gap: 4px 16px !important;
 }
 
-.card-trabajo .detalles strong {
+div.card-trabajo .detalles strong {
     color: #b0b5bf !important;
 }
 
-.card-trabajo .detalles .producto-tag {
+div.card-trabajo .detalles .producto-tag {
     background: #121214 !important;
     padding: 0 10px !important;
     border-radius: 4px !important;
@@ -303,11 +307,11 @@
     color: #b0b5bf !important;
 }
 
-.card-trabajo .detalles .producto-tag .precio {
+div.card-trabajo .detalles .producto-tag .precio {
     color: #f1c40f !important;
 }
 
-.card-trabajo .pie {
+div.card-trabajo .pie {
     margin-top: 10px !important;
     font-size: 13px !important;
     color: #b0b5bf !important;
@@ -317,22 +321,22 @@
     align-items: center !important;
 }
 
-.card-trabajo .pie .estado-texto-pagado {
-    color: #2ecc71 !important;
+div.card-trabajo .pie .estado-texto-pagado {
+    color: #00ff00 !important;
     font-weight: 600 !important;
 }
 
-.card-trabajo .pie .estado-texto-pendiente {
-    color: #e74c3c !important;
+div.card-trabajo .pie .estado-texto-pendiente {
+    color: #ff0000 !important;
     font-weight: 600 !important;
 }
 
-.card-trabajo .pie .monto {
+div.card-trabajo .pie .monto {
     color: #f5f5f5 !important;
     font-weight: 600 !important;
 }
 
-.card-trabajo .btn-accion {
+div.card-trabajo .btn-accion {
     margin-top: 12px !important;
     width: 100% !important;
     padding: 10px !important;
@@ -349,118 +353,120 @@
     text-decoration: none !important;
 }
 
-.card-trabajo .btn-accion.primary {
+div.card-trabajo .btn-accion.primary {
     background: #2ecc71 !important;
     color: #121214 !important;
 }
 
-.card-trabajo .btn-accion.primary:hover {
+div.card-trabajo .btn-accion.primary:hover {
     background: #27ae60 !important;
     transform: translateY(-2px) !important;
 }
 
-.card-trabajo .btn-accion.blue {
+div.card-trabajo .btn-accion.blue {
     background: #3498db !important;
     color: #121214 !important;
 }
 
-.card-trabajo .btn-accion.blue:hover {
+div.card-trabajo .btn-accion.blue:hover {
     background: #2980b9 !important;
     transform: translateY(-2px) !important;
 }
 
-.card-trabajo .btn-accion.secondary {
+div.card-trabajo .btn-accion.secondary {
     background: #2a2a32 !important;
     color: #f5f5f5 !important;
     border: 1px solid #2e3138 !important;
 }
 
-.card-trabajo .btn-accion.secondary:hover {
+div.card-trabajo .btn-accion.secondary:hover {
     background: #2a2a32 !important;
     transform: translateY(-2px) !important;
 }
 
-.card-trabajo .btn-accion .material-symbols-rounded {
+div.card-trabajo .btn-accion .material-symbols-rounded {
     font-size: 18px !important;
 }
 
-/* Empty state */
-.empty-state {
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+div.empty-state {
     text-align: center !important;
     padding: 60px 20px !important;
 }
 
-.empty-state .icon {
+div.empty-state .icon {
     font-size: 56px !important;
     color: #6b7078 !important;
 }
 
-.empty-state h4 {
+div.empty-state h4 {
     color: #b0b5bf !important;
     font-weight: 400 !important;
     margin-top: 12px !important;
     font-size: 18px !important;
 }
 
-.empty-state p {
+div.empty-state p {
     color: #6b7078 !important;
     font-size: 14px !important;
 }
 
-/* ============================
+/* ============================================================
    RESPONSIVE
-   ============================ */
+   ============================================================ */
 @media (max-width: 768px) {
-    .filtros-grid {
+    div.filtros-grid {
         grid-template-columns: repeat(3, 1fr) !important;
         gap: 6px !important;
     }
-    .filtro-card-dixon {
+    a.filtro-card-dixon {
         padding: 8px 10px !important;
     }
-    .filtro-card-dixon .numero {
+    a.filtro-card-dixon .numero {
         font-size: 22px !important;
     }
-    .filtro-card-dixon .etiqueta {
+    a.filtro-card-dixon .etiqueta {
         font-size: 9px !important;
     }
-    .card-trabajo {
+    div.card-trabajo {
         padding: 14px 16px !important;
     }
-    .card-trabajo .header .nombre {
+    div.card-trabajo .header .nombre {
         font-size: 16px !important;
     }
-    .flota-alert {
+    div.flota-alert {
         padding: 10px 14px !important;
     }
-    .empty-state {
+    div.empty-state {
         padding: 40px 16px !important;
     }
 }
 
 @media (max-width: 480px) {
-    .filtros-grid {
+    div.filtros-grid {
         grid-template-columns: repeat(3, 1fr) !important;
         gap: 4px !important;
     }
-    .filtro-card-dixon {
+    a.filtro-card-dixon {
         padding: 6px 8px !important;
     }
-    .filtro-card-dixon .numero {
+    a.filtro-card-dixon .numero {
         font-size: 18px !important;
     }
-    .filtro-card-dixon .etiqueta {
+    a.filtro-card-dixon .etiqueta {
         font-size: 8px !important;
     }
-    .buscador-wrapper input {
+    div.buscador-wrapper input {
         padding: 12px 12px 12px 42px !important;
         font-size: 14px !important;
     }
-    .card-trabajo .detalles {
+    div.card-trabajo .detalles {
         font-size: 12px !important;
         gap: 2px 10px !important;
     }
-    .card-trabajo .pie {
+    div.card-trabajo .pie {
         font-size: 12px !important;
     }
 }
@@ -495,32 +501,34 @@
 </h2>
 
 <!-- ============================
-   FILTROS - CON CLASE NUEVA SIN CONFLICTOS
+   FILTROS
    ============================ -->
 <div class="filtros-grid">
+
     <!-- TOTAL -->
     <a href="?estado=todos" class="filtro-card-dixon {% if not estado or estado == 'todos' %}active-total{% endif %}">
         <span class="numero">{{ (pendientes_mes or 0) + (pagados_mes or 0) }}</span>
         <span class="etiqueta">Total</span>
     </a>
-    
+
     <!-- PAGADOS - BORDE VERDE -->
     <a href="?estado=pagado" class="filtro-card-dixon {% if estado == 'pagado' %}active-pagados{% endif %}">
         <span class="numero">{{ pagados_mes or 0 }}</span>
         <span class="etiqueta">
-            <span class="material-symbols-rounded" style="color: #2ecc71 !important;">check_circle</span>
+            <span class="material-symbols-rounded" style="color: #00ff00 !important;">check_circle</span>
             Pagados
         </span>
     </a>
-    
+
     <!-- PENDIENTES - BORDE ROJO -->
     <a href="?estado=pendiente" class="filtro-card-dixon {% if estado == 'pendiente' %}active-pendientes{% endif %}">
         <span class="numero">{{ pendientes_mes or 0 }}</span>
         <span class="etiqueta">
-            <span class="material-symbols-rounded" style="color: #e74c3c !important;">pending</span>
+            <span class="material-symbols-rounded" style="color: #ff0000 !important;">pending</span>
             Pendientes
         </span>
     </a>
+
 </div>
 
 <!-- ============================
