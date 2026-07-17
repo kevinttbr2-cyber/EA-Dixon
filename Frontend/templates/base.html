@@ -1,666 +1,592 @@
-{% extends "base.html" %}
-
-{% block title %}Estado - Dixon Automotriz{% endblock %}
-
-{% block content %}
-
-<style>
-/* ============================
-   ESTILOS ESPECÍFICOS PARA ESTADO
-   ============================ */
-
-.filtros-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.filtro-card-dixon {
-    background: #1e1e24 !important;
-    border-radius: 12px !important;
-    padding: 12px 16px !important;
-    text-align: center !important;
-    text-decoration: none !important;
-    transition: all 0.3s ease !important;
-    cursor: pointer !important;
-    display: block !important;
-}
-
-.filtro-card-dixon:hover {
-    transform: translateY(-2px) !important;
-}
-
-.filtro-card-dixon .numero {
-    font-size: 28px !important;
-    font-weight: 800 !important;
-    display: block !important;
-    line-height: 1.2 !important;
-    color: #f5f5f5 !important;
-}
-
-.filtro-card-dixon .etiqueta {
-    font-size: 11px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-    opacity: 0.6 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 4px !important;
-    color: #b0b5bf !important;
-}
-
-.filtro-card-dixon .etiqueta .material-symbols-rounded {
-    font-size: 16px !important;
-}
-
-/* Buscador */
-.buscador-wrapper {
-    position: relative !important;
-    margin-bottom: 20px !important;
-}
-
-.buscador-wrapper .search-icon {
-    position: absolute !important;
-    left: 14px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    color: #6b7078 !important;
-    pointer-events: none !important;
-}
-
-.buscador-wrapper input {
-    width: 100% !important;
-    padding: 14px 16px 14px 48px !important;
-    background: #26262e !important;
-    border: 2px solid transparent !important;
-    border-radius: 12px !important;
-    color: #f5f5f5 !important;
-    font-size: 15px !important;
-    transition: all 0.3s ease !important;
-    font-family: inherit !important;
-}
-
-.buscador-wrapper input:focus {
-    outline: none !important;
-    border-color: #2ecc71 !important;
-    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.1) !important;
-}
-
-.buscador-wrapper input::placeholder {
-    color: #6b7078 !important;
-}
-
-/* Alerta flotas */
-.flota-alert {
-    background: rgba(241, 196, 15, 0.06) !important;
-    border: 1px solid rgba(241, 196, 15, 0.15) !important;
-    border-radius: 12px !important;
-    padding: 12px 18px !important;
-    margin-bottom: 20px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    flex-wrap: wrap !important;
-    gap: 10px !important;
-}
-
-.flota-alert .info {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-    flex-wrap: wrap !important;
-}
-
-.flota-alert .info .icon {
-    color: #f1c40f !important;
-    font-size: 24px !important;
-}
-
-.flota-alert .info .text {
-    color: #b0b5bf !important;
-    font-size: 14px !important;
-}
-
-.flota-alert .info .text strong {
-    color: #f1c40f !important;
-}
-
-.flota-alert .badge-count {
-    background: #f1c40f !important;
-    color: #121214 !important;
-    border-radius: 50px !important;
-    padding: 0 14px !important;
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    line-height: 26px !important;
-}
-
-.flota-alert .btn-ver {
-    color: #f1c40f !important;
-    font-size: 13px !important;
-    text-decoration: none !important;
-    background: rgba(241, 196, 15, 0.08) !important;
-    padding: 4px 18px !important;
-    border-radius: 50px !important;
-    border: 1px solid rgba(241, 196, 15, 0.12) !important;
-    transition: all 0.3s ease !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-}
-
-.flota-alert .btn-ver:hover {
-    background: rgba(241, 196, 15, 0.15) !important;
-}
-
-/* ============================
-   TARJETAS DE TRABAJO
-   ============================ */
-.card-trabajo {
-    border-radius: 12px !important;
-    padding: 16px 18px !important;
-    margin-bottom: 12px !important;
-    transition: all 0.3s ease !important;
-    border: 1px solid #2e3138 !important;
-    border-left-width: 4px !important;
-}
-
-.card-trabajo:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
-}
-
-.card-trabajo.pagado {
-    background: rgba(46, 204, 113, 0.06) !important;
-    border-left: 4px solid #2ecc71 !important;
-}
-
-.card-trabajo.pendiente {
-    background: rgba(231, 76, 60, 0.06) !important;
-    border-left: 4px solid #e74c3c !important;
-}
-
-.card-trabajo .header {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: flex-start !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-    margin-bottom: 4px !important;
-}
-
-.card-trabajo .header .nombre {
-    font-size: 18px !important;
-    font-weight: 700 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    flex-wrap: wrap !important;
-    color: #f5f5f5 !important;
-}
-
-.card-trabajo .header .nombre .estado-icon-pagado {
-    color: #2ecc71 !important;
-    font-size: 18px !important;
-}
-
-.card-trabajo .header .nombre .estado-icon-pendiente {
-    color: #e74c3c !important;
-    font-size: 18px !important;
-}
-
-.card-trabajo .header .nombre .badge-directa {
-    background: rgba(52, 152, 219, 0.12) !important;
-    color: #3498db !important;
-    border: 1px solid rgba(52, 152, 219, 0.15) !important;
-    font-size: 10px !important;
-    padding: 0 10px !important;
-    border-radius: 20px !important;
-    line-height: 20px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 2px !important;
-}
-
-.card-trabajo .header .nombre .badge-flota {
-    background: rgba(241, 196, 15, 0.10) !important;
-    color: #f1c40f !important;
-    border: 1px solid rgba(241, 196, 15, 0.12) !important;
-    font-size: 10px !important;
-    padding: 0 10px !important;
-    border-radius: 20px !important;
-    line-height: 20px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 2px !important;
-}
-
-.card-trabajo .header .telefono {
-    color: #b0b5bf !important;
-    font-size: 13px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-}
-
-.card-trabajo .header .telefono .material-symbols-rounded {
-    font-size: 16px !important;
-}
-
-.card-trabajo .detalles {
-    margin-top: 4px !important;
-    font-size: 13px !important;
-    color: #b0b5bf !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 4px 16px !important;
-}
-
-.card-trabajo .detalles strong {
-    color: #b0b5bf !important;
-}
-
-.card-trabajo .detalles .producto-tag {
-    background: #121214 !important;
-    padding: 0 10px !important;
-    border-radius: 4px !important;
-    font-size: 12px !important;
-    display: inline-block !important;
-    margin: 2px !important;
-    color: #b0b5bf !important;
-}
-
-.card-trabajo .detalles .producto-tag .precio {
-    color: #f1c40f !important;
-}
-
-.card-trabajo .pie {
-    margin-top: 10px !important;
-    font-size: 13px !important;
-    color: #b0b5bf !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 4px 16px !important;
-    align-items: center !important;
-}
-
-.card-trabajo .pie .estado-texto-pagado {
-    color: #2ecc71 !important;
-    font-weight: 600 !important;
-}
-
-.card-trabajo .pie .estado-texto-pendiente {
-    color: #e74c3c !important;
-    font-weight: 600 !important;
-}
-
-.card-trabajo .pie .monto {
-    color: #f5f5f5 !important;
-    font-weight: 600 !important;
-}
-
-.card-trabajo .btn-accion {
-    margin-top: 12px !important;
-    width: 100% !important;
-    padding: 10px !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    border: none !important;
-    cursor: pointer !important;
-    transition: all 0.3s ease !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    text-decoration: none !important;
-}
-
-.card-trabajo .btn-accion.primary {
-    background: #2ecc71 !important;
-    color: #121214 !important;
-}
-
-.card-trabajo .btn-accion.primary:hover {
-    background: #27ae60 !important;
-    transform: translateY(-2px) !important;
-}
-
-.card-trabajo .btn-accion.blue {
-    background: #3498db !important;
-    color: #121214 !important;
-}
-
-.card-trabajo .btn-accion.blue:hover {
-    background: #2980b9 !important;
-    transform: translateY(-2px) !important;
-}
-
-.card-trabajo .btn-accion.secondary {
-    background: #2a2a32 !important;
-    color: #f5f5f5 !important;
-    border: 1px solid #2e3138 !important;
-}
-
-.card-trabajo .btn-accion.secondary:hover {
-    background: #2a2a32 !important;
-    transform: translateY(-2px) !important;
-}
-
-.card-trabajo .btn-accion .material-symbols-rounded {
-    font-size: 18px !important;
-}
-
-.empty-state {
-    text-align: center !important;
-    padding: 60px 20px !important;
-}
-
-.empty-state .icon {
-    font-size: 56px !important;
-    color: #6b7078 !important;
-}
-
-.empty-state h4 {
-    color: #b0b5bf !important;
-    font-weight: 400 !important;
-    margin-top: 12px !important;
-    font-size: 18px !important;
-}
-
-.empty-state p {
-    color: #6b7078 !important;
-    font-size: 14px !important;
-}
-
-/* ============================
-   RESPONSIVE
-   ============================ */
-@media (max-width: 768px) {
-    .filtros-grid {
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 6px !important;
-    }
-    .filtro-card-dixon {
-        padding: 8px 10px !important;
-    }
-    .filtro-card-dixon .numero {
-        font-size: 22px !important;
-    }
-    .filtro-card-dixon .etiqueta {
-        font-size: 9px !important;
-    }
-    .card-trabajo {
-        padding: 14px 16px !important;
-    }
-    .card-trabajo .header .nombre {
-        font-size: 16px !important;
-    }
-    .flota-alert {
-        padding: 10px 14px !important;
-    }
-    .empty-state {
-        padding: 40px 16px !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .filtros-grid {
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 4px !important;
-    }
-    .filtro-card-dixon {
-        padding: 6px 8px !important;
-    }
-    .filtro-card-dixon .numero {
-        font-size: 18px !important;
-    }
-    .filtro-card-dixon .etiqueta {
-        font-size: 8px !important;
-    }
-    .buscador-wrapper input {
-        padding: 12px 12px 12px 42px !important;
-        font-size: 14px !important;
-    }
-    .card-trabajo .detalles {
-        font-size: 12px !important;
-        gap: 2px 10px !important;
-    }
-    .card-trabajo .pie {
-        font-size: 12px !important;
-    }
-}
-</style>
-
-<!-- ============================
-   ALERTA DE FLOTAS PENDIENTES
-   ============================ -->
-{% if flotas_pendientes_count > 0 %}
-<div class="flota-alert">
-    <div class="info">
-        <span class="icon material-symbols-rounded">pending_actions</span>
-        <span class="text">
-            <strong>{{ flotas_pendientes_count }}</strong> 
-            flota{% if flotas_pendientes_count > 1 %}s{% endif %} pendiente{% if flotas_pendientes_count > 1 %}s{% endif %} de cobro
-        </span>
-        <span class="badge-count">{{ flotas_pendientes_count }}</span>
-    </div>
-    <a href="/flotas_pendientes" class="btn-ver">
-        Ver todas
-        <span class="material-symbols-rounded" style="font-size: 16px;">arrow_forward</span>
-    </a>
-</div>
-{% endif %}
-
-<!-- ============================
-   TÍTULO
-   ============================ -->
-<h2 class="text-center mb-4" style="font-weight: 700; font-size: 24px; display: flex; align-items: center; justify-content: center; gap: 10px; color: #f5f5f5;">
-    <span class="material-symbols-rounded" style="font-size: 28px;">dashboard</span>
-    Lista de Trabajo
-</h2>
-
-<!-- ============================
-   FILTROS - CON ESTILOS INLINE DIRECTOS
-   ============================ -->
-<div class="filtros-grid">
-
-    <!-- TOTAL -->
-    <a href="?estado=todos" class="filtro-card-dixon" 
-       style="border: 3px solid {% if not estado or estado == 'todos' %}#b0b5bf{% else %}#2e3138{% endif %} !important;
-              background: {% if not estado or estado == 'todos' %}#2a2a32{% else %}#1e1e24{% endif %} !important;">
-        <span class="numero">{{ (pendientes_mes or 0) + (pagados_mes or 0) }}</span>
-        <span class="etiqueta">Total</span>
-    </a>
-
-    <!-- PAGADOS - BORDE VERDE -->
-    <a href="?estado=pagado" class="filtro-card-dixon" 
-       style="border: 3px solid {% if estado == 'pagado' %}#00ff00{% else %}#2e3138{% endif %} !important;
-              background: {% if estado == 'pagado' %}rgba(0, 255, 0, 0.08){% else %}#1e1e24{% endif %} !important;">
-        <span class="numero" style="color: #f5f5f5 !important;">{{ pagados_mes or 0 }}</span>
-        <span class="etiqueta">
-            <span class="material-symbols-rounded" style="color: #00ff00 !important;">check_circle</span>
-            Pagados
-        </span>
-    </a>
-
-    <!-- PENDIENTES - BORDE ROJO -->
-    <a href="?estado=pendiente" class="filtro-card-dixon" 
-       style="border: 3px solid {% if estado == 'pendiente' %}#ff0000{% else %}#2e3138{% endif %} !important;
-              background: {% if estado == 'pendiente' %}rgba(255, 0, 0, 0.08){% else %}#1e1e24{% endif %} !important;">
-        <span class="numero" style="color: #f5f5f5 !important;">{{ pendientes_mes or 0 }}</span>
-        <span class="etiqueta">
-            <span class="material-symbols-rounded" style="color: #ff0000 !important;">pending</span>
-            Pendientes
-        </span>
-    </a>
-
-</div>
-
-<!-- ============================
-   BUSCADOR
-   ============================ -->
-<div class="buscador-wrapper">
-    <span class="search-icon material-symbols-rounded">search</span>
-    <input type="text" id="buscador" placeholder="Buscar por cliente, patente, flota...">
-</div>
-
-<!-- ============================
-   LISTA DE TRABAJOS
-   ============================ -->
-<div id="lista-trabajos">
-    {% for r in registros %}
-    <div class="card-trabajo {% if r.estado == 'pagado' %}pagado{% else %}pendiente{% endif %} registro-item" 
-         data-nombre="{{ r.nombre|lower }}" 
-         data-patente="{{ r.patente|lower if r.patente else '' }}"
-         data-flota="{{ r.flota|lower if r.flota else '' }}">
-
-        <div class="header">
-            <div class="nombre">
-                {% if r.estado == 'pagado' %}
-                <span class="estado-icon-pagado material-symbols-rounded">check_circle</span>
-                {% else %}
-                <span class="estado-icon-pendiente material-symbols-rounded">pending</span>
-                {% endif %}
-                {{ r.nombre }}
-                
-                {% if not r.marca or r.marca == '' %}
-                <span class="badge-directa">
-                    <span class="material-symbols-rounded" style="font-size: 12px;">bolt</span>
-                    Directa
-                </span>
-                {% endif %}
-                
-                {% if r.flota and r.flota != '' %}
-                <span class="badge-flota">
-                    <span class="material-symbols-rounded" style="font-size: 12px;">directions_car</span>
-                    {{ r.flota }}
-                </span>
-                {% endif %}
-            </div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+    <title>Dixon Electricidad Automotriz</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2ecc71">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- theme.css (global) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}?v=3">
+    
+    <style>
+        /* ============================
+           ESTILOS GLOBALES BASE
+           ============================ */
+        :root {
+            --bg-primary: #121214;
+            --bg-secondary: #181a1f;
+            --bg-card: #1e1e24;
+            --bg-hover: #2a2a32;
+            --bg-input: #26262e;
+            --text-primary: #f5f5f5;
+            --text-secondary: #b0b5bf;
+            --text-muted: #6b7078;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --border-subtle: #2e3138;
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #121214 !important;
+            color: #f5f5f5 !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            min-height: 100vh;
+            padding-top: 76px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ============================
+           NAVBAR
+           ============================ */
+        .navbar-custom {
+            background: #181a1f !important;
+            border-bottom: 1px solid #2e3138 !important;
+            padding: 8px 20px !important;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3) !important;
+            position: fixed !important;
+            top: 0 !important;
+            width: 100% !important;
+            z-index: 1000 !important;
+        }
+
+        .navbar-custom .navbar-brand {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .navbar-custom .navbar-brand .logo-img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .navbar-custom .nav-link {
+            color: #b0b5bf !important;
+            padding: 6px 14px !important;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: #f5f5f5 !important;
+            background: #2a2a32;
+        }
+
+        .navbar-custom .nav-link.active {
+            color: #2ecc71 !important;
+            background: rgba(46, 204, 113, 0.08);
+        }
+
+        .navbar-custom .nav-link .badge-count {
+            background: #f1c40f;
+            color: #121214;
+            border-radius: 50px;
+            padding: 0 8px;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 18px;
+            margin-left: 2px;
+        }
+
+        .navbar-custom .nav-link .material-symbols-rounded {
+            font-size: 18px;
+        }
+
+        .navbar-custom .dropdown-menu {
+            background: #181a1f !important;
+            border: 1px solid #2e3138 !important;
+            border-radius: 12px !important;
+            padding: 8px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        .navbar-custom .dropdown-item {
+            color: #b0b5bf !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .navbar-custom .dropdown-item:hover {
+            background: #2a2a32 !important;
+            color: #f5f5f5 !important;
+        }
+
+        .navbar-custom .dropdown-item .material-symbols-rounded {
+            font-size: 18px;
+        }
+
+        .navbar-custom .dropdown-divider {
+            border-color: #2e3138 !important;
+        }
+
+        .navbar-custom .user-name {
+            color: #f5f5f5 !important;
+            padding: 6px 14px !important;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .navbar-custom .logout-link {
+            color: #e74c3c !important;
+        }
+        .navbar-custom .logout-link:hover {
+            background: rgba(231, 76, 60, 0.1) !important;
+        }
+
+        .navbar-custom .navbar-toggler {
+            border: none !important;
+            padding: 4px 8px !important;
+        }
+        .navbar-custom .navbar-toggler:focus {
+            box-shadow: none !important;
+        }
+        .navbar-custom .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,0.7)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+        }
+
+        /* ============================
+           CONTENEDOR PRINCIPAL
+           ============================ */
+        .base-container {
+            background: #181a1f !important;
+            border-radius: 16px !important;
+            padding: 24px 28px !important;
+            border: 1px solid #2e3138 !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+            max-width: 1200px !important;
+            margin: 0 auto 40px !important;
+        }
+
+        /* ============================
+           ALERTAS
+           ============================ */
+        .alert {
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid transparent;
+        }
+        .alert-success {
+            background: rgba(46, 204, 113, 0.12);
+            color: #2ecc71;
+            border-color: rgba(46, 204, 113, 0.25);
+        }
+        .alert-danger {
+            background: rgba(231, 76, 60, 0.12);
+            color: #e74c3c;
+            border-color: rgba(231, 76, 60, 0.25);
+        }
+        .alert-warning {
+            background: rgba(241, 196, 15, 0.12);
+            color: #f1c40f;
+            border-color: rgba(241, 196, 15, 0.25);
+        }
+        .alert-info {
+            background: rgba(52, 152, 219, 0.12);
+            color: #3498db;
+            border-color: rgba(52, 152, 219, 0.25);
+        }
+        .alert .btn-close {
+            filter: invert(1);
+            opacity: 0.5;
+        }
+
+        /* ============================
+           BOTONES FLOTANTES (FAB)
+           ============================ */
+        .fab-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+            z-index: 50;
+        }
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            font-weight: 700;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .fab-primary {
+            background: #2ecc71;
+            color: #121214;
+        }
+        .fab-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(46, 204, 113, 0.4);
+        }
+
+        .fab-secondary {
+            background: #1e1e24;
+            color: #f5f5f5;
+            font-size: 20px;
+            border: 1px solid #2e3138;
+        }
+        .fab-secondary:hover {
+            background: #2a2a32;
+            transform: scale(1.05);
+        }
+
+        .fab-label {
+            background: #1e1e24;
+            color: #f5f5f5;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .fab-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .fab-item:hover .fab-label {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* ============================
+           RESPONSIVE
+           ============================ */
+        @media (max-width: 768px) {
+            .navbar-custom .navbar-collapse {
+                padding: 12px 0;
+            }
+            .navbar-custom .nav-link {
+                padding: 10px 14px !important;
+                font-size: 14px;
+                width: 100%;
+            }
+            .navbar-custom .dropdown-menu {
+                background: #2a2a32 !important;
+                border: none !important;
+                padding-left: 20px !important;
+                box-shadow: none !important;
+            }
+            .navbar-custom .user-name {
+                padding: 10px 14px !important;
+                width: 100%;
+            }
+            .base-container {
+                padding: 16px !important;
+                margin: 0 8px 30px !important;
+            }
+            .fab {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fab-container {
+                bottom: 16px;
+                right: 16px;
+            }
+            .fab {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+            .fab-label {
+                display: none;
+            }
+            .navbar-custom .navbar-brand .logo-img {
+                height: 32px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- ============================
+    NAVBAR
+    ============================ -->
+    <nav class="navbar navbar-custom navbar-expand-lg">
+        <div class="container-fluid px-0">
+            <a class="navbar-brand" href="/estado">
+                <img src="{{ url_for('static', filename='images/dixon-navbar.png') }}" alt="Dixon" class="logo-img">
+            </a>
             
-            {% if r.telefono %}
-            <div class="telefono">
-                <span class="material-symbols-rounded">phone</span>
-                {{ r.telefono }}
-            </div>
-            {% endif %}
-        </div>
-
-        <div class="detalles">
-            {% if not r.marca or r.marca == '' %}
-                <div style="width: 100%;">
-                    <strong>Productos:</strong> 
-                    {% if r.detalles_repuestos %}
-                        {% for item in r.detalles_repuestos %}
-                        <span class="producto-tag">
-                            {{ item.nombre }}
-                            <span class="precio">(${{ "{:,.0f}".format(item.costo_unitario|default(0)) }})</span>
-                        </span>
-                        {% endfor %}
-                    {% else %}
-                        {{ r.producto_vendido or 'Sin producto' }}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+                    
+                    {% if session.get("usuario") %}
+                    
+                    <!-- FINANZAS -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuFinanzas" role="button" data-bs-toggle="dropdown">
+                            <span class="material-symbols-rounded">account_balance</span>
+                            Finanzas
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/balance"><span class="material-symbols-rounded">balance</span> Balance Total</a></li>
+                            <li><a class="dropdown-item" href="/balance_ventas"><span class="material-symbols-rounded">point_of_sale</span> Balance Ventas</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/dashboard"><span class="material-symbols-rounded">analytics</span> Dashboard</a></li>
+                        </ul>
+                    </li>
                     {% endif %}
-                </div>
-                <div>
-                    <strong>Forma de Pago:</strong> {{ r.forma_pago or 'No especificada' }}
-                </div>
-            {% else %}
-                <div><strong>Marca:</strong> {{ r.marca or '-' }}</div>
-                <div><strong>Modelo:</strong> {{ r.modelo or '-' }}</div>
-                <div><strong>Patente:</strong> {{ r.patente or '-' }}</div>
-                {% if r.anio %}
-                <div><strong>Año:</strong> {{ r.anio }}</div>
-                {% endif %}
-            {% endif %}
+                    
+                    <!-- GESTIÓN -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown">
+                            <span class="material-symbols-rounded">settings</span>
+                            Gestión
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/registros"><span class="material-symbols-rounded">history</span> Registros</a></li>
+                            <li><a class="dropdown-item" href="/flotas"><span class="material-symbols-rounded">directions_car</span> Flotas</a></li>
+                            <li><a class="dropdown-item" href="/flotas_pendientes"><span class="material-symbols-rounded">pending_actions</span> Flotas Pendientes {% if flotas_pendientes_count > 0 %}<span class="badge-count">{{ flotas_pendientes_count }}</span>{% endif %}</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/repuestos"><span class="material-symbols-rounded">inventory_2</span> Repuestos</a></li>
+                            <li><a class="dropdown-item" href="/auditoria_descargas"><span class="material-symbols-rounded">download</span> Auditoría</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- VALIDAR PAGOS -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/pendientes_validacion' %}active{% endif %}" href="/pendientes_validacion">
+                            <span class="material-symbols-rounded">verified</span>
+                            Validar Pagos
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- USUARIOS -->
+                    {% if session.get("rol") == "admin" %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown">
+                            <span class="material-symbols-rounded">people</span>
+                            Usuarios
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/register"><span class="material-symbols-rounded">person_add</span> Crear Usuario</a></li>
+                            <li><a class="dropdown-item" href="/usuarios"><span class="material-symbols-rounded">group</span> Lista de Usuarios</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- LOGS -->
+                    {% if session.get("rol") == "admin" %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/ver_logs' %}active{% endif %}" href="/ver_logs">
+                            <span class="material-symbols-rounded">terminal</span>
+                            Logs
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- USUARIO + SALIR -->
+                    <li class="nav-item">
+                        <span class="user-name">
+                            <span class="material-symbols-rounded" style="font-size: 16px;">account_circle</span>
+                            {{ session.get('nombre_completo', session.get('usuario')) }}
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link logout-link" href="/logout">
+                            <span class="material-symbols-rounded">logout</span>
+                            Salir
+                        </a>
+                    </li>
+                    
+                    {% endif %}
+                    
+                </ul>
+            </div>
         </div>
+    </nav>
 
-        <div class="pie">
-            <div>
-                <strong>Fecha:</strong> 
-                {{ r.fecha[:10] if r.fecha else '' }}
-                {% if r.hora %}
-                <span style="color: #6b7078;">· {{ r.hora[:5] if r.hora else '' }}</span>
-                {% endif %}
-            </div>
-            <div>
-                <strong>Estado:</strong>
-                {% if r.estado == 'pagado' %}
-                <span class="estado-texto-pagado">PAGADO</span>
-                {% else %}
-                <span class="estado-texto-pendiente">PENDIENTE</span>
-                {% endif %}
-            </div>
-            {% if r.monto %}
-            <div>
-                <strong>Monto:</strong>
-                <span class="monto">${{ "{:,.0f}".format(r.monto) }}</span>
-            </div>
+    <!-- ============================
+    CONTENIDO PRINCIPAL
+    ============================ -->
+    <div class="base-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <span class="material-symbols-rounded" style="font-size: 20px;">
+                            {% if category == 'success' %}check_circle{% elif category == 'error' %}error{% elif category == 'warning' %}warning{% else %}info{% endif %}
+                        </span>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
             {% endif %}
-            {% if r.atendido_por %}
-            <div>
-                <strong>Atendido por:</strong>
-                <span style="color: #6b7078;">{{ r.atendido_por }}</span>
-            </div>
-            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- ============================
+    BOTONES FLOTANTES
+    ============================ -->
+    <div class="fab-container">
+        <div class="fab-item">
+            <span class="fab-label">Venta Rápida</span>
+            <a href="/venta_rapida" class="fab fab-secondary">
+                <span class="material-symbols-rounded" style="font-size: 24px;">bolt</span>
+            </a>
         </div>
-
-        <div>
-            {% if r.estado == 'pendiente' %}
-                {% if not r.marca or r.marca == '' %}
-                <a href="/venta_rapida" class="btn-accion blue">
-                    <span class="material-symbols-rounded">bolt</span>
-                    Completar Venta
-                </a>
-                {% else %}
-                <a href="/pagar/{{ r.id }}" class="btn-accion primary">
-                    <span class="material-symbols-rounded">payments</span>
-                    Pagar
-                </a>
-                {% endif %}
-            {% else %}
-                <a href="/pago_exitoso/{{ r.id }}" class="btn-accion secondary">
-                    <span class="material-symbols-rounded">receipt_long</span>
-                    Ver Comprobante
-                </a>
-            {% endif %}
+        <div class="fab-item">
+            <span class="fab-label">Agregar Cliente</span>
+            <a href="/agregar_cliente" class="fab fab-primary">
+                <span class="material-symbols-rounded" style="font-size: 28px;">add</span>
+            </a>
         </div>
     </div>
-    {% endfor %}
-</div>
 
-<!-- ============================
-   MENSAJE CUANDO NO HAY REGISTROS
-   ============================ -->
-{% if not registros %}
-<div class="empty-state">
-    <span class="icon material-symbols-rounded">inbox</span>
-    <h4>No hay registros</h4>
-    <p>Comienza agregando un nuevo cliente o realizando una venta rápida.</p>
-</div>
-{% endif %}
-
-<!-- ============================
-   SCRIPT PARA BUSCADOR
-   ============================ -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const buscador = document.getElementById('buscador');
-    if (buscador) {
-        buscador.addEventListener('input', function() {
-            const texto = this.value.toLowerCase().trim();
-            document.querySelectorAll('.registro-item').forEach(function(card) {
-                const nombre = (card.dataset.nombre || '').toLowerCase();
-                const patente = (card.dataset.patente || '').toLowerCase();
-                const flota = (card.dataset.flota || '').toLowerCase();
-                const coincide = texto === '' || nombre.includes(texto) || patente.includes(texto) || flota.includes(texto) || card.textContent.toLowerCase().includes(texto);
-                card.style.display = coincide ? '' : 'none';
-            });
-        });
+    <!-- ============================
+    SCRIPTS
+    ============================ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function(reg) { console.log('✅ Service Worker registrado'); })
+                .catch(function(err) { console.log('❌ Service Worker error:', err); });
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+    let VAPID_PUBLIC_KEY = '{{ vapid_public_key }}';
+    if (!VAPID_PUBLIC_KEY || VAPID_PUBLIC_KEY === '' || VAPID_PUBLIC_KEY === '{{ vapid_public_key }}') {
+        VAPID_PUBLIC_KEY = 'BJMiQjYynySFnvgwsForqgTnewTNLvH-kJgqKtMEWZ8LfPFkYOdpC0GhN4isHbydoYd-uc_LDs30SvqyuMyPwTY';
     }
-});
-</script>
 
-{% endblock %}
+    function urlBase64ToUint8Array(base64String) {
+        if (!base64String) return null;
+        try {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        } catch (error) {
+            console.error('❌ Error convirtiendo clave:', error);
+            return null;
+        }
+    }
+
+    async function suscribirsePush() {
+        if (!('Notification' in window) || Notification.permission !== 'granted' || !VAPID_PUBLIC_KEY) return;
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            let subscription = await registration.pushManager.getSubscription();
+            if (subscription) return subscription;
+            const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+            if (!applicationServerKey) return;
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: applicationServerKey
+            });
+            await fetch('/api/guardar_suscripcion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(subscription)
+            });
+            console.log('✅ Suscripción push guardada');
+            return subscription;
+        } catch (error) {
+            console.error('❌ Error en suscripción push:', error);
+        }
+    }
+
+    if ('Notification' in window && 'serviceWorker' in navigator) {
+        if (Notification.permission === 'default') {
+            Notification.requestPermission().then(function(permission) {
+                if (permission === 'granted') {
+                    navigator.serviceWorker.ready.then(() => setTimeout(suscribirsePush, 1000));
+                }
+            });
+        } else if (Notification.permission === 'granted') {
+            navigator.serviceWorker.ready.then(() => setTimeout(suscribirsePush, 500));
+        }
+    }
+    </script>
+
+</body>
+</html>
