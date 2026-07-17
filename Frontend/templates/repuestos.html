@@ -1473,13 +1473,16 @@ function mostrarPreviewProductos(datos) {
             <td style="padding:4px 6px;color:#ffcc00;">$${item.costo.toLocaleString('es-CL')}</td>
             <td style="padding:4px 6px;color:#00ff66;">$${item.precio_venta.toLocaleString('es-CL')}</td>
             <td style="padding:4px 6px;color:#4fc3f7;">${item.margen}%</td>
+            ${item.categoria ? `<td style="padding:4px 6px;color:#f1c40f;">${item.categoria}</td>` : '<td style="padding:4px 6px;color:#666;">-</td>'}
+            ${item.subcategoria ? `<td style="padding:4px 6px;color:#9b59b6;">${item.subcategoria}</td>` : '<td style="padding:4px 6px;color:#666;">-</td>'}
+            <td style="padding:4px 6px;color:#ff6b6b;font-weight:600;text-align:center;">${item.stock || 0}</td>
         `;
         previewBody.appendChild(tr);
     });
     
     if (datos.length > 10) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="5" style="padding:6px;text-align:center;color:#666;">... y ${datos.length - 10} más</td>`;
+        tr.innerHTML = `<td colspan="8" style="padding:6px;text-align:center;color:#666;">... y ${datos.length - 10} más</td>`;
         previewBody.appendChild(tr);
     }
     
@@ -1871,6 +1874,101 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar categorías al inicio para editar
     cargarCategoriasEnEditar();
 });
+function procesarArchivoProductos(file) {
+    // Verificar que sea un archivo Excel
+    const validTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'
+    ];
+    
+    if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/)) {
+        alert('⚠️ Formato no válido. Por favor, sube un archivo .xlsx, .xls o .csv');
+        document.getElementById('fileInputProductos').value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                alert('⚠️ El archivo no contiene hojas');
+                return;
+            }
+            
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+            
+            if (jsonData.length === 0) {
+                alert('⚠️ El archivo está vacío');
+                return;
+            }
+            
+            // Verificar que tenga las columnas necesarias
+            const firstRow = jsonData[0];
+            const requiredColumns = ['Producto', 'Costo Proveedor', 'Precio Venta'];
+            const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+            
+            if (missingColumns.length > 0) {
+                alert(`⚠️ Faltan columnas obligatorias: ${missingColumns.join(', ')}\n\nColumnas esperadas: Producto, Costo Proveedor, Precio Venta, Proveedor, Categoría, Subcategoría, Stock`);
+                return;
+            }
+            
+            // Procesar datos CON STOCK
+            datosProductos = jsonData.map(row => {
+                const nombre = String(row['Producto'] || row['nombre'] || '').trim();
+                const costo = parseFloat(row['Costo Proveedor'] || row['costo_proveedor'] || 0);
+                const precioVenta = parseFloat(row['Precio Venta'] || row['precio_venta'] || 0);
+                const proveedor = String(row['Proveedor'] || row['proveedor'] || 'Importado').trim();
+                const categoria = String(row['Categoría'] || row['categoria'] || '').trim();
+                const subcategoria = String(row['Subcategoría'] || row['subcategoria'] || '').trim();
+                // ✅ NUEVO: LEER STOCK
+                const stock = parseInt(row['Stock'] || row['stock'] || 0);
+                
+                let margenFinal = 0;
+                if (costo > 0 && precioVenta > 0) {
+                    const iva = 1.19;
+                    const costoConIva = costo * iva;
+                    margenFinal = ((precioVenta / costoConIva) - 1) * 100;
+                    margenFinal = Math.round(margenFinal * 10) / 10;
+                }
+                
+                return { 
+                    nombre: nombre, 
+                    costo: costo,
+                    precio_venta: precioVenta,
+                    margen: margenFinal,
+                    proveedor: proveedor || 'Importado',
+                    categoria: categoria,
+                    subcategoria: subcategoria,
+                    stock: stock  // ✅ NUEVO
+                };
+            }).filter(item => item.nombre && item.costo > 0 && item.precio_venta > 0);
+            
+            if (datosProductos.length === 0) {
+                alert('⚠️ No hay datos válidos para importar. Verifica que las columnas tengan datos correctos.');
+                return;
+            }
+            
+            mostrarPreviewProductos(datosProductos);
+            
+        } catch (error) {
+            console.error('Error detallado:', error);
+            alert('❌ Error al leer el archivo: ' + error.message + '\n\nAsegúrate de que el archivo sea un Excel válido (.xlsx)');
+            document.getElementById('fileInputProductos').value = '';
+        }
+    };
+    
+    reader.onerror = function() {
+        alert('❌ Error al leer el archivo');
+        document.getElementById('fileInputProductos').value = '';
+    };
+    
+    reader.readAsArrayBuffer(file);
+}
 </script>
 
 {% endblock %}
