@@ -1,5 +1,6 @@
 Flask==3.0.0
 flask-cors==4.0.1
+Flask-SQLAlchemy==3.1.1
 psycopg2-binary==2.9.9
 bcrypt==4.0.1
 reportlab==4.2.5
@@ -8,6 +9,8 @@ pytz==2024.1
 gunicorn==21.2.0
 twilio>=8.0.0
 qrcode[pil]==7.4.2
-openpyxl>=3.0.0 
+openpyxl>=3.0.0
 pywebpush==1.14.0
 cryptography==39.0.2
+requests==2.31.0
+python-dotenv==1.0.0
