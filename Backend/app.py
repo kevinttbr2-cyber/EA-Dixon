@@ -1,11 +1,15 @@
-import os 
-from flask import Flask, jsonify, make_response, request
+import os
+from flask import Flask, jsonify, make_response, request, send_file
 from flask_cors import CORS
 from config import Config
 from routes import auth_bp, pago_bp, catalogo_bp, flota_bp, pdf_bp, auditoria_bp
 from services.auth_service import AuthService
 import time
-import math 
+import math
+import json
+import re
+from datetime import datetime
+import io
 
 # Establecer zona horaria a Chile (UTC-3)
 os.environ['TZ'] = 'America/Santiago'
@@ -257,6 +261,8 @@ def test_notificacion():
             "success": False,
             "error": str(e)
         }), 500
+
+
 # ============================================
 # RUTAS PARA GESTIÓN DE GASTOS Y CIERRE DE CAJA
 # ============================================
@@ -310,6 +316,7 @@ def registrar_gasto():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 # ============================================
 # 2. OBTENER GASTOS POR FECHA
@@ -569,6 +576,8 @@ def historial_cierres():
     except Exception as e:
         print(f"❌ Error en historial_cierres: {e}")
         return jsonify({"error": str(e)}), 500
+
+
 # ============================================
 # RUTAS PARA PROVEEDORES
 # ============================================
@@ -586,6 +595,7 @@ def obtener_proveedores():
     except Exception as e:
         print(f"❌ Error en obtener_proveedores: {e}")
         return jsonify([])
+
 
 @app.route('/api/proveedores', methods=['POST'])
 def crear_proveedor():
@@ -615,6 +625,7 @@ def crear_proveedor():
         print(f"❌ Error en crear_proveedor: {e}")
         return jsonify({"error": str(e)}), 500
 
+
 # ============================================
 # RUTAS PARA EMPLEADOS / PLANILLA DE SUELDOS
 # ============================================
@@ -632,6 +643,7 @@ def obtener_empleados():
     except Exception as e:
         print(f"❌ Error en obtener_empleados: {e}")
         return jsonify([])
+
 
 @app.route('/api/empleados', methods=['POST'])
 def crear_empleado():
@@ -658,6 +670,7 @@ def crear_empleado():
     except Exception as e:
         print(f"❌ Error en crear_empleado: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/planilla_sueldos', methods=['POST'])
 def registrar_planilla():
@@ -693,7 +706,6 @@ def registrar_planilla():
         # Registrar el gasto total como un gasto de sueldos
         total_sueldos = sum(e.get('sueldo_neto', 0) for e in data.get('empleados', []))
         if total_sueldos > 0:
-            # Llamar a la función de registrar gasto
             registrar_gasto_interno({
                 'categoria': 'Sueldos',
                 'monto': total_sueldos,
@@ -709,6 +721,8 @@ def registrar_planilla():
     except Exception as e:
         print(f"❌ Error en registrar_planilla: {e}")
         return jsonify({"error": str(e)}), 500
+
+
 # ============================================
 # ELIMINAR EMPLEADO
 # ============================================
@@ -796,6 +810,8 @@ def eliminar_empleado_planilla(id_empleado):
     except Exception as e:
         print(f"❌ Error en eliminar_empleado_planilla: {e}")
         return jsonify({"error": str(e)}), 500
+
+
 # ============================================
 # OBTENER EMPLEADOS ACTIVOS
 # ============================================
@@ -816,141 +832,11 @@ def obtener_empleados_activos():
     except Exception as e:
         print(f"❌ Error en obtener_empleados_activos: {e}")
         return jsonify([])
+
+
 # ============================================
 # PROCESAR PRODUCTO DESDE ESCÁNER
 # ============================================
-@app.route('/api/repuestos/from_scan', methods=['POST'])
-def procesar_producto_escaner():
-    """Procesa un producto escaneado y lo agrega al stock de repuestos"""
-    try:
-        data = request.json
-        texto_escaneado = data.get('texto', '')
-        
-        # Extraer datos del producto
-        producto = extraer_datos_producto(texto_escaneado)
-        
-        if not producto:
-            return jsonify({"error": "No se pudo extraer información del producto"}), 400
-        
-        from database import get_connection
-        conn = get_connection()
-        cur = conn.cursor()
-        
-        # Verificar si el repuesto ya existe
-        cur.execute("SELECT id, costo_venta_final FROM repuestos WHERE nombre ILIKE %s", (producto['nombre'],))
-        existente = cur.fetchone()
-        
-        if existente:
-            # Actualizar precio si es diferente
-            if existente[1] != producto['costo_venta_final']:
-                cur.execute("""
-                    UPDATE repuestos 
-                    SET costo_venta_final = %s,
-                        updated_at = NOW() AT TIME ZONE 'America/Santiago'
-                    WHERE id = %s
-                """, (producto['costo_venta_final'], existente[0]))
-            mensaje = f"✅ Producto actualizado: {producto['nombre']}"
-        else:
-            # Crear nuevo repuesto
-            cur.execute("""
-                INSERT INTO repuestos 
-                (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, stock, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, 
-                        NOW() AT TIME ZONE 'America/Santiago', 
-                        NOW() AT TIME ZONE 'America/Santiago')
-                RETURNING id
-            """, (
-                producto['nombre'],
-                producto.get('costo_proveedor', 0),
-                producto.get('margen_ganancia', 30),
-                producto['costo_venta_final'],
-                producto.get('proveedor', 'Escáner'),
-                producto.get('cantidad', 1)
-            ))
-            id_repuesto = cur.fetchone()[0]
-            mensaje = f"✅ Nuevo repuesto agregado: {producto['nombre']}"
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        return jsonify({
-            "success": True, 
-            "mensaje": mensaje,
-            "producto": producto
-        })
-        
-    except Exception as e:
-        print(f"❌ Error en procesar_producto_escaner: {e}")
-        return jsonify({"error": str(e)}), 500
-
-def extraer_datos_producto(texto):
-    """Extrae datos de un producto desde el texto escaneado"""
-    import re
-    
-    producto = {
-        'nombre': None,
-        'costo_venta_final': 0,
-        'costo_proveedor': 0,
-        'margen_ganancia': 30,
-        'proveedor': None,
-        'cantidad': 1,
-        'codigo': None
-    }
-    
-    # Buscar nombre del producto
-    match = re.search(r'(?:Producto|Nombre|Item|Descripción)[^:]*:\s*([^\n,]+)', texto, re.IGNORECASE)
-    if match:
-        producto['nombre'] = match.group(1).strip()
-    
-    # Si no se encuentra con formato, buscar líneas que parezcan productos
-    if not producto['nombre']:
-        lineas = texto.split('\n')
-        for linea in lineas:
-            if re.search(r'[\d.,]+\s*$', linea) and len(linea) > 5:
-                producto['nombre'] = linea.strip()
-                break
-    
-    # Buscar precio
-    match = re.search(r'(?:Precio|Valor|Costo)[^:]*[:=]\s*\$?\s*([\d.,]+)', texto, re.IGNORECASE)
-    if match:
-        precio_str = match.group(1).replace('.', '').replace(',', '.')
-        producto['costo_venta_final'] = float(precio_str)
-    
-    # Si no se encuentra precio con formato, buscar números al final de línea
-    if producto['costo_venta_final'] == 0:
-        match = re.search(r'([\d.,]+)\s*$', texto)
-        if match:
-            precio_str = match.group(1).replace('.', '').replace(',', '.')
-            try:
-                producto['costo_venta_final'] = float(precio_str)
-            except:
-                pass
-    
-    # Buscar proveedor
-    match = re.search(r'(?:Proveedor|Proveedores|Marca)[^:]*:\s*([^\n]+)', texto, re.IGNORECASE)
-    if match:
-        producto['proveedor'] = match.group(1).strip()
-    
-    # Buscar cantidad
-    match = re.search(r'(?:Cantidad|Qty|Und)[^:]*:\s*(\d+)', texto, re.IGNORECASE)
-    if match:
-        producto['cantidad'] = int(match.group(1))
-    
-    # Buscar código de barras
-    match = re.search(r'(?:Código|Code|ID)[^:]*:\s*([^\n]+)', texto, re.IGNORECASE)
-    if match:
-        producto['codigo'] = match.group(1).strip()
-    
-    # Validar que tenemos al menos nombre y precio
-    if not producto['nombre'] or producto['costo_venta_final'] == 0:
-        return None
-    
-    return producto
-# ============================================
-# RUTAS PARA REPUESTOS (DESDE ESCÁNER)
-# ============================================
-
 @app.route('/api/repuestos/from_scan', methods=['POST'])
 def procesar_producto_escaner():
     """Procesa un producto escaneado y lo agrega al stock de repuestos"""
@@ -972,7 +858,6 @@ def procesar_producto_escaner():
         
         if not nombre or precio == 0:
             # Intentar extraer del texto plano
-            import re
             lineas = texto_escaneado.split('\n')
             for linea in lineas:
                 if linea.strip() and not linea.startswith('http'):
@@ -1051,6 +936,456 @@ def procesar_producto_escaner():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# REPORTE DE STOCK BAJO EN PDF
+# ============================================
+@app.route('/api/reporte_stock_bajo', methods=['POST'])
+def generar_reporte_stock_bajo():
+    """Genera un PDF con los productos con stock bajo"""
+    try:
+        from database import get_cursor
+        from reportlab.lib.pagesizes import letter, landscape
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        import io
+        from datetime import datetime
+        import pytz
+        
+        data = request.json
+        proveedor_filtro = data.get('proveedor', 'todos')
+        stock_minimo = data.get('stock_minimo', 5)
+        
+        chile_tz = pytz.timezone('America/Santiago')
+        ahora = datetime.now(chile_tz)
+        
+        # Consultar productos con stock bajo
+        conn, cur = get_cursor()
+        
+        query = """
+            SELECT id, nombre, stock, costo_proveedor, costo_venta_final, 
+                   margen_ganancia, proveedor, costo_proveedor_pendiente
+            FROM repuestos 
+            WHERE stock IS NOT NULL AND stock <= %s AND stock > 0
+        """
+        params = [stock_minimo]
+        
+        if proveedor_filtro != 'todos':
+            query += " AND proveedor = %s"
+            params.append(proveedor_filtro)
+        
+        query += " ORDER BY stock ASC, nombre ASC"
+        
+        cur.execute(query, params)
+        productos = [dict(row) for row in cur.fetchall()]
+        
+        # Obtener lista de proveedores para el filtro
+        cur.execute("SELECT DISTINCT proveedor FROM repuestos WHERE proveedor IS NOT NULL AND proveedor != '' ORDER BY proveedor")
+        proveedores = [row[0] for row in cur.fetchall()]
+        
+        cur.close()
+        conn.close()
+        
+        if not productos:
+            return jsonify({
+                "error": f"No hay productos con stock menor o igual a {stock_minimo}",
+                "proveedores": proveedores
+            }), 404
+        
+        # Crear PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(letter),
+            rightMargin=40,
+            leftMargin=40,
+            topMargin=40,
+            bottomMargin=40
+        )
+        
+        styles = getSampleStyleSheet()
+        elementos = []
+        
+        # Título
+        titulo_style = ParagraphStyle(
+            'Titulo',
+            parent=styles['Heading1'],
+            fontSize=22,
+            textColor=colors.HexColor('#1a4d2e'),
+            alignment=1,
+            spaceAfter=6,
+            fontName='Helvetica-Bold'
+        )
+        
+        subtitulo_style = ParagraphStyle(
+            'Subtitulo',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.HexColor('#666666'),
+            alignment=1,
+            spaceAfter=20,
+            fontName='Helvetica'
+        )
+        
+        titulo = Paragraph("DIXON ELECTRICIDAD AUTOMOTRIZ", titulo_style)
+        elementos.append(titulo)
+        
+        subtitulo = Paragraph("Reporte de Stock Bajo", subtitulo_style)
+        elementos.append(subtitulo)
+        
+        # Información del reporte
+        info_style = ParagraphStyle(
+            'Info',
+            parent=styles['Normal'],
+            fontSize=11,
+            textColor=colors.HexColor('#333333'),
+            alignment=0,
+            spaceAfter=8,
+            fontName='Helvetica'
+        )
+        
+        fecha_str = ahora.strftime('%d/%m/%Y %H:%M')
+        info_text = f"""
+        <b>Fecha de emisión:</b> {fecha_str}<br/>
+        <b>Stock mínimo:</b> {stock_minimo} unidades<br/>
+        <b>Proveedor filtrado:</b> {proveedor_filtro if proveedor_filtro != 'todos' else 'Todos'}<br/>
+        <b>Total de productos con stock bajo:</b> {len(productos)}
+        """
+        info = Paragraph(info_text, info_style)
+        elementos.append(info)
+        elementos.append(Spacer(1, 0.15 * inch))
+        
+        # Tabla
+        table_data = [
+            ['ID', 'Producto', 'Stock', 'Costo Proveedor ($)', 'Margen (%)', 'Precio Venta ($)', 'Proveedor']
+        ]
+        
+        for p in productos:
+            table_data.append([
+                str(p['id']),
+                p['nombre'][:30] + '...' if len(p['nombre']) > 30 else p['nombre'],
+                str(p['stock'] or 0),
+                f"{p['costo_proveedor']:,.0f}" if p['costo_proveedor'] else 'Pendiente',
+                f"{p['margen_ganancia']:.1f}%" if p['margen_ganancia'] else '0%',
+                f"{p['costo_venta_final']:,.0f}" if p['costo_venta_final'] else 'N/A',
+                p['proveedor'] or 'Sin proveedor'
+            ])
+        
+        col_widths = [0.5*inch, 2.5*inch, 0.7*inch, 1.0*inch, 0.8*inch, 1.0*inch, 1.2*inch]
+        tabla = Table(table_data, colWidths=col_widths, repeatRows=1)
+        tabla.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a4d2e')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('TOPPADDING', (0, 0), (-1, 0), 6),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('ALIGN', (2, 1), (2, -1), 'CENTER'),
+            ('ALIGN', (3, 1), (5, -1), 'RIGHT'),
+            ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#2e3138')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f5f5')]),
+        ]))
+        
+        elementos.append(tabla)
+        elementos.append(Spacer(1, 0.2 * inch))
+        
+        # Resumen final
+        total_productos = len(productos)
+        stock_total = sum(p.get('stock', 0) for p in productos)
+        
+        resumen_style = ParagraphStyle(
+            'Resumen',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.HexColor('#1a4d2e'),
+            alignment=2,
+            spaceBefore=10,
+            fontName='Helvetica-Bold'
+        )
+        
+        resumen_text = f"""
+        <b>Resumen del Reporte</b><br/>
+        Total de productos con stock bajo: {total_productos}<br/>
+        Stock total de estos productos: {stock_total} unidades
+        """
+        resumen = Paragraph(resumen_text, resumen_style)
+        elementos.append(resumen)
+        
+        # Pie de página
+        pie_style = ParagraphStyle(
+            'Pie',
+            parent=styles['Normal'],
+            fontSize=8,
+            textColor=colors.HexColor('#666666'),
+            alignment=1,
+            spaceBefore=30,
+            fontName='Helvetica'
+        )
+        
+        pie_text = f"""
+        <b>Dixon Electricidad Automotriz</b><br/>
+        Neptuno 163, Local C, Lo Prado, RM, Chile<br/>
+        +569 9855 0331<br/>
+        Reporte generado automáticamente el {ahora.strftime('%d/%m/%Y %H:%M')}
+        """
+        pie = Paragraph(pie_text, pie_style)
+        elementos.append(pie)
+        
+        doc.build(elementos)
+        
+        buffer.seek(0)
+        
+        nombre_archivo = f'reporte_stock_bajo_{ahora.strftime("%Y%m%d_%H%M")}.pdf'
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=nombre_archivo
+        )
+        
+    except Exception as e:
+        print(f"❌ Error en generar_reporte_stock_bajo: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# GANANCIA REAL (VENTAS - COSTOS - GASTOS)
+# ============================================
+@app.route('/api/ganancia_real', methods=['GET'])
+def get_ganancia_real():
+    """Calcula la ganancia real del taller"""
+    try:
+        from database import get_cursor
+        filtro = request.args.get('filtro', 'hoy')
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        
+        conn, cur = get_cursor()
+        
+        # 1. VENTAS TOTALES
+        query_ventas = """
+            SELECT 
+                COALESCE(SUM(monto), 0) as total_ventas,
+                COALESCE(SUM(costo_repuestos_real), 0) as total_costos_repuestos,
+                COALESCE(SUM(costo_mano_obra_real), 0) as total_mano_obra,
+                COALESCE(SUM(costo_diagnostico_real), 0) as total_diagnostico,
+                COALESCE(SUM(ganancia_neta), 0) as ganancia_neta
+            FROM pagos 
+            WHERE estado = 'pagado' AND estado_pago = 'pagado'
+        """
+        
+        if filtro == 'hoy':
+            query_ventas += " AND fecha = CURRENT_DATE"
+        elif filtro == '7d':
+            query_ventas += " AND fecha >= CURRENT_DATE - INTERVAL '7 days'"
+        elif filtro == 'mes':
+            query_ventas += " AND fecha >= DATE_TRUNC('month', CURRENT_DATE)"
+        elif filtro == 'anio':
+            query_ventas += " AND fecha >= DATE_TRUNC('year', CURRENT_DATE)"
+        elif fecha_inicio and fecha_fin:
+            query_ventas += " AND fecha BETWEEN %s AND %s"
+            cur.execute(query_ventas, (fecha_inicio, fecha_fin))
+            ventas_data = cur.fetchone()
+        else:
+            cur.execute(query_ventas)
+            ventas_data = cur.fetchone()
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Filtro no válido"}), 400
+        
+        if not fecha_inicio or not fecha_fin:
+            cur.execute(query_ventas)
+            ventas_data = cur.fetchone()
+        
+        # 2. GASTOS OPERATIVOS
+        query_gastos = """
+            SELECT 
+                COALESCE(SUM(CASE WHEN metodo_pago = 'efectivo' THEN monto ELSE 0 END), 0) as gastos_efectivo,
+                COALESCE(SUM(CASE WHEN metodo_pago = 'transferencia' THEN monto ELSE 0 END), 0) as gastos_transferencia,
+                COALESCE(SUM(monto), 0) as total_gastos,
+                COALESCE(SUM(CASE WHEN categoria = 'Sueldos' THEN monto ELSE 0 END), 0) as gastos_sueldos,
+                COALESCE(SUM(CASE WHEN categoria = 'Arriendo' THEN monto ELSE 0 END), 0) as gastos_arriendo,
+                COALESCE(SUM(CASE WHEN categoria = 'Servicios Públicos' THEN monto ELSE 0 END), 0) as gastos_servicios,
+                COALESCE(SUM(CASE WHEN categoria = 'Alimentación' THEN monto ELSE 0 END), 0) as gastos_alimentacion,
+                COALESCE(SUM(CASE WHEN categoria = 'Herramientas' THEN monto ELSE 0 END), 0) as gastos_herramientas,
+                COALESCE(SUM(CASE WHEN categoria = 'Impuestos' THEN monto ELSE 0 END), 0) as gastos_impuestos,
+                COALESCE(SUM(CASE WHEN categoria = 'Otros' THEN monto ELSE 0 END), 0) as gastos_otros
+            FROM gastos
+        """
+        
+        if filtro == 'hoy':
+            query_gastos += " WHERE fecha = CURRENT_DATE"
+        elif filtro == '7d':
+            query_gastos += " WHERE fecha >= CURRENT_DATE - INTERVAL '7 days'"
+        elif filtro == 'mes':
+            query_gastos += " WHERE fecha >= DATE_TRUNC('month', CURRENT_DATE)"
+        elif filtro == 'anio':
+            query_gastos += " WHERE fecha >= DATE_TRUNC('year', CURRENT_DATE)"
+        elif fecha_inicio and fecha_fin:
+            query_gastos += " WHERE fecha BETWEEN %s AND %s"
+            cur.execute(query_gastos, (fecha_inicio, fecha_fin))
+            gastos_data = cur.fetchone()
+        else:
+            cur.execute(query_gastos)
+            gastos_data = cur.fetchone()
+        
+        if not fecha_inicio or not fecha_fin:
+            cur.execute(query_gastos)
+            gastos_data = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        
+        # 3. Calcular ganancia real
+        ventas = {
+            'total_ventas': float(ventas_data[0] or 0),
+            'total_costos_repuestos': float(ventas_data[1] or 0),
+            'total_mano_obra': float(ventas_data[2] or 0),
+            'total_diagnostico': float(ventas_data[3] or 0),
+            'ganancia_neta': float(ventas_data[4] or 0)
+        }
+        
+        gastos = {
+            'gastos_efectivo': float(gastos_data[0] or 0),
+            'gastos_transferencia': float(gastos_data[1] or 0),
+            'total_gastos': float(gastos_data[2] or 0),
+            'gastos_sueldos': float(gastos_data[3] or 0),
+            'gastos_arriendo': float(gastos_data[4] or 0),
+            'gastos_servicios': float(gastos_data[5] or 0),
+            'gastos_alimentacion': float(gastos_data[6] or 0),
+            'gastos_herramientas': float(gastos_data[7] or 0),
+            'gastos_impuestos': float(gastos_data[8] or 0),
+            'gastos_otros': float(gastos_data[9] or 0)
+        }
+        
+        ganancia_real = ventas['total_ventas'] - ventas['total_costos_repuestos'] - gastos['total_gastos']
+        
+        return jsonify({
+            'ventas': ventas,
+            'gastos': gastos,
+            'ganancia_real': round(ganancia_real, 2),
+            'filtro': filtro,
+            'fecha_inicio': fecha_inicio,
+            'fecha_fin': fecha_fin
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en get_ganancia_real: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# ACTUALIZAR REPUESTO (NO MODIFICA PRECIO VENTA)
+# ============================================
+@app.route('/api/repuestos/<int:id_repuesto>', methods=['PUT'])
+def actualizar_repuesto(id_repuesto):
+    """Actualiza un repuesto sin modificar el precio de venta si no se envía"""
+    try:
+        data = request.json
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Obtener precio venta actual
+        cur.execute("SELECT costo_venta_final FROM repuestos WHERE id = %s", (id_repuesto,))
+        row = cur.fetchone()
+        if not row:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Repuesto no encontrado"}), 404
+        
+        precio_venta_actual = row[0]
+        
+        # Si no se envía costo_venta_final, mantener el actual
+        costo_venta_final = data.get('costo_venta_final', precio_venta_actual)
+        
+        # Calcular costo_proveedor_pendiente
+        costo_proveedor = data.get('costo_proveedor', 0)
+        costo_proveedor_pendiente = costo_proveedor == 0
+        
+        # Actualizar (incluye stock)
+        cur.execute("""
+            UPDATE repuestos 
+            SET nombre = %s,
+                costo_proveedor = %s,
+                margen_ganancia = %s,
+                proveedor = %s,
+                costo_venta_final = %s,
+                stock = %s,
+                costo_proveedor_pendiente = %s,
+                updated_at = NOW() AT TIME ZONE 'America/Santiago'
+            WHERE id = %s
+            RETURNING id
+        """, (
+            data.get('nombre'),
+            costo_proveedor,
+            data.get('margen_ganancia', 30),
+            data.get('proveedor', ''),
+            costo_venta_final,
+            data.get('stock', 0),
+            costo_proveedor_pendiente,
+            id_repuesto
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"❌ Error en actualizar_repuesto: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# FUNCIÓN INTERNA PARA REGISTRAR GASTO
+# ============================================
+def registrar_gasto_interno(data):
+    """Función interna para registrar gastos desde otras rutas"""
+    try:
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO gastos 
+            (categoria, monto, metodo_pago, descripcion, fecha, hora, registrado_por, es_planilla)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
+            data.get('categoria'),
+            float(data.get('monto', 0)),
+            data.get('metodo_pago', 'transferencia'),
+            data.get('descripcion', ''),
+            data.get('fecha'),
+            data.get('hora'),
+            data.get('registrado_por', 'Sistema'),
+            data.get('es_planilla', False)
+        ))
+        
+        id_gasto = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        print(f"✅ Gasto interno registrado ID: {id_gasto}")
+        return True
+    except Exception as e:
+        print(f"❌ Error en registrar_gasto_interno: {e}")
+        return False
+
 
 # ============================
 # CREAR ADMIN AL INICIAR
