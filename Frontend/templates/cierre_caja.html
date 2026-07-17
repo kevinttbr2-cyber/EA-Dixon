@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Cierre de Caja - Dixon{% endblock %}
+
+{% block content %}
+
+<div class="base-container">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
+        <h2 style="color: var(--text-primary); font-weight: 700; margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--accent-yellow);">receipt_long</span>
+            Cierre de Caja
+        </h2>
+        <span style="color: var(--text-muted); font-size: 14px;">{{ hoy }}</span>
+    </div>
+
+    <!-- RESUMEN DE CAJA -->
+    <div class="card" style="padding: 20px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+            <span style="color: var(--text-secondary);">(+) Efectivo Inicial</span>
+            <span style="color: var(--text-primary); font-weight: 600;">${{ efectivo_inicial|int }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+            <span style="color: var(--text-secondary);">(+) Ventas en Efectivo hoy</span>
+            <span style="color: var(--accent-green); font-weight: 600;">${{ ventas_efectivo|int }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+            <span style="color: var(--text-secondary);">(-) Gastos en Efectivo hoy</span>
+            <span style="color: var(--accent-red); font-weight: 600;">-${{ gastos_efectivo|int }}</span>
+        </div>
+        <div style="border-top: 2px solid var(--border-subtle); margin-top: 8px; padding-top: 8px;">
+            <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                <span style="font-size: 18px; font-weight: 700; color: var(--text-primary);">💰 Efectivo esperado</span>
+                <span style="font-size: 24px; font-weight: 700; color: var(--accent-green);">${{ efectivo_esperado|int }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULARIO DE CIERRE -->
+    <form id="formCierreCaja" class="card" style="padding: 20px;">
+        <div style="margin-bottom: 16px;">
+            <label style="color: var(--text-secondary); font-size: 14px; display: block; margin-bottom: 4px;">
+                📌 Efectivo real en caja (cuenta el dinero físico)
+            </label>
+            <input type="number" id="efectivo_real" step="0.01" min="0" required 
+                   placeholder="Ej: 155000" 
+                   style="width:100%;padding:14px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);font-size:18px;">
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                Ingresa el monto exacto que tienes en la caja física.
+            </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label style="color: var(--text-secondary); font-size: 14px; display: block; margin-bottom: 4px;">Observaciones (opcional)</label>
+            <input type="text" id="observaciones_cierre" placeholder="Ej: Faltante por devolución de cliente..." 
+                   style="width:100%;padding:10px;background:var(--bg-input);color:var(--text-primary);border:2px solid transparent;border-radius:var(--radius-sm);">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary" style="flex:1;">
+                <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">check_circle</span>
+                Cerrar Caja del Día
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/estado'">
+                Cancelar
+            </button>
+        </div>
+    </form>
+
+    <!-- HISTORIAL -->
+    <div style="margin-top: 20px;">
+        <h4 style="color: var(--text-secondary); margin-bottom: 12px;">📋 Últimos cierres</h4>
+        {% for c in historial_cierres %}
+        <div class="card" style="padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div>
+                <span style="font-weight: 600;">{{ c.fecha }}</span>
+                <span style="color: var(--text-muted); font-size: 13px; margin-left: 12px;">
+                    Esperado: ${{ c.efectivo_esperado|int }}
+                </span>
+                <span style="color: var(--text-muted); font-size: 13px; margin-left: 8px;">
+                    Real: ${{ c.efectivo_real|int }}
+                </span>
+            </div>
+            <div>
+                {% if c.diferencia > 0 %}
+                <span style="color: var(--accent-green);">✅ Sobrante ${{ c.diferencia|int }}</span>
+                {% elif c.diferencia < 0 %}
+                <span style="color: var(--accent-red);">❌ Faltante ${{ (c.diferencia|int)|abs }}</span>
+                {% else %}
+                <span style="color: var(--accent-green);">✅ Cuadrada</span>
+                {% endif %}
+                <span style="color: var(--text-muted); font-size: 11px; margin-left: 8px;">
+                    por: {{ c.cerrado_por or 'Sistema' }}
+                </span>
+            </div>
+        </div>
+        {% else %}
+        <div style="text-align: center; color: var(--text-muted); padding: 20px 0;">
+            No hay cierres registrados
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+const API_URL = '{{ backend_url }}';
+
+document.getElementById('formCierreCaja').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const efectivoReal = parseFloat(document.getElementById('efectivo_real').value);
+    if (isNaN(efectivoReal) || efectivoReal < 0) {
+        alert('⚠️ Ingresa un monto válido');
+        return;
+    }
+    
+    const efectivoEsperado = {{ efectivo_esperado|int }};
+    const diferencia = efectivoReal - efectivoEsperado;
+    
+    let mensaje = '📊 Resumen del Cierre\n\n';
+    mensaje += `💰 Efectivo esperado: $${efectivoEsperado.toLocaleString()}\n`;
+    mensaje += `💵 Efectivo real: $${efectivoReal.toLocaleString()}\n`;
+    mensaje += `📉 Diferencia: $${diferencia.toLocaleString()}`;
+    
+    if (diferencia > 0) mensaje += ' (Sobrante)';
+    else if (diferencia < 0) mensaje += ' (Faltante)';
+    else mensaje += ' ✅ ¡Cuadrada!';
+    
+    if (!confirm(`${mensaje}\n\n¿Confirmar cierre de caja?`)) return;
+    
+    try {
+        const resp = await fetch(`${API_URL}/api/cierre_caja/{{ hoy }}/cerrar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                efectivo_real: efectivoReal,
+                observaciones: document.getElementById('observaciones_cierre').value,
+                cerrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
+            })
+        });
+        
+        const result = await resp.json();
+        if (result.success) {
+            alert(result.mensaje);
+            window.location.href = '/estado';
+        } else {
+            alert('❌ Error: ' + (result.error || 'Desconocido'));
+        }
+    } catch(e) {
+        console.error('Error:', e);
+        alert('❌ Error de conexión');
+    }
+});
+</script>
+
+{% endblock %}
