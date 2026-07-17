@@ -10,313 +10,360 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Google Material Symbols (Iconos modernos) -->
+    <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     
-    <!-- Font Awesome (respaldo) -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- CSS Moderno (PRINCIPAL) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo-moderno.css') }}?v=4">
-    
     <style>
         /* ============================
-           ESTILOS COMPATIBLES (sin conflictos)
+           ESTILOS GLOBALES (inline)
            ============================ */
-        
-        /* Reset base */
+        :root {
+            --bg-primary: #121214;
+            --bg-secondary: #181a1f;
+            --bg-card: #1e1e24;
+            --bg-hover: #2a2a32;
+            --bg-input: #26262e;
+            --text-primary: #f5f5f5;
+            --text-secondary: #b0b5bf;
+            --text-muted: #6b7078;
+            --accent-green: #2ecc71;
+            --accent-green-dark: #27ae60;
+            --accent-yellow: #f1c40f;
+            --accent-red: #e74c3c;
+            --accent-blue: #3498db;
+            --border-subtle: #2e3138;
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        
+
         body {
-            background: var(--bg-primary) !important;
-            color: var(--text-primary) !important;
+            background: #121214 !important;
+            color: #f5f5f5 !important;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             min-height: 100vh;
             padding-top: 76px;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
-        
-        /* Contenedor principal - usa variables del theme */
+
+        /* ============================
+           NAVBAR
+           ============================ */
+        .navbar-custom {
+            background: #181a1f !important;
+            border-bottom: 1px solid #2e3138 !important;
+            padding: 8px 20px !important;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3) !important;
+            position: fixed !important;
+            top: 0 !important;
+            width: 100% !important;
+            z-index: 1000 !important;
+        }
+
+        .navbar-custom .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #f5f5f5;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .navbar-custom .navbar-brand .logo-img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .navbar-custom .nav-link {
+            color: #b0b5bf !important;
+            padding: 6px 14px !important;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: #f5f5f5 !important;
+            background: #2a2a32;
+        }
+
+        .navbar-custom .nav-link.active {
+            color: #2ecc71 !important;
+            background: rgba(46, 204, 113, 0.08);
+        }
+
+        .navbar-custom .nav-link .badge-count {
+            background: #f1c40f;
+            color: #121214;
+            border-radius: 50px;
+            padding: 0 8px;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 18px;
+            margin-left: 2px;
+        }
+
+        .navbar-custom .nav-link .material-symbols-rounded {
+            font-size: 18px;
+        }
+
+        .navbar-custom .dropdown-menu {
+            background: #181a1f !important;
+            border: 1px solid #2e3138 !important;
+            border-radius: 12px !important;
+            padding: 8px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        .navbar-custom .dropdown-item {
+            color: #b0b5bf !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .navbar-custom .dropdown-item:hover {
+            background: #2a2a32 !important;
+            color: #f5f5f5 !important;
+        }
+
+        .navbar-custom .dropdown-item .material-symbols-rounded {
+            font-size: 18px;
+        }
+
+        .navbar-custom .dropdown-divider {
+            border-color: #2e3138 !important;
+        }
+
+        .navbar-custom .user-name {
+            color: #f5f5f5 !important;
+            padding: 6px 14px !important;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .navbar-custom .logout-link {
+            color: #e74c3c !important;
+        }
+        .navbar-custom .logout-link:hover {
+            background: rgba(231, 76, 60, 0.1) !important;
+        }
+
+        .navbar-custom .navbar-toggler {
+            border: none !important;
+            padding: 4px 8px !important;
+        }
+        .navbar-custom .navbar-toggler:focus {
+            box-shadow: none !important;
+        }
+        .navbar-custom .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,0.7)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+        }
+
+        /* ============================
+           CONTENEDOR PRINCIPAL
+           ============================ */
         .base-container {
-            background: var(--bg-secondary) !important;
-            border-radius: var(--radius-lg) !important;
+            background: #181a1f !important;
+            border-radius: 16px !important;
             padding: 24px 28px !important;
-            border: 1px solid var(--border-subtle) !important;
-            box-shadow: var(--shadow-card) !important;
+            border: 1px solid #2e3138 !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
             max-width: 1200px !important;
             margin: 0 auto 40px !important;
-            backdrop-filter: blur(4px);
         }
-        
-        /* Tarjetas estilo Android - usa variables del theme */
-        .card-android {
-            background: var(--bg-card) !important;
-            border: 1px solid var(--border-subtle) !important;
-            border-radius: var(--radius-md) !important;
-            padding: 18px 20px !important;
-            margin-bottom: 16px !important;
-            transition: var(--transition) !important;
-            box-shadow: var(--shadow-card) !important;
-        }
-        
-        .card-android:hover {
-            box-shadow: var(--shadow-hover) !important;
-            transform: translateY(-2px);
-        }
-        
-        /* Botones principales - usa variables del theme */
-        .btn-primary {
-            background: var(--accent-green) !important;
-            border: none !important;
-            color: var(--bg-primary) !important;
-            font-weight: 700 !important;
-            border-radius: var(--radius-md) !important;
-            padding: 12px 24px !important;
-            transition: var(--transition) !important;
-            box-shadow: 0 4px 16px rgba(46, 204, 113, 0.3) !important;
-        }
-        
-        .btn-primary:hover {
-            background: var(--accent-green-dark) !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 24px rgba(46, 204, 113, 0.4) !important;
-        }
-        
-        /* Filtros - usa variables del theme */
-        .filtro-card {
-            padding: 10px 20px !important;
-            border-radius: var(--radius-md) !important;
-            text-decoration: none !important;
-            background: var(--bg-card) !important;
-            border: 1px solid var(--border-subtle) !important;
-            text-align: center !important;
-            display: inline-block !important;
-            color: var(--text-muted) !important;
-            transition: var(--transition) !important;
-            min-width: 80px !important;
-        }
-        
-        .filtro-card:hover {
-            border-color: var(--accent-green) !important;
-            color: var(--text-primary) !important;
-        }
-        
-        .filtro-card .numero {
-            font-size: 26px !important;
-            font-weight: 800 !important;
-            display: block !important;
-        }
-        
-        .filtro-card .etiqueta {
-            font-size: 10px !important;
-            text-transform: uppercase !important;
-            opacity: 0.6 !important;
-            letter-spacing: 0.5px !important;
-        }
-        
-        .filtro-card.active-total {
-            background: var(--bg-hover) !important;
-            border-color: var(--text-secondary) !important;
-        }
-        .filtro-card.active-total .numero {
-            color: var(--text-primary) !important;
-        }
-        
-        .filtro-card.active-pagados {
-            border-color: var(--accent-green) !important;
-            background: var(--accent-green-subtle) !important;
-        }
-        .filtro-card.active-pagados .numero {
-            color: var(--accent-green) !important;
-        }
-        
-        .filtro-card.active-pendientes {
-            border-color: var(--accent-yellow) !important;
-            background: rgba(241, 196, 15, 0.08) !important;
-        }
-        .filtro-card.active-pendientes .numero {
-            color: var(--accent-yellow) !important;
-        }
-        
+
         /* ============================
-           BOTONES FLOTANTES (FAB) - COMPATIBLES
+           ALERTAS
            ============================ */
-        #botonFlotante {
-            position: fixed !important;
-            bottom: 30px !important;
-            right: 30px !important;
-            background: var(--accent-green) !important;
-            color: var(--bg-primary) !important;
-            padding: 14px 24px !important;
-            border-radius: 50px !important;
-            font-weight: 700 !important;
-            text-decoration: none !important;
-            box-shadow: 0 4px 20px rgba(46, 204, 113, 0.4) !important;
-            z-index: 1000 !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            transition: var(--transition) !important;
-            border: none !important;
-            font-size: 14px !important;
+        .alert {
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid transparent;
         }
-        
-        #botonFlotante:hover {
-            transform: scale(1.05) !important;
-            box-shadow: 0 6px 30px rgba(46, 204, 113, 0.5) !important;
-            color: var(--bg-primary) !important;
-            text-decoration: none !important;
+        .alert-success {
+            background: rgba(46, 204, 113, 0.12);
+            color: #2ecc71;
+            border-color: rgba(46, 204, 113, 0.25);
         }
-        
-        #botonFlotante:active {
-            transform: scale(0.95) !important;
+        .alert-danger {
+            background: rgba(231, 76, 60, 0.12);
+            color: #e74c3c;
+            border-color: rgba(231, 76, 60, 0.25);
         }
-        
-        #botonVentaRapida {
-            position: fixed !important;
-            bottom: 30px !important;
-            right: 190px !important;
-            background: var(--bg-card) !important;
-            color: var(--text-primary) !important;
-            padding: 14px 24px !important;
-            border-radius: 50px !important;
-            font-weight: 700 !important;
-            text-decoration: none !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
-            z-index: 1000 !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            transition: var(--transition) !important;
-            border: 1px solid var(--border-subtle) !important;
-            font-size: 14px !important;
+        .alert-warning {
+            background: rgba(241, 196, 15, 0.12);
+            color: #f1c40f;
+            border-color: rgba(241, 196, 15, 0.25);
         }
-        
-        #botonVentaRapida:hover {
-            transform: scale(1.05) !important;
-            background: var(--bg-hover) !important;
-            border-color: var(--accent-green) !important;
-            color: var(--text-primary) !important;
-            text-decoration: none !important;
+        .alert-info {
+            background: rgba(52, 152, 219, 0.12);
+            color: #3498db;
+            border-color: rgba(52, 152, 219, 0.25);
         }
-        
-        #botonVentaRapida:active {
-            transform: scale(0.95) !important;
+        .alert .btn-close {
+            filter: invert(1);
+            opacity: 0.5;
         }
-        
+
         /* ============================
-           DROPDOWN - COMPATIBLE
+           BOTONES FLOTANTES (FAB)
            ============================ */
-        .dropdown-menu {
-            background: var(--bg-secondary) !important;
-            border: 1px solid var(--border-subtle) !important;
-            backdrop-filter: blur(10px) !important;
-            border-radius: var(--radius-md) !important;
-            padding: 8px !important;
-            min-width: 220px !important;
-            box-shadow: var(--shadow-hover) !important;
+        .fab-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+            z-index: 50;
         }
-        
-        .dropdown-item {
-            color: var(--text-secondary) !important;
-            padding: 10px 16px !important;
-            border-radius: var(--radius-sm) !important;
-            transition: var(--transition) !important;
-            font-size: 14px !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            font-weight: 700;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
         }
-        
-        .dropdown-item:hover {
-            background: var(--accent-green-subtle) !important;
-            color: var(--accent-green) !important;
+
+        .fab-primary {
+            background: #2ecc71;
+            color: #121214;
         }
-        
-        .dropdown-item .material-symbols-rounded {
-            font-size: 18px !important;
+        .fab-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(46, 204, 113, 0.4);
         }
-        
-        .dropdown-divider {
-            border-color: var(--border-subtle) !important;
-            margin: 6px 0 !important;
+
+        .fab-secondary {
+            background: #1e1e24;
+            color: #f5f5f5;
+            font-size: 20px;
+            border: 1px solid #2e3138;
         }
-        
+        .fab-secondary:hover {
+            background: #2a2a32;
+            transform: scale(1.05);
+        }
+
+        .fab-label {
+            background: #1e1e24;
+            color: #f5f5f5;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .fab-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .fab-item:hover .fab-label {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
         /* ============================
-           RESPONSIVE - COMPATIBLE
+           RESPONSIVE
            ============================ */
         @media (max-width: 768px) {
+            .navbar-custom .navbar-collapse {
+                padding: 12px 0;
+            }
+            .navbar-custom .nav-link {
+                padding: 10px 14px !important;
+                font-size: 14px;
+                width: 100%;
+            }
+            .navbar-custom .dropdown-menu {
+                background: #2a2a32 !important;
+                border: none !important;
+                padding-left: 20px !important;
+                box-shadow: none !important;
+            }
+            .navbar-custom .user-name {
+                padding: 10px 14px !important;
+                width: 100%;
+            }
             .base-container {
                 padding: 16px !important;
                 margin: 0 8px 30px !important;
-                border-radius: var(--radius-md) !important;
             }
-            
-            #botonFlotante {
-                padding: 10px 18px !important;
-                font-size: 13px !important;
-                bottom: 20px !important;
-                right: 16px !important;
-                border-radius: 50px !important;
-            }
-            
-            #botonVentaRapida {
-                right: 16px !important;
-                bottom: 80px !important;
-                padding: 10px 18px !important;
-                font-size: 13px !important;
-                border-radius: 50px !important;
-            }
-            
-            .filtro-card {
-                padding: 8px 12px !important;
-                min-width: 60px !important;
-            }
-            
-            .filtro-card .numero {
-                font-size: 20px !important;
-            }
-            
-            .dropdown-menu {
-                min-width: 180px !important;
+            .fab {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
             }
         }
-        
+
         @media (max-width: 480px) {
-            #botonFlotante span,
-            #botonVentaRapida span {
-                display: none !important;
+            .fab-container {
+                bottom: 16px;
+                right: 16px;
             }
-            
-            #botonFlotante {
-                padding: 12px 16px !important;
-                gap: 0 !important;
-                width: 52px !important;
-                height: 52px !important;
-                justify-content: center !important;
-                border-radius: 50% !important;
+            .fab {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
             }
-            
-            #botonVentaRapida {
-                padding: 12px 16px !important;
-                gap: 0 !important;
-                width: 52px !important;
-                height: 52px !important;
-                justify-content: center !important;
-                border-radius: 50% !important;
-                right: 16px !important;
-                bottom: 80px !important;
+            .fab-label {
+                display: none;
             }
-            
-            #botonFlotante i,
-            #botonVentaRapida i {
-                font-size: 20px !important;
+            .navbar-custom .navbar-brand {
+                font-size: 15px;
+            }
+            .navbar-custom .navbar-brand .logo-img {
+                height: 32px;
             }
         }
     </style>
@@ -328,22 +375,137 @@
     <!-- ============================
     NAVBAR
     ============================ -->
-    {% include 'navbar.html' %}
+    <nav class="navbar navbar-custom navbar-expand-lg">
+        <div class="container-fluid px-0">
+            <a class="navbar-brand" href="/estado">
+                <img src="{{ url_for('static', filename='images/dixon-navbar.png') }}" alt="Dixon" class="logo-img">
+                <span>Dixon Automotive</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+                    
+                    {% if session.get("usuario") %}
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/estado' %}active{% endif %}" href="/estado">
+                            <span class="material-symbols-rounded">dashboard</span>
+                            Estado
+                            {% if flotas_pendientes_count > 0 %}
+                            <span class="badge-count">{{ flotas_pendientes_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuFinanzas" role="button" data-bs-toggle="dropdown">
+                            <span class="material-symbols-rounded">account_balance</span>
+                            Finanzas
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/balance"><span class="material-symbols-rounded">balance</span> Balance Total</a></li>
+                            <li><a class="dropdown-item" href="/balance_ventas"><span class="material-symbols-rounded">point_of_sale</span> Balance Ventas</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/dashboard"><span class="material-symbols-rounded">analytics</span> Dashboard</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown">
+                            <span class="material-symbols-rounded">settings</span>
+                            Gestión
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/registros"><span class="material-symbols-rounded">history</span> Registros</a></li>
+                            <li><a class="dropdown-item" href="/flotas"><span class="material-symbols-rounded">directions_car</span> Flotas</a></li>
+                            <li><a class="dropdown-item" href="/flotas_pendientes"><span class="material-symbols-rounded">pending_actions</span> Flotas Pendientes {% if flotas_pendientes_count > 0 %}<span class="badge-count">{{ flotas_pendientes_count }}</span>{% endif %}</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/repuestos"><span class="material-symbols-rounded">inventory_2</span> Repuestos</a></li>
+                            <li><a class="dropdown-item" href="/auditoria_descargas"><span class="material-symbols-rounded">download</span> Auditoría</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/pendientes_validacion' %}active{% endif %}" href="/pendientes_validacion">
+                            <span class="material-symbols-rounded">verified</span>
+                            Validar Pagos
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/venta_rapida' %}active{% endif %}" href="/venta_rapida">
+                            <span class="material-symbols-rounded">bolt</span>
+                            Venta
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% if session.get("rol") == "admin" %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown">
+                            <span class="material-symbols-rounded">people</span>
+                            Usuarios
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/register"><span class="material-symbols-rounded">person_add</span> Crear Usuario</a></li>
+                            <li><a class="dropdown-item" href="/usuarios"><span class="material-symbols-rounded">group</span> Lista de Usuarios</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    {% if session.get("rol") == "admin" %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/ver_logs' %}active{% endif %}" href="/ver_logs">
+                            <span class="material-symbols-rounded">terminal</span>
+                            Logs
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="nav-item">
+                        <span class="user-name">
+                            <span class="material-symbols-rounded" style="font-size: 16px;">account_circle</span>
+                            {{ session.get('nombre_completo', session.get('usuario')) }}
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link logout-link" href="/logout">
+                            <span class="material-symbols-rounded">logout</span>
+                            Salir
+                        </a>
+                    </li>
+                    
+                    {% endif %}
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
 
     <!-- ============================
     CONTENIDO PRINCIPAL
     ============================ -->
     <div class="base-container">
-        <!-- Mostrar mensajes flash -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        <span class="material-symbols-rounded" style="font-size: 20px; vertical-align: middle;">
+                        <span class="material-symbols-rounded" style="font-size: 20px;">
                             {% if category == 'success' %}check_circle{% elif category == 'error' %}error{% elif category == 'warning' %}warning{% else %}info{% endif %}
                         </span>
                         {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="filter: invert(1); opacity: 0.5;"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -355,61 +517,44 @@
     <!-- ============================
     BOTONES FLOTANTES
     ============================ -->
-    <a href="/agregar_cliente" id="botonFlotante">
-        <i class="fas fa-user-plus"></i>
-        <span>+ CLIENTE</span>
-    </a>
-    
-    <a href="/venta_rapida" id="botonVentaRapida">
-        <i class="fas fa-bolt"></i>
-        <span>VENTA</span>
-    </a>
+    <div class="fab-container">
+        <div class="fab-item">
+            <span class="fab-label">Venta Rápida</span>
+            <a href="/venta_rapida" class="fab fab-secondary">
+                <span class="material-symbols-rounded" style="font-size: 24px;">bolt</span>
+            </a>
+        </div>
+        <div class="fab-item">
+            <span class="fab-label">Agregar Cliente</span>
+            <a href="/agregar_cliente" class="fab fab-primary">
+                <span class="material-symbols-rounded" style="font-size: 28px;">add</span>
+            </a>
+        </div>
+    </div>
 
     <!-- ============================
     SCRIPTS
     ============================ -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <script>
-        // ============================
-        // SERVICE WORKER
-        // ============================
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js')
-                .then(function(registration) {
-                    console.log('✅ Service Worker registrado');
-                })
-                .catch(function(error) {
-                    console.log('❌ Error en Service Worker:', error);
-                });
+                .then(function(reg) { console.log('✅ Service Worker registrado'); })
+                .catch(function(err) { console.log('❌ Service Worker error:', err); });
         }
     </script>
     
-    {% block scripts %}{% endblock %}
-
-    <!-- ============================
-    NOTIFICACIONES PUSH (CON FALLBACK)
-    ============================ -->
+    {% block extra_js %}{% endblock %}
+    
     <script>
-    // ✅ INTENTAR OBTENER DEL SERVIDOR
     let VAPID_PUBLIC_KEY = '{{ vapid_public_key }}';
-
-    // ✅ SI LA CLAVE DEL SERVIDOR ESTÁ VACÍA O ES LA PLANTILLA, USAR HARDCODEADA
     if (!VAPID_PUBLIC_KEY || VAPID_PUBLIC_KEY === '' || VAPID_PUBLIC_KEY === '{{ vapid_public_key }}') {
-        console.warn('⚠️ Clave del servidor no disponible, usando hardcodeada');
         VAPID_PUBLIC_KEY = 'BJMiQjYynySFnvgwsForqgTnewTNLvH-kJgqKtMEWZ8LfPFkYOdpC0GhN4isHbydoYd-uc_LDs30SvqyuMyPwTY';
     }
 
-    console.log('🔑 Clave VAPID:', VAPID_PUBLIC_KEY.substring(0, 30) + '...');
-    console.log('📏 Longitud:', VAPID_PUBLIC_KEY.length);
-
-    // ✅ FUNCIÓN PARA CONVERTIR BASE64 A Uint8Array
     function urlBase64ToUint8Array(base64String) {
-        if (!base64String) {
-            console.error('❌ Clave VAPID vacía');
-            return null;
-        }
+        if (!base64String) return null;
         try {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
             const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -418,7 +563,6 @@
             for (let i = 0; i < rawData.length; ++i) {
                 outputArray[i] = rawData.charCodeAt(i);
             }
-            console.log('✅ Clave convertida, longitud:', outputArray.length);
             return outputArray;
         } catch (error) {
             console.error('❌ Error convirtiendo clave:', error);
@@ -426,129 +570,41 @@
         }
     }
 
-    // ✅ FUNCIÓN PARA SUSCRIBIRSE
     async function suscribirsePush() {
-        if (!('Notification' in window)) {
-            console.warn('⚠️ Notificaciones no soportadas');
-            return;
-        }
-        
-        if (Notification.permission !== 'granted') {
-            console.warn('⚠️ Permiso no concedido');
-            return;
-        }
-        
-        if (!VAPID_PUBLIC_KEY) {
-            console.error('❌ VAPID_PUBLIC_KEY no disponible');
-            return;
-        }
-        
-        console.log('🔄 Iniciando suscripción...');
-        
+        if (!('Notification' in window) || Notification.permission !== 'granted' || !VAPID_PUBLIC_KEY) return;
         try {
             const registration = await navigator.serviceWorker.ready;
-            console.log('✅ Service Worker listo');
-            
-            // Verificar si ya está suscrito
             let subscription = await registration.pushManager.getSubscription();
-            
-            if (subscription) {
-                console.log('✅ Suscripción activa encontrada');
-                return subscription;
-            }
-            
-            // Convertir clave
+            if (subscription) return subscription;
             const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-            if (!applicationServerKey) {
-                console.error('❌ Error convirtiendo clave');
-                return;
-            }
-            
-            // Crear suscripción
+            if (!applicationServerKey) return;
             subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: applicationServerKey
             });
-            
-            console.log('✅ Nueva suscripción creada');
-            
-            // Guardar en el backend
-            const response = await fetch('/api/guardar_suscripcion', {
+            await fetch('/api/guardar_suscripcion', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(subscription)
             });
-            
-            if (response.ok) {
-                console.log('✅ Suscripción guardada en el backend');
-            } else {
-                console.error('❌ Error guardando suscripción:', await response.text());
-            }
-            
+            console.log('✅ Suscripción push guardada');
             return subscription;
-            
         } catch (error) {
-            console.error('❌ Error en suscripción:', error);
-            
-            // Si el error es por clave diferente, limpiar y reintentar
-            if (error.message && error.message.includes('different applicationServerKey')) {
-                console.log('🔄 Eliminando suscripción antigua...');
-                try {
-                    const registration = await navigator.serviceWorker.ready;
-                    const sub = await registration.pushManager.getSubscription();
-                    if (sub) {
-                        await sub.unsubscribe();
-                        console.log('✅ Suscripción eliminada, reintentando...');
-                        setTimeout(suscribirsePush, 2000);
-                    }
-                } catch (e) {
-                    console.error('❌ Error limpiando:', e);
-                }
-            }
-            
-            // Si el error es de curva, mostrar mensaje
-            if (error.message && error.message.includes('curve must be an EllipticCurve')) {
-                console.error('❌ Error de curva: La clave VAPID no es válida');
-                console.log('📌 Verifica que la clave tenga 87 caracteres');
-            }
+            console.error('❌ Error en suscripción push:', error);
         }
     }
 
-    // ✅ INICIALIZAR
     if ('Notification' in window && 'serviceWorker' in navigator) {
         if (Notification.permission === 'default') {
-            Notification.requestPermission().then(permission => {
+            Notification.requestPermission().then(function(permission) {
                 if (permission === 'granted') {
-                    console.log('✅ Notificaciones permitidas');
-                    navigator.serviceWorker.ready.then(() => {
-                        setTimeout(suscribirsePush, 1000);
-                    });
-                } else {
-                    console.log('❌ Notificaciones denegadas');
+                    navigator.serviceWorker.ready.then(() => setTimeout(suscribirsePush, 1000));
                 }
             });
         } else if (Notification.permission === 'granted') {
-            navigator.serviceWorker.ready.then(() => {
-                setTimeout(suscribirsePush, 500);
-            });
+            navigator.serviceWorker.ready.then(() => setTimeout(suscribirsePush, 500));
         }
     }
-
-    // ✅ FUNCIÓN PARA LIMPIAR SUSCRIPCIONES (desde consola)
-    function limpiarSuscripcionPush() {
-        navigator.serviceWorker.ready.then(async function(registration) {
-            const subscription = await registration.pushManager.getSubscription();
-            if (subscription) {
-                await subscription.unsubscribe();
-                console.log('✅ Suscripción eliminada');
-            } else {
-                console.log('ℹ️ No hay suscripción activa');
-            }
-        });
-    }
-
-    console.log('✅ Sistema de notificaciones listo');
-    console.log('📌 Para limpiar suscripción: limpiarSuscripcionPush()');
     </script>
 
 </body>
