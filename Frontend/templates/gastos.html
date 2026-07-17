@@ -668,7 +668,102 @@ function procesarDatosFactura(texto) {
         alert('⚠️ No se pudo extraer el monto automáticamente.');
     }
 }
-
+// ============================================
+// RENDERIZAR PLANILLA CON BOTÓN ELIMINAR
+// ============================================
+function renderPlanilla() {
+    const tbody = document.getElementById('cuerpoPlanilla');
+    let totalBase = 0, totalComision = 0, totalExtras = 0, totalBonos = 0, totalDescuentos = 0, totalNeto = 0;
+    
+    if (empleadosPlanilla.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px 0;">
+                    <span class="material-symbols-rounded" style="font-size:32px;">person_off</span>
+                    <p style="font-size:14px;">No hay empleados en la planilla</p>
+                    <button onclick="agregarEmpleadoPlanilla()" class="btn btn-sm btn-primary" style="margin-top:8px;">
+                        <span class="material-symbols-rounded" style="font-size:16px;">person_add</span>
+                        Agregar Empleado
+                    </button>
+                </td>
+            </tr>
+        `;
+        document.getElementById('totalPlanilla').textContent = '$0';
+        return;
+    }
+    
+    tbody.innerHTML = empleadosPlanilla.map((e, i) => {
+        const neto = (e.sueldo_base || 0) + (e.comision || 0) + (e.horas_extras || 0) + (e.bonos || 0) - (e.descuentos || 0);
+        e.sueldo_neto = neto;
+        totalBase += e.sueldo_base || 0;
+        totalComision += e.comision || 0;
+        totalExtras += e.horas_extras || 0;
+        totalBonos += e.bonos || 0;
+        totalDescuentos += e.descuentos || 0;
+        totalNeto += neto;
+        
+        return `<tr>
+            <td>
+                ${e.nombre} 
+                <span style="color:var(--text-muted);font-size:11px;">${e.cargo || ''}</span>
+                <button onclick="eliminarEmpleadoPlanilla(${i})" 
+                        style="background:transparent;border:none;color:var(--accent-red);cursor:pointer;font-size:14px;margin-left:6px;"
+                        title="Eliminar empleado">
+                    <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
+                </button>
+            </td>
+            <td><input type="number" value="${e.sueldo_base||0}" onchange="actualizarPlanilla(${i},'sueldo_base',this.value)" style="width:100%;padding:4px 6px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);"></td>
+            <td><input type="number" value="${e.comision||0}" onchange="actualizarPlanilla(${i},'comision',this.value)" style="width:100%;padding:4px 6px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);"></td>
+            <td><input type="number" value="${e.horas_extras||0}" onchange="actualizarPlanilla(${i},'horas_extras',this.value)" style="width:100%;padding:4px 6px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);"></td>
+            <td><input type="number" value="${e.bonos||0}" onchange="actualizarPlanilla(${i},'bonos',this.value)" style="width:100%;padding:4px 6px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);"></td>
+            <td><input type="number" value="${e.descuentos||0}" onchange="actualizarPlanilla(${i},'descuentos',this.value)" style="width:100%;padding:4px 6px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);"></td>
+            <td style="text-align:right;font-weight:700;color:var(--accent-green);">$${neto.toLocaleString()}</td>
+        </tr>`;
+    }).join('');
+    
+    document.getElementById('total_base').textContent = '$' + totalBase.toLocaleString();
+    document.getElementById('total_comision').textContent = '$' + totalComision.toLocaleString();
+    document.getElementById('total_extras').textContent = '$' + totalExtras.toLocaleString();
+    document.getElementById('total_bonos').textContent = '$' + totalBonos.toLocaleString();
+    document.getElementById('total_descuentos').textContent = '$' + totalDescuentos.toLocaleString();
+    document.getElementById('total_neto').textContent = '$' + totalNeto.toLocaleString();
+    document.getElementById('totalPlanilla').textContent = '$' + totalNeto.toLocaleString();
+}
+// ============================================
+// ELIMINAR EMPLEADO DE LA PLANILLA
+// ============================================
+function eliminarEmpleadoPlanilla(index) {
+    const empleado = empleadosPlanilla[index];
+    if (!empleado) return;
+    
+    if (!confirm(`¿Eliminar a "${empleado.nombre}" de la planilla?`)) return;
+    
+    // Si el empleado tiene ID real (guardado en BD), eliminarlo del backend
+    if (empleado.id && typeof empleado.id === 'number' && empleado.id > 0) {
+        fetch(`${API_URL}/api/planilla_sueldos/empleado/${empleado.id}`, {
+            method: 'DELETE'
+        })
+        .then(resp => resp.json())
+        .then(result => {
+            if (result.success) {
+                // Eliminar del array local
+                empleadosPlanilla.splice(index, 1);
+                renderPlanilla();
+                alert('✅ Empleado eliminado correctamente');
+            } else {
+                alert('❌ Error: ' + (result.error || 'Desconocido'));
+            }
+        })
+        .catch(e => {
+            console.error('Error:', e);
+            alert('❌ Error de conexión');
+        });
+    } else {
+        // Si es un empleado temporal (solo en frontend)
+        empleadosPlanilla.splice(index, 1);
+        renderPlanilla();
+    }
+}
 // ============================================
 // PROVEEDORES
 // ============================================
