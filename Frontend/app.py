@@ -1222,11 +1222,16 @@ def ver_logs():
 # ============================
 # GASTOS
 # ============================
+# ============================
+# GASTOS
+# ============================
 @app.route('/gastos')
 @login_required
 @role_required(['admin', 'operador'])
 def gastos():
     hoy = datetime.now().strftime('%Y-%m-%d')
+    mes_actual = datetime.now().month
+    anio_actual = datetime.now().year
     
     try:
         resp = requests.get(f"{BACKEND_URL}/api/gastos?fecha={hoy}", timeout=10)
@@ -1237,16 +1242,22 @@ def gastos():
     total_gastos = sum(g.get('monto', 0) for g in gastos)
     gastos_efectivo = sum(g.get('monto', 0) for g in gastos if g.get('metodo_pago') == 'efectivo')
     gastos_transferencia = sum(g.get('monto', 0) for g in gastos if g.get('metodo_pago') == 'transferencia')
+    gastos_sueldos = sum(g.get('monto', 0) for g in gastos if g.get('categoria') == 'Sueldos')
     gastos_efectivo_count = len([g for g in gastos if g.get('metodo_pago') == 'efectivo'])
     gastos_transferencia_count = len([g for g in gastos if g.get('metodo_pago') == 'transferencia'])
+    gastos_sueldos_count = len([g for g in gastos if g.get('categoria') == 'Sueldos'])
     
     return render_template("gastos.html",
                           gastos=gastos,
                           total_gastos=total_gastos,
                           gastos_efectivo=gastos_efectivo,
                           gastos_transferencia=gastos_transferencia,
+                          gastos_sueldos=gastos_sueldos,
                           gastos_efectivo_count=gastos_efectivo_count,
-                          gastos_transferencia_count=gastos_transferencia_count)
+                          gastos_transferencia_count=gastos_transferencia_count,
+                          gastos_sueldos_count=gastos_sueldos_count,
+                          mes_actual=mes_actual,
+                          anio_actual=anio_actual)
 
 # ============================
 # CIERRE DE CAJA
