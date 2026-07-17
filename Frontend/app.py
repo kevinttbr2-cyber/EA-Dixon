@@ -1219,6 +1219,79 @@ def ver_logs():
     except Exception as e:
         logger.error(f"Error al leer logs: {str(e)}")
         return render_template("ver_logs.html", logs=f"Error al leer logs: {str(e)}")
+# ============================
+# GASTOS
+# ============================
+@app.route('/gastos')
+@login_required
+@role_required(['admin', 'operador'])
+def gastos():
+    hoy = datetime.now().strftime('%Y-%m-%d')
+    
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/gastos?fecha={hoy}", timeout=10)
+        gastos = resp.json() if resp.status_code == 200 else []
+    except:
+        gastos = []
+    
+    total_gastos = sum(g.get('monto', 0) for g in gastos)
+    gastos_efectivo = sum(g.get('monto', 0) for g in gastos if g.get('metodo_pago') == 'efectivo')
+    gastos_transferencia = sum(g.get('monto', 0) for g in gastos if g.get('metodo_pago') == 'transferencia')
+    gastos_efectivo_count = len([g for g in gastos if g.get('metodo_pago') == 'efectivo'])
+    gastos_transferencia_count = len([g for g in gastos if g.get('metodo_pago') == 'transferencia'])
+    
+    return render_template("gastos.html",
+                          gastos=gastos,
+                          total_gastos=total_gastos,
+                          gastos_efectivo=gastos_efectivo,
+                          gastos_transferencia=gastos_transferencia,
+                          gastos_efectivo_count=gastos_efectivo_count,
+                          gastos_transferencia_count=gastos_transferencia_count)
+
+# ============================
+# CIERRE DE CAJA
+# ============================
+@app.route('/cierre_caja')
+@login_required
+@role_required(['admin'])
+def cierre_caja():
+    hoy = datetime.now().strftime('%Y-%m-%d')
+    efectivo_inicial = 50000  # Fondo de caja por defecto
+    ventas_efectivo = 0
+    gastos_efectivo = 0
+    efectivo_esperado = 50000
+    historial_cierres = []
+    
+    try:
+        # Obtener cierre de hoy
+        resp = requests.get(f"{BACKEND_URL}/api/cierre_caja/{hoy}", timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            efectivo_inicial = data.get('cierre', {}).get('efectivo_inicial', 50000)
+            ventas_efectivo = data.get('ventas_efectivo', 0)
+            gastos_efectivo = data.get('gastos_efectivo', 0)
+            efectivo_esperado = data.get('efectivo_esperado', 50000)
+        else:
+            # Crear cierre automáticamente
+            requests.post(f"{BACKEND_URL}/api/cierre_caja", 
+                         json={"fecha": hoy, "efectivo_inicial": 50000})
+    except:
+        pass
+    
+    # Historial
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/historial_cierres", timeout=10)
+        historial_cierres = resp.json() if resp.status_code == 200 else []
+    except:
+        pass
+    
+    return render_template("cierre_caja.html",
+                          hoy=hoy,
+                          efectivo_inicial=efectivo_inicial,
+                          ventas_efectivo=ventas_efectivo,
+                          gastos_efectivo=gastos_efectivo,
+                          efectivo_esperado=efectivo_esperado,
+                          historial_cierres=historial_cierres)
 
 # ============================
 # RUTAS ESTÁTICAS
