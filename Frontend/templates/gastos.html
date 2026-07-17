@@ -563,109 +563,238 @@ function cambiarTab(tab) {
 }
 
 // ============================================
-// ESCÁNER (funciones completas)
+// ESCÁNER PDF417 - VERSIÓN CORREGIDA
 // ============================================
+
+// Variable global para el lector
+let codeReader = null;
+let scannerActivo = false;
+
+// Cargar librería ZXing
 function cargarZXing() {
     return new Promise((resolve, reject) => {
-        if (typeof ZXing !== 'undefined') { resolve(); return; }
+        if (typeof ZXing !== 'undefined') {
+            console.log('✅ ZXing ya cargado');
+            resolve();
+            return;
+        }
         const script = document.createElement('script');
         script.src = 'https://unpkg.com/@zxing/library@0.19.2/umd/index.min.js';
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Error cargando ZXing'));
+        script.onload = () => {
+            console.log('✅ ZXing cargado correctamente');
+            resolve();
+        };
+        script.onerror = () => {
+            reject(new Error('Error cargando la librería ZXing'));
+        };
         document.head.appendChild(script);
     });
 }
 
+// Solicitar permiso de cámara
 async function solicitarPermisoCamara() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+        });
         stream.getTracks().forEach(track => track.stop());
+        console.log('✅ Permiso de cámara concedido');
         return true;
     } catch (error) {
+        console.error('❌ Permiso de cámara denegado:', error);
         return false;
     }
 }
 
+// Iniciar escáner (VERSIÓN CORREGIDA)
 async function iniciarEscanner() {
-    if (scannerActivo) { await detenerEscanner(); return; }
-    
+    if (scannerActivo) {
+        await detenerEscanner();
+        return;
+    }
+
+    // 1. Solicitar permiso de cámara
     const tienePermiso = await solicitarPermisoCamara();
     if (!tienePermiso) {
-        alert('⚠️ Para escanear facturas, necesitas permitir el acceso a la cámara.');
+        alert('⚠️ Para escanear facturas, necesitas permitir el acceso a la cámara.\n\nPor favor, permite el acceso en la configuración de tu navegador.');
         return;
     }
 
     try {
+        // 2. Cargar la librería ZXing
         await cargarZXing();
+        
+        // 3. Verificar que ZXing esté disponible
+        if (typeof ZXing === 'undefined') {
+            throw new Error('ZXing no está disponible');
+        }
+
         const video = document.getElementById('videoElement');
         const container = document.getElementById('videoContainer');
         container.classList.add('active');
         video.style.display = 'block';
 
+        // 4. Crear el lector - USANDO BrowserPDF417Reader DIRECTAMENTE
         codeReader = new ZXing.BrowserPDF417Reader();
-        const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
-        const deviceId = devices.length > 0 ? devices[devices.length - 1].deviceId : undefined;
+        console.log('✅ Lector PDF417 creado');
 
-        scannerActivo = true;
-        document.getElementById('btnEscanear').textContent = '⏹️ Detener';
-        document.getElementById('btnEscanear').classList.add('activo');
-
-        await codeReader.decodeFromVideoDevice(deviceId, 'videoElement', (result, error) => {
-            if (result) {
-                procesarDatosFactura(result.getText());
-                detenerEscanner();
+        // 5. OBTENER DISPOSITIVOS - MÉTODO CORRECTO
+        let deviceId = undefined;
+        try {
+            // Método correcto para la versión 0.19.2
+            const devices = await ZXing.BrowserPDF417Reader.listVideoInputDevices();
+            console.log('📷 Dispositivos encontrados:', devices.length);
+            if (devices && devices.length > 0) {
+                // Usar la cámara trasera (la última de la lista suele ser la trasera)
+                deviceId = devices[devices.length - 1].deviceId;
+                console.log('📷 Usando cámara:', devices[devices.length - 1].label || 'Cámara trasera');
             }
-        });
+        } catch (e) {
+            console.warn('⚠️ No se pudieron listar dispositivos, usando cámara por defecto:', e);
+        }
+
+        // 6. Iniciar decodificación
+        scannerActivo = true;
+        const btn = document.getElementById('btnEscanear');
+        btn.textContent = '⏹️ Detener Escáner';
+        btn.classList.add('activo');
+
+        // 7. Decodificar desde video
+        await codeReader.decodeFromVideoDevice(
+            deviceId, // undefined = cámara por defecto
+            'videoElement',
+            (result, error) => {
+                if (result) {
+                    const textoCompleto = result.getText();
+                    console.log('📄 Texto escaneado:', textoCompleto);
+                    procesarDatosFactura(textoCompleto);
+                    detenerEscanner();
+                }
+                if (error && !(error instanceof ZXing.NotFoundException)) {
+                    console.log('🔍 Buscando código PDF417...');
+                }
+            }
+        );
+
     } catch (error) {
-        alert('❌ Error al iniciar el escáner: ' + error.message);
+        console.error('❌ Error al iniciar el escáner:', error);
+        
+        let mensaje = '❌ Error al iniciar el escáner:\n\n';
+        if (error.message && error.message.includes('Permission denied')) {
+            mensaje += 'No se pudo acceder a la cámara. Verifica los permisos en tu navegador.';
+        } else if (error.message && error.message.includes('not a function')) {
+            mensaje += 'Error de compatibilidad. Por favor, actualiza la página e intenta nuevamente.';
+        } else {
+            mensaje += error.message || 'Error desconocido';
+        }
+        alert(mensaje);
         detenerEscanner();
     }
 }
 
+// Detener escáner (VERSIÓN CORREGIDA)
 async function detenerEscanner() {
     scannerActivo = false;
-    document.getElementById('videoContainer').classList.remove('active');
-    document.getElementById('videoElement').style.display = 'none';
-    document.getElementById('videoElement').srcObject = null;
-    if (codeReader) { await codeReader.reset(); codeReader = null; }
-    document.getElementById('btnEscanear').textContent = '📸 Escanear Factura / Boleta';
-    document.getElementById('btnEscanear').classList.remove('activo');
+    const video = document.getElementById('videoElement');
+    const container = document.getElementById('videoContainer');
+    container.classList.remove('active');
+    video.style.display = 'none';
+    
+    // Detener todos los tracks de video
+    if (video.srcObject) {
+        try {
+            const tracks = video.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+        } catch (e) {
+            console.warn('⚠️ Error al detener tracks:', e);
+        }
+        video.srcObject = null;
+    }
+
+    // Resetear el lector
+    if (codeReader) {
+        try {
+            await codeReader.reset();
+        } catch (e) {
+            console.warn('⚠️ Error al resetear el lector:', e);
+        }
+        codeReader = null;
+    }
+
+    const btn = document.getElementById('btnEscanear');
+    btn.textContent = '📸 Escanear Factura / Boleta';
+    btn.classList.remove('activo');
 }
 
+// Procesar datos extraídos del código PDF417
 function procesarDatosFactura(texto) {
-    let monto = null, proveedor = null, rut = null, folio = null;
-    
-    // Buscar monto
-    let match = texto.match(/MontoTotal[^\d]*([\d.,]+)/i) || texto.match(/Total[^\d]*([\d.,]+)/i);
-    if (match) {
-        monto = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.'));
+    console.log('🔍 Procesando texto escaneado...');
+    console.log('📄 Texto completo:', texto);
+
+    let monto = null;
+    let proveedor = null;
+    let rut = null;
+    let folio = null;
+
+    // Buscar Monto Total
+    let montoMatch = texto.match(/MontoTotal[^\d]*([\d.,]+)/i);
+    if (!montoMatch) {
+        montoMatch = texto.match(/Total[^\d]*([\d.,]+)/i);
+    }
+    if (!montoMatch) {
+        montoMatch = texto.match(/Neto[^\d]*([\d.,]+)/i);
+    }
+    if (montoMatch) {
+        monto = parseFloat(montoMatch[1].replace(/[.,]/g, (match) => match === '.' ? '' : '.'));
         document.getElementById('gasto_monto').value = monto;
+        console.log('💰 Monto encontrado:', monto);
     }
-    
-    // Buscar proveedor
-    match = texto.match(/RazónSocial[^:]*:\s*([^\n]+)/i) || texto.match(/Nombre[^:]*:\s*([^\n]+)/i);
-    if (match) {
-        proveedor = match[1].trim();
+
+    // Buscar Proveedor
+    let proveedorMatch = texto.match(/RazónSocial[^:]*:\s*([^\n]+)/i);
+    if (!proveedorMatch) {
+        proveedorMatch = texto.match(/Nombre[^:]*:\s*([^\n]+)/i);
+    }
+    if (!proveedorMatch) {
+        proveedorMatch = texto.match(/Cliente[^:]*:\s*([^\n]+)/i);
+    }
+    if (proveedorMatch) {
+        proveedor = proveedorMatch[1].trim();
         document.getElementById('gasto_proveedor').value = proveedor;
+        console.log('🏢 Proveedor encontrado:', proveedor);
     }
-    
+
     // Buscar RUT
-    match = texto.match(/RUT[^:]*:\s*([\d.-]+)/i);
-    if (match && !proveedor) {
-        document.getElementById('gasto_proveedor').value = match[1].trim();
+    let rutMatch = texto.match(/RUT[^:]*:\s*([\d.-]+)/i);
+    if (!rutMatch) {
+        rutMatch = texto.match(/Rut[^:]*:\s*([\d.-]+)/i);
     }
-    
-    // Buscar folio
-    match = texto.match(/Folio[^:]*:\s*(\d+)/i);
-    if (match) {
-        folio = match[1].trim();
+    if (rutMatch) {
+        rut = rutMatch[1].trim();
+        if (!proveedor) {
+            document.getElementById('gasto_proveedor').value = rut;
+        }
+        console.log('🆔 RUT encontrado:', rut);
+    }
+
+    // Buscar Folio
+    let folioMatch = texto.match(/Folio[^:]*:\s*(\d+)/i);
+    if (folioMatch) {
+        folio = folioMatch[1].trim();
         document.getElementById('gasto_folio').value = folio;
+        console.log('📄 Folio encontrado:', folio);
     }
-    
+
+    // Mensaje de éxito
     if (monto) {
-        alert(`✅ Datos cargados:\n💰 Monto: $${monto.toLocaleString()}${proveedor ? '\n🏢 ' + proveedor : ''}`);
+        let mensaje = '✅ Datos cargados automáticamente:\n\n';
+        mensaje += `💰 Monto: $${monto.toLocaleString()}\n`;
+        if (proveedor) mensaje += `🏢 Proveedor: ${proveedor}\n`;
+        if (rut) mensaje += `🆔 RUT: ${rut}\n`;
+        if (folio) mensaje += `📄 Folio: ${folio}\n`;
+        alert(mensaje);
     } else {
-        alert('⚠️ No se pudo extraer el monto automáticamente.');
+        alert('⚠️ No se pudo extraer el monto automáticamente.\n\nRevisa que el código PDF417 sea válido.\n\nSi el problema persiste, ingresa los datos manualmente.');
     }
 }
 // ============================================
