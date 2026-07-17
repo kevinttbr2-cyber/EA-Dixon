@@ -755,13 +755,15 @@ def registros():
     )
 
 # ============================
-# BALANCE DE GANANCIA
+# BALANCE DE GANANCIA (CON GASTOS)
 # ============================
 @app.route('/balance')
 @login_required
 @role_required(['admin'])
 def balance():
     filtro = request.args.get('filtro', 'hoy')
+    hoy = datetime.now().date()
+    
     try:
         resp = requests.get(f"{BACKEND_URL}/api/balance?filtro={filtro}", timeout=10)
         if resp.status_code == 200:
@@ -778,10 +780,40 @@ def balance():
         logger.error(f"Error en /balance: {e}")
         registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     
-    hoy = [r for r in registros if r.get('fecha') == datetime.now().strftime('%Y-%m-%d')]
-    semana = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')]
-    mes = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')]
-    todos = registros
+    # ============================================
+    # OBTENER GASTOS OPERATIVOS
+    # ============================================
+    gastos_operativos = []
+    total_gastos = 0
+    
+    try:
+        # Obtener gastos según el filtro
+        fecha_inicio = None
+        if filtro == 'hoy':
+            fecha_inicio = hoy.strftime('%Y-%m-%d')
+        elif filtro == '7d':
+            fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+        elif filtro == 'mes':
+            fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+        elif filtro == 'todos':
+            fecha_inicio = '2020-01-01'  # Una fecha muy antigua para traer todos
+        
+        if fecha_inicio:
+            resp_gastos = requests.get(f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={hoy.strftime('%Y-%m-%d')}", timeout=10)
+            if resp_gastos.status_code == 200:
+                gastos_operativos = resp_gastos.json()
+                total_gastos = sum(g.get('monto', 0) for g in gastos_operativos)
+    except Exception as e:
+        logger.error(f"Error al obtener gastos para balance: {e}")
+    
+    # Calcular ganancia real (restando los gastos operativos)
+    ganancia_real = ganancia_neta - total_gastos
+    
+    # Filtros para las vistas
+    hoy_list = [r for r in registros if r.get('fecha') == hoy.strftime('%Y-%m-%d')]
+    semana_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')]
+    mes_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
+    todos_list = registros
     
     return render_template(
         "balance.html",
@@ -791,13 +823,15 @@ def balance():
         total_mano_obra=total_mano_obra,
         total_diagnostico=total_diagnostico,
         ganancia_neta=ganancia_neta,
+        ganancia_real=ganancia_real,
+        total_gastos=total_gastos,
+        gastos_operativos=gastos_operativos,
         filtro=filtro,
-        hoy=hoy,
-        semana=semana,
-        mes=mes,
-        todos=todos
+        hoy=hoy_list,
+        semana=semana_list,
+        mes=mes_list,
+        todos=todos_list
     )
-
 # ============================
 # MODELOS
 # ============================
