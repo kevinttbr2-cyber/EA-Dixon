@@ -717,8 +717,11 @@ def pago_validado(id_reg):
 @login_required
 @role_required(['admin'])
 def registros():
+    filtro = request.args.get('filtro', 'todos')
+    
     try:
-        resp = requests.get(f"{BACKEND_URL}/api/registros", timeout=10)
+        # Enviar el filtro al backend
+        resp = requests.get(f"{BACKEND_URL}/api/registros?filtro={filtro}", timeout=10)
         registros = resp.json() if resp.status_code == 200 else []
     except Exception as e:
         logger.error(f"Error en /registros: {e}")
@@ -729,19 +732,26 @@ def registros():
     fecha_7d = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
     fecha_mes = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
     
-    registros_hoy = [r for r in registros if r.get('fecha', '') == hoy_str]
-    registros_7d = [r for r in registros if r.get('fecha', '') >= fecha_7d]
-    registros_mes = [r for r in registros if r.get('fecha', '') >= fecha_mes]
-    total_general = sum(r.get('monto', 0) for r in registros)
+    # Estos son para mostrar en los filtros (siempre el total sin filtrar)
+    try:
+        resp_all = requests.get(f"{BACKEND_URL}/api/registros?filtro=todos", timeout=10)
+        registros_all = resp_all.json() if resp_all.status_code == 200 else []
+    except:
+        registros_all = []
+    
+    registros_hoy = [r for r in registros_all if r.get('fecha', '') == hoy_str]
+    registros_7d = [r for r in registros_all if r.get('fecha', '') >= fecha_7d]
+    registros_mes = [r for r in registros_all if r.get('fecha', '') >= fecha_mes]
+    total_general = sum(r.get('monto', 0) for r in registros_all)
     
     return render_template(
         "registros.html",
-        registros=registros,
-        registros_hoy=registros_hoy,
-        registros_7d=registros_7d,
-        registros_mes=registros_mes,
+        registros=registros,           # Ya filtrados por el backend
+        registros_hoy=registros_hoy,   # Para mostrar el contador
+        registros_7d=registros_7d,     # Para mostrar el contador
+        registros_mes=registros_mes,   # Para mostrar el contador
         total_general=total_general,
-        filtro=request.args.get('filtro', 'todos')
+        filtro=filtro
     )
 
 # ============================
