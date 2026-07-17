@@ -21,7 +21,7 @@
     
     <style>
         /* ============================
-           ESTILOS GLOBALES (inline)
+           ESTILOS GLOBALES
            ============================ */
         :root {
             --bg-primary: #121214;
@@ -78,11 +78,9 @@
         .navbar-custom .navbar-brand {
             display: flex;
             align-items: center;
-            gap: 10px;
             text-decoration: none;
-            color: #f5f5f5;
-            font-weight: 700;
-            font-size: 18px;
+            padding: 0;
+            margin: 0;
         }
 
         .navbar-custom .navbar-brand .logo-img {
@@ -359,9 +357,6 @@
             .fab-label {
                 display: none;
             }
-            .navbar-custom .navbar-brand {
-                font-size: 15px;
-            }
             .navbar-custom .navbar-brand .logo-img {
                 height: 32px;
             }
@@ -377,9 +372,9 @@
     ============================ -->
     <nav class="navbar navbar-custom navbar-expand-lg">
         <div class="container-fluid px-0">
+            <!-- Logo SOLO (sin texto) - al hacer clic va a /estado -->
             <a class="navbar-brand" href="/estado">
                 <img src="{{ url_for('static', filename='images/dixon-navbar.png') }}" alt="Dixon" class="logo-img">
-                <span>Dixon Automotive</span>
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
@@ -391,16 +386,9 @@
                     
                     {% if session.get("usuario") %}
                     
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/estado' %}active{% endif %}" href="/estado">
-                            <span class="material-symbols-rounded">dashboard</span>
-                            Estado
-                            {% if flotas_pendientes_count > 0 %}
-                            <span class="badge-count">{{ flotas_pendientes_count }}</span>
-                            {% endif %}
-                        </a>
-                    </li>
-                    
+                    <!-- ====================
+                    FINANZAS (Dropdown)
+                    ==================== -->
                     {% if session.get("rol") in ["admin", "operador"] %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuFinanzas" role="button" data-bs-toggle="dropdown">
@@ -416,6 +404,9 @@
                     </li>
                     {% endif %}
                     
+                    <!-- ====================
+                    GESTIÓN (Dropdown)
+                    ==================== -->
                     {% if session.get("rol") in ["admin", "operador"] %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown">
@@ -433,6 +424,9 @@
                     </li>
                     {% endif %}
                     
+                    <!-- ====================
+                    VALIDAR PAGOS (directo)
+                    ==================== -->
                     {% if session.get("rol") in ["admin", "operador"] %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/pendientes_validacion' %}active{% endif %}" href="/pendientes_validacion">
@@ -442,15 +436,9 @@
                     </li>
                     {% endif %}
                     
-                    {% if session.get("rol") in ["admin", "operador"] %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/venta_rapida' %}active{% endif %}" href="/venta_rapida">
-                            <span class="material-symbols-rounded">bolt</span>
-                            Venta
-                        </a>
-                    </li>
-                    {% endif %}
-                    
+                    <!-- ====================
+                    USUARIOS (solo admin)
+                    ==================== -->
                     {% if session.get("rol") == "admin" %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown">
@@ -464,6 +452,9 @@
                     </li>
                     {% endif %}
                     
+                    <!-- ====================
+                    LOGS (solo admin)
+                    ==================== -->
                     {% if session.get("rol") == "admin" %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/ver_logs' %}active{% endif %}" href="/ver_logs">
@@ -473,6 +464,9 @@
                     </li>
                     {% endif %}
                     
+                    <!-- ====================
+                    USUARIO + SALIR
+                    ==================== -->
                     <li class="nav-item">
                         <span class="user-name">
                             <span class="material-symbols-rounded" style="font-size: 16px;">account_circle</span>
@@ -515,7 +509,7 @@
     </div>
 
     <!-- ============================
-    BOTONES FLOTANTES
+    BOTONES FLOTANTES (FAB) - SOLO AQUÍ
     ============================ -->
     <div class="fab-container">
         <div class="fab-item">
