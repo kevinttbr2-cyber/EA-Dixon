@@ -30,7 +30,6 @@
 
 .filtro-card:hover {
     transform: translateY(-2px) !important;
-    border-color: #6b7078 !important;
 }
 
 .filtro-card .numero {
@@ -38,6 +37,7 @@
     font-weight: 800 !important;
     display: block !important;
     line-height: 1.2 !important;
+    color: #f5f5f5 !important;
 }
 
 .filtro-card .etiqueta {
@@ -49,13 +49,16 @@
     align-items: center !important;
     justify-content: center !important;
     gap: 4px !important;
+    color: #b0b5bf !important;
 }
 
 .filtro-card .etiqueta .material-symbols-rounded {
     font-size: 16px !important;
 }
 
-/* FILTRO TOTAL */
+/* ============================
+   FILTRO TOTAL (blanco)
+   ============================ */
 .filtro-card.active-total {
     border-color: #b0b5bf !important;
     background: #2a2a32 !important;
@@ -64,30 +67,34 @@
     color: #f5f5f5 !important;
 }
 
-/* FILTRO PAGADOS - VERDE */
+/* ============================
+   FILTRO PAGADOS - BORDE VERDE
+   ============================ */
 .filtro-card.active-pagados {
-    border-color: #00ff00 !important;
-    background: rgba(0, 255, 0, 0.08) !important;
+    border-color: #2ecc71 !important;
+    background: rgba(46, 204, 113, 0.06) !important;
 }
 .filtro-card.active-pagados .numero {
-    color: #00ff00 !important;
+    color: #f5f5f5 !important;
 }
 .filtro-card.active-pagados .etiqueta {
-    color: #00ff00 !important;
-    opacity: 1 !important;
+    color: #b0b5bf !important;
+    opacity: 0.8 !important;
 }
 
-/* FILTRO PENDIENTES - ROJO */
+/* ============================
+   FILTRO PENDIENTES - BORDE ROJO
+   ============================ */
 .filtro-card.active-pendientes {
-    border-color: #ff0000 !important;
-    background: rgba(255, 0, 0, 0.08) !important;
+    border-color: #e74c3c !important;
+    background: rgba(231, 76, 60, 0.06) !important;
 }
 .filtro-card.active-pendientes .numero {
-    color: #ff0000 !important;
+    color: #f5f5f5 !important;
 }
 .filtro-card.active-pendientes .etiqueta {
-    color: #ff0000 !important;
-    opacity: 1 !important;
+    color: #b0b5bf !important;
+    opacity: 0.8 !important;
 }
 
 /* Buscador */
@@ -119,8 +126,8 @@
 
 .buscador-wrapper input:focus {
     outline: none !important;
-    border-color: #00ff00 !important;
-    box-shadow: 0 0 0 4px rgba(0, 255, 0, 0.1) !important;
+    border-color: #2ecc71 !important;
+    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.1) !important;
 }
 
 .buscador-wrapper input::placeholder {
@@ -129,8 +136,8 @@
 
 /* Alerta flotas */
 .flota-alert {
-    background: rgba(255, 200, 0, 0.06) !important;
-    border: 1px solid rgba(255, 200, 0, 0.15) !important;
+    background: rgba(241, 196, 15, 0.06) !important;
+    border: 1px solid rgba(241, 196, 15, 0.15) !important;
     border-radius: 12px !important;
     padding: 12px 18px !important;
     margin-bottom: 20px !important;
@@ -149,7 +156,7 @@
 }
 
 .flota-alert .info .icon {
-    color: #ffcc00 !important;
+    color: #f1c40f !important;
     font-size: 24px !important;
 }
 
@@ -159,11 +166,11 @@
 }
 
 .flota-alert .info .text strong {
-    color: #ffcc00 !important;
+    color: #f1c40f !important;
 }
 
 .flota-alert .badge-count {
-    background: #ffcc00 !important;
+    background: #f1c40f !important;
     color: #121214 !important;
     border-radius: 50px !important;
     padding: 0 14px !important;
@@ -173,13 +180,13 @@
 }
 
 .flota-alert .btn-ver {
-    color: #ffcc00 !important;
+    color: #f1c40f !important;
     font-size: 13px !important;
     text-decoration: none !important;
-    background: rgba(255, 200, 0, 0.08) !important;
+    background: rgba(241, 196, 15, 0.08) !important;
     padding: 4px 18px !important;
     border-radius: 50px !important;
-    border: 1px solid rgba(255, 200, 0, 0.12) !important;
+    border: 1px solid rgba(241, 196, 15, 0.12) !important;
     transition: all 0.3s ease !important;
     display: flex !important;
     align-items: center !important;
@@ -187,7 +194,7 @@
 }
 
 .flota-alert .btn-ver:hover {
-    background: rgba(255, 200, 0, 0.15) !important;
+    background: rgba(241, 196, 15, 0.15) !important;
 }
 
 /* ============================
@@ -208,19 +215,19 @@
 }
 
 /* ============================
-   PAGADOS - FONDO VERDE
+   PAGADOS - FONDO VERDE SUTIL + BORDE VERDE
    ============================ */
 .card-trabajo.pagado {
-    background: rgba(0, 255, 0, 0.08) !important;
-    border-left: 4px solid #00ff00 !important;
+    background: rgba(46, 204, 113, 0.06) !important;
+    border-left: 4px solid #2ecc71 !important;
 }
 
 /* ============================
-   PENDIENTES - FONDO ROJO
+   PENDIENTES - FONDO ROJO SUTIL + BORDE ROJO
    ============================ */
 .card-trabajo.pendiente {
-    background: rgba(255, 0, 0, 0.08) !important;
-    border-left: 4px solid #ff0000 !important;
+    background: rgba(231, 76, 60, 0.06) !important;
+    border-left: 4px solid #e74c3c !important;
 }
 
 .card-trabajo .header {
@@ -243,12 +250,12 @@
 }
 
 .card-trabajo .header .nombre .estado-icon-pagado {
-    color: #00ff00 !important;
+    color: #2ecc71 !important;
     font-size: 18px !important;
 }
 
 .card-trabajo .header .nombre .estado-icon-pendiente {
-    color: #ff0000 !important;
+    color: #e74c3c !important;
     font-size: 18px !important;
 }
 
@@ -266,9 +273,9 @@
 }
 
 .card-trabajo .header .nombre .badge-flota {
-    background: rgba(255, 200, 0, 0.10) !important;
-    color: #ffcc00 !important;
-    border: 1px solid rgba(255, 200, 0, 0.12) !important;
+    background: rgba(241, 196, 15, 0.10) !important;
+    color: #f1c40f !important;
+    border: 1px solid rgba(241, 196, 15, 0.12) !important;
     font-size: 10px !important;
     padding: 0 10px !important;
     border-radius: 20px !important;
@@ -314,7 +321,7 @@
 }
 
 .card-trabajo .detalles .producto-tag .precio {
-    color: #ffcc00 !important;
+    color: #f1c40f !important;
 }
 
 .card-trabajo .pie {
@@ -328,12 +335,12 @@
 }
 
 .card-trabajo .pie .estado-texto-pagado {
-    color: #00ff00 !important;
+    color: #2ecc71 !important;
     font-weight: 600 !important;
 }
 
 .card-trabajo .pie .estado-texto-pendiente {
-    color: #ff0000 !important;
+    color: #e74c3c !important;
     font-weight: 600 !important;
 }
 
@@ -360,12 +367,12 @@
 }
 
 .card-trabajo .btn-accion.primary {
-    background: #00ff00 !important;
+    background: #2ecc71 !important;
     color: #121214 !important;
 }
 
 .card-trabajo .btn-accion.primary:hover {
-    background: #00cc00 !important;
+    background: #27ae60 !important;
     transform: translateY(-2px) !important;
 }
 
@@ -505,24 +512,29 @@
 </h2>
 
 <!-- ============================
-   FILTROS
+   FILTROS - BORDES DE COLOR
    ============================ -->
 <div class="filtros-grid">
+    <!-- TOTAL - BORDE GRIS -->
     <a href="?estado=todos" class="filtro-card {% if not estado or estado == 'todos' %}active-total{% endif %}">
         <span class="numero">{{ (pendientes_mes or 0) + (pagados_mes or 0) }}</span>
         <span class="etiqueta">Total</span>
     </a>
+    
+    <!-- PAGADOS - BORDE VERDE -->
     <a href="?estado=pagado" class="filtro-card {% if estado == 'pagado' %}active-pagados{% endif %}">
-        <span class="numero" style="color: #00ff00 !important;">{{ pagados_mes or 0 }}</span>
-        <span class="etiqueta" style="color: #00ff00 !important;">
-            <span class="material-symbols-rounded" style="color: #00ff00 !important;">check_circle</span>
+        <span class="numero">{{ pagados_mes or 0 }}</span>
+        <span class="etiqueta">
+            <span class="material-symbols-rounded" style="color: #2ecc71 !important;">check_circle</span>
             Pagados
         </span>
     </a>
+    
+    <!-- PENDIENTES - BORDE ROJO -->
     <a href="?estado=pendiente" class="filtro-card {% if estado == 'pendiente' %}active-pendientes{% endif %}">
-        <span class="numero" style="color: #ff0000 !important;">{{ pendientes_mes or 0 }}</span>
-        <span class="etiqueta" style="color: #ff0000 !important;">
-            <span class="material-symbols-rounded" style="color: #ff0000 !important;">pending</span>
+        <span class="numero">{{ pendientes_mes or 0 }}</span>
+        <span class="etiqueta">
+            <span class="material-symbols-rounded" style="color: #e74c3c !important;">pending</span>
             Pendientes
         </span>
     </a>
@@ -544,16 +556,15 @@
     <div class="card-trabajo {% if r.estado == 'pagado' %}pagado{% else %}pendiente{% endif %} registro-item" 
          data-nombre="{{ r.nombre|lower }}" 
          data-patente="{{ r.patente|lower if r.patente else '' }}"
-         data-flota="{{ r.flota|lower if r.flota else '' }}"
-         style="{% if r.estado == 'pagado' %}background: rgba(0, 255, 0, 0.08) !important; border-left: 4px solid #00ff00 !important;{% else %}background: rgba(255, 0, 0, 0.08) !important; border-left: 4px solid #ff0000 !important;{% endif %}">
+         data-flota="{{ r.flota|lower if r.flota else '' }}">
 
         <div class="header">
             <div class="nombre">
-                <!-- ICONO DE ESTADO CON COLORES DIRECTOS -->
+                <!-- ICONO DE ESTADO -->
                 {% if r.estado == 'pagado' %}
-                <span class="material-symbols-rounded" style="color: #00ff00 !important; font-size: 18px;">check_circle</span>
+                <span class="estado-icon-pagado material-symbols-rounded">check_circle</span>
                 {% else %}
-                <span class="material-symbols-rounded" style="color: #ff0000 !important; font-size: 18px;">pending</span>
+                <span class="estado-icon-pendiente material-symbols-rounded">pending</span>
                 {% endif %}
                 {{ r.nombre }}
                 
@@ -619,9 +630,9 @@
             <div>
                 <strong>Estado:</strong>
                 {% if r.estado == 'pagado' %}
-                <span style="color: #00ff00 !important; font-weight: 600;">PAGADO</span>
+                <span class="estado-texto-pagado">PAGADO</span>
                 {% else %}
-                <span style="color: #ff0000 !important; font-weight: 600;">PENDIENTE</span>
+                <span class="estado-texto-pendiente">PENDIENTE</span>
                 {% endif %}
             </div>
             {% if r.monto %}
