@@ -96,7 +96,7 @@ app.jinja_env.filters['strftime'] = lambda date, fmt: date.strftime(fmt) if date
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
 
 # ============================
-# FUNCIÓN CENTRALIZADA PARA ENVIAR NOTIFICACIONES
+# FUNCIÓN CENTRALIZADA PARA ENVIAR NOTIFICACIONES (NUEVO)
 # ============================
 def enviar_notificacion_push(titulo, mensaje, url="/estado", id_reg=None):
     """
@@ -109,7 +109,6 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id_reg=None):
         
         logger.info(f"📨 Enviando notificación a: {url_notificacion}")
         logger.info(f"📨 Título: {titulo}")
-        logger.info(f"📨 Mensaje: {mensaje[:100]}...")
         
         resp = requests.post(
             url_notificacion,
@@ -128,29 +127,10 @@ def enviar_notificacion_push(titulo, mensaje, url="/estado", id_reg=None):
             return True
         else:
             logger.warning(f"⚠️ Notificación falló: {resp.status_code} - {resp.text[:100]}")
-            
-            # Fallback: guardar en archivo local
-            try:
-                if LOG_DIR:
-                    notif_file = os.path.join(LOG_DIR, 'notificaciones_fallback.log')
-                    with open(notif_file, 'a') as f:
-                        f.write(f"{datetime.now()} - {titulo} - {mensaje}\n")
-                    logger.info("📝 Notificación guardada en archivo local")
-            except:
-                pass
             return False
             
     except requests.exceptions.ConnectionError:
         logger.error(f"❌ No se pudo conectar al backend para notificación")
-        # Fallback: guardar en archivo local
-        try:
-            if LOG_DIR:
-                notif_file = os.path.join(LOG_DIR, 'notificaciones_fallback.log')
-                with open(notif_file, 'a') as f:
-                    f.write(f"{datetime.now()} - {titulo} - {mensaje}\n")
-                logger.info("📝 Notificación guardada en archivo local")
-        except:
-            pass
         return False
     except Exception as e:
         logger.error(f"❌ Error en notificación: {e}")
@@ -364,7 +344,20 @@ def estado():
                           estado="todos")
 
 # ============================
-# AGREGAR CLIENTE
+# AGREGAR CLIENTE (PÁGINA)
+# ============================
+@app.route('/agregar_cliente')
+@login_required
+def agregar_cliente():
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=5)
+        flotas = resp.json() if resp.status_code == 200 else []
+    except:
+        flotas = []
+    return render_template("agregar_cliente.html", flotas=flotas)
+
+# ============================
+# AGREGAR CLIENTE (PROCESAR)
 # ============================
 @app.route('/agregar', methods=['POST'])
 @login_required
@@ -414,7 +407,7 @@ def agregar():
         
         logger.info(f"✅ Cliente agregado exitosamente por '{usuario}': '{nombre}', patente: '{patente}'")
         
-        # ✅ ENVIAR NOTIFICACIÓN USANDO FUNCIÓN CENTRALIZADA
+        # ✅ ENVIAR NOTIFICACIÓN - AHORA USA LA FUNCIÓN CENTRALIZADA
         enviar_notificacion_push(
             titulo="📋 Nuevo Cliente",
             mensaje=f"{nombre}\nPatente: {patente}\nRegistrado por: {usuario}",
@@ -428,20 +421,6 @@ def agregar():
         return redirect("/agregar_cliente")
     
     return redirect("/estado")
-
-# ============================
-# AGREGAR CLIENTE (PÁGINA)
-# ============================
-@app.route('/agregar_cliente')
-@login_required
-def agregar_cliente_page():
-    try:
-        # Obtener flotas disponibles
-        resp = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=5)
-        flotas = resp.json() if resp.status_code == 200 else []
-    except:
-        flotas = []
-    return render_template("agregar_cliente.html", flotas=flotas)
 
 # ============================
 # PAGAR
@@ -517,7 +496,7 @@ def pago_exitoso(id_reg):
         registro['firma'] = firma
         url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
         
-        # ✅ ENVIAR NOTIFICACIÓN PUSH USANDO FUNCIÓN CENTRALIZADA
+        # ✅ ENVIAR NOTIFICACIÓN - AHORA USA LA FUNCIÓN CENTRALIZADA
         nombre_cliente = registro.get('nombre', 'Cliente')
         monto = registro.get('monto', 0)
         forma_pago = registro.get('forma_pago', 'efectivo')
@@ -1009,7 +988,7 @@ def exportar_flota_pdf(flota):
         resp = requests.post(url, json={"fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta}, timeout=60)
         
         if resp.status_code == 200:
-            # ✅ ENVIAR NOTIFICACIÓN PUSH USANDO FUNCIÓN CENTRALIZADA
+            # ✅ ENVIAR NOTIFICACIÓN - AHORA USA LA FUNCIÓN CENTRALIZADA
             enviar_notificacion_push(
                 titulo="📄 Reporte Generado",
                 mensaje=f"Flota: {flota}\nFechas: {fecha_desde} - {fecha_hasta}\nGenerado por: {session.get('usuario')}",
