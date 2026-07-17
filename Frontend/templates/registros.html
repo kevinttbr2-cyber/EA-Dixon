@@ -1,277 +1,852 @@
 {% extends "base.html" %}
 
+{% block title %}Registros de Pagos - Dixon{% endblock %}
+
 {% block content %}
 
 <style>
-    /* ============================================
-       ESTILOS PARA DROPDOWNS DE 3 PUNTOS
-       ============================================ */
-    .dropdown-3p {
-        position: relative;
-        display: inline-block;
-    }
-    
-    .dropdown-3p .btn-3p {
-        background: transparent;
-        border: none;
-        color: rgba(255,255,255,0.4);
-        font-size: 20px;
-        padding: 4px 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-radius: 6px;
-        line-height: 1;
-    }
-    
-    .dropdown-3p .btn-3p:hover {
-        color: rgba(255,255,255,0.8);
-        background: rgba(255,255,255,0.05);
-    }
-    
-    .dropdown-3p .menu-3p {
-        display: none;
-        position: absolute;
-        right: 0;
-        top: 100%;
-        margin-top: 4px;
-        background: #1a1a1a;
-        border: 1px solid #00ff66;
-        border-radius: 12px;
-        padding: 6px 0;
-        min-width: 170px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.9);
-        z-index: 9999999;
-    }
-    
-    .dropdown-3p .menu-3p.show {
-        display: block;
-    }
-    
-    .dropdown-3p .menu-3p a,
-    .dropdown-3p .menu-3p button {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 16px;
-        color: #e0e0e0;
-        font-size: 13px;
-        text-decoration: none;
-        background: transparent;
-        border: none;
-        width: 100%;
-        text-align: left;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border-radius: 0;
-    }
-    
-    .dropdown-3p .menu-3p a:hover,
-    .dropdown-3p .menu-3p button:hover {
-        background: rgba(255,255,255,0.05);
-    }
-    
-    .dropdown-3p .menu-3p .text-danger {
-        color: #ff6b6b !important;
-    }
-    .dropdown-3p .menu-3p .text-danger:hover {
-        background: rgba(255,107,107,0.1) !important;
-    }
-    .dropdown-3p .menu-3p .text-primary {
-        color: #4fc3f7 !important;
-    }
-    .dropdown-3p .menu-3p .text-success {
-        color: #00ff66 !important;
-    }
-    .dropdown-3p .menu-3p .text-warning {
-        color: #ffcc00 !important;
-    }
-    .dropdown-3p .menu-3p .divider {
-        border: none;
-        border-top: 1px solid rgba(255,255,255,0.06);
-        margin: 4px 0;
-    }
-    
-    /* Dropdown hacia arriba en móvil */
-    .dropdown-3p.dropup .menu-3p {
-        top: auto;
-        bottom: 100%;
-        margin-top: 0;
-        margin-bottom: 4px;
-    }
-    
-    /* Iconos en el menú */
-    .dropdown-3p .menu-3p i {
-        width: 20px;
-        text-align: center;
-    }
+/* ============================================
+   ESTILOS MODERNOS PARA REGISTROS
+   ============================================ */
 
-    /* Estilos para el modal de editar repuestos */
-    .fila-editar-repuesto input {
-        background: rgba(0,0,0,0.40) !important;
-        color: #fff !important;
-        border: 1px solid rgba(255,200,0,0.20) !important;
-        border-radius: 6px !important;
-        padding: 4px 8px !important;
-        font-size: 12px !important;
+/* Filtros */
+.filtros-grid-registros {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 20px !important;
+}
+
+.filtro-card-registro {
+    background: var(--bg-card) !important;
+    border: 2px solid var(--border-subtle) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 10px 16px !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    transition: var(--transition) !important;
+    cursor: pointer !important;
+    display: block !important;
+}
+
+.filtro-card-registro:hover {
+    transform: translateY(-2px) !important;
+    border-color: var(--text-muted) !important;
+}
+
+.filtro-card-registro .numero {
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    display: block !important;
+    line-height: 1.2 !important;
+    color: var(--text-primary) !important;
+}
+
+.filtro-card-registro .etiqueta {
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    opacity: 0.6 !important;
+    color: var(--text-secondary) !important;
+}
+
+.filtro-card-registro.active-total {
+    border-color: var(--text-secondary) !important;
+    background: var(--bg-hover) !important;
+}
+
+.filtro-card-registro.active-pagados {
+    border-color: var(--accent-green) !important;
+    background: rgba(46, 204, 113, 0.06) !important;
+}
+.filtro-card-registro.active-pagados .numero {
+    color: var(--accent-green) !important;
+}
+
+/* Barra de búsqueda */
+.buscador-wrapper-registros {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    margin-bottom: 16px !important;
+    background: var(--bg-input) !important;
+    padding: 8px 12px !important;
+    border-radius: var(--radius-md) !important;
+    border: 2px solid transparent !important;
+    transition: var(--transition) !important;
+}
+
+.buscador-wrapper-registros:focus-within {
+    border-color: var(--accent-green) !important;
+    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.08) !important;
+}
+
+.buscador-wrapper-registros select,
+.buscador-wrapper-registros input {
+    background: transparent !important;
+    color: var(--text-primary) !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    border-radius: var(--radius-sm) !important;
+    outline: none !important;
+    flex: 1 !important;
+    min-width: 100px !important;
+}
+
+.buscador-wrapper-registros select {
+    max-width: 140px !important;
+    color: var(--text-secondary) !important;
+    cursor: pointer !important;
+}
+
+.buscador-wrapper-registros select option {
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.buscador-wrapper-registros input::placeholder {
+    color: var(--text-muted) !important;
+}
+
+.buscador-wrapper-registros .btn-buscar {
+    background: var(--accent-green-subtle) !important;
+    color: var(--accent-green) !important;
+    border: 1px solid rgba(46, 204, 113, 0.2) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+}
+
+.buscador-wrapper-registros .btn-buscar:hover {
+    background: var(--accent-green) !important;
+    color: var(--bg-primary) !important;
+}
+
+.buscador-wrapper-registros .btn-limpiar {
+    background: var(--bg-hover) !important;
+    color: var(--text-muted) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+}
+
+.buscador-wrapper-registros .btn-limpiar:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Total general */
+.total-general {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    padding: 10px 16px !important;
+    background: var(--accent-green-subtle) !important;
+    border-radius: var(--radius-md) !important;
+    border: 1px solid rgba(46, 204, 113, 0.12) !important;
+    margin-bottom: 16px !important;
+}
+
+.total-general .label {
+    color: var(--text-secondary) !important;
+    font-size: 14px !important;
+}
+
+.total-general .label span {
+    color: var(--text-muted) !important;
+}
+
+.total-general .monto {
+    color: var(--accent-green) !important;
+    font-weight: 700 !important;
+    font-size: 22px !important;
+}
+
+/* Tabla */
+.tabla-wrapper {
+    overflow-x: auto !important;
+    border-radius: var(--radius-md) !important;
+    border: 1px solid var(--border-subtle) !important;
+    background: var(--bg-secondary) !important;
+}
+
+.tabla-registros {
+    font-size: 13px !important;
+    min-width: 1100px !important;
+    width: 100% !important;
+    color: var(--text-primary) !important;
+    margin-bottom: 0 !important;
+}
+
+.tabla-registros thead th {
+    background: var(--bg-card) !important;
+    color: var(--text-secondary) !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    border-bottom: 2px solid var(--border-subtle) !important;
+    padding: 10px 12px !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+}
+
+.tabla-registros thead th:hover {
+    color: var(--text-primary) !important;
+}
+
+.tabla-registros tbody td {
+    padding: 8px 10px !important;
+    text-align: center !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    vertical-align: middle !important;
+}
+
+.tabla-registros tbody tr {
+    transition: var(--transition) !important;
+}
+
+.tabla-registros tbody tr:hover {
+    background: var(--bg-hover) !important;
+}
+
+.tabla-registros .id-link {
+    color: var(--accent-green) !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-weight: 600 !important;
+}
+
+.tabla-registros .id-link:hover {
+    text-decoration: underline !important;
+}
+
+.tabla-registros .monto-cell {
+    color: var(--accent-green) !important;
+    font-weight: 600 !important;
+}
+
+/* Dropdown 3 puntos (moderno) */
+.dropdown-3p {
+    position: relative !important;
+    display: inline-block !important;
+}
+
+.dropdown-3p .btn-3p {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted) !important;
+    font-size: 20px !important;
+    padding: 4px 8px !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+    border-radius: 6px !important;
+    line-height: 1 !important;
+}
+
+.dropdown-3p .btn-3p:hover {
+    color: var(--text-primary) !important;
+    background: var(--bg-hover) !important;
+}
+
+.dropdown-3p .menu-3p {
+    display: none !important;
+    position: absolute !important;
+    right: 0 !important;
+    top: 100% !important;
+    margin-top: 4px !important;
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 6px 0 !important;
+    min-width: 180px !important;
+    box-shadow: var(--shadow-hover) !important;
+    z-index: 9999999 !important;
+}
+
+.dropdown-3p .menu-3p.show {
+    display: block !important;
+}
+
+.dropdown-3p .menu-3p button,
+.dropdown-3p .menu-3p a {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 16px !important;
+    color: var(--text-secondary) !important;
+    font-size: 13px !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    border: none !important;
+    width: 100% !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+    border-radius: 0 !important;
+}
+
+.dropdown-3p .menu-3p button:hover,
+.dropdown-3p .menu-3p a:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+.dropdown-3p .menu-3p .text-danger {
+    color: var(--accent-red) !important;
+}
+.dropdown-3p .menu-3p .text-danger:hover {
+    background: rgba(231, 76, 60, 0.08) !important;
+}
+.dropdown-3p .menu-3p .text-primary {
+    color: var(--accent-blue) !important;
+}
+.dropdown-3p .menu-3p .text-success {
+    color: var(--accent-green) !important;
+}
+.dropdown-3p .menu-3p .text-warning {
+    color: var(--accent-yellow) !important;
+}
+.dropdown-3p .menu-3p .divider {
+    border: none !important;
+    border-top: 1px solid var(--border-subtle) !important;
+    margin: 4px 0 !important;
+}
+
+.dropdown-3p.dropup .menu-3p {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 4px !important;
+}
+
+/* ============================================
+   VISTA MÓVIL: TARJETAS
+   ============================================ */
+.vista-movil {
+    display: none !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+}
+
+.card-movil-registro {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 14px 16px !important;
+    position: relative !important;
+    transition: var(--transition) !important;
+}
+
+.card-movil-registro:hover {
+    box-shadow: var(--shadow-hover) !important;
+}
+
+.card-movil-registro .header-card {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.card-movil-registro .header-card .id {
+    color: var(--accent-green) !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.card-movil-registro .header-card .id a {
+    color: var(--accent-green) !important;
+    text-decoration: none !important;
+    font-size: 12px !important;
+}
+
+.card-movil-registro .header-card .monto {
+    color: var(--accent-green) !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+}
+
+.card-movil-registro .grid-datos {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2px 12px !important;
+    margin-top: 6px !important;
+    font-size: 13px !important;
+}
+
+.card-movil-registro .grid-datos .label {
+    color: var(--text-muted) !important;
+}
+
+.card-movil-registro .grid-datos .value {
+    color: var(--text-primary) !important;
+}
+
+.card-movil-registro .grid-datos .full-width {
+    grid-column: 1/3 !important;
+}
+
+.card-movil-registro .observaciones {
+    margin-top: 4px !important;
+    font-size: 12px !important;
+    color: var(--text-muted) !important;
+    border-top: 1px solid var(--border-subtle) !important;
+    padding-top: 4px !important;
+}
+
+/* ============================================
+   MODALES MODERNOS
+   ============================================ */
+.modal-dixon {
+    display: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    z-index: 99999 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    backdrop-filter: blur(4px) !important;
+    overflow-y: auto !important;
+    padding: 20px 0 !important;
+}
+
+.modal-dixon.active {
+    display: flex !important;
+}
+
+.modal-dixon .modal-content {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: 24px 28px !important;
+    max-width: 750px !important;
+    width: 95% !important;
+    max-height: 95vh !important;
+    overflow-y: auto !important;
+    margin: auto !important;
+    box-shadow: var(--shadow-hover) !important;
+}
+
+.modal-dixon .modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 16px !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    padding-bottom: 12px !important;
+}
+
+.modal-dixon .modal-header h3 {
+    margin: 0 !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+}
+
+.modal-dixon .modal-header .close-btn {
+    background: transparent !important;
+    border: none !important;
+    color: var(--accent-red) !important;
+    font-size: 28px !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+}
+
+.modal-dixon .modal-header .close-btn:hover {
+    transform: scale(1.1) !important;
+}
+
+.modal-dixon .section-box {
+    border-radius: var(--radius-md) !important;
+    padding: 12px 16px !important;
+    margin-bottom: 12px !important;
+    border-left: 3px solid var(--accent-green) !important;
+    background: rgba(46, 204, 113, 0.03) !important;
+}
+
+.modal-dixon .section-box h4 {
+    margin: 0 0 10px 0 !important;
+    font-size: 15px !important;
+    color: var(--accent-green) !important;
+}
+
+.modal-dixon .section-box.blue {
+    border-left-color: var(--accent-blue) !important;
+    background: rgba(52, 152, 219, 0.03) !important;
+}
+.modal-dixon .section-box.blue h4 {
+    color: var(--accent-blue) !important;
+}
+
+.modal-dixon .section-box.yellow {
+    border-left-color: var(--accent-yellow) !important;
+    background: rgba(241, 196, 15, 0.03) !important;
+}
+.modal-dixon .section-box.yellow h4 {
+    color: var(--accent-yellow) !important;
+}
+
+.modal-dixon .form-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+}
+
+.modal-dixon .form-grid .full-width {
+    grid-column: 1/3 !important;
+}
+
+.modal-dixon .form-grid label {
+    color: var(--text-secondary) !important;
+    font-size: 12px !important;
+    display: block !important;
+    margin-bottom: 2px !important;
+}
+
+.modal-dixon .form-grid input,
+.modal-dixon .form-grid select,
+.modal-dixon .form-grid textarea {
+    width: 100% !important;
+    padding: 8px 12px !important;
+    background: var(--bg-input) !important;
+    border: 2px solid transparent !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--text-primary) !important;
+    font-size: 14px !important;
+    transition: var(--transition) !important;
+    font-family: inherit !important;
+}
+
+.modal-dixon .form-grid input:focus,
+.modal-dixon .form-grid select:focus,
+.modal-dixon .form-grid textarea:focus {
+    outline: none !important;
+    border-color: var(--accent-green) !important;
+    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.08) !important;
+}
+
+.modal-dixon .form-grid textarea {
+    min-height: 60px !important;
+    resize: vertical !important;
+}
+
+.modal-dixon .btn-primary-modern {
+    background: var(--accent-green) !important;
+    color: var(--bg-primary) !important;
+    font-weight: 700 !important;
+    border-radius: var(--radius-md) !important;
+    padding: 12px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+    flex: 1 !important;
+}
+
+.modal-dixon .btn-primary-modern:hover {
+    background: var(--accent-green-dark) !important;
+    transform: translateY(-2px) !important;
+}
+
+.modal-dixon .btn-secondary-modern {
+    background: var(--bg-hover) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 12px 24px !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+}
+
+.modal-dixon .btn-secondary-modern:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+.modal-dixon .btn-yellow {
+    background: var(--accent-yellow) !important;
+    color: var(--bg-primary) !important;
+    font-weight: 700 !important;
+    border-radius: var(--radius-md) !important;
+    padding: 12px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+    flex: 1 !important;
+}
+
+.modal-dixon .btn-yellow:hover {
+    background: #d4a800 !important;
+    transform: translateY(-2px) !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .filtros-grid-registros {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
     }
-    .fila-editar-repuesto input:focus {
-        border-color: #ffcc00 !important;
-        box-shadow: 0 0 0 2px rgba(255,200,0,0.10) !important;
-        outline: none !important;
+    .filtro-card-registro {
+        padding: 8px 12px !important;
     }
+    .filtro-card-registro .numero {
+        font-size: 20px !important;
+    }
+    .buscador-wrapper-registros {
+        padding: 6px 10px !important;
+    }
+    .buscador-wrapper-registros select {
+        max-width: 100% !important;
+        min-width: 80px !important;
+    }
+    .vista-escritorio {
+        display: none !important;
+    }
+    .vista-movil {
+        display: flex !important;
+    }
+    .modal-dixon .modal-content {
+        padding: 16px !important;
+        width: 98% !important;
+    }
+    .modal-dixon .form-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .modal-dixon .form-grid .full-width {
+        grid-column: 1 !important;
+    }
+    .total-general {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .filtros-grid-registros {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 4px !important;
+    }
+    .filtro-card-registro {
+        padding: 6px 10px !important;
+    }
+    .filtro-card-registro .numero {
+        font-size: 17px !important;
+    }
+    .filtro-card-registro .etiqueta {
+        font-size: 9px !important;
+    }
+    .card-movil-registro .grid-datos {
+        grid-template-columns: 1fr !important;
+    }
+    .card-movil-registro .grid-datos .full-width {
+        grid-column: 1 !important;
+    }
+}
 </style>
 
+<!-- ============================
+   CONTENIDO
+   ============================ -->
 <div class="base-container">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-        <h2 style="color: #00ff66; font-weight: 700; margin: 0; font-size: 22px;">
-            📋 Registros de Pagos
+
+    <!-- HEADER -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
+        <h2 style="color: var(--text-primary); font-weight: 700; margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--accent-green);">history</span>
+            Registros de Pagos
         </h2>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <a href="/balance" class="btn btn-sm" style="
-                background: rgba(79, 195, 247, 0.15);
-                color: #4fc3f7;
-                border: 1px solid rgba(79, 195, 247, 0.25);
-                border-radius: 20px;
-                padding: 6px 16px;
-                text-decoration: none;
-                font-weight: 600;
-                font-size: 13px;
-            ">
-                📊 Ganancia
-            </a>
-        </div>
+        <a href="/balance" class="btn" style="
+            background: rgba(52, 152, 219, 0.12);
+            color: var(--accent-blue);
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            border-radius: 50px;
+            padding: 6px 18px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            transition: var(--transition);
+        ">
+            <span class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">account_balance</span>
+            Ver Ganancia
+        </a>
     </div>
 
     <!-- FILTROS -->
-    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
-        <a href="?filtro=todos" class="filtro-card {% if filtro == 'todos' %}active-total{% endif %}">
-            <div class="etiqueta">Todos</div>
-            <div class="numero">{{ registros|length }}</div>
+    <div class="filtros-grid-registros">
+        <a href="?filtro=todos" class="filtro-card-registro {% if filtro == 'todos' %}active-total{% endif %}">
+            <span class="numero">{{ registros|length }}</span>
+            <span class="etiqueta">Todos</span>
         </a>
-        <a href="?filtro=hoy" class="filtro-card {% if filtro == 'hoy' %}active-pagados{% endif %}">
-            <div class="etiqueta">Hoy</div>
-            <div class="numero">{{ registros_hoy|length }}</div>
+        <a href="?filtro=hoy" class="filtro-card-registro {% if filtro == 'hoy' %}active-pagados{% endif %}">
+            <span class="numero">{{ registros_hoy|length }}</span>
+            <span class="etiqueta">
+                <span class="material-symbols-rounded" style="font-size: 14px; vertical-align: middle;">today</span>
+                Hoy
+            </span>
         </a>
-        <a href="?filtro=7d" class="filtro-card {% if filtro == '7d' %}active-pagados{% endif %}">
-            <div class="etiqueta">7 días</div>
-            <div class="numero">{{ registros_7d|length }}</div>
+        <a href="?filtro=7d" class="filtro-card-registro {% if filtro == '7d' %}active-pagados{% endif %}">
+            <span class="numero">{{ registros_7d|length }}</span>
+            <span class="etiqueta">7 días</span>
         </a>
-        <a href="?filtro=mes" class="filtro-card {% if filtro == 'mes' %}active-pagados{% endif %}">
-            <div class="etiqueta">1 Mes</div>
-            <div class="numero">{{ registros_mes|length }}</div>
+        <a href="?filtro=mes" class="filtro-card-registro {% if filtro == 'mes' %}active-pagados{% endif %}">
+            <span class="numero">{{ registros_mes|length }}</span>
+            <span class="etiqueta">1 Mes</span>
         </a>
     </div>
 
-    <!-- BUSCADOR -->
-    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);">
-        <select id="campoBusqueda" style="background:rgba(0,0,0,0.40);color:#fff;border:1px solid rgba(0,255,102,0.20);border-radius:8px;padding:6px 12px;font-size:13px;">
+    <!-- BUSCADOR + ACCIONES -->
+    <div class="buscador-wrapper-registros">
+        <select id="campoBusqueda">
             <option value="nombre">Cliente</option>
             <option value="patente">Patente</option>
             <option value="marca">Marca</option>
             <option value="modelo">Modelo</option>
             <option value="atendido_por">Atendido por</option>
             <option value="id">ID</option>
-            <option value="forma_pago">Forma de Pago</option> 
+            <option value="forma_pago">Forma de Pago</option>
         </select>
-        <input type="text" id="buscadorInput" placeholder="Buscar..." style="flex:1;min-width:120px;background:rgba(0,0,0,0.40);color:#fff;border:1px solid rgba(0,255,102,0.20);border-radius:8px;padding:6px 12px;font-size:13px;">
-        <button id="btnBuscar" style="background:rgba(0,255,102,0.12);color:#00ff66;border:1px solid rgba(0,255,102,0.20);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;"><i class="fa-solid fa-magnifying-glass"></i></button>
-        <button id="btnLimpiar" style="background:rgba(255,255,255,0.04);color:#888;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-        
-        <!-- ============================================
-             DROPDOWN GLOBAL (3 PUNTITOS)
-             ============================================ -->
+        <input type="text" id="buscadorInput" placeholder="Buscar...">
+        <button id="btnBuscar" class="btn-buscar">
+            <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">search</span>
+        </button>
+        <button id="btnLimpiar" class="btn-limpiar">
+            <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">close</span>
+        </button>
+
+        <!-- DROPDOWN GLOBAL -->
         <div class="dropdown-3p" style="margin-left: auto;">
             <button class="btn-3p" onclick="toggleMenu3p(this)">
-                <i class="fa-solid fa-ellipsis-vertical"></i>
+                <span class="material-symbols-rounded">more_vert</span>
             </button>
             <div class="menu-3p">
-                <a href="/dashboard"><i class="fa-solid fa-chart-line" style="color: #4fc3f7;"></i> Dashboard</a>
+                <a href="/dashboard">
+                    <span class="material-symbols-rounded" style="font-size: 18px; color: var(--accent-blue);">analytics</span>
+                    Dashboard
+                </a>
                 <hr class="divider">
-                <a href="/exportar_datos"><i class="fa-solid fa-database" style="color: #00c8ff;"></i> Exportar DB</a>
+                <a href="/exportar_datos">
+                    <span class="material-symbols-rounded" style="font-size: 18px; color: var(--accent-blue);">database</span>
+                    Exportar DB
+                </a>
                 <hr class="divider">
-                <button onclick="confirmarExportarYBorrar()" class="text-danger"><i class="fa-solid fa-trash-can" style="color: #ff6b6b;"></i> ⚠️ Borrar DB</button>
+                <button onclick="confirmarExportarYBorrar()" class="text-danger">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">delete_forever</span>
+                    ⚠️ Borrar DB
+                </button>
             </div>
         </div>
     </div>
 
     <!-- TOTAL GENERAL -->
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:8px 12px;background:rgba(0,255,102,0.06);border-radius:10px;border:1px solid rgba(0,255,102,0.12);margin-bottom:12px;">
-        <span style="color:#90e0a0;font-size:14px;">📊 Total general <span style="color:#888;">({{ registros|length }} registros)</span></span>
-        <span style="color:#00ff66;font-weight:700;font-size:20px;">${{ "{:,.0f}".format(total_general) }}</span>
+    <div class="total-general">
+        <span class="label">
+            📊 Total general
+            <span>({{ registros|length }} registros)</span>
+        </span>
+        <span class="monto">${{ "{:,.0f}".format(total_general) }}</span>
     </div>
 
     <!-- ============================================
          VISTA ESCRITORIO: TABLA
          ============================================ -->
-    <div class="vista-escritorio" style="overflow-x:auto;border-radius:12px;border:1px solid rgba(0,255,102,0.15);background:#141414;">
-        <table class="table table-dark table-hover table-bordered mb-0" id="tablaRegistros" style="font-size:13px;min-width:1100px;width:100%;">
-            <thead style="background:#2a6d44 !important;color:#ffffff !important;">
+    <div class="vista-escritorio tabla-wrapper">
+        <table class="tabla-registros" id="tablaRegistros">
+            <thead>
                 <tr>
-                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(0)">ID ↕</th>
-                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(1)">Cliente ↕</th>
-                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(2)">Monto ↕</th>
-                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(3)">Fecha ↕</th>
-                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(4)">Patente ↕</th>
-                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(5)">Marca ↕</th>
-                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(6)">Modelo ↕</th>
-                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(7)">Atendido por ↕</th>
-                    <th style="padding:8px 10px;text-align:center;cursor:pointer;" onclick="ordenarTabla(8)">Forma Pago ↕</th> 
-                    <th style="padding:8px 10px;text-align:center;">Acciones</th>
+                    <th onclick="ordenarTabla(0)">ID ↕</th>
+                    <th onclick="ordenarTabla(1)">Cliente ↕</th>
+                    <th onclick="ordenarTabla(2)">Monto ↕</th>
+                    <th onclick="ordenarTabla(3)">Fecha ↕</th>
+                    <th onclick="ordenarTabla(4)">Patente ↕</th>
+                    <th onclick="ordenarTabla(5)">Marca ↕</th>
+                    <th onclick="ordenarTabla(6)">Modelo ↕</th>
+                    <th onclick="ordenarTabla(7)">Atendido por ↕</th>
+                    <th onclick="ordenarTabla(8)">Forma Pago ↕</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for r in registros %}
                 <tr data-id="{{ r.id }}" class="fila-registro">
-                    <td style="padding:6px 8px;text-align:center;font-weight:600;">
-                        <a href="https://ea-dixon-production.up.railway.app/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" style="color:#00ff66;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
-                            <i class="fa-solid fa-file-pdf" style="font-size:11px;"></i> {{ r.id }}
+                    <td>
+                        <a href="https://ea-dixon-production.up.railway.app/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" class="id-link">
+                            <span class="material-symbols-rounded" style="font-size: 14px;">description</span>
+                            {{ r.id }}
                         </a>
                     </td>
-                    <td style="padding:6px 8px;text-align:center;">{{ r.nombre }}</td>
-                    <td style="padding:6px 8px;text-align:center;color:#00ff66;font-weight:600;">${{ "{:,.0f}".format(r.monto) }}</td>
-                    <td style="padding:6px 8px;text-align:center;font-size:12px;">{{ r.fecha[:10] if r.fecha else '' }}</td>
-                    <td style="padding:6px 8px;text-align:center;">{{ r.patente }}</td>
-                    <td style="padding:6px 8px;text-align:center;">{{ r.marca }}</td>
-                    <td style="padding:6px 8px;text-align:center;">{{ r.modelo }}</td>
-                    <td style="padding:6px 8px;text-align:center;">{{ r.atendido_por or r.usuario or '-' }}</td>
-                    <td style="padding:6px 8px;text-align:center;font-size:12px;">
+                    <td>{{ r.nombre }}</td>
+                    <td class="monto-cell">${{ "{:,.0f}".format(r.monto) }}</td>
+                    <td style="font-size: 12px;">{{ r.fecha[:10] if r.fecha else '' }}</td>
+                    <td>{{ r.patente }}</td>
+                    <td>{{ r.marca }}</td>
+                    <td>{{ r.modelo }}</td>
+                    <td>{{ r.atendido_por or r.usuario or '-' }}</td>
+                    <td style="font-size: 12px;">
                         {% if r.forma_pago %}
                             {% if r.forma_pago == 'efectivo' %}
-                                <span style="color:#00ff66;">💵 Efectivo</span>
+                                <span style="color: var(--accent-green);">💵 Efectivo</span>
                             {% elif r.forma_pago == 'tarjeta' %}
-                                <span style="color:#4fc3f7;">💳 Tarjeta</span>
+                                <span style="color: var(--accent-blue);">💳 Tarjeta</span>
                             {% elif r.forma_pago == 'transferencia' %}
-                                <span style="color:#ffcc00;">🏦 Transferencia</span>
+                                <span style="color: var(--accent-yellow);">🏦 Transferencia</span>
                             {% elif r.forma_pago == 'cheque' %}
-                                <span style="color:#ff6b6b;">📄 Cheque</span>
+                                <span style="color: var(--accent-red);">📄 Cheque</span>
                             {% else %}
-                                <span style="color:#888;">🔄 {{ r.forma_pago }}</span>
+                                <span style="color: var(--text-muted);">🔄 {{ r.forma_pago }}</span>
                             {% endif %}
                         {% else %}
-                            <span style="color:#666;">—</span>
+                            <span style="color: var(--text-muted);">—</span>
                         {% endif %}
                     </td>
-                    <td style="padding:6px 8px;text-align:center;">
+                    <td>
                         <div class="dropdown-3p">
                             <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}">
-                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                <span class="material-symbols-rounded" style="font-size: 20px;">more_vert</span>
                             </button>
                             <div class="menu-3p" data-id="{{ r.id }}">
-                                <button onclick="verDetalle({{ r.id }})"><i class="fa-solid fa-eye" style="color: #fff;"></i> Detalle</button>
-                                <button onclick="editarRegistro({{ r.id }})" class="text-primary"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
-                                <!-- ✅ NUEVO: Botón para editar repuestos -->
-                                <button onclick="editarRepuestosVenta({{ r.id }})" class="text-warning"><i class="fa-solid fa-boxes-stacked"></i> Editar Repuestos</button>
+                                <button onclick="verDetalle({{ r.id }})">
+                                    <span class="material-symbols-rounded" style="font-size: 18px;">visibility</span>
+                                    Detalle
+                                </button>
+                                <button onclick="editarRegistro({{ r.id }})" class="text-primary">
+                                    <span class="material-symbols-rounded" style="font-size: 18px;">edit</span>
+                                    Editar
+                                </button>
+                                <button onclick="editarRepuestosVenta({{ r.id }})" class="text-warning">
+                                    <span class="material-symbols-rounded" style="font-size: 18px;">inventory_2</span>
+                                    Editar Repuestos
+                                </button>
                                 <hr class="divider">
-                                <button onclick="eliminarRegistro({{ r.id }})" class="text-danger"><i class="fa-solid fa-trash-can"></i> Eliminar</button>
+                                <button onclick="eliminarRegistro({{ r.id }})" class="text-danger">
+                                    <span class="material-symbols-rounded" style="font-size: 18px;">delete</span>
+                                    Eliminar
+                                </button>
                             </div>
                         </div>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="10" style="text-align:center;color:#666;padding:40px 0;">
-                        <i class="fa-solid fa-inbox" style="font-size:48px;color:#00ff66;opacity:0.2;display:block;margin-bottom:10px;"></i>
-                        <p style="font-size:16px;">No hay registros de pagos</p>
+                    <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                        <span class="material-symbols-rounded" style="font-size: 56px; color: var(--text-muted); display: block; margin-bottom: 10px;">inbox</span>
+                        <p style="font-size: 16px;">No hay registros de pagos</p>
                     </td>
                 </tr>
                 {% endfor %}
@@ -280,83 +855,60 @@
     </div>
 
     <!-- ============================================
-         VISTA MÓVIL: TARJETAS (CORREGIDA)
+         VISTA MÓVIL: TARJETAS
          ============================================ -->
-    <div class="vista-movil" style="display:none;flex-direction:column;gap:12px;">
+    <div class="vista-movil">
         {% for r in registros %}
-        <div class="card-android" style="background:rgba(20,20,20,0.80);border:1px solid rgba(0,255,102,0.20);border-radius:14px;padding:14px 16px;position:relative;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="color:#00ff66;font-weight:700;font-size:14px;">#{{ r.id }}</span>
-                    <a href="https://ea-dixon-production.up.railway.app/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank" style="color:#00ff66;text-decoration:none;font-size:12px;"><i class="fa-solid fa-file-pdf"></i></a>
+        <div class="card-movil-registro">
+            <div class="header-card">
+                <div class="id">
+                    <span>#{{ r.id }}</span>
+                    <a href="https://ea-dixon-production.up.railway.app/api/pdf/{{ r.id }}/{{ r.firma or '' }}" target="_blank">
+                        <span class="material-symbols-rounded" style="font-size: 16px;">description</span>
+                    </a>
                 </div>
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <span style="color:#00ff66;font-weight:700;font-size:16px;">${{ "{:,.0f}".format(r.monto) }}</span>
-                    
-                    <!-- DROPDOWN DE 3 PUNTOS EN TARJETA MÓVIL -->
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="monto">${{ "{:,.0f}".format(r.monto) }}</span>
                     <div class="dropdown-3p dropup">
-                        <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}" style="font-size:22px;">
-                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}" style="font-size: 22px;">
+                            <span class="material-symbols-rounded" style="font-size: 22px;">more_vert</span>
                         </button>
                         <div class="menu-3p" data-id="{{ r.id }}">
-                            {% if session.get("rol") == "admin" and r["estado"] == 'pagado' %}
-                            <button onclick="editarRegistro({{ r.id }})" class="text-primary" style="
-                                display: flex;
-                                align-items: center;
-                                gap: 10px;
-                                padding: 8px 16px;
-                                color: #4fc3f7;
-                                font-size: 13px;
-                                background: transparent;
-                                border: none;
-                                width: 100%;
-                                text-align: left;
-                                cursor: pointer;
-                                transition: all 0.2s ease;
-                                border-radius: 0;
-                            ">
-                                <i class="fa-solid fa-pen-to-square" style="width: 20px;"></i> Editar Pago
+                            <button onclick="verDetalle({{ r.id }})">
+                                <span class="material-symbols-rounded" style="font-size: 18px;">visibility</span>
+                                Detalle
                             </button>
-                            {% endif %}
-                            
                             {% if session.get("rol") in ["admin", "operador"] %}
-                            <a href="/eliminar/{{ r['id'] }}" class="text-danger" onclick="return confirm('⚠️ ¿Estás seguro de eliminar este registro?\n\nEsta acción NO se puede deshacer.');" style="
-                                display: flex;
-                                align-items: center;
-                                gap: 10px;
-                                padding: 8px 16px;
-                                color: #ff6b6b;
-                                font-size: 13px;
-                                text-decoration: none;
-                                background: transparent;
-                                border: none;
-                                width: 100%;
-                                text-align: left;
-                                cursor: pointer;
-                                transition: all 0.2s ease;
-                                border-radius: 0;
-                            ">
-                                <i class="fa-solid fa-trash-can" style="width: 20px;"></i> Eliminar
-                            </a>
-                            {% endif %}
-                            
-                            {% if not (session.get("rol") == "admin" and r["estado"] == 'pagado') and session.get("rol") not in ["admin", "operador"] %}
-                            <div style="padding: 10px 16px; color: #666; font-size: 13px; text-align: center;">Sin acciones</div>
+                            <button onclick="editarRegistro({{ r.id }})" class="text-primary">
+                                <span class="material-symbols-rounded" style="font-size: 18px;">edit</span>
+                                Editar
+                            </button>
+                            <button onclick="editarRepuestosVenta({{ r.id }})" class="text-warning">
+                                <span class="material-symbols-rounded" style="font-size: 18px;">inventory_2</span>
+                                Editar Repuestos
+                            </button>
+                            <hr class="divider">
+                            <button onclick="eliminarRegistro({{ r.id }})" class="text-danger">
+                                <span class="material-symbols-rounded" style="font-size: 18px;">delete</span>
+                                Eliminar
+                            </button>
+                            {% else %}
+                            <div style="padding: 10px 16px; color: var(--text-muted); font-size: 13px; text-align: center;">Sin acciones</div>
                             {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin-top:6px;font-size:13px;">
-                <div><span style="color:#888;">Cliente:</span> <span style="color:#fff;">{{ r.nombre }}</span></div>
-                <div><span style="color:#888;">Fecha:</span> <span style="color:#fff;">{{ r.fecha[:10] if r.fecha else '' }}</span></div>
-                <div><span style="color:#888;">Patente:</span> <span style="color:#fff;">{{ r.patente }}</span></div>
-                <div><span style="color:#888;">Atendido:</span> <span style="color:#fff;">{{ r.atendido_por or r.usuario or '-' }}</span></div>
-                <div style="grid-column:1/3;"><span style="color:#888;">Vehículo:</span> <span style="color:#fff;">{{ r.marca }} {{ r.modelo }}</span></div>
-                <div style="grid-column:1/3; margin-top:4px; padding-top:4px; border-top:1px solid rgba(255,255,255,0.05);">
-                    <span style="color:#888;">💳 Forma de Pago:</span>
-                    <span style="color:#fff;">
+
+            <div class="grid-datos">
+                <div><span class="label">Cliente:</span> <span class="value">{{ r.nombre }}</span></div>
+                <div><span class="label">Fecha:</span> <span class="value">{{ r.fecha[:10] if r.fecha else '' }}</span></div>
+                <div><span class="label">Patente:</span> <span class="value">{{ r.patente }}</span></div>
+                <div><span class="label">Atendido:</span> <span class="value">{{ r.atendido_por or r.usuario or '-' }}</span></div>
+                <div class="full-width"><span class="label">Vehículo:</span> <span class="value">{{ r.marca }} {{ r.modelo }}</span></div>
+                <div class="full-width" style="margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border-subtle);">
+                    <span class="label">💳 Forma de Pago:</span>
+                    <span class="value">
                         {% if r.forma_pago %}
                             {% if r.forma_pago == 'efectivo' %}💵 Efectivo
                             {% elif r.forma_pago == 'tarjeta' %}💳 Tarjeta
@@ -370,124 +922,139 @@
                     </span>
                 </div>
             </div>
-            
-            <div style="margin-top:4px;font-size:12px;color:#666;border-top:1px solid rgba(255,255,255,0.05);padding-top:4px;">
+
+            <div class="observaciones">
                 {{ (r.observaciones_pago or r.observaciones_cliente or '')[:60] }}{% if (r.observaciones_pago or r.observaciones_cliente or '')|length > 60 %}...{% endif %}
             </div>
         </div>
         {% else %}
-        <div style="text-align:center;color:#666;padding:40px 0;">
-            <i class="fa-solid fa-inbox" style="font-size:48px;color:#00ff66;opacity:0.2;display:block;margin-bottom:10px;"></i>
-            <p style="font-size:16px;">No hay registros de pagos</p>
+        <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+            <span class="material-symbols-rounded" style="font-size: 56px; color: var(--text-muted); display: block; margin-bottom: 10px;">inbox</span>
+            <p style="font-size: 16px;">No hay registros de pagos</p>
         </div>
         {% endfor %}
     </div>
 </div>
 
 <!-- ============================================
-     MODAL DETALLE
-     ============================================ -->
-<div id="modalDetalle" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-    <div style="background:rgba(15,15,15,0.98);border:1px solid #00ff66;border-radius:16px;padding:20px 25px;max-width:600px;width:95%;max-height:90vh;overflow-y:auto;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <h3 style="color:#00ff66;margin:0;font-size:20px;">📄 Detalle Completo</h3>
-            <button id="cerrarModalDetalle" style="background:transparent;border:none;color:#ff6b6b;font-size:24px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+   MODALES MODERNOS
+   ============================================ -->
+
+<!-- MODAL DETALLE -->
+<div id="modalDetalle" class="modal-dixon">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: var(--accent-green);">
+                <span class="material-symbols-rounded" style="font-size: 28px; vertical-align: middle;">description</span>
+                Detalle Completo
+            </h3>
+            <button class="close-btn" onclick="cerrarModal('modalDetalle')">
+                <span class="material-symbols-rounded">close</span>
+            </button>
         </div>
-        <div id="contenidoDetalle"></div>
+        <div id="contenidoDetalle" style="color: var(--text-secondary);">
+            <div style="text-align: center; padding: 20px;">
+                <span class="material-symbols-rounded" style="font-size: 40px; color: var(--text-muted);">hourglass_empty</span>
+                <br>Cargando...
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- ============================================
-     MODAL EDITAR COMPLETO
-     ============================================ -->
-<div id="modalEditarCompleto" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0;">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #4fc3f7;border-radius:16px;padding:25px 30px;max-width:750px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="color:#4fc3f7;margin:0;font-size:22px;">✏️ Editar Registro Completo</h3>
-            <button id="cerrarModalEditarCompleto" style="background:transparent;border:none;color:#ff6b6b;font-size:28px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+<!-- MODAL EDITAR COMPLETO -->
+<div id="modalEditarCompleto" class="modal-dixon">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: var(--accent-blue);">
+                <span class="material-symbols-rounded" style="font-size: 28px; vertical-align: middle;">edit</span>
+                Editar Registro Completo
+            </h3>
+            <button class="close-btn" onclick="cerrarModal('modalEditarCompleto')">
+                <span class="material-symbols-rounded">close</span>
+            </button>
         </div>
         <form id="formEditarCompleto">
             <input type="hidden" name="id" id="edit_completo_id">
-            
+
             <!-- DATOS DEL CLIENTE -->
-            <div style="background:rgba(0,255,102,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #00ff66;">
-                <h4 style="color:#00ff66;margin:0 0 10px 0;font-size:15px;">🚗 Datos del Cliente</h4>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div><label style="color:#90e0a0;font-size:12px;">Nombre</label><input type="text" name="nombre" id="edit_nombre" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Teléfono</label><input type="text" name="telefono" id="edit_telefono" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Patente</label><input type="text" name="patente" id="edit_patente" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Marca</label><input type="text" name="marca" id="edit_marca" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Modelo</label><input type="text" name="modelo" id="edit_modelo" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Año</label><input type="number" name="anio" id="edit_anio" class="form-control form-control-sm"></div>
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Flota</label><input type="text" name="flota" id="edit_flota" class="form-control form-control-sm"></div>
+            <div class="section-box">
+                <h4>🚗 Datos del Cliente</h4>
+                <div class="form-grid">
+                    <div><label>Nombre</label><input type="text" name="nombre" id="edit_nombre"></div>
+                    <div><label>Teléfono</label><input type="text" name="telefono" id="edit_telefono"></div>
+                    <div><label>Patente</label><input type="text" name="patente" id="edit_patente"></div>
+                    <div><label>Marca</label><input type="text" name="marca" id="edit_marca"></div>
+                    <div><label>Modelo</label><input type="text" name="modelo" id="edit_modelo"></div>
+                    <div><label>Año</label><input type="number" name="anio" id="edit_anio"></div>
+                    <div class="full-width"><label>Flota</label><input type="text" name="flota" id="edit_flota"></div>
                 </div>
             </div>
 
             <!-- DATOS DEL INGRESO -->
-            <div style="background:rgba(79,195,247,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #4fc3f7;">
-                <h4 style="color:#4fc3f7;margin:0 0 10px 0;font-size:15px;">📥 Datos del Ingreso</h4>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div><label style="color:#90e0a0;font-size:12px;">Fecha</label><input type="date" name="fecha" id="edit_fecha" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Hora</label><input type="time" name="hora" id="edit_hora" class="form-control form-control-sm"></div>
-                    <div><label style="color:#90e0a0;font-size:12px;">💰 Monto Pagado ($)</label>
-                        <input type="number" name="monto" id="edit_monto" class="form-control form-control-sm" step="0.01" min="0">
+            <div class="section-box blue">
+                <h4>📥 Datos del Ingreso</h4>
+                <div class="form-grid">
+                    <div><label>Fecha</label><input type="date" name="fecha" id="edit_fecha"></div>
+                    <div><label>Hora</label><input type="time" name="hora" id="edit_hora"></div>
+                    <div><label>💰 Monto Pagado ($)</label>
+                        <input type="number" name="monto" id="edit_monto" step="0.01" min="0">
                     </div>
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Observaciones de ingreso</label>
-                        <textarea name="observaciones_cliente" id="edit_observaciones_cliente" class="form-control form-control-sm" rows="2"></textarea>
+                    <div class="full-width"><label>Observaciones de ingreso</label>
+                        <textarea name="observaciones_cliente" id="edit_observaciones_cliente" rows="2"></textarea>
                     </div>
                 </div>
             </div>
 
             <!-- REPARACIÓN Y COSTOS -->
-            <div style="background:rgba(255,200,0,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #ffcc00;">
-                <h4 style="color:#ffcc00;margin:0 0 10px 0;font-size:15px;">🔧 Reparación y Costos</h4>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Diagnóstico</label>
-                        <textarea name="diagnostico" id="edit_diagnostico" class="form-control form-control-sm" rows="2"></textarea>
+            <div class="section-box yellow">
+                <h4>🔧 Reparación y Costos</h4>
+                <div class="form-grid">
+                    <div class="full-width"><label>Diagnóstico</label>
+                        <textarea name="diagnostico" id="edit_diagnostico" rows="2"></textarea>
                     </div>
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Reparación realizada</label>
-                        <textarea name="reparacion" id="edit_reparacion" class="form-control form-control-sm" rows="2"></textarea>
+                    <div class="full-width"><label>Reparación realizada</label>
+                        <textarea name="reparacion" id="edit_reparacion" rows="2"></textarea>
                     </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Resultado</label>
-                        <select name="resultado" id="edit_resultado" class="form-control form-control-sm">
+                    <div><label>Resultado</label>
+                        <select name="resultado" id="edit_resultado">
                             <option value="reparado">Reparado</option>
                             <option value="pendiente">Pendiente</option>
                             <option value="derivado">Derivado</option>
                         </select>
                     </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Tiempo estimado</label>
-                        <input type="text" name="tiempo_estimado" id="edit_tiempo_estimado" class="form-control form-control-sm" placeholder="HH:MM:SS">
+                    <div><label>Tiempo estimado</label>
+                        <input type="text" name="tiempo_estimado" id="edit_tiempo_estimado" placeholder="HH:MM:SS">
                     </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Costo repuestos</label>
-                        <input type="number" name="costo_repuestos_real" id="edit_costo_repuestos" class="form-control form-control-sm" step="0.01">
+                    <div><label>Costo repuestos</label>
+                        <input type="number" name="costo_repuestos_real" id="edit_costo_repuestos" step="0.01">
                     </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Mano de obra</label>
-                        <input type="number" name="costo_mano_obra_real" id="edit_costo_mano_obra" class="form-control form-control-sm" step="0.01">
+                    <div><label>Mano de obra</label>
+                        <input type="number" name="costo_mano_obra_real" id="edit_costo_mano_obra" step="0.01">
                     </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Costo diagnóstico</label>
-                        <input type="number" name="costo_diagnostico_real" id="edit_costo_diagnostico" class="form-control form-control-sm" step="0.01">
+                    <div><label>Costo diagnóstico</label>
+                        <input type="number" name="costo_diagnostico_real" id="edit_costo_diagnostico" step="0.01">
                     </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Ganancia neta</label>
-                        <input type="number" name="ganancia_neta" id="edit_ganancia_neta" class="form-control form-control-sm" step="0.01">
+                    <div><label>Ganancia neta</label>
+                        <input type="number" name="ganancia_neta" id="edit_ganancia_neta" step="0.01">
                     </div>
-                    <div style="grid-column:1/3;"><label style="color:#90e0a0;font-size:12px;">Observaciones de pago</label>
-                        <textarea name="observaciones_pago" id="edit_observaciones_pago" class="form-control form-control-sm" rows="2"></textarea>
+                    <div class="full-width"><label>Observaciones de pago</label>
+                        <textarea name="observaciones_pago" id="edit_observaciones_pago" rows="2"></textarea>
                     </div>
                 </div>
             </div>
 
             <!-- VALIDACIÓN -->
-            <div style="background:rgba(79,195,247,0.04);border-radius:10px;padding:12px 16px;margin-bottom:12px;border-left:3px solid #4fc3f7;">
-                <h4 style="color:#4fc3f7;margin:0 0 10px 0;font-size:15px;">✅ Validación</h4>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <div><label style="color:#90e0a0;font-size:12px;">Validado por</label>
-                        <input type="text" name="validado_por" id="edit_validado_por" class="form-control form-control-sm">
+            <div class="section-box blue">
+                <h4>✅ Validación</h4>
+                <div class="form-grid">
+                    <div><label>Validado por</label>
+                        <input type="text" name="validado_por" id="edit_validado_por">
                     </div>
-                    <div><label style="color:#90e0a0;font-size:12px;">Atendido por</label>
-                        <input type="text" name="atendido_por" id="edit_atendido_por" class="form-control form-control-sm">
+                    <div><label>Atendido por</label>
+                        <input type="text" name="atendido_por" id="edit_atendido_por">
                     </div>
-                    <div style="grid-column:1/3;display:flex;align-items:center;gap:12px;padding-top:4px;">
-                        <label style="color:#90e0a0;font-size:13px;display:flex;align-items:center;gap:6px;">
+                    <div class="full-width" style="display: flex; align-items: center; gap: 12px; padding-top: 4px;">
+                        <label style="display: flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 13px; cursor: pointer;">
                             <input type="checkbox" name="validado" id="edit_validado" value="1"> Validado
                         </label>
                     </div>
@@ -495,11 +1062,12 @@
             </div>
 
             <!-- BOTONES -->
-            <div style="display:flex;gap:10px;margin-top:10px;">
-                <button type="submit" class="btn btn-primary" style="flex:1;background:#4fc3f7 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;">
-                    💾 Guardar todos los cambios
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button type="submit" class="btn-primary-modern">
+                    <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">save</span>
+                    Guardar todos los cambios
                 </button>
-                <button type="button" id="btnCancelarEditarCompleto" class="btn" style="background:rgba(255,255,255,0.06);color:#888;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 24px;">
+                <button type="button" class="btn-secondary-modern" onclick="cerrarModal('modalEditarCompleto')">
                     Cancelar
                 </button>
             </div>
@@ -507,113 +1075,112 @@
     </div>
 </div>
 
-<!-- ============================================
-     MODAL EDITAR REPUESTOS DE VENTA (NUEVO)
-     ============================================ -->
-<div id="modalEditarRepuestosVenta" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0;">
-    <div style="background:rgba(15,15,15,0.98);border:2px solid #ffcc00;border-radius:16px;padding:25px 30px;max-width:750px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="color:#ffcc00;margin:0;font-size:22px;">📦 Editar Repuestos de Venta</h3>
-            <button onclick="cerrarModalEditarRepuestos()" style="background:transparent;border:none;color:#ff6b6b;font-size:28px;cursor:pointer;">
-                <i class="fa-solid fa-xmark"></i>
+<!-- MODAL EDITAR REPUESTOS -->
+<div id="modalEditarRepuestosVenta" class="modal-dixon">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: var(--accent-yellow);">
+                <span class="material-symbols-rounded" style="font-size: 28px; vertical-align: middle;">inventory_2</span>
+                Editar Repuestos de Venta
+            </h3>
+            <button class="close-btn" onclick="cerrarModal('modalEditarRepuestosVenta')">
+                <span class="material-symbols-rounded">close</span>
             </button>
         </div>
-        <!-- INDICADOR DE TIPO DE VENTA -->
-<div style="background:rgba(0,255,102,0.08);border-radius:8px;padding:8px 12px;margin-bottom:12px;border-left:3px solid #00ff66;">
-    <span id="tipo_venta_label" style="font-size:13px;font-weight:600;color:#00ff66;">
-        💰 El monto se recalcula automáticamente
-    </span>
-</div>
-        
-        <div style="background:rgba(255,200,0,0.05);border-radius:10px;padding:12px 16px;margin-bottom:12px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div><span style="color:#888;">📋 ID:</span> <span id="edit_venta_id" style="color:#fff;font-weight:600;">-</span></div>
-                <div><span style="color:#888;">👤 Cliente:</span> <span id="edit_venta_cliente" style="color:#fff;">-</span></div>
-                <div><span style="color:#888;">💰 Total Pagado:</span> <span id="edit_venta_total" style="color:#00ff66;font-weight:700;">$0</span></div>
-                <div><span style="color:#888;">📅 Fecha:</span> <span id="edit_venta_fecha" style="color:#fff;">-</span></div>
+
+        <!-- INDICADOR DE TIPO -->
+        <div style="background: rgba(46, 204, 113, 0.06); border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 12px; border-left: 3px solid var(--accent-green);">
+            <span id="tipo_venta_label" style="font-size: 13px; font-weight: 600; color: var(--accent-green);">
+                💰 El monto se recalcula automáticamente
+            </span>
+        </div>
+
+        <!-- DATOS DE LA VENTA -->
+        <div style="background: rgba(52, 152, 219, 0.04); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 12px; border-left: 3px solid var(--accent-blue);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px;">
+                <div><span style="color: var(--text-muted);">📋 ID:</span> <span id="edit_venta_id" style="color: var(--text-primary); font-weight: 600;">-</span></div>
+                <div><span style="color: var(--text-muted);">👤 Cliente:</span> <span id="edit_venta_cliente" style="color: var(--text-primary);">-</span></div>
+                <div><span style="color: var(--text-muted);">💰 Total Pagado:</span> <span id="edit_venta_total" style="color: var(--accent-green); font-weight: 700;">$0</span></div>
+                <div><span style="color: var(--text-muted);">📅 Fecha:</span> <span id="edit_venta_fecha" style="color: var(--text-primary);">-</span></div>
             </div>
         </div>
 
-        <!-- LISTA DE REPUESTOS EDITABLE -->
-        <div style="margin-bottom:12px;">
-            <label style="color:#90e0a0;font-size:13px;font-weight:500;display:block;margin-bottom:6px;">
-                🔧 Lista de Repuestos (Cantidad y Precio)
+        <!-- REPUESTOS -->
+        <div style="margin-bottom: 12px;">
+            <label style="color: var(--text-secondary); font-size: 13px; font-weight: 500; display: block; margin-bottom: 6px;">
+                🔧 Lista de Repuestos
             </label>
-            <div style="background:rgba(0,0,0,0.20);border-radius:10px;padding:10px;border:1px solid rgba(255,200,0,0.15);">
-                <table style="width:100%;border-collapse:collapse;">
+            <div style="background: var(--bg-input); border-radius: var(--radius-md); padding: 10px; border: 1px solid rgba(241, 196, 15, 0.15);">
+                <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr>
-                            <th style="text-align:left;padding:4px 6px;color:#90e0a0;font-size:11px;">Producto</th>
-                            <th style="text-align:center;padding:4px 6px;color:#90e0a0;font-size:11px;width:60px;">Cant.</th>
-                            <th style="text-align:right;padding:4px 6px;color:#90e0a0;font-size:11px;">Precio Unit.</th>
-                            <th style="text-align:right;padding:4px 6px;color:#90e0a0;font-size:11px;">Subtotal</th>
-                            <th style="width:30px;"></th>
+                            <th style="text-align: left; padding: 4px 6px; color: var(--text-secondary); font-size: 11px;">Producto</th>
+                            <th style="text-align: center; padding: 4px 6px; color: var(--text-secondary); font-size: 11px; width: 60px;">Cant.</th>
+                            <th style="text-align: right; padding: 4px 6px; color: var(--text-secondary); font-size: 11px;">Precio Unit.</th>
+                            <th style="text-align: right; padding: 4px 6px; color: var(--text-secondary); font-size: 11px;">Subtotal</th>
+                            <th style="width: 30px;"></th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoEditarRepuestos">
-                        <!-- Filas generadas por JavaScript -->
+                        <!-- Generado por JS -->
                     </tbody>
                 </table>
                 <button onclick="agregarFilaEditarRepuesto()" style="
-                    background:rgba(255,200,0,0.08);
-                    color:#ffcc00;
-                    border:1px solid rgba(255,200,0,0.15);
-                    border-radius:6px;
-                    padding:4px 12px;
-                    font-size:12px;
-                    cursor:pointer;
-                    margin-top:6px;
+                    background: rgba(241, 196, 15, 0.06);
+                    color: var(--accent-yellow);
+                    border: 1px solid rgba(241, 196, 15, 0.15);
+                    border-radius: var(--radius-sm);
+                    padding: 4px 12px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    margin-top: 6px;
+                    transition: var(--transition);
                 ">
-                    <i class="fa-solid fa-plus"></i> Agregar repuesto
+                    <span class="material-symbols-rounded" style="font-size: 16px; vertical-align: middle;">add</span>
+                    Agregar repuesto
                 </button>
-                <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
-                    <span style="color:#888;font-size:12px;">Total repuestos:</span>
-                    <span id="totalEditarRepuestos" style="color:#ffcc00;font-weight:700;font-size:18px;">$0</span>
+                <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--text-muted); font-size: 12px;">Total repuestos:</span>
+                    <span id="totalEditarRepuestos" style="color: var(--accent-yellow); font-weight: 700; font-size: 18px;">$0</span>
                 </div>
             </div>
         </div>
 
         <!-- COSTOS ASOCIADOS -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;padding:12px;background:rgba(0,0,0,0.20);border-radius:8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; padding: 12px; background: var(--bg-input); border-radius: var(--radius-md);">
             <div>
-                <label style="color:#90e0a0;font-size:11px;">👨‍🔧 Mano de obra</label>
-                <input type="number" id="edit_mano_obra" class="form-control form-control-sm" step="0.01" min="0">
+                <label style="color: var(--text-secondary); font-size: 11px;">👨‍🔧 Mano de obra</label>
+                <input type="number" id="edit_mano_obra" class="form-control form-control-sm" step="0.01" min="0" style="width: 100%; padding: 6px 10px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
             </div>
             <div>
-                <label style="color:#90e0a0;font-size:11px;">🩺 Diagnóstico</label>
-                <input type="number" id="edit_diagnostico_costo" class="form-control form-control-sm" step="0.01" min="0">
+                <label style="color: var(--text-secondary); font-size: 11px;">🩺 Diagnóstico</label>
+                <input type="number" id="edit_diagnostico_costo" class="form-control form-control-sm" step="0.01" min="0" style="width: 100%; padding: 6px 10px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
             </div>
         </div>
 
-        <!-- RESUMEN ACTUALIZADO -->
-        <div style="background:rgba(0,255,102,0.04);border-radius:10px;padding:14px 16px;margin-bottom:12px;border:1px solid rgba(0,255,102,0.15);">
-            <div style="display:flex;justify-content:space-between;padding:4px 0;">
-                <span style="color:#888;">💰 Total Venta:</span>
-                <span id="resumen_nuevo_total" style="color:#00ff66;font-weight:700;font-size:20px;">$0</span>
+        <!-- RESUMEN -->
+        <div style="background: rgba(46, 204, 113, 0.04); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 12px; border: 1px solid rgba(46, 204, 113, 0.12);">
+            <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                <span style="color: var(--text-muted);">💰 Total Venta:</span>
+                <span id="resumen_nuevo_total" style="color: var(--accent-green); font-weight: 700; font-size: 20px;">$0</span>
             </div>
-            <div style="display:flex;justify-content:space-between;padding:4px 0;">
-                <span style="color:#888;">📦 Total Repuestos:</span>
-                <span id="resumen_nuevo_repuestos" style="color:#ffcc00;">$0</span>
+            <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                <span style="color: var(--text-muted);">📦 Total Repuestos:</span>
+                <span id="resumen_nuevo_repuestos" style="color: var(--accent-yellow);">$0</span>
             </div>
-            <div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;margin-top:4px;">
-                <span style="color:#fff;font-weight:700;">📊 Nueva Ganancia Neta:</span>
-                <span id="resumen_nueva_ganancia" style="color:#00ff66;font-weight:700;font-size:18px;">$0</span>
+            <div style="display: flex; justify-content: space-between; padding: 4px 0; border-top: 1px solid var(--border-subtle); padding-top: 8px; margin-top: 4px;">
+                <span style="color: var(--text-primary); font-weight: 700;">📊 Nueva Ganancia Neta:</span>
+                <span id="resumen_nueva_ganancia" style="color: var(--accent-green); font-weight: 700; font-size: 18px;">$0</span>
             </div>
         </div>
 
         <!-- BOTONES -->
-        <div style="display:flex;gap:10px;">
-            <button onclick="guardarEdicionRepuestos()" class="btn btn-primary" style="flex:1;background:#ffcc00 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;cursor:pointer;">
-                💾 Guardar cambios en repuestos
+        <div style="display: flex; gap: 10px;">
+            <button onclick="guardarEdicionRepuestos()" class="btn-yellow">
+                <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">save</span>
+                Guardar cambios en repuestos
             </button>
-            <button onclick="cerrarModalEditarRepuestos()" style="
-                background:rgba(255,255,255,0.06);
-                color:#888;
-                border:1px solid rgba(255,255,255,0.08);
-                border-radius:10px;
-                padding:12px 24px;
-                cursor:pointer;
-            ">
+            <button type="button" class="btn-secondary-modern" onclick="cerrarModal('modalEditarRepuestosVenta')">
                 Cancelar
             </button>
         </div>
@@ -621,25 +1188,21 @@
 </div>
 
 <!-- ============================================
-     SCRIPTS
-     ============================================ -->
+   SCRIPTS
+   ============================================ -->
 <script>
 // ============================================
-// CONFIGURACIÓN - URL DEL BACKEND
+// CONFIGURACIÓN
 // ============================================
 const API_URL = 'https://ea-dixon-production.up.railway.app';
-
-// ============================================
-// VARIABLE GLOBAL PARA TIPO DE VENTA
-// ============================================
-let tipoVentaEditando = 'trabajo'; // 'directa' o 'trabajo'
+let tipoVentaEditando = 'trabajo';
 let idVentaEditando = null;
 
 // ============================================
-// TOGGLE DROPDOWN DE 3 PUNTOS (FUNCIÓN GLOBAL)
+// TOGGLE DROPDOWN
 // ============================================
 function toggleMenu3p(button, id) {
-    event.stopPropagation();
+    if (event) event.stopPropagation();
     
     const menu = button.nextElementSibling;
     
@@ -663,31 +1226,39 @@ function toggleMenu3p(button, id) {
 
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.dropdown-3p')) {
-        document.querySelectorAll('.menu-3p.show').forEach(m => {
-            m.classList.remove('show');
-        });
+        document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
     }
 });
 
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        document.querySelectorAll('.menu-3p.show').forEach(m => {
-            m.classList.remove('show');
-        });
+        document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
+        document.querySelectorAll('.modal-dixon.active').forEach(m => m.classList.remove('active'));
     }
 });
+
+// ============================================
+// MODALES
+// ============================================
+function cerrarModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+function abrirModal(id) {
+    document.getElementById(id).classList.add('active');
+}
 
 // ============================================
 // EXPORTAR Y BORRAR DB
 // ============================================
 function confirmarExportarYBorrar() {
+    document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
+    
     if (confirm('⚠️ ¿Estás seguro de que quieres EXPORTAR y BORRAR TODOS los registros?\n\nSe descargará un archivo de respaldo y luego se eliminarán todos los datos.')) {
         if (confirm('⚠️ Confirmación final: ¿Realmente deseas EXPORTAR y BORRAR TODA la base de datos?\n\nEsta acción NO se puede deshacer.')) {
             fetch(`${API_URL}/exportar_y_borrar`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: { 'Content-Type': 'application/json' }
             })
             .then(response => {
                 if (!response.ok) {
@@ -704,11 +1275,8 @@ function confirmarExportarYBorrar() {
                 a.click();
                 window.URL.revokeObjectURL(url);
                 a.remove();
-                
                 alert('✅ Backup descargado. Los datos han sido eliminados.');
-                setTimeout(() => {
-                    window.location.href = '/registros';
-                }, 1500);
+                setTimeout(() => window.location.href = '/registros', 1500);
             })
             .catch(error => {
                 alert('❌ Error: ' + error.message);
@@ -725,8 +1293,8 @@ function verDetalle(id) {
     
     const modal = document.getElementById('modalDetalle');
     const contenido = document.getElementById('contenidoDetalle');
-    modal.style.display = 'flex';
-    contenido.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Cargando...</div>';
+    abrirModal('modalDetalle');
+    contenido.innerHTML = '<div style="text-align:center;padding:20px;color: var(--text-muted);"><span class="material-symbols-rounded" style="font-size:40px;">hourglass_empty</span><br>Cargando...</div>';
 
     fetch(`${API_URL}/api/registro/${id}`)
         .then(resp => {
@@ -736,40 +1304,33 @@ function verDetalle(id) {
         .then(data => {
             contenido.innerHTML = `
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:14px;">
-                    <div><strong style="color:#90e0a0;">ID:</strong> ${data.id}</div>
-                    <div><strong style="color:#90e0a0;">Cliente:</strong> ${data.nombre}</div>
-                    <div><strong style="color:#90e0a0;">Monto:</strong> <span style="color:#00ff66;">$${Number(data.monto).toLocaleString()}</span></div>
-                    <div><strong style="color:#90e0a0;">Fecha:</strong> ${data.fecha}</div>
-                    <div><strong style="color:#90e0a0;">Hora:</strong> ${data.hora}</div>
-                    <div><strong style="color:#90e0a0;">Patente:</strong> ${data.patente}</div>
-                    <div><strong style="color:#90e0a0;">Marca:</strong> ${data.marca}</div>
-                    <div><strong style="color:#90e0a0;">Modelo:</strong> ${data.modelo}</div>
-                    <div><strong style="color:#90e0a0;">Atendido por:</strong> ${data.atendido_por || data.usuario || '-'}</div>
-                    <div><strong style="color:#90e0a0;">Estado:</strong> ${data.estado}</div>
-                    <div><strong style="color:#90e0a0;">Resultado:</strong> ${data.resultado || 'pendiente'}</div>
-                    <div style="grid-column:1/3;"><strong style="color:#90e0a0;">Observaciones:</strong> ${data.observaciones_pago || data.observaciones_cliente || '-'}</div>
-                    <div style="grid-column:1/3;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;margin-top:6px;">
-                        <strong style="color:#90e0a0;">📊 Costos:</strong>
+                    <div><strong style="color:var(--text-secondary);">ID:</strong> ${data.id}</div>
+                    <div><strong style="color:var(--text-secondary);">Cliente:</strong> ${data.nombre}</div>
+                    <div><strong style="color:var(--text-secondary);">Monto:</strong> <span style="color:var(--accent-green);">$${Number(data.monto).toLocaleString()}</span></div>
+                    <div><strong style="color:var(--text-secondary);">Fecha:</strong> ${data.fecha}</div>
+                    <div><strong style="color:var(--text-secondary);">Hora:</strong> ${data.hora}</div>
+                    <div><strong style="color:var(--text-secondary);">Patente:</strong> ${data.patente}</div>
+                    <div><strong style="color:var(--text-secondary);">Marca:</strong> ${data.marca}</div>
+                    <div><strong style="color:var(--text-secondary);">Modelo:</strong> ${data.modelo}</div>
+                    <div><strong style="color:var(--text-secondary);">Atendido por:</strong> ${data.atendido_por || data.usuario || '-'}</div>
+                    <div><strong style="color:var(--text-secondary);">Estado:</strong> ${data.estado}</div>
+                    <div><strong style="color:var(--text-secondary);">Resultado:</strong> ${data.resultado || 'pendiente'}</div>
+                    <div style="grid-column:1/3;"><strong style="color:var(--text-secondary);">Observaciones:</strong> ${data.observaciones_pago || data.observaciones_cliente || '-'}</div>
+                    <div style="grid-column:1/3;border-top:1px solid var(--border-subtle);padding-top:10px;margin-top:6px;">
+                        <strong style="color:var(--text-secondary);">📊 Costos:</strong>
                         <div>Repuestos: $${Number(data.costo_repuestos_real || 0).toLocaleString()}</div>
                         <div>Mano de obra: $${Number(data.costo_mano_obra_real || 0).toLocaleString()}</div>
                         <div>Diagnóstico: $${Number(data.costo_diagnostico_real || 0).toLocaleString()}</div>
-                        <div style="color:#00ff66;font-size:18px;font-weight:700;">Ganancia Neta: $${Number(data.ganancia_neta || 0).toLocaleString()}</div>
+                        <div style="color:var(--accent-green);font-size:18px;font-weight:700;">Ganancia Neta: $${Number(data.ganancia_neta || 0).toLocaleString()}</div>
                     </div>
-                    ${data.validado ? `<div style="grid-column:1/3;color:#4fc3f7;">✅ Validado por: ${data.validado_por || 'Sistema'}</div>` : ''}
+                    ${data.validado ? `<div style="grid-column:1/3;color:var(--accent-blue);">✅ Validado por: ${data.validado_por || 'Sistema'}</div>` : ''}
                 </div>
             `;
         })
         .catch(e => {
-            contenido.innerHTML = `<div style="color:#ff6b6b;">❌ Error al cargar los datos: ${e.message}</div>`;
+            contenido.innerHTML = `<div style="color:var(--accent-red);">❌ Error al cargar los datos: ${e.message}</div>`;
         });
 }
-
-document.getElementById('cerrarModalDetalle').onclick = function() {
-    document.getElementById('modalDetalle').style.display = 'none';
-};
-document.getElementById('modalDetalle').onclick = function(e) {
-    if (e.target === this) this.style.display = 'none';
-};
 
 // ============================================
 // EDITAR REGISTRO
@@ -777,8 +1338,7 @@ document.getElementById('modalDetalle').onclick = function(e) {
 function editarRegistro(id) {
     document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
     
-    const modal = document.getElementById('modalEditarCompleto');
-    modal.style.display = 'flex';
+    abrirModal('modalEditarCompleto');
 
     fetch(`${API_URL}/api/registro/${id}`)
         .then(resp => {
@@ -817,19 +1377,6 @@ function editarRegistro(id) {
         });
 }
 
-document.getElementById('cerrarModalEditarCompleto').onclick = function() {
-    document.getElementById('modalEditarCompleto').style.display = 'none';
-};
-document.getElementById('modalEditarCompleto').onclick = function(e) {
-    if (e.target === this) this.style.display = 'none';
-};
-document.getElementById('btnCancelarEditarCompleto').onclick = function() {
-    document.getElementById('modalEditarCompleto').style.display = 'none';
-};
-
-// ============================================
-// GUARDAR EDICIÓN COMPLETA
-// ============================================
 document.getElementById('formEditarCompleto').onsubmit = async function(e) {
     e.preventDefault();
     const id = document.getElementById('edit_completo_id').value;
@@ -869,7 +1416,7 @@ document.getElementById('formEditarCompleto').onsubmit = async function(e) {
         
         if (resp.ok) {
             alert('✅ Registro actualizado correctamente');
-            document.getElementById('modalEditarCompleto').style.display = 'none';
+            cerrarModal('modalEditarCompleto');
             location.reload();
         } else {
             const error = await resp.json();
@@ -902,7 +1449,7 @@ function eliminarRegistro(id) {
 }
 
 // ============================================
-// EDITAR REPUESTOS DE VENTA (CORREGIDO - SIN DUPLICADOS)
+// EDITAR REPUESTOS DE VENTA
 // ============================================
 function editarRepuestosVenta(id) {
     document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
@@ -910,8 +1457,7 @@ function editarRepuestosVenta(id) {
     console.log('🔍 Editando repuestos de venta ID:', id);
     
     idVentaEditando = id;
-    const modal = document.getElementById('modalEditarRepuestosVenta');
-    modal.style.display = 'flex';
+    abrirModal('modalEditarRepuestosVenta');
     
     document.getElementById('edit_venta_id').textContent = 'Cargando...';
     document.getElementById('edit_venta_cliente').textContent = 'Cargando...';
@@ -919,16 +1465,12 @@ function editarRepuestosVenta(id) {
     
     fetch(`${API_URL}/api/registro/${id}`)
         .then(resp => {
-            console.log('📡 Respuesta del servidor:', resp.status);
-            if (!resp.ok) {
-                throw new Error(`Error HTTP: ${resp.status}`);
-            }
+            if (!resp.ok) throw new Error(`Error HTTP: ${resp.status}`);
             return resp.json();
         })
         .then(data => {
             console.log('📦 Datos recibidos:', data);
             
-            // ✅ DETECTAR TIPO DE VENTA
             tipoVentaEditando = (data.marca && data.marca.trim() !== '') ? 'trabajo' : 'directa';
             
             document.getElementById('edit_venta_id').textContent = data.id;
@@ -936,30 +1478,25 @@ function editarRepuestosVenta(id) {
             document.getElementById('edit_venta_total').textContent = '$' + Number(data.monto || 0).toLocaleString();
             document.getElementById('edit_venta_fecha').textContent = data.fecha || '';
             
-            // ✅ MOSTRAR INDICADOR SEGÚN TIPO
             const tipoLabel = document.getElementById('tipo_venta_label');
-            if (tipoLabel) {
-                if (tipoVentaEditando === 'directa') {
-                    tipoLabel.innerHTML = '⚡ VENTA DIRECTA - El monto final se recalcula automáticamente';
-                    tipoLabel.style.color = '#4fc3f7';
-                } else {
-                    tipoLabel.innerHTML = '🔧 TRABAJO - El monto final NO cambia, la ganancia se recalcula';
-                    tipoLabel.style.color = '#ffcc00';
-                }
+            if (tipoVentaEditando === 'directa') {
+                tipoLabel.innerHTML = '⚡ VENTA DIRECTA - El monto final se recalcula automáticamente';
+                tipoLabel.style.color = 'var(--accent-blue)';
+            } else {
+                tipoLabel.innerHTML = '🔧 TRABAJO - El monto final NO cambia, la ganancia se recalcula';
+                tipoLabel.style.color = 'var(--accent-yellow)';
             }
             
-            // Cargar repuestos
             const repuestos = data.detalles_repuestos || [];
             cargarRepuestosEditar(repuestos);
             
-            // Cargar costos
             document.getElementById('edit_mano_obra').value = data.costo_mano_obra_real || 0;
             document.getElementById('edit_diagnostico_costo').value = data.costo_diagnostico_real || 0;
             
             calcularResumenEditar();
         })
         .catch(e => {
-            console.error('❌ Error detallado:', e);
+            console.error('❌ Error:', e);
             document.getElementById('edit_venta_id').textContent = 'Error';
             document.getElementById('edit_venta_cliente').textContent = 'Error al cargar';
             alert('❌ Error al cargar los datos: ' + e.message);
@@ -986,30 +1523,23 @@ function agregarFilaEditarRepuesto(nombre = '', cantidad = 1, costo = 0) {
     fila.className = 'fila-editar-repuesto';
     fila.innerHTML = `
         <td style="padding:4px 4px;">
-            <input type="text" class="form-control form-control-sm editar-repuesto-nombre" 
-                   value="${nombre}" placeholder="Nombre" style="font-size:12px;width:100%;">
+            <input type="text" class="editar-repuesto-nombre" 
+                   value="${nombre}" placeholder="Nombre" style="width:100%;padding:4px 8px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:12px;">
         </td>
         <td style="padding:4px 4px;text-align:center;">
-            <input type="number" class="form-control form-control-sm editar-repuesto-cantidad" 
-                   value="${cantidad}" min="1" step="1" style="text-align:center;width:50px;font-size:12px;">
+            <input type="number" class="editar-repuesto-cantidad" 
+                   value="${cantidad}" min="1" step="1" style="text-align:center;width:50px;padding:4px 4px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:12px;">
         </td>
         <td style="padding:4px 4px;">
-            <input type="number" class="form-control form-control-sm editar-repuesto-costo" 
-                   value="${costo}" step="0.01" min="0" style="text-align:right;font-size:12px;width:100%;">
+            <input type="number" class="editar-repuesto-costo" 
+                   value="${costo}" step="0.01" min="0" style="text-align:right;width:100%;padding:4px 8px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:12px;">
         </td>
-        <td style="padding:4px 4px;text-align:right;font-weight:600;color:#ffcc00;font-size:12px;" class="subtotal-editar">
+        <td style="padding:4px 4px;text-align:right;font-weight:600;color:var(--accent-yellow);font-size:12px;" class="subtotal-editar">
             $${(cantidad * costo).toLocaleString()}
         </td>
         <td style="padding:4px 4px;text-align:center;">
-            <button onclick="eliminarFilaEditarRepuesto(this)" style="
-                background:transparent;
-                border:none;
-                color:#ff6b6b;
-                cursor:pointer;
-                font-size:14px;
-                opacity:0.4;
-            ">
-                <i class="fa-solid fa-trash-can"></i>
+            <button onclick="eliminarFilaEditarRepuesto(this)" style="background:transparent;border:none;color:var(--accent-red);cursor:pointer;font-size:14px;opacity:0.5;">
+                <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
             </button>
         </td>
     `;
@@ -1071,7 +1601,7 @@ function calcularResumenEditar() {
     document.getElementById('resumen_nuevo_total').textContent = '$' + totalVenta.toLocaleString();
     document.getElementById('resumen_nuevo_repuestos').textContent = '$' + totalRepuestos.toLocaleString();
     document.getElementById('resumen_nueva_ganancia').textContent = '$' + gananciaNeta.toLocaleString();
-    document.getElementById('resumen_nueva_ganancia').style.color = gananciaNeta >= 0 ? '#00ff66' : '#ff6b6b';
+    document.getElementById('resumen_nueva_ganancia').style.color = gananciaNeta >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
 }
 
 function guardarEdicionRepuestos() {
@@ -1140,9 +1670,7 @@ function guardarEdicionRepuestos() {
         mensaje += `🔧 TRABAJO: El monto pagado NO cambia, la ganancia se recalcula`;
     }
     
-    if (!confirm(mensaje)) {
-        return;
-    }
+    if (!confirm(mensaje)) return;
     
     fetch(`${API_URL}/api/editar_repuestos_venta/${idVentaEditando}`, {
         method: 'POST',
@@ -1153,7 +1681,7 @@ function guardarEdicionRepuestos() {
     .then(result => {
         if (result.success) {
             alert('✅ Repuestos actualizados correctamente');
-            cerrarModalEditarRepuestos();
+            cerrarModal('modalEditarRepuestosVenta');
             location.reload();
         } else {
             alert('❌ Error: ' + (result.error || 'Desconocido'));
@@ -1165,19 +1693,8 @@ function guardarEdicionRepuestos() {
     });
 }
 
-function cerrarModalEditarRepuestos() {
-    document.getElementById('modalEditarRepuestosVenta').style.display = 'none';
-    idVentaEditando = null;
-}
-
-document.getElementById('modalEditarRepuestosVenta').addEventListener('click', function(e) {
-    if (e.target === this) {
-        cerrarModalEditarRepuestos();
-    }
-});
-
 // ============================================
-// RESTO DEL CÓDIGO (Buscador, Ordenar, etc.)
+// BUSCADOR Y ORDENAMIENTO
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -1209,12 +1726,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'modelo': valor = celdas[6]?.textContent || ''; break;
                 case 'atendido_por': valor = celdas[7]?.textContent || ''; break;
                 case 'id': valor = fila.dataset.id || ''; break;
-                case 'forma_pago': valor = celdas[8]?.textContent || ''; break; 
+                case 'forma_pago': valor = celdas[8]?.textContent || ''; break;
                 default: valor = '';
             }
             fila.style.display = valor.toLowerCase().includes(texto) ? '' : 'none';
         });
-        document.querySelectorAll('.card-android').forEach(card => {
+        document.querySelectorAll('.card-movil-registro').forEach(card => {
             const texto = card.textContent.toLowerCase();
             card.style.display = texto.includes(buscadorInput.value.toLowerCase().trim()) ? '' : 'none';
         });
@@ -1255,5 +1772,5 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 </script>
+
 {% endblock %}
- 
