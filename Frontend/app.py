@@ -344,18 +344,33 @@ def estado():
                           estado="todos")
 
 # ============================
-# AGREGAR CLIENTE (PÁGINA)
+# AGREGAR CLIENTE (PÁGINA CON CATÁLOGO COMPLETO)
 # ============================
 @app.route('/agregar_cliente')
 @login_required
 def agregar_cliente():
     try:
-        resp = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=5)
-        flotas = resp.json() if resp.status_code == 200 else []
-    except:
+        # Obtener flotas disponibles
+        resp_flotas = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=5)
+        flotas = resp_flotas.json() if resp_flotas.status_code == 200 else []
+        
+        # Obtener marcas desde el backend
+        resp_marcas = requests.get(f"{BACKEND_URL}/api/marcas", timeout=5)
+        marcas = resp_marcas.json() if resp_marcas.status_code == 200 else []
+        
+        # Obtener modelos (se cargarán dinámicamente con JS)
+        modelos = []
+        
+    except Exception as e:
+        logger.error(f"⚠️ Error al cargar datos para agregar_cliente: {e}")
         flotas = []
-    return render_template("agregar_cliente.html", flotas=flotas)
-
+        marcas = []
+        modelos = []
+    
+    return render_template("agregar_cliente.html", 
+                          flotas=flotas, 
+                          marcas=marcas, 
+                          modelos=modelos)
 # ============================
 # AGREGAR CLIENTE (PROCESAR)
 # ============================
