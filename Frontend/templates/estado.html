@@ -9,7 +9,6 @@
    ESTILOS ESPECÍFICOS PARA ESTADO
    ============================ */
 
-/* Filtros */
 .filtros-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -17,22 +16,27 @@
     margin-bottom: 20px;
 }
 
-.filtro-card {
+/* ============================================================
+   FILTRO - CLASE NUEVA SIN CONFLICTOS CON BOOTSTRAP
+   ============================================================ */
+.filtro-card-dixon {
     background: #1e1e24 !important;
-    border: 2px solid #2e3138 !important;
+    border: 3px solid #2e3138 !important;
     border-radius: 12px !important;
     padding: 12px 16px !important;
     text-align: center !important;
     text-decoration: none !important;
     transition: all 0.3s ease !important;
     cursor: pointer !important;
+    display: block !important;
 }
 
-.filtro-card:hover {
+.filtro-card-dixon:hover {
     transform: translateY(-2px) !important;
+    border-color: #6b7078 !important;
 }
 
-.filtro-card .numero {
+.filtro-card-dixon .numero {
     font-size: 28px !important;
     font-weight: 800 !important;
     display: block !important;
@@ -40,7 +44,7 @@
     color: #f5f5f5 !important;
 }
 
-.filtro-card .etiqueta {
+.filtro-card-dixon .etiqueta {
     font-size: 11px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
@@ -52,49 +56,32 @@
     color: #b0b5bf !important;
 }
 
-.filtro-card .etiqueta .material-symbols-rounded {
+.filtro-card-dixon .etiqueta .material-symbols-rounded {
     font-size: 16px !important;
 }
 
-/* ============================
-   FILTRO TOTAL (blanco)
-   ============================ */
-.filtro-card.active-total {
+/* ============================================================
+   FILTRO TOTAL
+   ============================================================ */
+.filtro-card-dixon.active-total {
     border-color: #b0b5bf !important;
     background: #2a2a32 !important;
 }
-.filtro-card.active-total .numero {
-    color: #f5f5f5 !important;
-}
 
-/* ============================
+/* ============================================================
    FILTRO PAGADOS - BORDE VERDE
-   ============================ */
-.filtro-card.active-pagados {
+   ============================================================ */
+.filtro-card-dixon.active-pagados {
     border-color: #2ecc71 !important;
-    background: rgba(46, 204, 113, 0.06) !important;
-}
-.filtro-card.active-pagados .numero {
-    color: #f5f5f5 !important;
-}
-.filtro-card.active-pagados .etiqueta {
-    color: #b0b5bf !important;
-    opacity: 0.8 !important;
+    background: rgba(46, 204, 113, 0.08) !important;
 }
 
-/* ============================
+/* ============================================================
    FILTRO PENDIENTES - BORDE ROJO
-   ============================ */
-.filtro-card.active-pendientes {
+   ============================================================ */
+.filtro-card-dixon.active-pendientes {
     border-color: #e74c3c !important;
-    background: rgba(231, 76, 60, 0.06) !important;
-}
-.filtro-card.active-pendientes .numero {
-    color: #f5f5f5 !important;
-}
-.filtro-card.active-pendientes .etiqueta {
-    color: #b0b5bf !important;
-    opacity: 0.8 !important;
+    background: rgba(231, 76, 60, 0.08) !important;
 }
 
 /* Buscador */
@@ -214,17 +201,13 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
 }
 
-/* ============================
-   PAGADOS - FONDO VERDE SUTIL + BORDE VERDE
-   ============================ */
+/* PAGADOS - VERDE */
 .card-trabajo.pagado {
     background: rgba(46, 204, 113, 0.06) !important;
     border-left: 4px solid #2ecc71 !important;
 }
 
-/* ============================
-   PENDIENTES - FONDO ROJO SUTIL + BORDE ROJO
-   ============================ */
+/* PENDIENTES - ROJO */
 .card-trabajo.pendiente {
     background: rgba(231, 76, 60, 0.06) !important;
     border-left: 4px solid #e74c3c !important;
@@ -432,13 +415,13 @@
         grid-template-columns: repeat(3, 1fr) !important;
         gap: 6px !important;
     }
-    .filtro-card {
+    .filtro-card-dixon {
         padding: 8px 10px !important;
     }
-    .filtro-card .numero {
+    .filtro-card-dixon .numero {
         font-size: 22px !important;
     }
-    .filtro-card .etiqueta {
+    .filtro-card-dixon .etiqueta {
         font-size: 9px !important;
     }
     .card-trabajo {
@@ -460,13 +443,13 @@
         grid-template-columns: repeat(3, 1fr) !important;
         gap: 4px !important;
     }
-    .filtro-card {
+    .filtro-card-dixon {
         padding: 6px 8px !important;
     }
-    .filtro-card .numero {
+    .filtro-card-dixon .numero {
         font-size: 18px !important;
     }
-    .filtro-card .etiqueta {
+    .filtro-card-dixon .etiqueta {
         font-size: 8px !important;
     }
     .buscador-wrapper input {
@@ -512,17 +495,17 @@
 </h2>
 
 <!-- ============================
-   FILTROS - BORDES DE COLOR
+   FILTROS - CON CLASE NUEVA SIN CONFLICTOS
    ============================ -->
 <div class="filtros-grid">
-    <!-- TOTAL - BORDE GRIS -->
-    <a href="?estado=todos" class="filtro-card {% if not estado or estado == 'todos' %}active-total{% endif %}">
+    <!-- TOTAL -->
+    <a href="?estado=todos" class="filtro-card-dixon {% if not estado or estado == 'todos' %}active-total{% endif %}">
         <span class="numero">{{ (pendientes_mes or 0) + (pagados_mes or 0) }}</span>
         <span class="etiqueta">Total</span>
     </a>
     
     <!-- PAGADOS - BORDE VERDE -->
-    <a href="?estado=pagado" class="filtro-card {% if estado == 'pagado' %}active-pagados{% endif %}">
+    <a href="?estado=pagado" class="filtro-card-dixon {% if estado == 'pagado' %}active-pagados{% endif %}">
         <span class="numero">{{ pagados_mes or 0 }}</span>
         <span class="etiqueta">
             <span class="material-symbols-rounded" style="color: #2ecc71 !important;">check_circle</span>
@@ -531,7 +514,7 @@
     </a>
     
     <!-- PENDIENTES - BORDE ROJO -->
-    <a href="?estado=pendiente" class="filtro-card {% if estado == 'pendiente' %}active-pendientes{% endif %}">
+    <a href="?estado=pendiente" class="filtro-card-dixon {% if estado == 'pendiente' %}active-pendientes{% endif %}">
         <span class="numero">{{ pendientes_mes or 0 }}</span>
         <span class="etiqueta">
             <span class="material-symbols-rounded" style="color: #e74c3c !important;">pending</span>
@@ -560,7 +543,6 @@
 
         <div class="header">
             <div class="nombre">
-                <!-- ICONO DE ESTADO -->
                 {% if r.estado == 'pagado' %}
                 <span class="estado-icon-pagado material-symbols-rounded">check_circle</span>
                 {% else %}
