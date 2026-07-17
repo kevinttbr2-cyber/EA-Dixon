@@ -815,7 +815,137 @@ def obtener_empleados_activos():
     except Exception as e:
         print(f"❌ Error en obtener_empleados_activos: {e}")
         return jsonify([])
+# ============================================
+# PROCESAR PRODUCTO DESDE ESCÁNER
+# ============================================
+@app.route('/api/repuestos/from_scan', methods=['POST'])
+def procesar_producto_escaner():
+    """Procesa un producto escaneado y lo agrega al stock de repuestos"""
+    try:
+        data = request.json
+        texto_escaneado = data.get('texto', '')
+        
+        # Extraer datos del producto
+        producto = extraer_datos_producto(texto_escaneado)
+        
+        if not producto:
+            return jsonify({"error": "No se pudo extraer información del producto"}), 400
+        
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Verificar si el repuesto ya existe
+        cur.execute("SELECT id, costo_venta_final FROM repuestos WHERE nombre ILIKE %s", (producto['nombre'],))
+        existente = cur.fetchone()
+        
+        if existente:
+            # Actualizar precio si es diferente
+            if existente[1] != producto['costo_venta_final']:
+                cur.execute("""
+                    UPDATE repuestos 
+                    SET costo_venta_final = %s,
+                        updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                    WHERE id = %s
+                """, (producto['costo_venta_final'], existente[0]))
+            mensaje = f"✅ Producto actualizado: {producto['nombre']}"
+        else:
+            # Crear nuevo repuesto
+            cur.execute("""
+                INSERT INTO repuestos 
+                (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, stock, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, 
+                        NOW() AT TIME ZONE 'America/Santiago', 
+                        NOW() AT TIME ZONE 'America/Santiago')
+                RETURNING id
+            """, (
+                producto['nombre'],
+                producto.get('costo_proveedor', 0),
+                producto.get('margen_ganancia', 30),
+                producto['costo_venta_final'],
+                producto.get('proveedor', 'Escáner'),
+                producto.get('cantidad', 1)
+            ))
+            id_repuesto = cur.fetchone()[0]
+            mensaje = f"✅ Nuevo repuesto agregado: {producto['nombre']}"
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "success": True, 
+            "mensaje": mensaje,
+            "producto": producto
+        })
+        
+    except Exception as e:
+        print(f"❌ Error en procesar_producto_escaner: {e}")
+        return jsonify({"error": str(e)}), 500
 
+def extraer_datos_producto(texto):
+    """Extrae datos de un producto desde el texto escaneado"""
+    import re
+    
+    producto = {
+        'nombre': None,
+        'costo_venta_final': 0,
+        'costo_proveedor': 0,
+        'margen_ganancia': 30,
+        'proveedor': None,
+        'cantidad': 1,
+        'codigo': None
+    }
+    
+    # Buscar nombre del producto
+    match = re.search(r'(?:Producto|Nombre|Item|Descripción)[^:]*:\s*([^\n,]+)', texto, re.IGNORECASE)
+    if match:
+        producto['nombre'] = match.group(1).strip()
+    
+    # Si no se encuentra con formato, buscar líneas que parezcan productos
+    if not producto['nombre']:
+        lineas = texto.split('\n')
+        for linea in lineas:
+            if re.search(r'[\d.,]+\s*$', linea) and len(linea) > 5:
+                producto['nombre'] = linea.strip()
+                break
+    
+    # Buscar precio
+    match = re.search(r'(?:Precio|Valor|Costo)[^:]*[:=]\s*\$?\s*([\d.,]+)', texto, re.IGNORECASE)
+    if match:
+        precio_str = match.group(1).replace('.', '').replace(',', '.')
+        producto['costo_venta_final'] = float(precio_str)
+    
+    # Si no se encuentra precio con formato, buscar números al final de línea
+    if producto['costo_venta_final'] == 0:
+        match = re.search(r'([\d.,]+)\s*$', texto)
+        if match:
+            precio_str = match.group(1).replace('.', '').replace(',', '.')
+            try:
+                producto['costo_venta_final'] = float(precio_str)
+            except:
+                pass
+    
+    # Buscar proveedor
+    match = re.search(r'(?:Proveedor|Proveedores|Marca)[^:]*:\s*([^\n]+)', texto, re.IGNORECASE)
+    if match:
+        producto['proveedor'] = match.group(1).strip()
+    
+    # Buscar cantidad
+    match = re.search(r'(?:Cantidad|Qty|Und)[^:]*:\s*(\d+)', texto, re.IGNORECASE)
+    if match:
+        producto['cantidad'] = int(match.group(1))
+    
+    # Buscar código de barras
+    match = re.search(r'(?:Código|Code|ID)[^:]*:\s*([^\n]+)', texto, re.IGNORECASE)
+    if match:
+        producto['codigo'] = match.group(1).strip()
+    
+    # Validar que tenemos al menos nombre y precio
+    if not producto['nombre'] or producto['costo_venta_final'] == 0:
+        return None
+    
+    return producto
 
 # ============================
 # CREAR ADMIN AL INICIAR
