@@ -55,6 +55,9 @@
     font-size: 16px;
 }
 
+/* ============================
+   FILTRO TOTAL
+   ============================ */
 .filtro-card.active-total {
     border-color: #b0b5bf;
     background: #2a2a32;
@@ -63,20 +66,34 @@
     color: #f5f5f5;
 }
 
+/* ============================
+   FILTRO PAGADOS - VERDE
+   ============================ */
 .filtro-card.active-pagados {
-    border-color: #2ecc71;
-    background: rgba(46, 204, 113, 0.06);
+    border-color: #2ecc71 !important;
+    background: rgba(46, 204, 113, 0.08) !important;
 }
 .filtro-card.active-pagados .numero {
-    color: #2ecc71;
+    color: #2ecc71 !important;
+}
+.filtro-card.active-pagados .etiqueta {
+    color: #2ecc71 !important;
+    opacity: 1 !important;
 }
 
+/* ============================
+   FILTRO PENDIENTES - ROJO
+   ============================ */
 .filtro-card.active-pendientes {
-    border-color: #e74c3c;
-    background: rgba(231, 76, 60, 0.06);
+    border-color: #e74c3c !important;
+    background: rgba(231, 76, 60, 0.08) !important;
 }
 .filtro-card.active-pendientes .numero {
-    color: #e74c3c;
+    color: #e74c3c !important;
+}
+.filtro-card.active-pendientes .etiqueta {
+    color: #e74c3c !important;
+    opacity: 1 !important;
 }
 
 /* Buscador */
@@ -186,7 +203,6 @@
     border-radius: 12px;
     padding: 16px 18px;
     margin-bottom: 12px;
-    border-left: 4px solid #2ecc71;
     transition: all 0.3s ease;
     border: 1px solid #2e3138;
     border-left-width: 4px;
@@ -202,7 +218,7 @@
    ============================ */
 .card-trabajo.pagado {
     background: rgba(46, 204, 113, 0.06) !important;
-    border-left-color: #2ecc71;
+    border-left: 4px solid #2ecc71 !important;
 }
 
 /* ============================
@@ -210,12 +226,9 @@
    ============================ */
 .card-trabajo.pendiente {
     background: rgba(231, 76, 60, 0.06) !important;
-    border-left-color: #e74c3c;
+    border-left: 4px solid #e74c3c !important;
 }
 
-/* ============================
-   ELEMENTOS DENTRO DE LA TARJETA
-   ============================ */
 .card-trabajo .header {
     display: flex;
     justify-content: space-between;
@@ -235,10 +248,22 @@
     color: #f5f5f5;
 }
 
-.card-trabajo .header .nombre .estado-icon {
+/* ============================
+   ICONO DE ESTADO
+   ============================ */
+.card-trabajo .header .nombre .estado-icon-pagado {
+    color: #2ecc71 !important;
     font-size: 18px;
 }
 
+.card-trabajo .header .nombre .estado-icon-pendiente {
+    color: #e74c3c !important;
+    font-size: 18px;
+}
+
+/* ============================
+   BADGES
+   ============================ */
 .card-trabajo .header .nombre .badge-directa {
     background: rgba(52, 152, 219, 0.12);
     color: #3498db;
@@ -314,16 +339,17 @@
     align-items: center;
 }
 
-.card-trabajo .pie .estado-texto {
+/* ============================
+   TEXTO DE ESTADO
+   ============================ */
+.card-trabajo .pie .estado-texto-pagado {
+    color: #2ecc71 !important;
     font-weight: 600;
 }
 
-.card-trabajo .pie .estado-texto.pendiente {
-    color: #e74c3c;
-}
-
-.card-trabajo .pie .estado-texto.pagado {
-    color: #2ecc71;
+.card-trabajo .pie .estado-texto-pendiente {
+    color: #e74c3c !important;
+    font-weight: 600;
 }
 
 .card-trabajo .pie .monto {
@@ -537,10 +563,11 @@
 
         <div class="header">
             <div class="nombre">
+                <!-- ICONO DE ESTADO CON COLORES FORZADOS -->
                 {% if r.estado == 'pagado' %}
-                <span class="estado-icon material-symbols-rounded" style="color: #2ecc71;">check_circle</span>
+                <span class="estado-icon-pagado material-symbols-rounded">check_circle</span>
                 {% else %}
-                <span class="estado-icon material-symbols-rounded" style="color: #e74c3c;">pending</span>
+                <span class="estado-icon-pendiente material-symbols-rounded">pending</span>
                 {% endif %}
                 {{ r.nombre }}
                 
@@ -605,9 +632,12 @@
             </div>
             <div>
                 <strong>Estado:</strong>
-                <span class="estado-texto {% if r.estado == 'pagado' %}pagado{% else %}pendiente{% endif %}">
-                    {% if r.estado == 'pagado' %}PAGADO{% else %}PENDIENTE{% endif %}
-                </span>
+                <!-- TEXTO DE ESTADO CON COLORES FORZADOS -->
+                {% if r.estado == 'pagado' %}
+                <span class="estado-texto-pagado">PAGADO</span>
+                {% else %}
+                <span class="estado-texto-pendiente">PENDIENTE</span>
+                {% endif %}
             </div>
             {% if r.monto %}
             <div>
