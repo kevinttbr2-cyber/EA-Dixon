@@ -431,6 +431,18 @@
                 <div class="scan-overlay"></div>
                 <div class="scan-text">🔄 Escaneando...</div>
             </div>
+            <!-- Selector de modo de escaneo -->
+<div style="display: flex; gap: 8px; margin-bottom: 10px;">
+    <button type="button" id="scan_auto" class="btn btn-sm btn-primary scan-mode-btn active" onclick="setScanMode('auto')" style="flex:1;">
+        🔄 Automático
+    </button>
+    <button type="button" id="scan_factura" class="btn btn-sm btn-secondary scan-mode-btn" onclick="setScanMode('factura')" style="flex:1;">
+        📄 Factura
+    </button>
+    <button type="button" id="scan_producto" class="btn btn-sm btn-secondary scan-mode-btn" onclick="setScanMode('producto')" style="flex:1;">
+        📦 Producto
+    </button>
+</div>
 
             <!-- Categoría -->
             <div style="margin-bottom:10px;">
@@ -579,117 +591,269 @@ function cambiarTab(tab) {
 }
 
 // ============================================
-// ESCÁNER
+// ESCÁNER INTELIGENTE (Facturas + Productos)
 // ============================================
-function cargarZXing() {
-    return new Promise((resolve, reject) => {
-        if (typeof ZXing !== 'undefined') {
-            console.log('✅ ZXing ya cargado');
-            resolve();
-            return;
-        }
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/@zxing/library@0.19.2/umd/index.min.js';
-        script.onload = () => { console.log('✅ ZXing cargado'); resolve(); };
-        script.onerror = () => reject(new Error('Error cargando ZXing'));
-        document.head.appendChild(script);
+
+let scanMode = 'auto'; // 'auto', 'factura', 'producto'
+let scanner = null;
+
+// Configurar modo de escaneo
+function setScanMode(mode) {
+    scanMode = mode;
+    document.querySelectorAll('.scan-mode-btn').forEach(btn => {
+        btn.classList.remove('active');
     });
+    document.getElementById('scan_' + mode).classList.add('active');
 }
 
-async function solicitarPermisoCamara() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
-        });
-        stream.getTracks().forEach(track => track.stop());
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
-
-async function iniciarEscanner() {
-    if (scannerActivo) { await detenerEscanner(); return; }
-    
-    const tienePermiso = await solicitarPermisoCamara();
-    if (!tienePermiso) {
-        alert('⚠️ Para escanear facturas, necesitas permitir el acceso a la cámara.');
+// Iniciar escáner inteligente
+async function iniciarEscannerInteligente() {
+    if (scanner) {
+        await detenerEscanner();
         return;
     }
 
     try {
-        await cargarZXing();
-        if (typeof ZXing === 'undefined') throw new Error('ZXing no disponible');
+        await cargarHtml5QrCode();
+        
+        const videoContainer = document.getElementById('videoContainer');
+        videoContainer.classList.add('active');
+        
+        const config = {
+            fps: 10,
+            qrbox: { width: 300, height: 150 },
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.PDF_417,
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.DATA_MATRIX,
+                Html5QrcodeSupportedFormats.CODE_39
+            ]
+        };
 
-        const video = document.getElementById('videoElement');
-        document.getElementById('videoContainer').classList.add('active');
-        video.style.display = 'block';
+        scanner = new Html5Qrcode('videoContainer');
 
-        codeReader = new ZXing.BrowserPDF417Reader();
-        let deviceId = undefined;
-        try {
-            const devices = await ZXing.BrowserPDF417Reader.listVideoInputDevices();
-            if (devices && devices.length > 0) {
-                deviceId = devices[devices.length - 1].deviceId;
-            }
-        } catch (e) {
-            console.warn('⚠️ Usando cámara por defecto:', e);
-        }
+        const btn = document.getElementById('btnEscanear');
+        btn.textContent = '⏹️ Detener Escáner';
+        btn.classList.add('activo');
 
-        scannerActivo = true;
-        document.getElementById('btnEscanear').textContent = '⏹️ Detener';
-        document.getElementById('btnEscanear').classList.add('activo');
+        await scanner.start(
+            { facingMode: "environment" },
+            config,
+            onScanSuccess,
+            onScanError
+        );
+        
+        console.log('✅ Escáner inteligente iniciado');
 
-        await codeReader.decodeFromVideoDevice(deviceId, 'videoElement', (result, error) => {
-            if (result) {
-                procesarDatosFactura(result.getText());
-                detenerEscanner();
-            }
-        });
     } catch (error) {
+        console.error('❌ Error al iniciar el escáner:', error);
         alert('❌ Error al iniciar el escáner: ' + error.message);
         detenerEscanner();
     }
 }
 
-async function detenerEscanner() {
-    scannerActivo = false;
-    document.getElementById('videoContainer').classList.remove('active');
-    document.getElementById('videoElement').style.display = 'none';
-    if (document.getElementById('videoElement').srcObject) {
-        document.getElementById('videoElement').srcObject.getTracks().forEach(t => t.stop());
-        document.getElementById('videoElement').srcObject = null;
+// Procesar escaneo exitoso
+async function onScanSuccess(decodedText, decodedResult) {
+    console.log('📄 Texto escaneado:', decodedText);
+    
+    // Determinar el tipo de documento
+    const tipo = detectarTipoDocumento(decodedText);
+    
+    if (tipo === 'factura') {
+        // Procesar como factura
+        const datos = extraerDatosFactura(decodedText);
+        if (datos && datos.monto) {
+            // Rellenar formulario de gastos
+            document.getElementById('gasto_categoria').value = 'Repuestos';
+            document.getElementById('gasto_monto').value = datos.monto;
+            document.getElementById('gasto_proveedor').value = datos.proveedor || '';
+            document.getElementById('gasto_folio').value = datos.folio || '';
+            document.getElementById('gasto_descripcion').value = `Factura ${datos.folio || ''} - ${datos.proveedor || ''}`;
+            alert(`✅ Factura procesada: $${datos.monto.toLocaleString()}\n🏢 ${datos.proveedor || 'Proveedor'}`);
+            detenerEscanner();
+        }
+        
+    } else if (tipo === 'producto') {
+        // Procesar como producto para stock
+        const producto = extraerDatosProducto(decodedText);
+        if (producto && producto.nombre && producto.precio) {
+            // Confirmar antes de agregar al stock
+            const confirmar = confirm(
+                `📦 Nuevo producto detectado:\n\n` +
+                `🔹 Nombre: ${producto.nombre}\n` +
+                `🔹 Precio: $${producto.precio.toLocaleString()}\n` +
+                `🔹 Proveedor: ${producto.proveedor || 'No especificado'}\n\n` +
+                `¿Agregar al stock de repuestos?`
+            );
+            
+            if (confirmar) {
+                await agregarProductoAlStock(producto);
+            }
+            detenerEscanner();
+        }
+        
+    } else {
+        // No se pudo identificar
+        const opcion = confirm(
+            `🤔 No se pudo identificar el tipo de documento.\n\n` +
+            `Texto escaneado:\n${decodedText.slice(0, 100)}...\n\n` +
+            `¿Quieres procesarlo como factura?`
+        );
+        
+        if (opcion) {
+            // Intentar procesar como factura
+            const datos = extraerDatosFactura(decodedText);
+            if (datos && datos.monto) {
+                document.getElementById('gasto_monto').value = datos.monto;
+                document.getElementById('gasto_proveedor').value = datos.proveedor || '';
+                alert(`✅ Datos cargados manualmente. Completa el formulario.`);
+            }
+        }
+        detenerEscanner();
     }
-    if (codeReader) { try { await codeReader.reset(); } catch(e) {} codeReader = null; }
-    document.getElementById('btnEscanear').textContent = '📸 Escanear Factura / Boleta';
-    document.getElementById('btnEscanear').classList.remove('activo');
 }
 
-function procesarDatosFactura(texto) {
-    let monto = null, proveedor = null, folio = null;
+// ============================================
+// DETECCIÓN DE TIPO DE DOCUMENTO
+// ============================================
+function detectarTipoDocumento(texto) {
+    const textoLower = texto.toLowerCase();
     
-    let match = texto.match(/MontoTotal[^\d]*([\d.,]+)/i) || texto.match(/Total[^\d]*([\d.,]+)/i);
-    if (match) {
-        monto = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.'));
-        document.getElementById('gasto_monto').value = monto;
+    // Palabras clave de factura
+    const facturaKeywords = ['monto', 'total', 'rut', 'razón social', 'folio', 'factura', 'boleta', 'dte', 'sii'];
+    let facturaScore = 0;
+    facturaKeywords.forEach(kw => {
+        if (textoLower.includes(kw)) facturaScore++;
+    });
+    
+    // Palabras clave de producto
+    const productoKeywords = ['producto', 'código', 'precio', 'cantidad', 'stock', 'inventario', 'unidad', 'kg', 'lt'];
+    let productoScore = 0;
+    productoKeywords.forEach(kw => {
+        if (textoLower.includes(kw)) productoScore++;
+    });
+    
+    // Si tiene "MontoTotal" o "RUT", es casi seguro una factura
+    if (textoLower.includes('montototal') || textoLower.includes('rut')) {
+        return 'factura';
     }
     
-    match = texto.match(/RazónSocial[^:]*:\s*([^\n]+)/i) || texto.match(/Nombre[^:]*:\s*([^\n]+)/i);
-    if (match) {
-        proveedor = match[1].trim();
-        document.getElementById('gasto_proveedor').value = proveedor;
+    // Si tiene "producto" y "precio", es probablemente un producto
+    if (textoLower.includes('producto') && textoLower.includes('precio')) {
+        return 'producto';
     }
     
+    // Decidir por puntaje
+    if (facturaScore > productoScore) return 'factura';
+    if (productoScore > facturaScore) return 'producto';
+    
+    // Por defecto, preguntar al usuario
+    return 'unknown';
+}
+
+// ============================================
+// EXTRACCIÓN DE DATOS DE FACTURA
+// ============================================
+function extraerDatosFactura(texto) {
+    const datos = { monto: null, proveedor: null, folio: null, fecha: null };
+    
+    // Monto
+    let match = texto.match(/MontoTotal[^\d]*([\d.,]+)/i);
+    if (!match) match = texto.match(/Total[^\d]*([\d.,]+)/i);
+    if (match) {
+        datos.monto = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.'));
+    }
+    
+    // Proveedor
+    match = texto.match(/RazónSocial[^:]*:\s*([^\n]+)/i);
+    if (!match) match = texto.match(/Nombre[^:]*:\s*([^\n]+)/i);
+    if (match) datos.proveedor = match[1].trim();
+    
+    // Folio
     match = texto.match(/Folio[^:]*:\s*(\d+)/i);
-    if (match) {
-        folio = match[1].trim();
-        document.getElementById('gasto_folio').value = folio;
+    if (match) datos.folio = match[1].trim();
+    
+    // Fecha
+    match = texto.match(/Fecha[^:]*:\s*([\d-]+)/i);
+    if (match) datos.fecha = match[1].trim();
+    
+    return datos;
+}
+
+// ============================================
+// EXTRACCIÓN DE DATOS DE PRODUCTO
+// ============================================
+function extraerDatosProducto(texto) {
+    const producto = { nombre: null, precio: 0, proveedor: null, cantidad: 1, codigo: null };
+    
+    // Nombre
+    let match = texto.match(/(?:Producto|Nombre|Item|Descripción)[^:]*:\s*([^\n]+)/i);
+    if (!match) {
+        // Buscar líneas que parezcan productos
+        const lineas = texto.split('\n');
+        for (const linea of lineas) {
+            if (linea.trim().length > 3 && !linea.match(/^\d/)) {
+                producto.nombre = linea.trim();
+                break;
+            }
+        }
+    } else {
+        producto.nombre = match[1].trim();
     }
     
-    if (monto) {
-        alert(`✅ Datos cargados:\n💰 Monto: $${monto.toLocaleString()}${proveedor ? '\n🏢 ' + proveedor : ''}`);
-    } else {
-        alert('⚠️ No se pudo extraer el monto automáticamente.');
+    // Precio
+    match = texto.match(/(?:Precio|Valor|Costo)[^:]*[:=]\s*\$?\s*([\d.,]+)/i);
+    if (!match) match = texto.match(/([\d.,]+)\s*$/);
+    if (match) {
+        const precioStr = match[1].replace(/[.,]/g, m => m === '.' ? '' : '.');
+        producto.precio = parseFloat(precioStr) || 0;
+    }
+    
+    // Proveedor
+    match = texto.match(/(?:Proveedor|Marca)[^:]*:\s*([^\n]+)/i);
+    if (match) producto.proveedor = match[1].trim();
+    
+    // Cantidad
+    match = texto.match(/(?:Cantidad|Qty)[^:]*:\s*(\d+)/i);
+    if (match) producto.cantidad = parseInt(match[1]) || 1;
+    
+    // Código
+    match = texto.match(/(?:Código|Code)[^:]*:\s*([^\n]+)/i);
+    if (match) producto.codigo = match[1].trim();
+    
+    return producto;
+}
+
+// ============================================
+// AGREGAR PRODUCTO AL STOCK
+// ============================================
+async function agregarProductoAlStock(producto) {
+    try {
+        const resp = await fetch(`${API_URL}/api/repuestos/from_scan`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                texto: JSON.stringify(producto)
+            })
+        });
+        
+        const result = await resp.json();
+        if (result.success) {
+            alert(`✅ ${result.mensaje}`);
+            // Recargar la lista de repuestos si está visible
+            if (document.getElementById('tabRepuestos').classList.contains('active')) {
+                cargarRepuestos();
+            }
+        } else {
+            alert('❌ Error al agregar producto: ' + (result.error || 'Desconocido'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión');
     }
 }
 
