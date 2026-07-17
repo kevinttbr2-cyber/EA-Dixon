@@ -568,7 +568,146 @@ def historial_cierres():
     except Exception as e:
         print(f"❌ Error en historial_cierres: {e}")
         return jsonify({"error": str(e)}), 500
+# ============================================
+# RUTAS PARA PROVEEDORES
+# ============================================
 
+@app.route('/api/proveedores', methods=['GET'])
+def obtener_proveedores():
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        cur.execute("SELECT * FROM proveedores ORDER BY nombre")
+        proveedores = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(proveedores)
+    except Exception as e:
+        print(f"❌ Error en obtener_proveedores: {e}")
+        return jsonify([])
+
+@app.route('/api/proveedores', methods=['POST'])
+def crear_proveedor():
+    try:
+        data = request.json
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO proveedores (nombre, rut, telefono, email, direccion, giro)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
+            data.get('nombre'),
+            data.get('rut'),
+            data.get('telefono'),
+            data.get('email'),
+            data.get('direccion'),
+            data.get('giro', 'repuestos')
+        ))
+        id_proveedor = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"success": True, "id": id_proveedor})
+    except Exception as e:
+        print(f"❌ Error en crear_proveedor: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# ============================================
+# RUTAS PARA EMPLEADOS / PLANILLA DE SUELDOS
+# ============================================
+
+@app.route('/api/empleados', methods=['GET'])
+def obtener_empleados():
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        cur.execute("SELECT * FROM empleados WHERE activo = TRUE ORDER BY nombre")
+        empleados = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(empleados)
+    except Exception as e:
+        print(f"❌ Error en obtener_empleados: {e}")
+        return jsonify([])
+
+@app.route('/api/empleados', methods=['POST'])
+def crear_empleado():
+    try:
+        data = request.json
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO empleados (nombre, rut, cargo, sueldo_base)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        """, (
+            data.get('nombre'),
+            data.get('rut'),
+            data.get('cargo'),
+            data.get('sueldo_base', 0)
+        ))
+        id_empleado = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"success": True, "id": id_empleado})
+    except Exception as e:
+        print(f"❌ Error en crear_empleado: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/planilla_sueldos', methods=['POST'])
+def registrar_planilla():
+    try:
+        data = request.json
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        for empleado in data.get('empleados', []):
+            cur.execute("""
+                INSERT INTO planilla_sueldos 
+                (empleado_id, mes, anio, sueldo_base, comision, horas_extras, bonos, descuentos, sueldo_neto, pagado, fecha_pago)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                empleado.get('id'),
+                data.get('mes'),
+                data.get('anio'),
+                empleado.get('sueldo_base', 0),
+                empleado.get('comision', 0),
+                empleado.get('horas_extras', 0),
+                empleado.get('bonos', 0),
+                empleado.get('descuentos', 0),
+                empleado.get('sueldo_neto', 0),
+                data.get('pagado', False),
+                data.get('fecha_pago')
+            ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # Registrar el gasto total como un gasto de sueldos
+        total_sueldos = sum(e.get('sueldo_neto', 0) for e in data.get('empleados', []))
+        if total_sueldos > 0:
+            # Llamar a la función de registrar gasto
+            registrar_gasto_interno({
+                'categoria': 'Sueldos',
+                'monto': total_sueldos,
+                'metodo_pago': 'transferencia',
+                'descripcion': f"Planilla {data.get('mes')}/{data.get('anio')}",
+                'fecha': data.get('fecha_pago'),
+                'hora': datetime.now().strftime('%H:%M:%S'),
+                'registrado_por': data.get('registrado_por', 'Sistema'),
+                'es_planilla': True
+            })
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"❌ Error en registrar_planilla: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # ============================
