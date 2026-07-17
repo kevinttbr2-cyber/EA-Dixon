@@ -1331,6 +1331,37 @@ def registrar_gasto_interno(data):
     except Exception as e:
         print(f"❌ Error en registrar_gasto_interno: {e}")
         return False
+# ============================================
+# OBTENER GASTOS PARA BALANCE
+# ============================================
+@app.route('/api/gastos_balance', methods=['GET'])
+def obtener_gastos_balance():
+    """Obtiene gastos operativos para el balance"""
+    try:
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        
+        if not fecha_inicio or not fecha_fin:
+            return jsonify({"error": "Fechas requeridas"}), 400
+        
+        from database import get_cursor
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT * FROM gastos 
+            WHERE fecha BETWEEN %s AND %s
+            ORDER BY fecha DESC, hora DESC
+        """, (fecha_inicio, fecha_fin))
+        
+        gastos = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        
+        return jsonify(gastos)
+        
+    except Exception as e:
+        print(f"❌ Error en obtener_gastos_balance: {e}")
+        return jsonify([])
 
 
 # ============================
