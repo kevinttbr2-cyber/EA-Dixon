@@ -261,11 +261,11 @@ def test_notificacion():
 # ============================================
 
 # ============================================
-# 1. REGISTRAR GASTO
+# REGISTRAR GASTO (VERSIÓN ACTUALIZADA)
 # ============================================
 @app.route('/api/gastos', methods=['POST'])
 def registrar_gasto():
-    """Registra un nuevo gasto (efectivo o transferencia)"""
+    """Registra un nuevo gasto (efectivo o transferencia) con datos de factura"""
     try:
         data = request.json
         
@@ -278,17 +278,19 @@ def registrar_gasto():
         conn = get_connection()
         cur = conn.cursor()
         
-        # Insertar gasto
+        # Insertar gasto (con nuevos campos)
         cur.execute("""
             INSERT INTO gastos 
-            (categoria, monto, metodo_pago, descripcion, fecha, hora, registrado_por)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            (categoria, monto, metodo_pago, descripcion, proveedor, folio, fecha, hora, registrado_por)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """, (
             data.get('categoria'),
             float(data.get('monto', 0)),
             data.get('metodo_pago', 'efectivo'),
             data.get('descripcion', ''),
+            data.get('proveedor', ''),
+            data.get('folio', ''),
             data.get('fecha'),
             data.get('hora'),
             data.get('registrado_por', 'Sistema')
@@ -307,7 +309,6 @@ def registrar_gasto():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 
 # ============================================
 # 2. OBTENER GASTOS POR FECHA
