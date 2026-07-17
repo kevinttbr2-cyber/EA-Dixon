@@ -1378,6 +1378,10 @@ function handleFileSelectProductos(e) {
 }
 
 function procesarArchivoProductos(file) {
+    console.log('📂 1. Iniciando procesamiento del archivo:', file.name);
+    console.log('📂 2. Tipo de archivo:', file.type);
+    console.log('📂 3. Tamaño:', file.size, 'bytes');
+    
     // Verificar que sea un archivo Excel
     const validTypes = [
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -1391,11 +1395,28 @@ function procesarArchivoProductos(file) {
         return;
     }
     
+    console.log('📂 4. Formato válido ✅');
+    
     const reader = new FileReader();
+    
     reader.onload = function(e) {
         try {
+            console.log('📂 5. Archivo leído correctamente');
+            
+            // Verificar que XLSX existe
+            if (typeof XLSX === 'undefined') {
+                console.error('❌ XLSX no está definido. ¿Cargaste la librería?');
+                alert('❌ Error: La librería XLSX no está cargada. Revisa tu conexión a internet.');
+                return;
+            }
+            console.log('📂 6. XLSX disponible ✅');
+            
             const data = new Uint8Array(e.target.result);
+            console.log('📂 7. Datos convertidos a Uint8Array, tamaño:', data.length);
+            
             const workbook = XLSX.read(data, { type: 'array' });
+            console.log('📂 8. Workbook leído:', workbook);
+            console.log('📂 9. Hojas disponibles:', workbook.SheetNames);
             
             if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
                 alert('⚠️ El archivo no contiene hojas');
@@ -1403,32 +1424,49 @@ function procesarArchivoProductos(file) {
             }
             
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            console.log('📂 10. Primera hoja:', workbook.SheetNames[0]);
+            
             const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+            console.log('📂 11. Datos JSON:', jsonData);
+            console.log('📂 12. Filas encontradas:', jsonData.length);
             
             if (jsonData.length === 0) {
                 alert('⚠️ El archivo está vacío');
                 return;
             }
             
-            // Verificar que tenga las columnas necesarias
-            const firstRow = jsonData[0];
-            const requiredColumns = ['Producto', 'Costo Proveedor', 'Precio Venta'];
-            const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+            // Mostrar la primera fila para depurar
+            console.log('📂 13. Primera fila (columnas):', Object.keys(jsonData[0]));
+            console.log('📂 14. Primer registro:', jsonData[0]);
             
-            if (missingColumns.length > 0) {
-                alert(`⚠️ Faltan columnas obligatorias: ${missingColumns.join(', ')}\n\nColumnas esperadas: Producto, Costo Proveedor, Precio Venta, Proveedor, Categoría, Subcategoría, Stock`);
+            // Verificar columnas
+            const firstRow = jsonData[0];
+            const hasProducto = 'Producto' in firstRow || 'Nombre' in firstRow || 'nombre' in firstRow;
+            const hasCosto = 'Costo Proveedor' in firstRow || 'costo_proveedor' in firstRow;
+            const hasPrecio = 'Precio Venta' in firstRow || 'precio_venta' in firstRow;
+            
+            console.log('📂 15. Columnas encontradas:');
+            console.log('   - Producto/Nombre:', hasProducto);
+            console.log('   - Costo Proveedor:', hasCosto);
+            console.log('   - Precio Venta:', hasPrecio);
+            
+            if (!hasProducto || !hasCosto || !hasPrecio) {
+                alert('⚠️ Faltan columnas obligatorias.\n\n' +
+                      'Usa: Producto (o Nombre), Costo Proveedor, Precio Venta\n\n' +
+                      'Opcionales: Proveedor, Categoría, Subcategoría, Stock\n\n' +
+                      'Columnas encontradas: ' + Object.keys(firstRow).join(', '));
                 return;
             }
             
-            // Procesar datos CON STOCK
+            // Procesar datos
             datosProductos = jsonData.map(row => {
-                const nombre = String(row['Producto'] || row['nombre'] || '').trim();
+                const nombre = String(row['Producto'] || row['Nombre'] || row['nombre'] || '').trim();
                 const costo = parseFloat(row['Costo Proveedor'] || row['costo_proveedor'] || 0);
                 const precioVenta = parseFloat(row['Precio Venta'] || row['precio_venta'] || 0);
                 const proveedor = String(row['Proveedor'] || row['proveedor'] || 'Importado').trim();
                 const categoria = String(row['Categoría'] || row['categoria'] || '').trim();
-                const subcategoria = String(row['Subcategoría'] || row['subcategoria'] || '').trim();
-                const stock = parseInt(row['Stock'] || row['stock'] || 0);
+                const subcategoria = String(row['Subcategoría'] || row['SubCategoría'] || row['subcategoria'] || '').trim();
+                const stock = parseInt(row['Stock'] || row['stock'] || 1);
                 
                 let margenFinal = 0;
                 if (costo > 0 && precioVenta > 0) {
@@ -1450,21 +1488,33 @@ function procesarArchivoProductos(file) {
                 };
             }).filter(item => item.nombre && item.costo > 0 && item.precio_venta > 0);
             
+            console.log('📂 16. Datos procesados:', datosProductos);
+            console.log('📂 17. Productos válidos:', datosProductos.length);
+            
             if (datosProductos.length === 0) {
-                alert('⚠️ No hay datos válidos para importar. Verifica que las columnas tengan datos correctos.');
+                alert('⚠️ No hay datos válidos para importar.\n\n' +
+                      'Asegúrate de que:\n' +
+                      '- Los nombres no estén vacíos\n' +
+                      '- Costo y Precio sean números mayores a 0\n' +
+                      '- Las columnas tengan los nombres correctos');
                 return;
             }
             
+            console.log('📂 18. Llamando a mostrarPreviewProductos...');
             mostrarPreviewProductos(datosProductos);
+            console.log('📂 19. Preview mostrado ✅');
             
         } catch (error) {
-            console.error('Error detallado:', error);
-            alert('❌ Error al leer el archivo: ' + error.message + '\n\nAsegúrate de que el archivo sea un Excel válido (.xlsx)');
+            console.error('❌ Error detallado:', error);
+            console.error('❌ Stack trace:', error.stack);
+            alert('❌ Error al leer el archivo: ' + error.message + '\n\n' +
+                  'Revisa la consola (F12) para más detalles.');
             document.getElementById('fileInputProductos').value = '';
         }
     };
     
-    reader.onerror = function() {
+    reader.onerror = function(error) {
+        console.error('❌ Error al leer el archivo:', error);
         alert('❌ Error al leer el archivo');
         document.getElementById('fileInputProductos').value = '';
     };
@@ -1473,13 +1523,28 @@ function procesarArchivoProductos(file) {
 }
 
 function mostrarPreviewProductos(datos) {
+    console.log('📊 1. Mostrando preview, datos:', datos.length);
+    
     const previewBody = document.getElementById('previewBodyProductos');
     const previewContainer = document.getElementById('previewProductos');
     const btnImportar = document.getElementById('btnImportarProductos');
     const contador = document.getElementById('contadorProductos');
     
+    console.log('📊 2. Elementos encontrados:');
+    console.log('   - previewBody:', previewBody ? '✅' : '❌');
+    console.log('   - previewContainer:', previewContainer ? '✅' : '❌');
+    console.log('   - btnImportar:', btnImportar ? '✅' : '❌');
+    console.log('   - contador:', contador ? '✅' : '❌');
+    
+    if (!previewBody) {
+        console.error('❌ No se encontró previewBodyProductos');
+        return;
+    }
+    
     previewBody.innerHTML = '';
     const mostrar = datos.slice(0, 10);
+    console.log('📊 3. Mostrando primeros', mostrar.length, 'registros');
+    
     mostrar.forEach((item, index) => {
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
@@ -1506,6 +1571,8 @@ function mostrarPreviewProductos(datos) {
     previewContainer.style.display = 'block';
     btnImportar.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datos.length} productos`;
     btnImportar.style.display = 'block';
+    
+    console.log('📊 4. Preview mostrado correctamente ✅');
 }
 
 async function importarProductos() {
