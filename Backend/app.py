@@ -1497,13 +1497,13 @@ def obtener_repuestos_por_categoria(categoria_nombre):
         print(f"❌ Error en obtener_repuestos_por_categoria: {e}")
         return jsonify([])
 # ============================================
-# IMPORTAR PRODUCTOS CON CATEGORÍAS
+# IMPORTAR PRODUCTOS CON CATEGORÍAS Y STOCK
 # ============================================
 @app.route('/api/repuestos/importar', methods=['POST'])
 def importar_repuestos():
     """
-    Importa productos desde Excel con categorías y subcategorías
-    Columnas esperadas: Producto, Costo Proveedor, Precio Venta, Proveedor, Categoría, Subcategoría
+    Importa productos desde Excel con categorías, subcategorías y stock
+    Columnas esperadas: Producto, Costo Proveedor, Precio Venta, Proveedor, Categoría, Subcategoría, Stock
     """
     try:
         data = request.json
@@ -1517,6 +1517,7 @@ def importar_repuestos():
         cur = conn.cursor()
         
         importados = 0
+        actualizados = 0
         errores = []
         exitosos = []
         
@@ -1598,12 +1599,13 @@ def importar_repuestos():
                 margen = round(margen, 1)
             
             # ============================================
-            # 4. Insertar o actualizar REPUESTO
+            # 4. Insertar o actualizar REPUESTO (CON STOCK)
             # ============================================
             cur.execute("SELECT id FROM repuestos WHERE LOWER(nombre) = LOWER(%s)", (nombre,))
             existente = cur.fetchone()
             
             if existente:
+                # ✅ ACTUALIZAR: SUMAR STOCK al existente
                 cur.execute("""
                     UPDATE repuestos 
                     SET costo_proveedor = %s,
@@ -1615,18 +1617,22 @@ def importar_repuestos():
                         categoria_nombre = %s,
                         updated_at = NOW() AT TIME ZONE 'America/Santiago'
                     WHERE id = %s
+                    RETURNING stock as nuevo_stock
                 """, (
                     costo_proveedor,
                     precio_venta,
                     margen,
                     proveedor,
-                    stock,
+                    stock,  # ✅ SUMAR STOCK
                     subcategoria_id,
                     categoria_nombre or subcategoria_nombre,
                     existente[0]
                 ))
-                exitosos.append(f"{nombre} (actualizado)")
+                nuevo_stock = cur.fetchone()[0]
+                actualizados += 1
+                exitosos.append(f"{nombre} (stock actualizado a {nuevo_stock})")
             else:
+                # ✅ CREAR NUEVO REPUESTO CON STOCK
                 cur.execute("""
                     INSERT INTO repuestos 
                     (nombre, costo_proveedor, costo_venta_final, margen_ganancia, proveedor, 
@@ -1643,11 +1649,11 @@ def importar_repuestos():
                     proveedor,
                     subcategoria_id,
                     categoria_nombre or subcategoria_nombre,
-                    stock
+                    stock  # ✅ STOCK INICIAL
                 ))
-                exitosos.append(nombre)
+                importados += 1
+                exitosos.append(f"{nombre} (nuevo, stock: {stock})")
             
-            importados += 1
             conn.commit()
         
         cur.close()
@@ -1656,6 +1662,7 @@ def importar_repuestos():
         return jsonify({
             "success": True,
             "importados": importados,
+            "actualizados": actualizados,
             "exitosos": exitosos,
             "errores": errores
         })
