@@ -178,6 +178,63 @@
         background: var(--accent-green);
         color: var(--bg-primary);
     }
+
+    /* Modal */
+    .modal-gasto {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+        overflow-y: auto;
+        padding: 20px 0;
+    }
+    .modal-gasto.active {
+        display: flex;
+    }
+    .modal-gasto .modal-content {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 20px 24px;
+        max-width: 500px;
+        width: 95%;
+        max-height: 95vh;
+        overflow-y: auto;
+        margin: auto;
+        box-shadow: var(--shadow-hover);
+    }
+    .modal-gasto .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--border-subtle);
+        padding-bottom: 10px;
+    }
+    .modal-gasto .modal-header h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--accent-yellow);
+    }
+    .modal-gasto .modal-header .close-btn {
+        background: transparent;
+        border: none;
+        color: var(--accent-red);
+        font-size: 24px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .modal-gasto .modal-header .close-btn:hover {
+        transform: scale(1.1);
+    }
 </style>
 
 <div class="base-container">
@@ -401,16 +458,16 @@
 </div>
 
 <!-- ============================================
-     MODAL: NUEVO GASTO
+     MODAL: NUEVO GASTO (CORREGIDO)
      ============================================ -->
-<div id="modalNuevoGasto" class="modal-dixon" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0;">
-    <div class="modal-content" style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:20px 24px;max-width:500px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;box-shadow:var(--shadow-hover);">
-        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--border-subtle);padding-bottom:10px;">
-            <h3 style="color:var(--accent-yellow);margin:0;font-size:20px;font-weight:700;">
+<div id="modalNuevoGasto" class="modal-gasto">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>
                 <span class="material-symbols-rounded" style="font-size:24px;vertical-align:middle;">add_circle</span>
                 Registrar Gasto
             </h3>
-            <button onclick="cerrarModalGasto()" style="background:transparent;border:none;color:var(--accent-red);font-size:24px;cursor:pointer;">
+            <button class="close-btn" onclick="cerrarModalGasto()">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
@@ -513,14 +570,14 @@
 <!-- ============================================
      MODAL: PROVEEDOR
      ============================================ -->
-<div id="modalProveedor" class="modal-dixon" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0;">
-    <div class="modal-content" style="background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:20px 24px;max-width:450px;width:95%;max-height:95vh;overflow-y:auto;margin:auto;box-shadow:var(--shadow-hover);">
-        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--border-subtle);padding-bottom:10px;">
-            <h3 style="color:var(--accent-blue);margin:0;font-size:20px;font-weight:700;">
+<div id="modalProveedor" class="modal-gasto">
+    <div class="modal-content" style="max-width:450px;">
+        <div class="modal-header">
+            <h3 style="color:var(--accent-blue);">
                 <span class="material-symbols-rounded" style="font-size:24px;vertical-align:middle;">business</span>
                 Proveedor
             </h3>
-            <button onclick="cerrarModalProveedor()" style="background:transparent;border:none;color:var(--accent-red);font-size:24px;cursor:pointer;">
+            <button class="close-btn" onclick="cerrarModalProveedor()">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
@@ -568,21 +625,61 @@
      ============================================ -->
 <script>
 const API_URL = '{{ backend_url }}';
-let scannerActivo = false;
-let codeReader = null;
+
+// ============================================
+// VARIABLES GLOBALES
+// ============================================
+let scanner = null;
 let empleadosPlanilla = [];
 let proveedoresLista = [];
-
-// ============================================
-// ESCÁNER INTELIGENTE (Facturas + Productos) - CORREGIDO
-// ============================================
-
 let scanMode = 'auto';
-let scanner = null;
 
 // ============================================
-// CARGAR LIBRERÍA html5-qrcode
+// TABS
 // ============================================
+function cambiarTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    const tabMap = {
+        'gastos': 'tabGastos',
+        'proveedores': 'tabProveedores',
+        'sueldos': 'tabSueldos'
+    };
+    document.getElementById(tabMap[tab]).classList.add('active');
+    document.querySelector(`.tab-btn[onclick*="${tab}"]`).classList.add('active');
+    
+    if (tab === 'proveedores') cargarProveedores();
+    if (tab === 'sueldos') cargarPlanilla();
+}
+
+// ============================================
+// MODALES
+// ============================================
+function abrirModalGasto() {
+    document.getElementById('modalNuevoGasto').classList.add('active');
+    document.getElementById('formNuevoGasto').reset();
+    detenerEscanner();
+    cargarProveedores();
+}
+
+function cerrarModalGasto() {
+    document.getElementById('modalNuevoGasto').classList.remove('active');
+    detenerEscanner();
+}
+
+function abrirModalProveedor() {
+    document.getElementById('modalProveedor').classList.add('active');
+    document.getElementById('formProveedor').reset();
+}
+
+function cerrarModalProveedor() {
+    document.getElementById('modalProveedor').classList.remove('active');
+}
+
+// ============================================
+// ESCÁNER (html5-qrcode)
+// ============================================
+
 function cargarHtml5QrCode() {
     return new Promise((resolve, reject) => {
         if (typeof Html5Qrcode !== 'undefined') {
@@ -601,36 +698,22 @@ function cargarHtml5QrCode() {
     });
 }
 
-// ============================================
-// SOLICITAR PERMISO DE CÁMARA
-// ============================================
 async function solicitarPermisoCamara() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: 'environment' } 
         });
         stream.getTracks().forEach(track => track.stop());
-        console.log('✅ Permiso de cámara concedido');
         return true;
     } catch (error) {
-        console.error('❌ Permiso de cámara denegado:', error);
         return false;
     }
 }
 
-// ============================================
-// INICIAR ESCÁNER
-// ============================================
 async function iniciarEscanner() {
     if (scanner) {
         await detenerEscanner();
         return;
-    }
-
-    // Verificar si es dispositivo móvil
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (!isMobile) {
-        alert('📱 El escáner funciona mejor en dispositivos móviles.\n\nSi estás en computador, usa la cámara web.');
     }
 
     const tienePermiso = await solicitarPermisoCamara();
@@ -648,7 +731,6 @@ async function iniciarEscanner() {
         const config = {
             fps: 10,
             qrbox: { width: 280, height: 120 },
-            aspectRatio: 1.0,
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.PDF_417,
                 Html5QrcodeSupportedFormats.QR_CODE,
@@ -678,23 +760,11 @@ async function iniciarEscanner() {
 
     } catch (error) {
         console.error('❌ Error al iniciar el escáner:', error);
-        
-        let mensaje = '❌ Error al iniciar el escáner:\n\n';
-        if (error.message && error.message.includes('Permission denied')) {
-            mensaje += 'No se pudo acceder a la cámara. Verifica los permisos en tu navegador.';
-        } else if (error.message && error.message.includes('not a function')) {
-            mensaje += 'Error de compatibilidad. Por favor, actualiza la página e intenta nuevamente.';
-        } else {
-            mensaje += error.message || 'Error desconocido';
-        }
-        alert(mensaje);
+        alert('❌ Error al iniciar el escáner: ' + error.message);
         detenerEscanner();
     }
 }
 
-// ============================================
-// DETENER ESCÁNER
-// ============================================
 async function detenerEscanner() {
     if (scanner) {
         try {
@@ -711,13 +781,17 @@ async function detenerEscanner() {
     document.getElementById('btnEscanear').classList.remove('activo');
 }
 
-// ============================================
-// ESCANEO EXITOSO
-// ============================================
+function setScanMode(mode) {
+    scanMode = mode;
+    document.querySelectorAll('.scan-mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById('scan_' + mode).classList.add('active');
+}
+
 function onScanSuccess(decodedText, decodedResult) {
     console.log('📄 Texto escaneado:', decodedText);
     
-    // Determinar el tipo de documento
     const tipo = detectarTipoDocumento(decodedText);
     
     if (tipo === 'factura') {
@@ -730,19 +804,14 @@ function onScanSuccess(decodedText, decodedResult) {
             document.getElementById('gasto_descripcion').value = `Factura ${datos.folio || ''} - ${datos.proveedor || ''}`;
             alert(`✅ Factura procesada: $${datos.monto.toLocaleString()}\n🏢 ${datos.proveedor || 'Proveedor'}`);
         } else {
-            alert('⚠️ No se pudo extraer el monto de la factura. Ingresa los datos manualmente.');
+            alert('⚠️ No se pudo extraer el monto de la factura.');
         }
         detenerEscanner();
-        
     } else if (tipo === 'producto') {
         const producto = extraerDatosProducto(decodedText);
         if (producto && producto.nombre && producto.precio) {
             const confirmar = confirm(
-                `📦 Nuevo producto detectado:\n\n` +
-                `🔹 Nombre: ${producto.nombre}\n` +
-                `🔹 Precio: $${producto.precio.toLocaleString()}\n` +
-                `🔹 Proveedor: ${producto.proveedor || 'No especificado'}\n\n` +
-                `¿Agregar al stock de repuestos?`
+                `📦 Nuevo producto detectado:\n\n🔹 Nombre: ${producto.nombre}\n🔹 Precio: $${producto.precio.toLocaleString()}\n🔹 Proveedor: ${producto.proveedor || 'No especificado'}\n\n¿Agregar al stock de repuestos?`
             );
             if (confirmar) {
                 await agregarProductoAlStock(producto);
@@ -751,12 +820,9 @@ function onScanSuccess(decodedText, decodedResult) {
             alert('⚠️ No se pudo extraer la información del producto.');
         }
         detenerEscanner();
-        
     } else {
         const opcion = confirm(
-            `🤔 No se pudo identificar el tipo de documento.\n\n` +
-            `Texto escaneado:\n${decodedText.slice(0, 100)}...\n\n` +
-            `¿Quieres procesarlo como factura?`
+            `🤔 No se pudo identificar el tipo de documento.\n\nTexto escaneado:\n${decodedText.slice(0, 100)}...\n\n¿Quieres procesarlo como factura?`
         );
         if (opcion) {
             const datos = extraerDatosFactura(decodedText);
@@ -770,163 +836,69 @@ function onScanSuccess(decodedText, decodedResult) {
     }
 }
 
-// ============================================
-// ERROR DE ESCANEO (ignorar)
-// ============================================
 function onScanError(error) {
-    // No mostrar errores para no saturar la consola
+    // No mostrar errores para no saturar
 }
 
-// ============================================
-// CONFIGURAR MODO DE ESCANEO
-// ============================================
-function setScanMode(mode) {
-    scanMode = mode;
-    document.querySelectorAll('.scan-mode-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.getElementById('scan_' + mode).classList.add('active');
-}
-
-// ============================================
-// DETECCIÓN DE TIPO DE DOCUMENTO
-// ============================================
 function detectarTipoDocumento(texto) {
     const textoLower = texto.toLowerCase();
-    
-    const facturaKeywords = ['monto', 'total', 'rut', 'razón social', 'folio', 'factura', 'boleta', 'dte', 'sii'];
+    const facturaKeywords = ['monto', 'total', 'rut', 'razón social', 'folio', 'factura', 'boleta'];
     let facturaScore = 0;
-    facturaKeywords.forEach(kw => {
-        if (textoLower.includes(kw)) facturaScore++;
-    });
-    
-    const productoKeywords = ['producto', 'código', 'precio', 'cantidad', 'stock', 'inventario', 'unidad', 'kg', 'lt'];
+    facturaKeywords.forEach(kw => { if (textoLower.includes(kw)) facturaScore++; });
+    const productoKeywords = ['producto', 'código', 'precio', 'cantidad'];
     let productoScore = 0;
-    productoKeywords.forEach(kw => {
-        if (textoLower.includes(kw)) productoScore++;
-    });
-    
-    if (textoLower.includes('montototal') || textoLower.includes('rut')) {
-        return 'factura';
-    }
-    
-    if (textoLower.includes('producto') && textoLower.includes('precio')) {
-        return 'producto';
-    }
-    
+    productoKeywords.forEach(kw => { if (textoLower.includes(kw)) productoScore++; });
+    if (textoLower.includes('montototal') || textoLower.includes('rut')) return 'factura';
+    if (textoLower.includes('producto') && textoLower.includes('precio')) return 'producto';
     if (facturaScore > productoScore) return 'factura';
     if (productoScore > facturaScore) return 'producto';
-    
     return 'unknown';
 }
 
-// ============================================
-// EXTRACCIÓN DE DATOS DE FACTURA
-// ============================================
 function extraerDatosFactura(texto) {
     const datos = { monto: null, proveedor: null, folio: null, fecha: null };
-    
-    let match = texto.match(/MontoTotal[^\d]*([\d.,]+)/i);
-    if (!match) match = texto.match(/Total[^\d]*([\d.,]+)/i);
-    if (match) {
-        datos.monto = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.'));
-    }
-    
-    match = texto.match(/RazónSocial[^:]*:\s*([^\n]+)/i);
-    if (!match) match = texto.match(/Nombre[^:]*:\s*([^\n]+)/i);
-    if (match) datos.proveedor = match[1].trim();
-    
+    let match = texto.match(/MontoTotal[^\d]*([\d.,]+)/i) || texto.match(/Total[^\d]*([\d.,]+)/i);
+    if (match) { datos.monto = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.')); }
+    match = texto.match(/RazónSocial[^:]*:\s*([^\n]+)/i) || texto.match(/Nombre[^:]*:\s*([^\n]+)/i);
+    if (match) { datos.proveedor = match[1].trim(); }
     match = texto.match(/Folio[^:]*:\s*(\d+)/i);
-    if (match) datos.folio = match[1].trim();
-    
+    if (match) { datos.folio = match[1].trim(); }
     match = texto.match(/Fecha[^:]*:\s*([\d-]+)/i);
-    if (match) datos.fecha = match[1].trim();
-    
+    if (match) { datos.fecha = match[1].trim(); }
     return datos;
 }
 
-// ============================================
-// EXTRACCIÓN DE DATOS DE PRODUCTO
-// ============================================
 function extraerDatosProducto(texto) {
     const producto = { nombre: null, precio: 0, proveedor: null, cantidad: 1, codigo: null };
-    
     let match = texto.match(/(?:Producto|Nombre|Item|Descripción)[^:]*:\s*([^\n]+)/i);
     if (!match) {
         const lineas = texto.split('\n');
         for (const linea of lineas) {
-            if (linea.trim().length > 3 && !linea.match(/^\d/)) {
-                producto.nombre = linea.trim();
-                break;
-            }
+            if (linea.trim().length > 3 && !linea.match(/^\d/)) { producto.nombre = linea.trim(); break; }
         }
-    } else {
-        producto.nombre = match[1].trim();
-    }
-    
-    match = texto.match(/(?:Precio|Valor|Costo)[^:]*[:=]\s*\$?\s*([\d.,]+)/i);
-    if (!match) match = texto.match(/([\d.,]+)\s*$/);
-    if (match) {
-        const precioStr = match[1].replace(/[.,]/g, m => m === '.' ? '' : '.');
-        producto.precio = parseFloat(precioStr) || 0;
-    }
-    
+    } else { producto.nombre = match[1].trim(); }
+    match = texto.match(/(?:Precio|Valor|Costo)[^:]*[:=]\s*\$?\s*([\d.,]+)/i) || texto.match(/([\d.,]+)\s*$/);
+    if (match) { producto.precio = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.')) || 0; }
     match = texto.match(/(?:Proveedor|Marca)[^:]*:\s*([^\n]+)/i);
-    if (match) producto.proveedor = match[1].trim();
-    
+    if (match) { producto.proveedor = match[1].trim(); }
     match = texto.match(/(?:Cantidad|Qty)[^:]*:\s*(\d+)/i);
-    if (match) producto.cantidad = parseInt(match[1]) || 1;
-    
+    if (match) { producto.cantidad = parseInt(match[1]) || 1; }
     match = texto.match(/(?:Código|Code)[^:]*:\s*([^\n]+)/i);
-    if (match) producto.codigo = match[1].trim();
-    
+    if (match) { producto.codigo = match[1].trim(); }
     return producto;
 }
 
-// ============================================
-// AGREGAR PRODUCTO AL STOCK
-// ============================================
 async function agregarProductoAlStock(producto) {
     try {
         const resp = await fetch(`${API_URL}/api/repuestos/from_scan`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                texto: JSON.stringify(producto)
-            })
+            body: JSON.stringify({ texto: JSON.stringify(producto) })
         });
-        
         const result = await resp.json();
-        if (result.success) {
-            alert(`✅ ${result.mensaje}`);
-            if (document.getElementById('tabRepuestos') && document.getElementById('tabRepuestos').classList.contains('active')) {
-                cargarRepuestos();
-            }
-        } else {
-            alert('❌ Error al agregar producto: ' + (result.error || 'Desconocido'));
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('❌ Error de conexión');
-    }
-}
-
-// ============================================
-// TABS
-// ============================================
-function cambiarTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    const tabMap = {
-        'gastos': 'tabGastos',
-        'proveedores': 'tabProveedores',
-        'sueldos': 'tabSueldos'
-    };
-    document.getElementById(tabMap[tab]).classList.add('active');
-    document.querySelector(`.tab-btn[onclick*="${tab}"]`).classList.add('active');
-    
-    if (tab === 'proveedores') cargarProveedores();
-    if (tab === 'sueldos') cargarPlanilla();
+        if (result.success) { alert(`✅ ${result.mensaje}`); } 
+        else { alert('❌ Error: ' + (result.error || 'Desconocido')); }
+    } catch (error) { alert('❌ Error de conexión'); }
 }
 
 // ============================================
@@ -958,18 +930,7 @@ async function cargarProveedores() {
         `).join('');
         const datalist = document.getElementById('listaProveedoresGasto');
         datalist.innerHTML = proveedoresLista.map(p => `<option value="${p.nombre}">`).join('');
-    } catch(e) {
-        console.error('Error cargando proveedores:', e);
-    }
-}
-
-function abrirModalProveedor() {
-    document.getElementById('modalProveedor').style.display = 'flex';
-    document.getElementById('formProveedor').reset();
-}
-
-function cerrarModalProveedor() {
-    document.getElementById('modalProveedor').style.display = 'none';
+    } catch(e) { console.error('Error cargando proveedores:', e); }
 }
 
 document.getElementById('formProveedor').addEventListener('submit', async function(e) {
@@ -1007,16 +968,11 @@ function agregarEmpleadoPlanilla() {
     if (!nombre) return;
     const cargo = prompt('Cargo:') || '';
     const sueldoBase = parseFloat(prompt('Sueldo base mensual ($):')) || 0;
-    
     empleadosPlanilla.push({
         id: Date.now(),
-        nombre,
-        cargo,
+        nombre, cargo,
         sueldo_base: sueldoBase,
-        comision: 0,
-        horas_extras: 0,
-        bonos: 0,
-        descuentos: 0,
+        comision: 0, horas_extras: 0, bonos: 0, descuentos: 0,
         sueldo_neto: sueldoBase
     });
     renderPlanilla();
@@ -1025,41 +981,26 @@ function agregarEmpleadoPlanilla() {
 function renderPlanilla() {
     const tbody = document.getElementById('cuerpoPlanilla');
     let totalBase = 0, totalComision = 0, totalExtras = 0, totalBonos = 0, totalDescuentos = 0, totalNeto = 0;
-    
     if (empleadosPlanilla.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px 0;">
-                    <span class="material-symbols-rounded" style="font-size:32px;">person_off</span>
-                    <p style="font-size:14px;">No hay empleados en la planilla</p>
-                    <button onclick="agregarEmpleadoPlanilla()" class="btn btn-sm btn-primary" style="margin-top:8px;">
-                        <span class="material-symbols-rounded" style="font-size:16px;">person_add</span>
-                        Agregar Empleado
-                    </button>
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px 0;">
+            <span class="material-symbols-rounded" style="font-size:32px;">person_off</span>
+            <p style="font-size:14px;">No hay empleados en la planilla</p>
+            <button onclick="agregarEmpleadoPlanilla()" class="btn btn-sm btn-primary" style="margin-top:8px;">
+                <span class="material-symbols-rounded" style="font-size:16px;">person_add</span> Agregar Empleado
+            </button>
+        </td></tr>`;
         document.getElementById('totalPlanilla').textContent = '$0';
         return;
     }
-    
     tbody.innerHTML = empleadosPlanilla.map((e, i) => {
         const neto = (e.sueldo_base || 0) + (e.comision || 0) + (e.horas_extras || 0) + (e.bonos || 0) - (e.descuentos || 0);
         e.sueldo_neto = neto;
-        totalBase += e.sueldo_base || 0;
-        totalComision += e.comision || 0;
-        totalExtras += e.horas_extras || 0;
-        totalBonos += e.bonos || 0;
-        totalDescuentos += e.descuentos || 0;
-        totalNeto += neto;
-        
+        totalBase += e.sueldo_base || 0; totalComision += e.comision || 0;
+        totalExtras += e.horas_extras || 0; totalBonos += e.bonos || 0;
+        totalDescuentos += e.descuentos || 0; totalNeto += neto;
         return `<tr>
-            <td>
-                ${e.nombre} 
-                <span style="color:var(--text-muted);font-size:11px;">${e.cargo || ''}</span>
-                <button onclick="eliminarEmpleadoPlanilla(${i})" 
-                        style="background:transparent;border:none;color:var(--accent-red);cursor:pointer;font-size:14px;margin-left:6px;"
-                        title="Eliminar empleado">
+            <td>${e.nombre} <span style="color:var(--text-muted);font-size:11px;">${e.cargo || ''}</span>
+                <button onclick="eliminarEmpleadoPlanilla(${i})" style="background:transparent;border:none;color:var(--accent-red);cursor:pointer;font-size:14px;margin-left:6px;">
                     <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
                 </button>
             </td>
@@ -1071,7 +1012,6 @@ function renderPlanilla() {
             <td style="text-align:right;font-weight:700;color:var(--accent-green);">$${neto.toLocaleString()}</td>
         </tr>`;
     }).join('');
-    
     document.getElementById('total_base').textContent = '$' + totalBase.toLocaleString();
     document.getElementById('total_comision').textContent = '$' + totalComision.toLocaleString();
     document.getElementById('total_extras').textContent = '$' + totalExtras.toLocaleString();
@@ -1092,28 +1032,20 @@ function eliminarEmpleadoPlanilla(index) {
     renderPlanilla();
 }
 
-function cargarPlanilla() {
-    renderPlanilla();
-}
+function cargarPlanilla() { renderPlanilla(); }
 
 async function guardarPlanilla() {
-    if (empleadosPlanilla.length === 0) {
-        alert('⚠️ No hay empleados en la planilla');
-        return;
-    }
+    if (empleadosPlanilla.length === 0) { alert('⚠️ No hay empleados en la planilla'); return; }
     const mes = document.getElementById('mes_planilla').value;
     const anio = document.getElementById('anio_planilla').value;
     const total = empleadosPlanilla.reduce((s,e) => s + (e.sueldo_neto || 0), 0);
-    
     if (!confirm(`¿Guardar planilla de ${mes}/${anio} por $${total.toLocaleString()}?`)) return;
-    
     try {
         const resp = await fetch(`${API_URL}/api/planilla_sueldos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                mes: parseInt(mes),
-                anio: parseInt(anio),
+                mes: parseInt(mes), anio: parseInt(anio),
                 empleados: empleadosPlanilla,
                 pagado: true,
                 fecha_pago: new Date().toISOString().split('T')[0],
@@ -1130,20 +1062,8 @@ async function guardarPlanilla() {
 }
 
 // ============================================
-// GASTOS
+// GASTOS - FORMULARIO
 // ============================================
-function abrirModalGasto() {
-    document.getElementById('modalNuevoGasto').style.display = 'flex';
-    document.getElementById('formNuevoGasto').reset();
-    detenerEscanner();
-    cargarProveedores();
-}
-
-function cerrarModalGasto() {
-    document.getElementById('modalNuevoGasto').style.display = 'none';
-    detenerEscanner();
-}
-
 document.getElementById('btnEscanear').addEventListener('click', async function(e) {
     e.preventDefault();
     await iniciarEscanner();
@@ -1194,14 +1114,9 @@ document.getElementById('formNuevoGasto').addEventListener('submit', async funct
 function filtrarGastos(metodo, btn) {
     document.querySelectorAll('.filtro-gasto').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    
     document.querySelectorAll('#listaGastos .card').forEach(card => {
-        if (metodo === 'todos') {
-            card.style.display = '';
-        } else {
-            const dataMetodo = card.dataset.metodo || '';
-            card.style.display = dataMetodo === metodo ? '' : 'none';
-        }
+        if (metodo === 'todos') { card.style.display = ''; } 
+        else { card.style.display = card.dataset.metodo === metodo ? '' : 'none'; }
     });
 }
 
@@ -1222,7 +1137,6 @@ document.getElementById('modalProveedor').addEventListener('click', function(e) 
     if (e.target === this) cerrarModalProveedor();
 });
 
-// Cargar datos iniciales
 document.addEventListener('DOMContentLoaded', function() {
     cargarProveedores();
 });
