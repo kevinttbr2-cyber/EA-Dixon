@@ -236,12 +236,14 @@
     font-weight: 600 !important;
 }
 
-/* Dropdown 3 puntos (moderno) */
+/* Contenedor del dropdown */
 .dropdown-3p {
     position: relative !important;
     display: inline-block !important;
+    z-index: 9999999 !important;
 }
 
+/* Botón de 3 puntos */
 .dropdown-3p .btn-3p {
     background: transparent !important;
     border: none !important;
@@ -252,6 +254,8 @@
     transition: var(--transition) !important;
     border-radius: 6px !important;
     line-height: 1 !important;
+    position: relative !important;
+    z-index: 9999999 !important;
 }
 
 .dropdown-3p .btn-3p:hover {
@@ -259,6 +263,7 @@
     background: var(--bg-hover) !important;
 }
 
+/* Menú desplegable */
 .dropdown-3p .menu-3p {
     display: none !important;
     position: absolute !important;
@@ -269,15 +274,18 @@
     border: 1px solid var(--border-subtle) !important;
     border-radius: var(--radius-md) !important;
     padding: 6px 0 !important;
-    min-width: 180px !important;
+    min-width: 190px !important;
     box-shadow: var(--shadow-hover) !important;
     z-index: 9999999 !important;
+    /* Asegurar que no sea recortado */
+    overflow: visible !important;
 }
 
 .dropdown-3p .menu-3p.show {
     display: block !important;
 }
 
+/* Items del menú */
 .dropdown-3p .menu-3p button,
 .dropdown-3p .menu-3p a {
     display: flex !important;
@@ -294,6 +302,7 @@
     cursor: pointer !important;
     transition: var(--transition) !important;
     border-radius: 0 !important;
+    white-space: nowrap !important;
 }
 
 .dropdown-3p .menu-3p button:hover,
@@ -302,6 +311,7 @@
     color: var(--text-primary) !important;
 }
 
+/* Colores especiales */
 .dropdown-3p .menu-3p .text-danger {
     color: var(--accent-red) !important;
 }
@@ -317,12 +327,14 @@
 .dropdown-3p .menu-3p .text-warning {
     color: var(--accent-yellow) !important;
 }
+
 .dropdown-3p .menu-3p .divider {
     border: none !important;
     border-top: 1px solid var(--border-subtle) !important;
     margin: 4px 0 !important;
 }
 
+/* Versión hacia arriba (para móvil) */
 .dropdown-3p.dropup .menu-3p {
     top: auto !important;
     bottom: 100% !important;
