@@ -1688,7 +1688,290 @@ def importar_repuestos():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+# ============================================
+# RUTAS PARA DEUDORES
+# ============================================
 
+@app.route('/api/deudores/<cliente_nombre>', methods=['GET'])
+def obtener_deudor(cliente_nombre):
+    """Obtiene el estado de deuda de un cliente por nombre"""
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT id, cliente_nombre, patente, telefono, 
+                   monto_deuda, monto_original, estado, 
+                   fecha_deuda, fecha_actualizacion, ultimo_pago,
+                   observaciones
+            FROM deudores 
+            WHERE cliente_nombre ILIKE %s
+            ORDER BY fecha_actualizacion DESC
+            LIMIT 1
+        """, (cliente_nombre,))
+        
+        deudor = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if deudor:
+            return jsonify(dict(deudor))
+        return jsonify({"success": False, "mensaje": "Cliente sin deudas"}), 404
+    except Exception as e:
+        print(f"❌ Error en obtener_deudor: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/deudores', methods=['POST'])
+def registrar_deuda():
+    """Registra una nueva deuda o actualiza una existente"""
+    try:
+        data = request.json
+        cliente_nombre = data.get('cliente_nombre', '').strip()
+        patente = data.get('patente', '').strip().upper()
+        telefono = data.get('telefono', '').strip()
+        monto_deuda = float(data.get('monto_deuda', 0))
+        monto_original = float(data.get('monto_original', monto_deuda))
+        id_registro = data.get('id_registro')
+        descripcion = data.get('descripcion', '')
+        
+        if not cliente_nombre or monto_deuda <= 0:
+            return jsonify({"error": "Cliente y monto son obligatorios"}), 400
+        
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Buscar si el cliente ya tiene deuda
+        cur.execute("""
+            SELECT id, monto_deuda, estado FROM deudores 
+            WHERE cliente_nombre ILIKE %s
+            ORDER BY fecha_actualizacion DESC
+            LIMIT 1
+        """, (cliente_nombre,))
+        
+        existente = cur.fetchone()
+        
+        if existente:
+            deudor_id, monto_actual, estado_actual = existente
+            nuevo_monto = monto_actual + monto_deuda
+            
+            # Determinar nuevo estado
+            if estado_actual == 'negro':
+                nuevo_estado = 'negro'
+            elif nuevo_monto > 100000:
+                nuevo_estado = 'rojo'
+            elif nuevo_monto > 30000:
+                nuevo_estado = 'amarillo'
+            else:
+                nuevo_estado = 'verde'
+            
+            cur.execute("""
+                UPDATE deudores 
+                SET monto_deuda = %s,
+                    monto_original = monto_original + %s,
+                    estado = %s,
+                    fecha_actualizacion = NOW() AT TIME ZONE 'America/Santiago',
+                    observaciones = %s
+                WHERE id = %s
+            """, (nuevo_monto, monto_original, nuevo_estado, descripcion, deudor_id))
+            
+            # Guardar en historial
+            cur.execute("""
+                INSERT INTO historial_deudas 
+                (deudor_id, cliente_nombre, patente, monto_deuda, 
+                 monto_abonado, saldo_restante, tipo, descripcion, id_registro)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                deudor_id, cliente_nombre, patente, monto_deuda,
+                0, nuevo_monto, 'deuda', descripcion, id_registro
+            ))
+            
+            mensaje = f"✅ Deuda actualizada: ${nuevo_monto:,.0f}"
+        else:
+            # Determinar estado inicial
+            if monto_deuda > 100000:
+                estado = 'rojo'
+            elif monto_deuda > 30000:
+                estado = 'amarillo'
+            else:
+                estado = 'verde'
+            
+            cur.execute("""
+                INSERT INTO deudores 
+                (cliente_nombre, patente, telefono, monto_deuda, 
+                 monto_original, estado, observaciones)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (cliente_nombre, patente, telefono, monto_deuda, 
+                  monto_original, estado, descripcion))
+            
+            deudor_id = cur.fetchone()[0]
+            
+            cur.execute("""
+                INSERT INTO historial_deudas 
+                (deudor_id, cliente_nombre, patente, monto_deuda, 
+                 monto_abonado, saldo_restante, tipo, descripcion, id_registro)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                deudor_id, cliente_nombre, patente, monto_deuda,
+                0, monto_deuda, 'deuda', descripcion, id_registro
+            ))
+            
+            mensaje = f"✅ Nueva deuda registrada: ${monto_deuda:,.0f}"
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "mensaje": mensaje,
+            "deudor": {
+                "cliente": cliente_nombre,
+                "monto_deuda": monto_deuda,
+                "estado": estado if not existente else nuevo_estado
+            }
+        })
+    except Exception as e:
+        print(f"❌ Error en registrar_deuda: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/deudores/pagar', methods=['POST'])
+def pagar_deuda():
+    """Registra un pago parcial o total de una deuda"""
+    try:
+        data = request.json
+        cliente_nombre = data.get('cliente_nombre', '').strip()
+        monto_abonado = float(data.get('monto_abonado', 0))
+        id_registro = data.get('id_registro')
+        descripcion = data.get('descripcion', 'Pago de deuda')
+        
+        if not cliente_nombre or monto_abonado <= 0:
+            return jsonify({"error": "Cliente y monto son obligatorios"}), 400
+        
+        from database import get_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT id, monto_deuda, estado FROM deudores 
+            WHERE cliente_nombre ILIKE %s
+            ORDER BY fecha_actualizacion DESC
+            LIMIT 1
+        """, (cliente_nombre,))
+        
+        deudor = cur.fetchone()
+        if not deudor:
+            return jsonify({"error": "Cliente sin deuda registrada"}), 404
+        
+        deudor_id, monto_deuda, estado_actual = deudor
+        nuevo_monto = max(0, monto_deuda - monto_abonado)
+        
+        # Determinar nuevo estado
+        if estado_actual == 'negro' and nuevo_monto > 0:
+            nuevo_estado = 'negro'
+        elif nuevo_monto == 0:
+            nuevo_estado = 'verde'
+        elif nuevo_monto > 100000:
+            nuevo_estado = 'rojo'
+        elif nuevo_monto > 30000:
+            nuevo_estado = 'amarillo'
+        else:
+            nuevo_estado = 'verde'
+        
+        cur.execute("""
+            UPDATE deudores 
+            SET monto_deuda = %s,
+                estado = %s,
+                ultimo_pago = NOW() AT TIME ZONE 'America/Santiago',
+                fecha_actualizacion = NOW() AT TIME ZONE 'America/Santiago'
+            WHERE id = %s
+        """, (nuevo_monto, nuevo_estado, deudor_id))
+        
+        # Guardar en historial
+        cur.execute("""
+            INSERT INTO historial_deudas 
+            (deudor_id, cliente_nombre, monto_deuda, monto_abonado, 
+             saldo_restante, tipo, descripcion, id_registro)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            deudor_id, cliente_nombre, monto_deuda, monto_abonado,
+            nuevo_monto, 'abono', descripcion, id_registro
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        mensaje = f"✅ Abono registrado: ${monto_abonado:,.0f} - Saldo restante: ${nuevo_monto:,.0f}"
+        if nuevo_monto == 0:
+            mensaje = f"✅ ¡DEUDA LIQUIDADA! Se abonó ${monto_abonado:,.0f}"
+        
+        return jsonify({
+            "success": True,
+            "mensaje": mensaje,
+            "saldo_restante": nuevo_monto,
+            "estado": nuevo_estado
+        })
+    except Exception as e:
+        print(f"❌ Error en pagar_deuda: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/deudores/historial/<cliente_nombre>', methods=['GET'])
+def historial_deudas_cliente(cliente_nombre):
+    """Obtiene el historial de deudas de un cliente"""
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT * FROM historial_deudas 
+            WHERE cliente_nombre ILIKE %s
+            ORDER BY fecha DESC
+            LIMIT 50
+        """, (cliente_nombre,))
+        
+        historial = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        
+        return jsonify(historial)
+    except Exception as e:
+        print(f"❌ Error en historial_deudas_cliente: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/deudores/todos', methods=['GET'])
+def obtener_todos_deudores():
+    """Obtiene todos los deudores con saldo pendiente"""
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT id, cliente_nombre, patente, telefono, 
+                   monto_deuda, monto_original, estado, 
+                   fecha_deuda, fecha_actualizacion, ultimo_pago
+            FROM deudores 
+            WHERE monto_deuda > 0
+            ORDER BY monto_deuda DESC
+        """)
+        
+        deudores = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        
+        return jsonify(deudores)
+    except Exception as e:
+        print(f"❌ Error en obtener_todos_deudores: {e}")
+        return jsonify({"error": str(e)}), 500
 
 # ============================
 # CREAR ADMIN AL INICIAR
