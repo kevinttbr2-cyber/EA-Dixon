@@ -1485,24 +1485,31 @@ def asignar_categoria_repuesto(id_repuesto):
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/api/repuestos/categoria/<categoria_nombre>', methods=['GET'])
-def obtener_repuestos_por_categoria(categoria_nombre):
+@app.route('/api/repuestos', methods=['GET'])
+def obtener_repuestos():
+    """✅ VERSION ACTUALIZADA CON CATEGORIA - 2026-07-18"""
     try:
         from database import get_cursor
         conn, cur = get_cursor()
+        
         cur.execute("""
-            SELECT * FROM repuestos 
-            WHERE categoria_nombre = %s 
-            ORDER BY nombre
-        """, (categoria_nombre,))
+            SELECT id, nombre, stock, costo_proveedor, 
+                   costo_proveedor_pendiente, margen_ganancia, 
+                   costo_venta_final, proveedor, categoria_nombre
+            FROM repuestos 
+            ORDER BY id DESC
+        """)
+        
         repuestos = [dict(row) for row in cur.fetchall()]
         cur.close()
         conn.close()
+        
         return jsonify(repuestos)
     except Exception as e:
-        print(f"❌ Error en obtener_repuestos_por_categoria: {e}")
+        print(f"❌ Error en obtener_repuestos: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify([])
-
 
 # ============================================
 # IMPORTAR PRODUCTOS CON CATEGORÍAS Y STOCK
