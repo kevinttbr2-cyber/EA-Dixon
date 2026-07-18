@@ -1866,18 +1866,17 @@ def registrar_deuda():
 
 
 # ============================================
-# RUTA PARA PAGAR DEUDA (CON UPDATE EN pagos)
+# PAGAR DEUDA (CON UPDATE - SUMA EN EL REGISTRO ORIGINAL)
 # ============================================
 @app.route('/api/deudores/pagar', methods=['POST'])
 def pagar_deuda():
-    """Registra un pago parcial o total de una deuda como NUEVO registro en pagos"""
+    """Registra un pago de deuda ACTUALIZANDO el registro original (suma el monto)"""
     try:
         data = request.json
         print("📥 Datos recibidos en pagar_deuda:", data)
         
         cliente_nombre = data.get('cliente_nombre', '').strip()
         monto_abonado = float(data.get('monto_abonado', 0))
-        id_registro = data.get('id_registro')
         descripcion = data.get('descripcion', 'Pago de deuda')
         forma_pago = data.get('forma_pago', 'efectivo')
         
@@ -1894,7 +1893,8 @@ def pagar_deuda():
         # 1. BUSCAR EL DEUDOR
         # ============================================
         cur.execute("""
-            SELECT id, monto_deuda, estado, frecuencia_deudas, patente, id_registro FROM deudores 
+            SELECT id, monto_deuda, estado, frecuencia_deudas, patente, id_registro 
+            FROM deudores 
             WHERE cliente_nombre ILIKE %s
             ORDER BY fecha_actualizacion DESC
             LIMIT 1
@@ -1911,61 +1911,108 @@ def pagar_deuda():
         monto_deuda = float(monto_deuda) if monto_deuda else 0
         print(f"📊 Deuda encontrada: ID={deudor_id}, Monto={monto_deuda}, Estado={estado_actual}")
         
+        # Calcular nuevo saldo de deuda
         nuevo_monto = max(0, monto_deuda - monto_abonado)
-        print(f"💰 Nuevo monto: {nuevo_monto}")
+        print(f"💰 Nuevo saldo de deuda: {nuevo_monto}")
         
-        # Determinar nuevo estado
-        if estado_actual == 'negro' and nuevo_monto > 0:
-            nuevo_estado = 'negro'
-        elif nuevo_monto == 0:
+        # ============================================
+        # 2. DETERMINAR NUEVO ESTADO
+        # ============================================
+        if nuevo_monto == 0:
             nuevo_estado = 'verde'
             print(f"🎉 Deuda liquidada para: {cliente_nombre}")
-        elif nuevo_monto > 100000:
-            nuevo_estado = 'rojo'
-        elif nuevo_monto > 30000:
-            nuevo_estado = 'rojo'
-        elif nuevo_monto > 0:
-            nuevo_estado = 'amarillo'
         else:
-            nuevo_estado = 'verde'
+            nuevo_estado = 'amarillo'
+            print(f"🟡 Cliente sigue debiendo: ${nuevo_monto}")
         
         print(f"🔄 Nuevo estado: {nuevo_estado}")
         
         # ============================================
-        # 2. CREAR NUEVO REGISTRO EN pagos (NO SUMAR)
+        # 3. BUSCAR EL REGISTRO ORIGINAL EN pagos
         # ============================================
         from datetime import datetime
         import pytz
         
         chile_tz = pytz.timezone('America/Santiago')
         ahora = datetime.now(chile_tz)
-        fecha_hoy = ahora.strftime('%Y-%m-%d')
         hora_ahora = ahora.strftime('%H:%M:%S')
         
-        # ✅ SIEMPRE CREAR NUEVO REGISTRO
-        cur.execute("""
-            INSERT INTO pagos 
-            (nombre, patente, monto, fecha, hora, estado, tipo_venta, 
-             observaciones_pago, atendido_por, forma_pago, diagnostico, reparacion)
-            VALUES (%s, %s, %s, %s, %s, 'pagado', 'deuda', %s, %s, %s, %s, %s)
-            RETURNING id
-        """, (
-            cliente_nombre,
-            patente or '',
-            monto_abonado,
-            fecha_hoy,
-            hora_ahora,
-            f"💰 Pago de deuda: {descripcion} | Deuda original: ${monto_deuda:,.0f}",
-            'Sistema',
-            forma_pago,
-            'Pago de deuda',
-            'Pago de deuda'
-        ))
-        id_pago = cur.fetchone()[0]
-        print(f"✅ Nuevo registro #{id_pago} creado para pago de deuda")
+        id_pago = None
+        monto_original = 0
+        
+        # Primero, buscar por el id_registro guardado en la deuda
+        if id_registro_original:
+            cur.execute("SELECT id, monto FROM pagos WHERE id = %s", (id_registro_original,))
+            registro = cur.fetchone()
+            if registro:
+                id_pago = registro[0]
+                monto_original = float(registro[1]) if registro[1] else 0
+                print(f"✅ Registro original encontrado: ID={id_pago}, Monto={monto_original}")
+        
+        # Si no se encontró por id_registro, buscar el más reciente del cliente
+        if not id_pago:
+            cur.execute("""
+                SELECT id, monto FROM pagos 
+                WHERE nombre ILIKE %s 
+                ORDER BY fecha DESC, id DESC
+                LIMIT 1
+            """, (cliente_nombre,))
+            registro = cur.fetchone()
+            if registro:
+                id_pago = registro[0]
+                monto_original = float(registro[1]) if registro[1] else 0
+                print(f"✅ Registro más reciente encontrado: ID={id_pago}, Monto={monto_original}")
         
         # ============================================
-        # 3. ACTUALIZAR LA DEUDA
+        # 4. ACTUALIZAR EL REGISTRO (SUMA EL MONTO)
+        # ============================================
+        if id_pago:
+            # ✅ SUMAR el monto al registro original
+            nuevo_monto_total = monto_original + monto_abonado
+            
+            cur.execute("""
+                UPDATE pagos 
+                SET monto = %s,
+                    observaciones_pago = COALESCE(observaciones_pago || ' | ', '') || %s,
+                    hora = %s,
+                    forma_pago = %s,
+                    updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                WHERE id = %s
+            """, (
+                nuevo_monto_total,
+                f"💰 Pago de deuda: {descripcion} | Deuda restante: ${nuevo_monto:,.0f}",
+                hora_ahora,
+                forma_pago,
+                id_pago
+            ))
+            print(f"✅ Registro #{id_pago} ACTUALIZADO: ${monto_original:,.0f} → ${nuevo_monto_total:,.0f}")
+        else:
+            # Si no hay registro, crear uno nuevo (caso extremo)
+            fecha_hoy = ahora.strftime('%Y-%m-%d')
+            cur.execute("""
+                INSERT INTO pagos 
+                (nombre, patente, monto, fecha, hora, estado, tipo_venta, 
+                 observaciones_pago, atendido_por, forma_pago, diagnostico, reparacion)
+                VALUES (%s, %s, %s, %s, %s, 'pagado', 'deuda', %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                cliente_nombre,
+                patente or '',
+                monto_abonado,
+                fecha_hoy,
+                hora_ahora,
+                f"💰 Pago de deuda: {descripcion} | Deuda restante: ${nuevo_monto:,.0f}",
+                'Sistema',
+                forma_pago,
+                'Pago de deuda',
+                'Pago de deuda'
+            ))
+            id_pago = cur.fetchone()[0]
+            nuevo_monto_total = monto_abonado
+            print(f"✅ Nuevo registro #{id_pago} creado (no se encontró registro original)")
+        
+        # ============================================
+        # 5. ACTUALIZAR LA DEUDA
         # ============================================
         cur.execute("""
             UPDATE deudores 
@@ -1978,47 +2025,41 @@ def pagar_deuda():
         """, (nuevo_monto, nuevo_estado, id_pago, deudor_id))
         
         # ============================================
-        # 4. GUARDAR EN HISTORIAL DE DEUDAS
+        # 6. GUARDAR EN HISTORIAL DE DEUDAS
         # ============================================
-        try:
-            cur.execute("""
-                INSERT INTO historial_deudas 
-                (deudor_id, cliente_nombre, patente, monto_deuda, monto_abonado, 
-                 saldo_restante, tipo, descripcion, id_registro)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                deudor_id, cliente_nombre, patente or '', monto_deuda, monto_abonado,
-                nuevo_monto, 'abono', f"Pago de deuda: {descripcion}", id_pago
-            ))
-            print("✅ Historial registrado correctamente")
-        except Exception as e:
-            print(f"⚠️ Error al guardar historial: {e}")
-            conn.rollback()
-            cur.execute("""
-                INSERT INTO historial_deudas 
-                (deudor_id, cliente_nombre, patente, monto_deuda, monto_abonado, 
-                 saldo_restante, tipo, descripcion)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                deudor_id, cliente_nombre, patente or '', monto_deuda, monto_abonado,
-                nuevo_monto, 'abono', f"Pago de deuda: {descripcion}"
-            ))
-            conn.commit()
-            print("✅ Historial registrado sin id_registro")
+        cur.execute("""
+            INSERT INTO historial_deudas 
+            (deudor_id, cliente_nombre, patente, monto_deuda, monto_abonado, 
+             saldo_restante, tipo, descripcion, id_registro)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            deudor_id, 
+            cliente_nombre, 
+            patente or '', 
+            monto_deuda, 
+            monto_abonado,
+            nuevo_monto, 
+            'abono', 
+            f"Pago de deuda: {descripcion}", 
+            id_pago
+        ))
+        print("✅ Historial registrado correctamente")
         
         conn.commit()
         cur.close()
         conn.close()
         
         # ============================================
-        # 5. MENSAJE DE CONFIRMACIÓN
+        # 7. MENSAJE DE CONFIRMACIÓN
         # ============================================
         mensaje = f"✅ Pago de deuda registrado correctamente\n\n"
         mensaje += f"💰 Monto pagado: ${monto_abonado:,.0f}\n"
         mensaje += f"📌 Saldo restante: ${nuevo_monto:,.0f}\n"
-        mensaje += f"📋 Nuevo registro #{id_pago} creado en el sistema"
+        mensaje += f"📋 Registro #{id_pago} ACTUALIZADO: ${monto_original:,.0f} → ${nuevo_monto_total:,.0f}\n"
         if nuevo_monto == 0:
-            mensaje += f"\n🎉 ¡DEUDA LIQUIDADA!"
+            mensaje += f"🟢 ¡DEUDA LIQUIDADA!"
+        else:
+            mensaje += f"🟡 Cliente sigue debiendo: ${nuevo_monto:,.0f}"
         
         return jsonify({
             "success": True,
@@ -2026,14 +2067,14 @@ def pagar_deuda():
             "saldo_restante": nuevo_monto,
             "estado": nuevo_estado,
             "frecuencia": frecuencia,
-            "id_pago": id_pago
+            "id_pago": id_pago,
+            "monto_total": nuevo_monto_total
         })
     except Exception as e:
         print(f"❌ Error en pagar_deuda: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 @app.route('/api/deudores/historial/<cliente_nombre>', methods=['GET'])
 def historial_deudas_cliente(cliente_nombre):
     """Obtiene el historial de deudas de un cliente"""
