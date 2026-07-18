@@ -1485,7 +1485,6 @@ function handleFileSelectProductos(e) {
         procesarArchivoProductos(file);
     }
 }
-
 function procesarArchivoProductos(file) {
     console.log('📂 1. Iniciando procesamiento del archivo:', file.name);
     
@@ -1535,23 +1534,73 @@ function procesarArchivoProductos(file) {
             const columnas = Object.keys(jsonData[0]);
             console.log('📂 4. Columnas encontradas:', columnas);
             
-            // ✅ BUSCAR COLUMNAS POR NOMBRE EXACTO (sin importar mayúsculas)
-            const colProducto = columnas.find(col => col.toLowerCase() === 'producto');
-            const colCosto = columnas.find(col => col.toLowerCase() === 'costo proveedor');
-            const colPrecio = columnas.find(col => col.toLowerCase() === 'precio venta');
-            const colProveedor = columnas.find(col => col.toLowerCase() === 'proveedor');
-            const colCategoria = columnas.find(col => col.toLowerCase() === 'categoría');
-            const colSubcategoria = columnas.find(col => col.toLowerCase() === 'subcategoría');
-            const colStock = columnas.find(col => col.toLowerCase() === 'stock');
+            // ================================================================
+            // ✅ BUSCAR COLUMNA DE CATEGORÍA CON MÁS FLEXIBILIDAD
+            // ================================================================
+            const colProducto = columnas.find(col => 
+                col.toLowerCase().trim() === 'producto' || 
+                col.toLowerCase().trim() === 'productos' ||
+                col.toLowerCase().trim() === 'nombre'
+            );
+            
+            const colCosto = columnas.find(col => 
+                col.toLowerCase().trim() === 'costo proveedor' || 
+                col.toLowerCase().trim() === 'costo_proveedor' ||
+                col.toLowerCase().trim() === 'costo'
+            );
+            
+            const colPrecio = columnas.find(col => 
+                col.toLowerCase().trim() === 'precio venta' || 
+                col.toLowerCase().trim() === 'precio_venta' ||
+                col.toLowerCase().trim() === 'precio'
+            );
+            
+            const colProveedor = columnas.find(col => 
+                col.toLowerCase().trim() === 'proveedor'
+            );
+            
+            // ✅ BUSCAR CATEGORÍA (más flexible)
+            const colCategoria = columnas.find(col => {
+                const lower = col.toLowerCase().trim();
+                return lower === 'categoría' || 
+                       lower === 'categoria' || 
+                       lower === 'categorias' ||
+                       lower === 'categoria_nombre' ||
+                       lower === 'categoria nombre' ||
+                       lower === 'cat' ||
+                       lower === 'categoria';
+            });
+            
+            // ✅ BUSCAR SUBCATEGORÍA (más flexible)
+            const colSubcategoria = columnas.find(col => {
+                const lower = col.toLowerCase().trim();
+                return lower === 'subcategoría' || 
+                       lower === 'subcategoria' || 
+                       lower === 'subcategorias' ||
+                       lower === 'subcategoria_nombre' ||
+                       lower === 'subcategoria nombre' ||
+                       lower === 'subcat' ||
+                       lower === 'subcategoria';
+            });
+            
+            const colStock = columnas.find(col => 
+                col.toLowerCase().trim() === 'stock'
+            );
             
             console.log('📂 5. Columnas mapeadas:');
             console.log('   - Producto:', colProducto);
             console.log('   - Costo:', colCosto);
             console.log('   - Precio:', colPrecio);
             console.log('   - Proveedor:', colProveedor);
-            console.log('   - Categoría:', colCategoria);
+            console.log('   - ✅ Categoría ENCONTRADA:', colCategoria);
             console.log('   - Subcategoría:', colSubcategoria);
             console.log('   - Stock:', colStock);
+            
+            // ⚠️ ALERTA si no encuentra categoría
+            if (!colCategoria) {
+                console.warn('⚠️ No se encontró columna de categoría. Columnas disponibles:', columnas);
+                alert('⚠️ No se encontró la columna "Categoría".\n\nColumnas disponibles en tu Excel:\n' + columnas.join(', '));
+            }
             
             if (!colProducto) {
                 alert('⚠️ No se encontró la columna "Producto".\n\nColumnas: ' + columnas.join(', '));
@@ -1566,19 +1615,23 @@ function procesarArchivoProductos(file) {
                 return;
             }
             
-            // ✅ PROCESAR DATOS - Asegurar que categoria y subcategoria se capturan
+            // ================================================================
+            // ✅ PROCESAR DATOS CON CATEGORÍA
+            // ================================================================
             datosProductos = jsonData.map(row => {
                 const nombre = String(row[colProducto] || '').trim();
                 const costo = parseFloat(row[colCosto] || 0);
                 const precioVenta = parseFloat(row[colPrecio] || 0);
                 const proveedor = colProveedor ? String(row[colProveedor] || 'Importado').trim() : 'Importado';
                 
-                // ✅ CAPTURAR CATEGORÍA Y SUBCATEGORÍA
+                // ✅ LEER CATEGORÍA (con verificación)
                 let categoria = '';
-                let subcategoria = '';
                 if (colCategoria) {
                     categoria = String(row[colCategoria] || '').trim();
                 }
+                
+                // ✅ LEER SUBCATEGORÍA
+                let subcategoria = '';
                 if (colSubcategoria) {
                     subcategoria = String(row[colSubcategoria] || '').trim();
                 }
@@ -1593,9 +1646,11 @@ function procesarArchivoProductos(file) {
                     margenFinal = Math.round(margenFinal * 10) / 10;
                 }
                 
-                // ✅ VERIFICAR QUE LA CATEGORÍA SE CAPTURÓ
+                // ✅ LOG PARA VERIFICAR QUE LA CATEGORÍA SE LEE
                 if (categoria) {
-                    console.log(`   ✅ Producto "${nombre}" tiene categoría: "${categoria}"`);
+                    console.log(`   ✅ "${nombre}" -> Categoría: "${categoria}"`);
+                } else {
+                    console.log(`   ⚠️ "${nombre}" -> SIN CATEGORÍA`);
                 }
                 
                 return { 
@@ -1604,7 +1659,7 @@ function procesarArchivoProductos(file) {
                     precio_venta: precioVenta,
                     margen: margenFinal,
                     proveedor: proveedor,
-                    categoria: categoria,      // ✅ Enviar categoría
+                    categoria: categoria,      // ✅ Enviar categoría (puede estar vacía)
                     subcategoria: subcategoria, // ✅ Enviar subcategoría
                     stock: stock
                 };
@@ -1613,11 +1668,16 @@ function procesarArchivoProductos(file) {
             console.log('📂 6. Productos procesados:', datosProductos.length);
             
             // ✅ CONTAR PRODUCTOS CON CATEGORÍA
-            const conCategoria = datosProductos.filter(p => p.categoria).length;
+            const conCategoria = datosProductos.filter(p => p.categoria && p.categoria.length > 0).length;
             console.log(`📂 7. Productos con categoría: ${conCategoria} de ${datosProductos.length}`);
             
+            if (conCategoria === 0) {
+                console.warn('⚠️ NINGÚN producto tiene categoría. Verifica que la columna "Categoría" exista en tu Excel.');
+                alert('⚠️ No se encontraron categorías en tu archivo.\n\nAsegúrate de que la columna se llame "Categoría" (con tilde o sin tilde).\n\nColumnas encontradas: ' + columnas.join(', '));
+            }
+            
             if (datosProductos.length === 0) {
-                alert('⚠️ No hay datos válidos para importar.\n\nAsegúrate de que:\n- Los nombres no estén vacíos\n- Costo y Precio sean números mayores a 0');
+                alert('⚠️ No hay datos válidos para importar.');
                 return;
             }
             
@@ -1639,6 +1699,7 @@ function procesarArchivoProductos(file) {
     
     reader.readAsArrayBuffer(file);
 }
+
 
 function mostrarPreviewProductos(datos) {
     console.log('📊 Mostrando preview, datos:', datos.length);
