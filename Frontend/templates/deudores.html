@@ -184,172 +184,6 @@
 }
 
 /* ============================================
-   MODAL HISTORIAL - PEQUEÑO Y ELEGANTE
-   ============================================ */
-.modal-historial-pequeno .modal-content {
-    max-width: 450px !important;
-    max-height: 60vh !important;
-    padding: 16px 20px !important;
-    background: var(--bg-secondary) !important;
-    border: 1px solid var(--border-subtle) !important;
-    border-radius: var(--radius-lg) !important;
-}
-
-.modal-historial-pequeno .modal-header {
-    padding-bottom: 8px !important;
-    margin-bottom: 8px !important;
-    border-bottom: 1px solid var(--border-subtle) !important;
-}
-
-.modal-historial-pequeno .modal-header h3 {
-    font-size: 16px !important;
-    margin: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    color: var(--text-primary) !important;
-}
-
-.modal-historial-pequeno .modal-header h3 .material-symbols-rounded {
-    font-size: 20px !important;
-    color: #4fc3f7 !important;
-}
-
-.modal-historial-pequeno .modal-header h3 .nombre-cliente {
-    color: #4fc3f7 !important;
-    font-weight: 700 !important;
-}
-
-.modal-historial-pequeno .modal-header .close-btn {
-    font-size: 20px !important;
-    padding: 0 !important;
-    background: transparent !important;
-    border: none !important;
-    color: var(--text-muted) !important;
-    cursor: pointer !important;
-}
-
-.modal-historial-pequeno .modal-header .close-btn:hover {
-    color: var(--text-primary) !important;
-}
-
-.modal-historial-pequeno #contenidoHistorialDeuda {
-    max-height: 200px !important;
-    overflow-y: auto !important;
-    padding: 4px 0 !important;
-}
-
-.modal-historial-pequeno .historial-item {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 6px 0 !important;
-    border-bottom: 1px solid var(--border-subtle) !important;
-}
-
-.modal-historial-pequeno .historial-item:last-child {
-    border-bottom: none !important;
-}
-
-.modal-historial-pequeno .historial-item .left {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-}
-
-.modal-historial-pequeno .historial-item .circulo-mini {
-    display: inline-block !important;
-    width: 10px !important;
-    height: 10px !important;
-    border-radius: 50% !important;
-    flex-shrink: 0 !important;
-}
-
-.modal-historial-pequeno .historial-item .tipo-deuda {
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    color: #ff6b6b !important;
-}
-
-.modal-historial-pequeno .historial-item .tipo-abono {
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    color: #00ff66 !important;
-}
-
-.modal-historial-pequeno .historial-item .monto {
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: var(--text-primary) !important;
-}
-
-.modal-historial-pequeno .historial-item .saldo {
-    font-size: 11px !important;
-    color: var(--text-muted) !important;
-    background: var(--bg-hover) !important;
-    padding: 0 8px !important;
-    border-radius: 10px !important;
-}
-
-.modal-historial-pequeno .historial-item .saldo-liquidado {
-    font-size: 11px !important;
-    color: #00ff66 !important;
-    background: rgba(0, 255, 102, 0.08) !important;
-    padding: 0 8px !important;
-    border-radius: 10px !important;
-}
-
-.modal-historial-pequeno .historial-item .fecha {
-    font-size: 10px !important;
-    color: var(--text-muted) !important;
-    white-space: nowrap !important;
-    margin-left: 8px !important;
-}
-
-.modal-historial-pequeno .empty-state {
-    text-align: center !important;
-    padding: 16px !important;
-    color: var(--text-muted) !important;
-    font-size: 13px !important;
-}
-
-.modal-historial-pequeno .empty-state .material-symbols-rounded {
-    font-size: 24px !important;
-    color: var(--text-muted) !important;
-    opacity: 0.3 !important;
-    display: block !important;
-    margin-bottom: 6px !important;
-}
-
-.modal-historial-pequeno .loading-state {
-    text-align: center !important;
-    padding: 20px !important;
-    color: var(--text-muted) !important;
-    font-size: 13px !important;
-}
-
-.modal-historial-pequeno .loading-state .material-symbols-rounded {
-    font-size: 28px !important;
-    color: var(--text-muted) !important;
-    opacity: 0.3 !important;
-    display: block !important;
-    margin-bottom: 8px !important;
-}
-
-.modal-historial-pequeno .error-state {
-    color: #ff6b6b !important;
-    text-align: center !important;
-    padding: 16px !important;
-    font-size: 13px !important;
-}
-
-.modal-historial-pequeno .error-state .material-symbols-rounded {
-    font-size: 24px !important;
-    display: block !important;
-    margin-bottom: 4px !important;
-}
-
-/* ============================================
    RESPONSIVE
    ============================================ */
 @media (max-width: 600px) {
@@ -368,9 +202,6 @@
     }
     .deudores-container .header h2 {
         font-size: 18px;
-    }
-    .modal-historial-pequeno .modal-content {
-        max-width: 95% !important;
     }
 }
 </style>
@@ -449,107 +280,15 @@
     </div>
 </div>
 
-<!-- ============================================
-   MODAL HISTORIAL DE DEUDAS (PEQUEÑO Y ELEGANTE)
-   ============================================ -->
-<div id="modalHistorialDeuda" class="modal-dixon modal-historial-pequeno" style="align-items: flex-start; padding-top: 80px;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>
-                <span class="material-symbols-rounded">history</span>
-                Historial de
-                <span class="nombre-cliente" id="historialClienteNombre">-</span>
-            </h3>
-            <button class="close-btn" onclick="cerrarModalHistorialDeuda()">
-                <span class="material-symbols-rounded">close</span>
-            </button>
-        </div>
-        <div id="contenidoHistorialDeuda">
-            <div class="loading-state">
-                <span class="material-symbols-rounded">hourglass_empty</span>
-                Cargando historial...
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
 // ============================================
-// VER HISTORIAL DE DEUDAS (CON CÍRCULOS DE COLOR)
+// VER HISTORIAL DE DEUDAS (REDIRIGE A REGISTROS CON FILTRO)
 // ============================================
 function verHistorialDeuda(nombre) {
-    const modal = document.getElementById('modalHistorialDeuda');
-    const contenido = document.getElementById('contenidoHistorialDeuda');
-    const clienteNombre = document.getElementById('historialClienteNombre');
-    
-    clienteNombre.textContent = nombre;
-    modal.classList.add('active');
-    
-    contenido.innerHTML = `
-        <div class="loading-state">
-            <span class="material-symbols-rounded">hourglass_empty</span>
-            Cargando historial...
-        </div>
-    `;
-    
-    fetch(`${API_URL}/api/deudores/historial/${encodeURIComponent(nombre)}`)
-        .then(r => r.json())
-        .then(data => {
-            if (data.length === 0) {
-                contenido.innerHTML = `
-                    <div class="empty-state">
-                        <span class="material-symbols-rounded">info</span>
-                        No hay historial de deudas
-                    </div>
-                `;
-                return;
-            }
-            
-            let html = '';
-            data.forEach(item => {
-                const fecha = new Date(item.fecha);
-                const fechaStr = fecha.toLocaleDateString('es-CL') + ' ' + fecha.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
-                
-                const esDeuda = item.tipo === 'deuda';
-                const color = esDeuda ? '#ff6b6b' : '#00ff66';
-                const icono = esDeuda ? '⬆️' : '⬇️';
-                const tipoLabel = esDeuda ? 'Deuda' : 'Abono';
-                const montoStr = esDeuda 
-                    ? '+' + item.monto_deuda.toLocaleString() 
-                    : '-' + item.monto_abonado.toLocaleString();
-                const tipoClass = esDeuda ? 'tipo-deuda' : 'tipo-abono';
-                
-                html += `
-                    <div class="historial-item">
-                        <div class="left">
-                            <span class="circulo-mini" style="background:${color};box-shadow:0 0 6px ${color}40;"></span>
-                            <span class="${tipoClass}">${icono} ${tipoLabel}</span>
-                            <span class="monto">$${montoStr}</span>
-                            ${item.saldo_restante > 0 ? 
-                                `<span class="saldo">Saldo: $${item.saldo_restante.toLocaleString()}</span>` : 
-                                `<span class="saldo-liquidado">✅ Liquidado</span>`
-                            }
-                        </div>
-                        <div class="fecha">${fechaStr}</div>
-                    </div>
-                `;
-            });
-            contenido.innerHTML = html;
-        })
-        .catch(() => {
-            contenido.innerHTML = `
-                <div class="error-state">
-                    <span class="material-symbols-rounded">error</span>
-                    Error al cargar historial
-                </div>
-            `;
-        });
-}
-
-function cerrarModalHistorialDeuda() {
-    document.getElementById('modalHistorialDeuda').classList.remove('active');
+    // Redirigir a la página de registros con el nombre del cliente como filtro
+    window.location.href = `/registros?cliente=${encodeURIComponent(nombre)}`;
 }
 
 // ============================================
