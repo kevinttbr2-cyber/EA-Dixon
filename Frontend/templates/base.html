@@ -644,26 +644,33 @@
         </a>
 
         <!-- GESTIÓN -->
-        <div class="drawer-section-title">Gestión</div>
-        <a href="/registros" class="drawer-item {% if request.path == '/registros' %}active{% endif %}" style="padding-left: 36px;">
-            <span class="material-symbols-rounded">history</span>
-            Registros
-        </a>
-        <a href="/flotas" class="drawer-item {% if request.path == '/flotas' %}active{% endif %}" style="padding-left: 36px;">
-            <span class="material-symbols-rounded">directions_car</span>
-            Flotas
-        </a>
-        <a href="/flotas_pendientes" class="drawer-item {% if request.path == '/flotas_pendientes' %}active{% endif %}" style="padding-left: 36px;">
-            <span class="material-symbols-rounded">pending_actions</span>
-            Flotas Pendientes
-            {% if flotas_pendientes_count > 0 %}
-            <span class="badge-count">{{ flotas_pendientes_count }}</span>
-            {% endif %}
-        </a>
-        <a href="/repuestos" class="drawer-item {% if request.path == '/repuestos' %}active{% endif %}" style="padding-left: 36px;">
-            <span class="material-symbols-rounded">inventory_2</span>
-            Repuestos
-        </a>
+<div class="drawer-section-title">Gestión</div>
+<a href="/registros" class="drawer-item {% if request.path == '/registros' %}active{% endif %}" style="padding-left: 36px;">
+    <span class="material-symbols-rounded">history</span>
+    Registros
+</a>
+<a href="/flotas" class="drawer-item {% if request.path == '/flotas' %}active{% endif %}" style="padding-left: 36px;">
+    <span class="material-symbols-rounded">directions_car</span>
+    Flotas
+</a>
+<a href="/flotas_pendientes" class="drawer-item {% if request.path == '/flotas_pendientes' %}active{% endif %}" style="padding-left: 36px;">
+    <span class="material-symbols-rounded">pending_actions</span>
+    Flotas Pendientes
+    {% if flotas_pendientes_count > 0 %}
+    <span class="badge-count">{{ flotas_pendientes_count }}</span>
+    {% endif %}
+</a>
+<a href="/deudores" class="drawer-item {% if request.path == '/deudores' %}active{% endif %}" style="padding-left: 36px;">
+    <span class="material-symbols-rounded">payments</span>
+    Deudores
+    {% if deudores_count is defined and deudores_count > 0 %}
+    <span class="badge-count" style="background:#ff6b6b;">{{ deudores_count }}</span>
+    {% endif %}
+</a>
+<a href="/repuestos" class="drawer-item {% if request.path == '/repuestos' %}active{% endif %}" style="padding-left: 36px;">
+    <span class="material-symbols-rounded">inventory_2</span>
+    Repuestos
+</a>
 
         <!-- OPERACIONES -->
         <div class="drawer-section-title">Operaciones</div>
