@@ -1872,10 +1872,14 @@ def pagar_deuda():
     """Registra un pago parcial o total de una deuda"""
     try:
         data = request.json
+        print("📥 Datos recibidos en pagar_deuda:", data)
+        
         cliente_nombre = data.get('cliente_nombre', '').strip()
         monto_abonado = float(data.get('monto_abonado', 0))
         id_registro = data.get('id_registro')
         descripcion = data.get('descripcion', 'Pago de deuda')
+        
+        print(f"👤 Cliente: {cliente_nombre}, 💰 Monto: {monto_abonado}, 📝 Desc: {descripcion}")
         
         if not cliente_nombre or monto_abonado <= 0:
             return jsonify({"error": "Cliente y monto son obligatorios"}), 400
@@ -1884,6 +1888,7 @@ def pagar_deuda():
         conn = get_connection()
         cur = conn.cursor()
         
+        # Buscar el deudor
         cur.execute("""
             SELECT id, monto_deuda, estado, frecuencia_deudas FROM deudores 
             WHERE cliente_nombre ILIKE %s
@@ -1893,20 +1898,21 @@ def pagar_deuda():
         
         deudor = cur.fetchone()
         if not deudor:
+            print(f"❌ No se encontró deuda para: {cliente_nombre}")
             return jsonify({"error": "Cliente sin deuda registrada"}), 404
         
         deudor_id, monto_deuda, estado_actual, frecuencia = deudor
-        nuevo_monto = max(0, monto_deuda - monto_abonado)
+        print(f"📊 Deuda encontrada: ID={deudor_id}, Monto={monto_deuda}, Estado={estado_actual}")
         
-        # ============================================
-        # DETERMINAR NUEVO ESTADO (Monto + Frecuencia)
-        # ============================================
+        nuevo_monto = max(0, monto_deuda - monto_abonado)
+        print(f"💰 Nuevo monto: {nuevo_monto}")
+        
+        # Determinar nuevo estado
         if estado_actual == 'negro' and nuevo_monto > 0:
             nuevo_estado = 'negro'
         elif nuevo_monto == 0:
-            # Si liquida la deuda, vuelve a verde (independiente de la frecuencia)
             nuevo_estado = 'verde'
-            print(f"   🟢 Deuda liquidada: {cliente_nombre} -> VERDE")
+            print(f"🎉 Deuda liquidada para: {cliente_nombre}")
         elif nuevo_monto > 100000:
             nuevo_estado = 'rojo'
         elif nuevo_monto > 30000:
@@ -1916,6 +1922,9 @@ def pagar_deuda():
         else:
             nuevo_estado = 'verde'
         
+        print(f"🔄 Nuevo estado: {nuevo_estado}")
+        
+        # Actualizar deudor
         cur.execute("""
             UPDATE deudores 
             SET monto_deuda = %s,
@@ -1926,15 +1935,35 @@ def pagar_deuda():
         """, (nuevo_monto, nuevo_estado, deudor_id))
         
         # Guardar en historial
-        cur.execute("""
-            INSERT INTO historial_deudas 
-            (deudor_id, cliente_nombre, monto_deuda, monto_abonado, 
-             saldo_restante, tipo, descripcion, id_registro)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
-            deudor_id, cliente_nombre, monto_deuda, monto_abonado,
-            nuevo_monto, 'abono', descripcion, id_registro
-        ))
+        try:
+            cur.execute("""
+                INSERT INTO historial_deudas 
+                (deudor_id, cliente_nombre, monto_deuda, monto_abonado, 
+                 saldo_restante, tipo, descripcion, id_registro)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                deudor_id, cliente_nombre, monto_deuda, monto_abonado,
+                nuevo_monto, 'abono', descripcion, id_registro
+            ))
+            print("✅ Historial registrado correctamente")
+        except Exception as e:
+            print(f"⚠️ Error al guardar historial: {e}")
+            # Si falla el historial, igual continuamos (ya se actualizó la deuda)
+            conn.rollback()
+            # Reintentar sin id_registro
+            cur.execute("""
+                INSERT INTO historial_deudas 
+                (deudor_id, cliente_nombre, monto_deuda, monto_abonado, 
+                 saldo_restante, tipo, descripcion)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                deudor_id, cliente_nombre, monto_deuda, monto_abonado,
+                nuevo_monto, 'abono', descripcion
+            ))
+            conn.commit()
+            print("✅ Historial registrado sin id_registro")
+            # Continuamos sin id_registro
+            id_registro = None
         
         conn.commit()
         cur.close()
@@ -1956,7 +1985,6 @@ def pagar_deuda():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/api/deudores/historial/<cliente_nombre>', methods=['GET'])
 def historial_deudas_cliente(cliente_nombre):
