@@ -1653,18 +1653,12 @@ function procesarArchivoProductos(file) {
 }
 
 function mostrarPreviewProductos(datos) {
-    console.log('📊 1. Mostrando preview, datos:', datos.length);
+    console.log('📊 Mostrando preview, datos:', datos.length);
     
     const previewBody = document.getElementById('previewBodyProductos');
     const previewContainer = document.getElementById('previewProductos');
     const btnImportar = document.getElementById('btnImportarProductos');
     const contador = document.getElementById('contadorProductos');
-    
-    console.log('📊 2. Elementos encontrados:');
-    console.log('   - previewBody:', previewBody ? '✅' : '❌');
-    console.log('   - previewContainer:', previewContainer ? '✅' : '❌');
-    console.log('   - btnImportar:', btnImportar ? '✅' : '❌');
-    console.log('   - contador:', contador ? '✅' : '❌');
     
     if (!previewBody) {
         console.error('❌ No se encontró previewBodyProductos');
@@ -1673,7 +1667,15 @@ function mostrarPreviewProductos(datos) {
     
     previewBody.innerHTML = '';
     const mostrar = datos.slice(0, 10);
-    console.log('📊 3. Mostrando primeros', mostrar.length, 'registros');
+    
+    // Contar categorías para mostrar resumen
+    const categorias = {};
+    datos.forEach(item => {
+        if (item.categoria) {
+            categorias[item.categoria] = (categorias[item.categoria] || 0) + 1;
+        }
+    });
+    console.log('📊 Resumen de categorías:', categorias);
     
     mostrar.forEach((item, index) => {
         const tr = document.createElement('tr');
@@ -1684,7 +1686,7 @@ function mostrarPreviewProductos(datos) {
             <td style="padding:4px 6px;color:#ffcc00;">$${item.costo.toLocaleString('es-CL')}</td>
             <td style="padding:4px 6px;color:#00ff66;">$${item.precio_venta.toLocaleString('es-CL')}</td>
             <td style="padding:4px 6px;color:#4fc3f7;">${item.margen}%</td>
-            <td style="padding:4px 6px;color:#f1c40f;">${item.categoria || '-'}</td>
+            <td style="padding:4px 6px;color:#f1c40f;font-weight:600;">${item.categoria || '⚠️ Sin categoría'}</td>
             <td style="padding:4px 6px;color:#9b59b6;">${item.subcategoria || '-'}</td>
             <td style="padding:4px 6px;color:#ff6b6b;font-weight:600;text-align:center;">${item.stock || 0}</td>
         `;
@@ -1697,16 +1699,27 @@ function mostrarPreviewProductos(datos) {
         previewBody.appendChild(tr);
     }
     
-    if (contador) contador.textContent = `${datos.length} registros`;
+    // Mostrar resumen de categorías
+    const resumenCategorias = Object.entries(categorias)
+        .map(([cat, count]) => `${cat} (${count})`)
+        .join(', ');
+    
+    if (contador) {
+        contador.textContent = `${datos.length} registros | 📂 ${Object.keys(categorias).length} categorías`;
+    }
+    
     if (previewContainer) previewContainer.style.display = 'block';
     if (btnImportar) {
         btnImportar.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datos.length} productos`;
         btnImportar.style.display = 'block';
     }
     
-    console.log('📊 4. Preview mostrado correctamente ✅');
+    console.log('📊 Preview mostrado correctamente ✅');
 }
 
+// ============================================
+// IMPORTAR PRODUCTOS - CORREGIDO CON CATEGORÍAS
+// ============================================
 async function importarProductos() {
     console.log('🚀 Iniciando importación...');
     console.log('📦 Datos a importar:', datosProductos.length);
@@ -1715,6 +1728,11 @@ async function importarProductos() {
         alert('⚠️ No hay datos para importar');
         return;
     }
+    
+    // Mostrar ejemplo de los datos para depurar
+    console.log('📦 Primer producto:', datosProductos[0]);
+    console.log('📦 Categorías encontradas:', datosProductos.map(p => p.categoria).filter(c => c));
+    console.log('📦 Subcategorías encontradas:', datosProductos.map(p => p.subcategoria).filter(s => s));
     
     if (!confirm(`📊 ¿Importar ${datosProductos.length} productos?\n\nSe agregarán a la lista de repuestos con sus categorías y stock.`)) {
         return;
@@ -1733,10 +1751,25 @@ async function importarProductos() {
         const url = `${API_URL}/api/repuestos/importar`;
         console.log('🌐 URL:', url);
         
+        // ✅ Asegurarse de enviar TODOS los campos: categoria y subcategoria
+        const payload = {
+            productos: datosProductos.map(p => ({
+                nombre: p.nombre,
+                costo: p.costo,
+                precio_venta: p.precio_venta,
+                proveedor: p.proveedor || 'Importado',
+                categoria: p.categoria || '',      // ✅ Enviar categoría
+                subcategoria: p.subcategoria || '', // ✅ Enviar subcategoría
+                stock: p.stock || 1
+            }))
+        };
+        
+        console.log('📦 Payload a enviar:', JSON.stringify(payload, null, 2).substring(0, 500) + '...');
+        
         const resp = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productos: datosProductos })
+            body: JSON.stringify(payload)
         });
         
         console.log('📡 Status:', resp.status);
@@ -1751,15 +1784,32 @@ async function importarProductos() {
         console.log('📡 Respuesta:', result);
         
         if (result.success) {
-            let mensaje = `✅ Importación completada!\n\n📊 ${result.importados || 0} importados correctamente`;
+            let mensaje = `✅ Importación completada!\n\n`;
+            mensaje += `📊 ${result.importados || 0} importados correctamente`;
             
             if (result.actualizados && result.actualizados > 0) {
                 mensaje += `\n📝 ${result.actualizados} actualizados (stock sumado)`;
             }
             
             if (result.errores && result.errores.length > 0) {
-                mensaje += `\n\n⚠️ ${result.errores.length} errores`;
-                console.log('Errores:', result.errores);
+                mensaje += `\n\n⚠️ ${result.errores.length} errores:`;
+                result.errores.slice(0, 5).forEach(err => {
+                    mensaje += `\n   - ${err.nombre}: ${err.error}`;
+                });
+                if (result.errores.length > 5) {
+                    mensaje += `\n   ... y ${result.errores.length - 5} más`;
+                }
+                console.log('Errores detallados:', result.errores);
+            }
+            
+            // Mostrar qué categorías se importaron
+            const categoriasImportadas = [...new Set(result.exitosos?.map(e => {
+                const match = e.match(/\(categoría: ([^)]+)\)/);
+                return match ? match[1] : null;
+            }).filter(Boolean))];
+            
+            if (categoriasImportadas.length > 0) {
+                mensaje += `\n\n📂 Categorías: ${categoriasImportadas.join(', ')}`;
             }
             
             alert(mensaje);
