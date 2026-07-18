@@ -133,6 +133,7 @@
     font-size: 13px;
     cursor: pointer;
     transition: var(--transition);
+    text-decoration: none;
 }
 
 .deudor-card .btn-pagar:hover {
@@ -189,11 +190,15 @@
     max-width: 450px !important;
     max-height: 60vh !important;
     padding: 16px 20px !important;
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-lg) !important;
 }
 
 .modal-historial-pequeno .modal-header {
     padding-bottom: 8px !important;
     margin-bottom: 8px !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
 }
 
 .modal-historial-pequeno .modal-header h3 {
@@ -201,157 +206,147 @@
     margin: 0 !important;
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
-    color: #4fc3f7 !important;
+    gap: 8px !important;
+    color: var(--text-primary) !important;
 }
 
 .modal-historial-pequeno .modal-header h3 .material-symbols-rounded {
     font-size: 20px !important;
+    color: #4fc3f7 !important;
+}
+
+.modal-historial-pequeno .modal-header h3 .nombre-cliente {
+    color: #4fc3f7 !important;
+    font-weight: 700 !important;
 }
 
 .modal-historial-pequeno .modal-header .close-btn {
     font-size: 20px !important;
     padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted) !important;
+    cursor: pointer !important;
 }
 
-.modal-historial-pequeno .modal-header .close-btn .material-symbols-rounded {
-    font-size: 20px !important;
+.modal-historial-pequeno .modal-header .close-btn:hover {
+    color: var(--text-primary) !important;
 }
 
 .modal-historial-pequeno #contenidoHistorialDeuda {
     max-height: 200px !important;
     overflow-y: auto !important;
-    font-size: 13px !important;
+    padding: 4px 0 !important;
 }
 
 .modal-historial-pequeno .historial-item {
     display: flex !important;
     justify-content: space-between !important;
-    padding: 4px 0 !important;
+    align-items: center !important;
+    padding: 6px 0 !important;
     border-bottom: 1px solid var(--border-subtle) !important;
-    font-size: 12px !important;
 }
 
 .modal-historial-pequeno .historial-item:last-child {
     border-bottom: none !important;
 }
 
+.modal-historial-pequeno .historial-item .left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.modal-historial-pequeno .historial-item .circulo-mini {
+    display: inline-block !important;
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+}
+
 .modal-historial-pequeno .historial-item .tipo-deuda {
-    color: #ff6b6b !important;
-    font-weight: 600 !important;
     font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #ff6b6b !important;
 }
 
 .modal-historial-pequeno .historial-item .tipo-abono {
-    color: #00ff66 !important;
-    font-weight: 600 !important;
     font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #00ff66 !important;
+}
+
+.modal-historial-pequeno .historial-item .monto {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+.modal-historial-pequeno .historial-item .saldo {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    background: var(--bg-hover) !important;
+    padding: 0 8px !important;
+    border-radius: 10px !important;
+}
+
+.modal-historial-pequeno .historial-item .saldo-liquidado {
+    font-size: 11px !important;
+    color: #00ff66 !important;
+    background: rgba(0, 255, 102, 0.08) !important;
+    padding: 0 8px !important;
+    border-radius: 10px !important;
 }
 
 .modal-historial-pequeno .historial-item .fecha {
-    color: var(--text-muted) !important;
     font-size: 10px !important;
+    color: var(--text-muted) !important;
+    white-space: nowrap !important;
+    margin-left: 8px !important;
 }
 
-.modal-historial-pequeno .loading-placeholder {
+.modal-historial-pequeno .empty-state {
     text-align: center !important;
     padding: 16px !important;
     color: var(--text-muted) !important;
     font-size: 13px !important;
 }
 
-.modal-historial-pequeno .loading-placeholder .material-symbols-rounded {
+.modal-historial-pequeno .empty-state .material-symbols-rounded {
     font-size: 24px !important;
+    color: var(--text-muted) !important;
+    opacity: 0.3 !important;
+    display: block !important;
+    margin-bottom: 6px !important;
 }
 
-/* ============================================
-   MODAL PAGO DE DEUDA
-   ============================================ */
-.modal-deuda .modal-content {
-    max-width: 500px !important;
+.modal-historial-pequeno .loading-state {
+    text-align: center !important;
+    padding: 20px !important;
+    color: var(--text-muted) !important;
+    font-size: 13px !important;
 }
 
-.modal-deuda .info-deuda {
-    background: rgba(255, 107, 107, 0.05);
-    border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    border-left: 3px solid #ff6b6b;
+.modal-historial-pequeno .loading-state .material-symbols-rounded {
+    font-size: 28px !important;
+    color: var(--text-muted) !important;
+    opacity: 0.3 !important;
+    display: block !important;
+    margin-bottom: 8px !important;
 }
 
-.modal-deuda .info-deuda .row {
-    display: flex;
-    justify-content: space-between;
-    padding: 4px 0;
+.modal-historial-pequeno .error-state {
+    color: #ff6b6b !important;
+    text-align: center !important;
+    padding: 16px !important;
+    font-size: 13px !important;
 }
 
-.modal-deuda .info-deuda .row .label {
-    color: var(--text-muted);
-}
-
-.modal-deuda .info-deuda .row .value {
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.modal-deuda .info-deuda .row .deuda-value {
-    color: #ff6b6b;
-    font-weight: 700;
-    font-size: 18px;
-}
-
-.modal-deuda .form-group {
-    margin-bottom: 12px;
-}
-
-.modal-deuda .form-group label {
-    color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 500;
-    display: block;
-    margin-bottom: 4px;
-}
-
-.modal-deuda .form-group input,
-.modal-deuda .form-group textarea {
-    width: 100%;
-    padding: 8px 12px;
-    background: var(--bg-input);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: 14px;
-    transition: var(--transition);
-}
-
-.modal-deuda .form-group input:focus,
-.modal-deuda .form-group textarea:focus {
-    outline: none;
-    border-color: var(--accent-green);
-    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
-}
-
-.modal-deuda .btn-pagar-deuda {
-    background: var(--accent-green) !important;
-    color: var(--bg-primary) !important;
-    font-weight: 700;
-    border: none;
-    border-radius: var(--radius-md);
-    padding: 12px;
-    width: 100%;
-    font-size: 16px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.modal-deuda .btn-pagar-deuda:hover {
-    transform: scale(1.01);
-    box-shadow: 0 0 30px rgba(0, 255, 102, 0.15);
-}
-
-.modal-deuda .btn-pagar-deuda:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.modal-historial-pequeno .error-state .material-symbols-rounded {
+    font-size: 24px !important;
+    display: block !important;
+    margin-bottom: 4px !important;
 }
 
 /* ============================================
@@ -434,14 +429,13 @@
                 <div class="acciones">
                     <span class="monto">${{ "{:,.0f}".format(d.monto_deuda) }}</span>
                     
-                    <!-- BOTÓN HISTORIAL -->
                     <button class="btn-historial" onclick="verHistorialDeuda('{{ d.cliente_nombre }}')" title="Ver historial de deudas">
                         <span class="material-symbols-rounded" style="font-size: 16px;">history</span>
                     </button>
                     
-                    <button class="btn-pagar" onclick="abrirModalPagoDeuda('{{ d.id }}', '{{ d.cliente_nombre }}', {{ d.monto_deuda }})">
+                    <a href="/pagar/{{ d.id_registro or 0 }}" class="btn-pagar" title="Ir a pagar">
                         💰 Pagar
-                    </button>
+                    </a>
                 </div>
             </div>
             {% endfor %}
@@ -456,72 +450,24 @@
 </div>
 
 <!-- ============================================
-   MODAL PAGAR DEUDA
-   ============================================ -->
-<div id="modalPagarDeuda" class="modal-dixon modal-deuda">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 style="color: var(--accent-green);">
-                <span class="material-symbols-rounded" style="font-size: 24px;">payments</span>
-                Pagar Deuda
-            </h3>
-            <button class="close-btn" onclick="cerrarModalPagoDeuda()">
-                <span class="material-symbols-rounded">close</span>
-            </button>
-        </div>
-        
-        <div class="info-deuda">
-            <div class="row">
-                <span class="label">👤 Cliente:</span>
-                <span class="value" id="modalClienteNombre">-</span>
-            </div>
-            <div class="row">
-                <span class="label">💰 Deuda actual:</span>
-                <span class="deuda-value" id="modalDeudaActual">$0</span>
-            </div>
-            <div class="row">
-                <span class="label">📊 Estado:</span>
-                <span class="value" id="modalEstadoActual">-</span>
-            </div>
-        </div>
-        
-        <input type="hidden" id="modalDeudorId">
-        <input type="hidden" id="modalMontoMaximo">
-        
-        <div class="form-group">
-            <label>💵 Monto a pagar</label>
-            <input type="number" id="modalMontoPago" step="0.01" min="0" placeholder="Ingresa el monto a pagar...">
-        </div>
-        
-        <div class="form-group">
-            <label>📝 Observaciones (opcional)</label>
-            <textarea id="modalObservaciones" rows="2" placeholder="Detalles del pago..."></textarea>
-        </div>
-        
-        <button class="btn-pagar-deuda" onclick="confirmarPagoDeuda()">
-            ✅ Confirmar Pago
-        </button>
-    </div>
-</div>
-
-<!-- ============================================
-   MODAL HISTORIAL DE DEUDAS (PEQUEÑO)
+   MODAL HISTORIAL DE DEUDAS (PEQUEÑO Y ELEGANTE)
    ============================================ -->
 <div id="modalHistorialDeuda" class="modal-dixon modal-historial-pequeno" style="align-items: flex-start; padding-top: 80px;">
     <div class="modal-content">
         <div class="modal-header">
             <h3>
                 <span class="material-symbols-rounded">history</span>
-                Historial de Deudas
+                Historial de
+                <span class="nombre-cliente" id="historialClienteNombre">-</span>
             </h3>
             <button class="close-btn" onclick="cerrarModalHistorialDeuda()">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
         <div id="contenidoHistorialDeuda">
-            <div class="loading-placeholder">
+            <div class="loading-state">
                 <span class="material-symbols-rounded">hourglass_empty</span>
-                <br>Cargando...
+                Cargando historial...
             </div>
         </div>
     </div>
@@ -531,114 +477,33 @@
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
 // ============================================
-// ABRIR MODAL DE PAGO
-// ============================================
-function abrirModalPagoDeuda(id, nombre, monto) {
-    document.getElementById('modalDeudorId').value = id;
-    document.getElementById('modalClienteNombre').textContent = nombre;
-    document.getElementById('modalDeudaActual').textContent = '$' + monto.toLocaleString('es-CL');
-    document.getElementById('modalMontoMaximo').value = monto;
-    document.getElementById('modalMontoPago').value = monto;
-    document.getElementById('modalMontoPago').max = monto;
-    document.getElementById('modalObservaciones').value = '';
-    
-    const card = document.querySelector(`.deudor-card[data-id="${id}"]`);
-    if (card) {
-        const circulo = card.querySelector('.circulo');
-        const color = circulo.style.background;
-        let estadoText = '';
-        if (color.includes('#00ff66')) estadoText = '🟢 Sin deuda';
-        else if (color.includes('#f1c40f')) estadoText = '🟡 Deudor';
-        else if (color.includes('#ff6b6b')) estadoText = '🔴 Deudor crítico';
-        else if (color.includes('#333333')) estadoText = '⚫ Lista negra';
-        else estadoText = '❓ Desconocido';
-        document.getElementById('modalEstadoActual').textContent = estadoText;
-    }
-    
-    document.getElementById('modalPagarDeuda').classList.add('active');
-}
-
-function cerrarModalPagoDeuda() {
-    document.getElementById('modalPagarDeuda').classList.remove('active');
-}
-
-// ============================================
-// CONFIRMAR PAGO DE DEUDA
-// ============================================
-function confirmarPagoDeuda() {
-    const id = document.getElementById('modalDeudorId').value;
-    const nombre = document.getElementById('modalClienteNombre').textContent;
-    const montoMaximo = parseFloat(document.getElementById('modalMontoMaximo').value) || 0;
-    const montoPago = parseFloat(document.getElementById('modalMontoPago').value) || 0;
-    const observaciones = document.getElementById('modalObservaciones').value.trim() || 'Pago de deuda';
-    
-    if (montoPago <= 0) {
-        alert('⚠️ Ingresa un monto válido para pagar');
-        return;
-    }
-    
-    if (montoPago > montoMaximo) {
-        alert(`⚠️ El monto no puede ser mayor a $${montoMaximo.toLocaleString()}`);
-        return;
-    }
-    
-    const confirmar = confirm(
-        `📊 Confirmar pago de deuda\n\n` +
-        `👤 Cliente: ${nombre}\n` +
-        `💰 Deuda actual: $${montoMaximo.toLocaleString()}\n` +
-        `💵 Monto a pagar: $${montoPago.toLocaleString()}\n` +
-        `📌 Saldo restante: $${(montoMaximo - montoPago).toLocaleString()}\n\n` +
-        `¿Confirmar?`
-    );
-    
-    if (!confirmar) return;
-    
-    const btn = document.querySelector('.btn-pagar-deuda');
-    btn.disabled = true;
-    btn.textContent = '⏳ Procesando...';
-    
-    fetch(`${API_URL}/api/deudores/pagar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            cliente_nombre: nombre,
-            monto_abonado: montoPago,
-            descripcion: observaciones
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ ' + data.mensaje);
-            cerrarModalPagoDeuda();
-            location.reload();
-        } else {
-            alert('❌ Error: ' + (data.error || 'Desconocido'));
-        }
-    })
-    .catch(() => {
-        alert('❌ Error de conexión');
-    })
-    .finally(() => {
-        btn.disabled = false;
-        btn.textContent = '✅ Confirmar Pago';
-    });
-}
-
-// ============================================
-// VER HISTORIAL DE DEUDAS (BOTÓN HISTORIAL)
+// VER HISTORIAL DE DEUDAS (CON CÍRCULOS DE COLOR)
 // ============================================
 function verHistorialDeuda(nombre) {
     const modal = document.getElementById('modalHistorialDeuda');
     const contenido = document.getElementById('contenidoHistorialDeuda');
+    const clienteNombre = document.getElementById('historialClienteNombre');
+    
+    clienteNombre.textContent = nombre;
     modal.classList.add('active');
-    contenido.innerHTML = '<div class="loading-placeholder"><span class="material-symbols-rounded">hourglass_empty</span><br>Cargando...</div>';
+    
+    contenido.innerHTML = `
+        <div class="loading-state">
+            <span class="material-symbols-rounded">hourglass_empty</span>
+            Cargando historial...
+        </div>
+    `;
     
     fetch(`${API_URL}/api/deudores/historial/${encodeURIComponent(nombre)}`)
         .then(r => r.json())
         .then(data => {
             if (data.length === 0) {
-                contenido.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:13px;">No hay historial de deudas</div>';
+                contenido.innerHTML = `
+                    <div class="empty-state">
+                        <span class="material-symbols-rounded">info</span>
+                        No hay historial de deudas
+                    </div>
+                `;
                 return;
             }
             
@@ -646,18 +511,26 @@ function verHistorialDeuda(nombre) {
             data.forEach(item => {
                 const fecha = new Date(item.fecha);
                 const fechaStr = fecha.toLocaleDateString('es-CL') + ' ' + fecha.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
-                const tipoClass = item.tipo === 'deuda' ? 'tipo-deuda' : 'tipo-abono';
-                const tipoIcono = item.tipo === 'deuda' ? '⚠️' : '💰';
-                const montoStr = item.tipo === 'deuda' 
+                
+                const esDeuda = item.tipo === 'deuda';
+                const color = esDeuda ? '#ff6b6b' : '#00ff66';
+                const icono = esDeuda ? '⬆️' : '⬇️';
+                const tipoLabel = esDeuda ? 'Deuda' : 'Abono';
+                const montoStr = esDeuda 
                     ? '+' + item.monto_deuda.toLocaleString() 
                     : '-' + item.monto_abonado.toLocaleString();
+                const tipoClass = esDeuda ? 'tipo-deuda' : 'tipo-abono';
                 
                 html += `
                     <div class="historial-item">
-                        <div>
-                            <span class="${tipoClass}">${tipoIcono} ${item.tipo === 'deuda' ? 'Deuda' : 'Abono'}</span>
-                            <span style="color:var(--text-primary);font-weight:600;margin-left:4px;">$${montoStr}</span>
-                            ${item.saldo_restante > 0 ? `<span style="color:var(--text-muted);font-size:11px;margin-left:4px;">Saldo: $${item.saldo_restante.toLocaleString()}</span>` : '<span style="color:#00ff66;font-size:11px;margin-left:4px;">✅ Liquidado</span>'}
+                        <div class="left">
+                            <span class="circulo-mini" style="background:${color};box-shadow:0 0 6px ${color}40;"></span>
+                            <span class="${tipoClass}">${icono} ${tipoLabel}</span>
+                            <span class="monto">$${montoStr}</span>
+                            ${item.saldo_restante > 0 ? 
+                                `<span class="saldo">Saldo: $${item.saldo_restante.toLocaleString()}</span>` : 
+                                `<span class="saldo-liquidado">✅ Liquidado</span>`
+                            }
                         </div>
                         <div class="fecha">${fechaStr}</div>
                     </div>
@@ -666,7 +539,12 @@ function verHistorialDeuda(nombre) {
             contenido.innerHTML = html;
         })
         .catch(() => {
-            contenido.innerHTML = '<div style="color:#ff6b6b;text-align:center;padding:12px;font-size:13px;">❌ Error al cargar historial</div>';
+            contenido.innerHTML = `
+                <div class="error-state">
+                    <span class="material-symbols-rounded">error</span>
+                    Error al cargar historial
+                </div>
+            `;
         });
 }
 
