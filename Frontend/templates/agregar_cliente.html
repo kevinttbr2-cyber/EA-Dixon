@@ -21,6 +21,36 @@
                 <label style="color: #90e0a0; font-weight: 500;">👤 Nombre del cliente</label>
                 <input type="text" name="nombre" class="form-control" required placeholder="Ej: Juan Pérez">
             </div>
+            <!-- ============================
+     ESTADO DEL CLIENTE (DEUDOR)
+     ============================ -->
+<div id="estadoClienteContainer" style="display: none; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; border: 2px solid;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="circuloClienteEstado" style="display: inline-block; width: 14px; height: 14px; border-radius: 50%;"></span>
+            <span id="textoClienteEstado" style="font-weight: 700; font-size: 15px;"></span>
+        </div>
+        <div>
+            <span style="color: #888;">💰 Deuda:</span>
+            <span id="montoClienteDeuda" style="font-weight: 700; font-size: 16px; color: #ff6b6b;">$0</span>
+        </div>
+    </div>
+    <div style="margin-top: 4px; font-size: 12px; color: #888;">
+        <span id="fechaClienteDeuda"></span>
+        <button onclick="verHistorialCliente()" style="
+            background: transparent;
+            color: #4fc3f7;
+            border: 1px solid rgba(79,195,247,0.3);
+            border-radius: 6px;
+            padding: 2px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+        ">
+            📜 Historial
+        </button>
+    </div>
+</div>
             <div class="mb-3">
                 <label style="color: #90e0a0; font-weight: 500;">🚛 Flota</label>
                 <div style="display: flex; gap: 6px;">
@@ -308,6 +338,144 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.style.opacity = '1';
     }, 10000);
 });
+// ============================================
+// BUSCAR ESTADO DEL CLIENTE AL ESCRIBIR NOMBRE
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const inputNombre = document.querySelector('input[name="nombre"]');
+    if (!inputNombre) return;
+    
+    let timeoutBusqueda = null;
+    
+    inputNombre.addEventListener('input', function() {
+        clearTimeout(timeoutBusqueda);
+        const nombre = this.value.trim();
+        
+        if (nombre.length < 3) {
+            document.getElementById('estadoClienteContainer').style.display = 'none';
+            return;
+        }
+        
+        timeoutBusqueda = setTimeout(function() {
+            buscarEstadoCliente(nombre);
+        }, 500);
+    });
+});
+
+function buscarEstadoCliente(nombre) {
+    fetch(`${API_URL}/api/deudores/${encodeURIComponent(nombre)}`)
+        .then(r => {
+            if (r.status === 404) {
+                document.getElementById('estadoClienteContainer').style.display = 'none';
+                return null;
+            }
+            return r.json();
+        })
+        .then(data => {
+            if (data && data.monto_deuda > 0) {
+                mostrarEstadoCliente(data);
+            } else {
+                document.getElementById('estadoClienteContainer').style.display = 'none';
+            }
+        })
+        .catch(() => {
+            document.getElementById('estadoClienteContainer').style.display = 'none';
+        });
+}
+
+function mostrarEstadoCliente(data) {
+    const container = document.getElementById('estadoClienteContainer');
+    container.style.display = 'block';
+    
+    const estado = data.estado || 'verde';
+    const monto = data.monto_deuda || 0;
+    
+    const colores = {
+        'verde': { bg: 'rgba(0,255,102,0.08)', border: '#00ff66', color: '#00ff66', text: '✅ Cliente sin deuda' },
+        'amarillo': { bg: 'rgba(241,196,15,0.08)', border: '#f1c40f', color: '#f1c40f', text: '🟡 Cliente con deuda (baja)' },
+        'rojo': { bg: 'rgba(255,107,107,0.08)', border: '#ff6b6b', color: '#ff6b6b', text: '🔴 Cliente con deuda crítica' },
+        'negro': { bg: 'rgba(0,0,0,0.20)', border: '#888', color: '#888', text: '⚫ Cliente en lista negra' }
+    };
+    
+    const config = colores[estado] || colores['verde'];
+    
+    container.style.background = config.bg;
+    container.style.borderColor = config.border;
+    
+    document.getElementById('circuloClienteEstado').style.background = config.border;
+    document.getElementById('textoClienteEstado').textContent = config.text;
+    document.getElementById('textoClienteEstado').style.color = config.color;
+    document.getElementById('montoClienteDeuda').textContent = '$' + monto.toLocaleString('es-CL');
+    
+    const fecha = data.fecha_deuda ? new Date(data.fecha_deuda) : null;
+    document.getElementById('fechaClienteDeuda').textContent = fecha ? `📅 Desde: ${fecha.toLocaleDateString('es-CL')}` : '';
+    container.dataset.cliente = data.cliente_nombre;
+}
+
+function verHistorialCliente() {
+    const container = document.getElementById('estadoClienteContainer');
+    const cliente = container.dataset.cliente;
+    if (!cliente) return;
+    
+    // Crear modal temporal
+    const modal = document.createElement('div');
+    modal.className = 'modal-dixon active';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 style="color: #4fc3f7;">📜 Historial de Deudas - ${cliente}</h3>
+                <button class="close-btn" onclick="this.closest('.modal-dixon').remove()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="contenidoHistorialCliente" style="max-height: 400px; overflow-y: auto;">
+                <div style="text-align:center;padding:20px;color:#888;">Cargando...</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    fetch(`${API_URL}/api/deudores/historial/${encodeURIComponent(cliente)}`)
+        .then(r => r.json())
+        .then(data => {
+            const contenido = document.getElementById('contenidoHistorialCliente');
+            if (data.length === 0) {
+                contenido.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No hay historial de deudas</div>';
+                return;
+            }
+            
+            let html = `<div style="font-size:13px;">`;
+            data.forEach(item => {
+                const fecha = new Date(item.fecha);
+                const fechaStr = fecha.toLocaleDateString('es-CL') + ' ' + fecha.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
+                const tipoEmoji = item.tipo === 'deuda' ? '⚠️' : '💰';
+                const tipoColor = item.tipo === 'deuda' ? '#ff6b6b' : '#00ff66';
+                html += `
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+                        <div>
+                            <span style="color:${tipoColor};">${tipoEmoji}</span>
+                            <span style="color:#fff;">${item.tipo === 'deuda' ? 'Deuda' : 'Abono'}</span>
+                            ${item.tipo === 'deuda' ? 
+                                `<span style="color:#ff6b6b;font-weight:600;">+$${item.monto_deuda.toLocaleString()}</span>` :
+                                `<span style="color:#00ff66;font-weight:600;">-$${item.monto_abonado.toLocaleString()}</span>`
+                            }
+                        </div>
+                        <div style="color:#888;font-size:12px;">
+                            ${item.saldo_restante > 0 ? `Saldo: $${item.saldo_restante.toLocaleString()}` : '✅ Liquidado'}
+                        </div>
+                        <div style="color:#666;font-size:11px;">${fechaStr}</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            contenido.innerHTML = html;
+        })
+        .catch(() => {
+            document.getElementById('contenidoHistorialCliente').innerHTML = 
+                '<div style="color:#ff6b6b;text-align:center;padding:20px;">❌ Error al cargar historial</div>';
+        });
+}
 </script>
 
 {% endblock %}
