@@ -5,9 +5,6 @@
 {% block content %}
 
 <style>
-/* ============================================
-   ESTILOS DEUDORES (CONSISTENTE CON EL SISTEMA)
-   ============================================ */
 .deudores-container {
     max-width: 1100px;
     margin: 0 auto;
@@ -53,7 +50,7 @@
 }
 
 /* ============================================
-   TARJETAS DE DEUDORES (ESTILO CONSISTENTE)
+   TARJETAS DE DEUDORES
    ============================================ */
 .deudores-grid {
     display: flex;
@@ -148,7 +145,7 @@
     color: #4fc3f7;
     border: 1px solid rgba(79, 195, 247, 0.15);
     border-radius: var(--radius-sm);
-    padding: 6px 12px;
+    padding: 6px 10px;
     font-size: 13px;
     cursor: pointer;
     transition: var(--transition);
@@ -156,6 +153,70 @@
 
 .deudor-card .btn-historial:hover {
     background: rgba(79, 195, 247, 0.20);
+}
+
+/* ============================================
+   DROPDOWN 3 PUNTOS
+   ============================================ */
+.dropdown-3p {
+    position: relative !important;
+    display: inline-block !important;
+}
+
+.dropdown-3p .btn-3p {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted) !important;
+    font-size: 20px !important;
+    padding: 4px 8px !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+    border-radius: 6px !important;
+    line-height: 1 !important;
+}
+
+.dropdown-3p .btn-3p:hover {
+    color: var(--text-primary) !important;
+    background: var(--bg-hover) !important;
+}
+
+.dropdown-3p .menu-3p {
+    display: none !important;
+    position: absolute !important;
+    right: 0 !important;
+    top: 100% !important;
+    margin-top: 4px !important;
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 6px 0 !important;
+    min-width: 190px !important;
+    box-shadow: var(--shadow-hover) !important;
+    z-index: 9999 !important;
+}
+
+.dropdown-3p .menu-3p.show {
+    display: block !important;
+}
+
+.dropdown-3p .menu-3p button {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 16px !important;
+    color: var(--text-secondary) !important;
+    font-size: 13px !important;
+    background: transparent !important;
+    border: none !important;
+    width: 100% !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+}
+
+.dropdown-3p .menu-3p button:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
 }
 
 .sin-deudores {
@@ -172,18 +233,8 @@
     margin-bottom: 16px;
 }
 
-.sin-deudores p {
-    font-size: 16px;
-    color: var(--text-primary);
-}
-
-.sin-deudores .sub {
-    color: var(--text-muted);
-    font-size: 14px;
-}
-
 /* ============================================
-   MODAL PAGO (CONSISTENTE)
+   MODAL PAGO DE DEUDA
    ============================================ */
 .modal-deuda .modal-content {
     max-width: 500px !important;
@@ -273,6 +324,39 @@
 }
 
 /* ============================================
+   MODAL HISTORIAL
+   ============================================ */
+.modal-historial .modal-content {
+    max-width: 600px !important;
+}
+
+.modal-historial .historial-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-historial .historial-item:last-child {
+    border-bottom: none;
+}
+
+.modal-historial .historial-item .tipo-deuda {
+    color: #ff6b6b;
+    font-weight: 600;
+}
+
+.modal-historial .historial-item .tipo-abono {
+    color: #00ff66;
+    font-weight: 600;
+}
+
+.modal-historial .historial-item .fecha {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 @media (max-width: 600px) {
@@ -350,9 +434,18 @@
                 <div class="acciones">
                     <span class="monto">${{ "{:,.0f}".format(d.monto_deuda) }}</span>
                     
-                    <button class="btn-historial" onclick="verHistorialDeuda('{{ d.cliente_nombre }}')" title="Ver historial">
-                        📜
-                    </button>
+                    <!-- 3 PUNTITOS (Menú) -->
+                    <div class="dropdown-3p">
+                        <button class="btn-3p" onclick="toggleMenuDeudor(event, {{ d.id }})" data-id="{{ d.id }}">
+                            <span class="material-symbols-rounded">more_vert</span>
+                        </button>
+                        <div class="menu-3p" id="menu-{{ d.id }}">
+                            <button onclick="verHistorialDeuda('{{ d.cliente_nombre }}')">
+                                <span class="material-symbols-rounded" style="font-size: 18px;">history</span>
+                                Ver Historial
+                            </button>
+                        </div>
+                    </div>
                     
                     <button class="btn-pagar" onclick="abrirModalPagoDeuda('{{ d.id }}', '{{ d.cliente_nombre }}', {{ d.monto_deuda }})">
                         💰 Pagar
@@ -363,8 +456,8 @@
         {% else %}
             <div class="sin-deudores">
                 <span class="icono material-symbols-rounded">check_circle</span>
-                <p>🎉 No hay deudores pendientes</p>
-                <span class="sub">Todos los clientes están al día</span>
+                <p style="font-size: 18px; color: var(--text-primary);">🎉 No hay deudores pendientes</p>
+                <span style="color: var(--text-muted);">Todos los clientes están al día</span>
             </div>
         {% endif %}
     </div>
@@ -420,10 +513,10 @@
 </div>
 
 <!-- ============================================
-   MODAL HISTORIAL
+   MODAL HISTORIAL DE DEUDAS
    ============================================ -->
-<div id="modalHistorialDeuda" class="modal-dixon">
-    <div class="modal-content" style="max-width: 600px;">
+<div id="modalHistorialDeuda" class="modal-dixon modal-historial">
+    <div class="modal-content">
         <div class="modal-header">
             <h3 style="color: #4fc3f7;">
                 <span class="material-symbols-rounded" style="font-size: 24px;">history</span>
@@ -436,7 +529,7 @@
         <div id="contenidoHistorialDeuda" style="max-height: 400px; overflow-y: auto;">
             <div style="text-align:center;padding:20px;color:var(--text-muted);">
                 <span class="material-symbols-rounded" style="font-size: 40px;">hourglass_empty</span>
-                <br>Cargando...
+                <br>Cargando historial...
             </div>
         </div>
     </div>
@@ -444,6 +537,26 @@
 
 <script>
 const API_URL = 'https://ea-dixon-production.up.railway.app';
+
+// ============================================
+// TOGGLE MENU 3 PUNTOS
+// ============================================
+function toggleMenuDeudor(event, id) {
+    event.stopPropagation();
+    
+    // Cerrar otros menús
+    document.querySelectorAll('.menu-3p.show').forEach(m => {
+        if (m.id !== 'menu-' + id) m.classList.remove('show');
+    });
+    
+    const menu = document.getElementById('menu-' + id);
+    menu.classList.toggle('show');
+}
+
+// Cerrar menús al hacer clic fuera
+document.addEventListener('click', function() {
+    document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
+});
 
 // ============================================
 // ABRIR MODAL DE PAGO
@@ -542,7 +655,7 @@ function confirmarPagoDeuda() {
 }
 
 // ============================================
-// VER HISTORIAL
+// VER HISTORIAL DE DEUDAS (desde 3 puntitos)
 // ============================================
 function verHistorialDeuda(nombre) {
     const modal = document.getElementById('modalHistorialDeuda');
@@ -558,30 +671,27 @@ function verHistorialDeuda(nombre) {
                 return;
             }
             
-            let html = `<div style="font-size:13px;">`;
+            let html = '';
             data.forEach(item => {
                 const fecha = new Date(item.fecha);
                 const fechaStr = fecha.toLocaleDateString('es-CL') + ' ' + fecha.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
-                const tipoEmoji = item.tipo === 'deuda' ? '⚠️' : '💰';
-                const tipoColor = item.tipo === 'deuda' ? '#ff6b6b' : '#00ff66';
+                const tipoClass = item.tipo === 'deuda' ? 'tipo-deuda' : 'tipo-abono';
+                const tipoIcono = item.tipo === 'deuda' ? '⚠️' : '💰';
+                const montoStr = item.tipo === 'deuda' 
+                    ? '+' + item.monto_deuda.toLocaleString() 
+                    : '-' + item.monto_abonado.toLocaleString();
+                
                 html += `
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-subtle);">
+                    <div class="historial-item">
                         <div>
-                            <span style="color:${tipoColor};">${tipoEmoji}</span>
-                            <span style="color:var(--text-primary);">${item.tipo === 'deuda' ? 'Deuda' : 'Abono'}</span>
-                            ${item.tipo === 'deuda' ? 
-                                `<span style="color:#ff6b6b;font-weight:600;">+$${item.monto_deuda.toLocaleString()}</span>` :
-                                `<span style="color:#00ff66;font-weight:600;">-$${item.monto_abonado.toLocaleString()}</span>`
-                            }
+                            <span class="${tipoClass}">${tipoIcono} ${item.tipo === 'deuda' ? 'Deuda' : 'Abono'}</span>
+                            <span style="color:var(--text-primary);font-weight:600;margin-left:8px;">$${montoStr}</span>
+                            ${item.saldo_restante > 0 ? `<span style="color:var(--text-muted);font-size:12px;margin-left:8px;">Saldo: $${item.saldo_restante.toLocaleString()}</span>` : '<span style="color:#00ff66;font-size:12px;margin-left:8px;">✅ Liquidado</span>'}
                         </div>
-                        <div style="color:var(--text-muted);font-size:12px;">
-                            ${item.saldo_restante > 0 ? `Saldo: $${item.saldo_restante.toLocaleString()}` : '✅ Liquidado'}
-                        </div>
-                        <div style="color:var(--text-muted);font-size:11px;">${fechaStr}</div>
+                        <div class="fecha">${fechaStr}</div>
                     </div>
                 `;
             });
-            html += `</div>`;
             contenido.innerHTML = html;
         })
         .catch(() => {
@@ -599,6 +709,7 @@ function cerrarModalHistorialDeuda() {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         document.querySelectorAll('.modal-dixon.active').forEach(m => m.classList.remove('active'));
+        document.querySelectorAll('.menu-3p.show').forEach(m => m.classList.remove('show'));
     }
 });
 
