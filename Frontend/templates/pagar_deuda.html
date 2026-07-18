@@ -3,12 +3,242 @@
 {% block content %}
 
 <style>
-/* ... (mantén los mismos estilos que ya tienes) ... */
+.pagar-deuda-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 10px 15px;
+}
+
+.pagar-deuda-container .cliente-info {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.pagar-deuda-container .cliente-info .nombre {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.pagar-deuda-container .cliente-info .patente {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.pagar-deuda-container .cliente-info .estado-badge {
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.pagar-deuda-container .cliente-info .estado-badge.amarillo {
+    background: rgba(241, 196, 15, 0.15);
+    color: #f1c40f;
+}
+
+.pagar-deuda-container .cliente-info .estado-badge.rojo {
+    background: rgba(255, 107, 107, 0.15);
+    color: #ff6b6b;
+}
+
+.pagar-deuda-container .cliente-info .estado-badge.negro {
+    background: rgba(0, 0, 0, 0.30);
+    color: #888;
+}
+
+.pagar-deuda-container .cliente-info .estado-badge.verde {
+    background: rgba(0, 255, 102, 0.10);
+    color: #00ff66;
+}
+
+.pagar-deuda-container .deuda-info {
+    background: rgba(255, 107, 107, 0.08);
+    border: 1px solid rgba(255, 107, 107, 0.20);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.pagar-deuda-container .deuda-info .monto-deuda {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ff6b6b;
+}
+
+.pagar-deuda-container .deuda-info .label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.pagar-deuda-container .deuda-info .fecha-deuda {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.pagar-deuda-container .form-group {
+    margin-bottom: 12px;
+}
+
+.pagar-deuda-container .form-group label {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.pagar-deuda-container .form-group input,
+.pagar-deuda-container .form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-input);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.pagar-deuda-container .form-group input:focus,
+.pagar-deuda-container .form-group select:focus {
+    outline: none;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
+}
+
+.pagar-deuda-container .form-group select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.pagar-deuda-container .btn-pagar {
+    background: var(--accent-green) !important;
+    color: var(--bg-primary) !important;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 14px;
+    width: 100%;
+    font-size: 18px;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 10px;
+}
+
+.pagar-deuda-container .btn-pagar:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 30px rgba(0, 255, 102, 0.15);
+}
+
+.pagar-deuda-container .btn-pagar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pagar-deuda-container .observaciones {
+    margin-top: 12px;
+}
+
+.pagar-deuda-container .observaciones textarea {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 14px;
+    min-height: 60px;
+    transition: var(--transition);
+}
+
+.pagar-deuda-container .observaciones textarea:focus {
+    outline: none;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
+}
+
+.pagar-deuda-container .btn-volver {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    width: 100%;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 8px;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+.pagar-deuda-container .btn-volver:hover {
+    background: rgba(255,255,255,0.10);
+    color: var(--text-primary);
+}
+
+.pagar-deuda-container .saldo-restante {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: rgba(0, 255, 102, 0.04);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(0, 255, 102, 0.08);
+    display: none;
+}
+
+.pagar-deuda-container .saldo-restante.show {
+    display: block;
+}
+
+.pagar-deuda-container .saldo-restante .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pagar-deuda-container .saldo-restante .row .label {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.pagar-deuda-container .saldo-restante .row .valor {
+    font-weight: 700;
+    font-size: 18px;
+    color: #ff6b6b;
+}
+
+.pagar-deuda-container .saldo-restante .row .valor.verde {
+    color: #00ff66;
+}
+
+@media (max-width: 600px) {
+    .pagar-deuda-container .deuda-info .monto-deuda {
+        font-size: 22px;
+    }
+    .pagar-deuda-container .cliente-info .nombre {
+        font-size: 17px;
+    }
+}
 </style>
 
 <div class="base-container pagar-deuda-container">
 
-    <!-- CLIENTE INFO -->
+    <!-- ============================================
+    CLIENTE INFO
+    ============================================ -->
     <div class="cliente-info">
         <div class="nombre">👤 {{ deuda.cliente_nombre }}</div>
         {% if deuda.patente %}
@@ -19,6 +249,7 @@
                 {% if deuda.estado == 'amarillo' %}amarillo
                 {% elif deuda.estado == 'rojo' %}rojo
                 {% elif deuda.estado == 'negro' %}negro
+                {% else %}verde
                 {% endif %}">
                 {% if deuda.estado == 'amarillo' %}🟡 Deudor
                 {% elif deuda.estado == 'rojo' %}🔴 Deudor crítico
@@ -29,24 +260,29 @@
         </div>
     </div>
 
-    <!-- DEUDA ACTUAL -->
+    <!-- ============================================
+    DEUDA ACTUAL
+    ============================================ -->
     <div class="deuda-info">
         <span class="label">💰 Deuda pendiente</span>
         <div class="monto-deuda">${{ "{:,.0f}".format(deuda.monto_deuda|float) }}</div>
-        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-            Desde: {{ deuda.fecha_deuda[:10] if deuda.fecha_deuda else '-' }}
+        <div class="fecha-deuda">
+            📅 Desde: {{ deuda.fecha_deuda[:10] if deuda.fecha_deuda else '-' }}
             {% if deuda.frecuencia_deudas > 1 %}
             · 🔁 {{ deuda.frecuencia_deudas }} deudas acumuladas
             {% endif %}
         </div>
     </div>
 
-    <!-- FORMULARIO DE PAGO -->
+    <!-- ============================================
+    FORMULARIO DE PAGO
+    ============================================ -->
     <form id="formPagarDeuda">
         <input type="hidden" id="deudaId" value="{{ deuda.id }}">
         <input type="hidden" id="clienteNombre" value="{{ deuda.cliente_nombre }}">
         <input type="hidden" id="montoMaximo" value="{{ deuda.monto_deuda }}">
 
+        <!-- 💵 MONTO A PAGAR -->
         <div class="form-group">
             <label>💵 ¿Cuánto va a pagar?</label>
             <input type="number" id="montoPagar" class="form-control" step="0.01" min="0" 
@@ -54,6 +290,7 @@
                    value="{{ deuda.monto_deuda }}">
         </div>
 
+        <!-- 💳 FORMA DE PAGO -->
         <div class="form-group">
             <label>💳 Forma de Pago</label>
             <select id="formaPago" class="form-control">
@@ -63,9 +300,18 @@
             </select>
         </div>
 
+        <!-- 📝 OBSERVACIONES -->
         <div class="observaciones">
             <label style="color: var(--text-secondary); font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">📝 Observaciones (opcional)</label>
             <textarea id="observacionesPago" placeholder="Detalles del pago..."></textarea>
+        </div>
+
+        <!-- SALDO RESTANTE (se muestra automáticamente) -->
+        <div class="saldo-restante" id="saldoRestanteDiv">
+            <div class="row">
+                <span class="label">📌 Saldo restante:</span>
+                <span class="valor" id="saldoRestanteValor">$0</span>
+            </div>
         </div>
 
         <button type="submit" class="btn-pagar">
@@ -79,6 +325,38 @@
 <script>
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
+// ============================================
+// CALCULAR SALDO RESTANTE EN TIEMPO REAL
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const montoMaximo = parseFloat(document.getElementById('montoMaximo').value) || 0;
+    const montoPagarInput = document.getElementById('montoPagar');
+    const saldoDiv = document.getElementById('saldoRestanteDiv');
+    const saldoValor = document.getElementById('saldoRestanteValor');
+    
+    function calcularSaldo() {
+        const montoPagar = parseFloat(montoPagarInput.value) || 0;
+        const saldo = Math.max(0, montoMaximo - montoPagar);
+        
+        saldoValor.textContent = '$' + saldo.toLocaleString('es-CL');
+        
+        if (saldo > 0) {
+            saldoDiv.classList.add('show');
+            saldoValor.style.color = '#ff6b6b';
+        } else {
+            saldoDiv.classList.add('show');
+            saldoValor.style.color = '#00ff66';
+            saldoValor.textContent = '✅ ¡Deuda liquidada!';
+        }
+    }
+    
+    montoPagarInput.addEventListener('input', calcularSaldo);
+    calcularSaldo();
+});
+
+// ============================================
+// ENVIAR FORMULARIO
+// ============================================
 document.getElementById('formPagarDeuda').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -131,9 +409,11 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
             return r.json();
         })
         .then(registros => {
+            // Buscar el registro del cliente
             const registro = registros.find(r => r.nombre === clienteNombre);
             
             if (!registro) {
+                // Si no existe, crear uno nuevo
                 return fetch(`${API_URL}/api/agregar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -152,6 +432,7 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
                 });
             }
             
+            // Si existe, registrar pago en el registro
             return fetch(`${API_URL}/api/pagar/${registro.id}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -172,6 +453,7 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
             });
         })
         .then(result => {
+            // 2. Registrar el abono en la deuda
             return fetch(`${API_URL}/api/deudores/pagar`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
