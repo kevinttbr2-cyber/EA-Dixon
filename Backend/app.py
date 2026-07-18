@@ -75,33 +75,7 @@ def health():
         "version": "2.0"
     })
 
-# ============================================
-# OBTENER TODOS LOS REPUESTOS (CON CATEGORÍA)
-# ============================================
-@app.route('/api/repuestos', methods=['GET'])
-def obtener_repuestos():
-    try:
-        from database import get_cursor
-        conn, cur = get_cursor()
-        
-        cur.execute("""
-            SELECT id, nombre, stock, costo_proveedor, 
-                   costo_proveedor_pendiente, margen_ganancia, 
-                   costo_venta_final, proveedor, categoria_nombre
-            FROM repuestos 
-            ORDER BY id DESC
-        """)
-        
-        repuestos = [dict(row) for row in cur.fetchall()]
-        cur.close()
-        conn.close()
-        
-        return jsonify(repuestos)
-    except Exception as e:
-        print(f"❌ Error en obtener_repuestos: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify([])
+
 # ============================================
 # RUTA 1: EXPORTAR DB (SIN BORRAR) - SIN PANDAS
 # ============================================
