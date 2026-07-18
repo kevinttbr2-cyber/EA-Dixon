@@ -232,8 +232,23 @@ def inject_globals():
         fecha_espanol=fecha_espanol,
         fecha_corta_espanol=fecha_corta_espanol,
         flotas_pendientes_count=flotas_pendientes_count,
+        deudores_count=deudores_count, 
         vapid_public_key=vapid_public_key
     )
+    # Dentro de inject_globals(), después de flotas_pendientes_count
+
+# ============================================
+# CONTADOR DE DEUDORES
+# ============================================
+deudores_count = 0
+try:
+    resp_deudores = requests.get(f"{BACKEND_URL}/api/deudores/todos", timeout=3)
+    if resp_deudores.status_code == 200:
+        deudores = resp_deudores.json()
+        deudores_count = len([d for d in deudores if d.get('monto_deuda', 0) > 0])
+except Exception as e:
+    print(f"⚠️ Error al obtener deudores: {e}")
+    deudores_count = 0
 
 # ============================
 # RUTAS PRINCIPALES
