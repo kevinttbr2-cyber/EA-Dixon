@@ -1865,6 +1865,9 @@ def registrar_deuda():
         return jsonify({"error": str(e)}), 500
 
 
+# ============================================
+# RUTA PARA PAGAR DEUDA (CON UPDATE EN pagos)
+# ============================================
 @app.route('/api/deudores/pagar', methods=['POST'])
 def pagar_deuda():
     """Registra un pago parcial o total de una deuda y lo guarda en pagos"""
@@ -1927,7 +1930,7 @@ def pagar_deuda():
         print(f"🔄 Nuevo estado: {nuevo_estado}")
         
         # ============================================
-        # 1. REGISTRAR EL PAGO EN LA TABLA pagos
+        # 1. REGISTRAR EL PAGO EN LA TABLA pagos (CON UPDATE)
         # ============================================
         from datetime import datetime
         import pytz
@@ -1948,18 +1951,19 @@ def pagar_deuda():
         registro_existente = cur.fetchone()
         
         if registro_existente:
-            # Actualizar el registro existente con el nuevo pago (sumar monto)
+            # ✅ UPDATE: ACTUALIZAR el registro existente
             id_pago = registro_existente[0]
             cur.execute("""
                 UPDATE pagos 
                 SET monto = monto + %s,
                     observaciones_pago = COALESCE(observaciones_pago || ' | ', '') || %s,
-                    hora = %s
+                    hora = %s,
+                    updated_at = NOW() AT TIME ZONE 'America/Santiago'
                 WHERE id = %s
             """, (monto_abonado, f"Pago de deuda: {descripcion}", hora_ahora, id_pago))
             print(f"✅ Registro #{id_pago} actualizado con pago de deuda")
         else:
-            # Crear un nuevo registro en pagos
+            # ✅ INSERT: Crear nuevo registro
             cur.execute("""
                 INSERT INTO pagos 
                 (nombre, patente, monto, fecha, hora, estado, tipo_venta, 
