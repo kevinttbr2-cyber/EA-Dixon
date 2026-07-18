@@ -5,6 +5,9 @@
 {% block content %}
 
 <style>
+/* ============================================
+   ESTILOS DEUDORES (CONSISTENTE CON EL SISTEMA)
+   ============================================ */
 .deudores-container {
     max-width: 1100px;
     margin: 0 auto;
@@ -32,43 +35,43 @@
 .deudores-container .total-deudas {
     background: rgba(255, 107, 107, 0.10);
     border: 1px solid rgba(255, 107, 107, 0.20);
-    border-radius: 12px;
-    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    padding: 8px 20px;
     text-align: center;
 }
 
 .deudores-container .total-deudas .label {
-    color: #888;
-    font-size: 13px;
+    color: var(--text-muted);
+    font-size: 12px;
     display: block;
 }
 
 .deudores-container .total-deudas .monto {
     color: #ff6b6b;
     font-weight: 700;
-    font-size: 24px;
+    font-size: 22px;
 }
 
 /* ============================================
-   TARJETAS DE DEUDORES
+   TARJETAS DE DEUDORES (ESTILO CONSISTENTE)
    ============================================ */
 .deudores-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .deudor-card {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     padding: 12px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
+    gap: 8px;
     transition: var(--transition);
-    cursor: default;
 }
 
 .deudor-card:hover {
@@ -110,40 +113,41 @@
 
 .deudor-card .frecuencia {
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 11px;
     background: var(--bg-hover);
     padding: 2px 10px;
     border-radius: 20px;
+    border: 1px solid var(--border-subtle);
 }
 
 .deudor-card .acciones {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
 }
 
 .deudor-card .btn-pagar {
-    background: #00ff66 !important;
-    color: #000 !important;
+    background: var(--accent-green) !important;
+    color: var(--bg-primary) !important;
     font-weight: 700;
     border: none;
-    border-radius: 8px;
-    padding: 6px 16px;
+    border-radius: var(--radius-sm);
+    padding: 6px 14px;
     font-size: 13px;
     cursor: pointer;
     transition: var(--transition);
 }
 
 .deudor-card .btn-pagar:hover {
-    background: #00cc52 !important;
     transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.15);
 }
 
 .deudor-card .btn-historial {
-    background: rgba(79, 195, 247, 0.12);
+    background: rgba(79, 195, 247, 0.10);
     color: #4fc3f7;
-    border: 1px solid rgba(79, 195, 247, 0.20);
-    border-radius: 8px;
+    border: 1px solid rgba(79, 195, 247, 0.15);
+    border-radius: var(--radius-sm);
     padding: 6px 12px;
     font-size: 13px;
     cursor: pointer;
@@ -168,76 +172,89 @@
     margin-bottom: 16px;
 }
 
+.sin-deudores p {
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.sin-deudores .sub {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
 /* ============================================
-   MODAL PAGO
+   MODAL PAGO (CONSISTENTE)
    ============================================ */
-.modal-pago-deuda .modal-content {
+.modal-deuda .modal-content {
     max-width: 500px !important;
 }
 
-.modal-pago-deuda .info-deuda {
-    background: rgba(255, 107, 107, 0.06);
-    border-radius: 10px;
+.modal-deuda .info-deuda {
+    background: rgba(255, 107, 107, 0.05);
+    border-radius: var(--radius-sm);
     padding: 12px 16px;
     margin-bottom: 16px;
     border-left: 3px solid #ff6b6b;
 }
 
-.modal-pago-deuda .info-deuda .row {
+.modal-deuda .info-deuda .row {
     display: flex;
     justify-content: space-between;
     padding: 4px 0;
 }
 
-.modal-pago-deuda .info-deuda .label {
+.modal-deuda .info-deuda .row .label {
     color: var(--text-muted);
 }
 
-.modal-pago-deuda .info-deuda .value {
+.modal-deuda .info-deuda .row .value {
     font-weight: 600;
     color: var(--text-primary);
 }
 
-.modal-pago-deuda .info-deuda .deuda-value {
+.modal-deuda .info-deuda .row .deuda-value {
     color: #ff6b6b;
     font-weight: 700;
     font-size: 18px;
 }
 
-.modal-pago-deuda .form-group {
+.modal-deuda .form-group {
     margin-bottom: 12px;
 }
 
-.modal-pago-deuda .form-group label {
+.modal-deuda .form-group label {
     color: var(--text-secondary);
     font-size: 13px;
+    font-weight: 500;
     display: block;
     margin-bottom: 4px;
 }
 
-.modal-pago-deuda .form-group input,
-.modal-pago-deuda .form-group textarea {
+.modal-deuda .form-group input,
+.modal-deuda .form-group textarea {
     width: 100%;
     padding: 8px 12px;
     background: var(--bg-input);
     border: 1px solid var(--border-subtle);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-size: 14px;
+    transition: var(--transition);
 }
 
-.modal-pago-deuda .form-group input:focus,
-.modal-pago-deuda .form-group textarea:focus {
+.modal-deuda .form-group input:focus,
+.modal-deuda .form-group textarea:focus {
     outline: none;
-    border-color: #00ff66;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
 }
 
-.modal-pago-deuda .btn-pagar-deuda {
-    background: #00ff66 !important;
-    color: #000 !important;
+.modal-deuda .btn-pagar-deuda {
+    background: var(--accent-green) !important;
+    color: var(--bg-primary) !important;
     font-weight: 700;
     border: none;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     padding: 12px;
     width: 100%;
     font-size: 16px;
@@ -245,16 +262,19 @@
     transition: var(--transition);
 }
 
-.modal-pago-deuda .btn-pagar-deuda:hover {
-    background: #00cc52 !important;
+.modal-deuda .btn-pagar-deuda:hover {
     transform: scale(1.01);
+    box-shadow: 0 0 30px rgba(0, 255, 102, 0.15);
 }
 
-.modal-pago-deuda .btn-pagar-deuda:disabled {
+.modal-deuda .btn-pagar-deuda:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 @media (max-width: 600px) {
     .deudor-card {
         flex-direction: column;
@@ -269,10 +289,14 @@
         align-items: stretch;
         gap: 10px;
     }
+    .deudores-container .header h2 {
+        font-size: 18px;
+    }
 }
 </style>
 
-<div class="deudores-container">
+<div class="base-container deudores-container">
+
     <!-- HEADER -->
     <div class="header">
         <h2>
@@ -315,7 +339,7 @@
                     {% endif %}
                     
                     <span class="frecuencia">
-                        {% if d.frecuencia_deudas %}
+                        {% if d.frecuencia_deudas and d.frecuencia_deudas > 0 %}
                             🔁 {{ d.frecuencia_deudas }} deuda{{ 's' if d.frecuencia_deudas > 1 else '' }}
                         {% else %}
                             🔁 1 deuda
@@ -326,11 +350,11 @@
                 <div class="acciones">
                     <span class="monto">${{ "{:,.0f}".format(d.monto_deuda) }}</span>
                     
-                    <button class="btn-historial" onclick="verHistorial('{{ d.cliente_nombre }}')">
+                    <button class="btn-historial" onclick="verHistorialDeuda('{{ d.cliente_nombre }}')" title="Ver historial">
                         📜
                     </button>
                     
-                    <button class="btn-pagar" onclick="abrirModalPago('{{ d.id }}', '{{ d.cliente_nombre }}', {{ d.monto_deuda }})">
+                    <button class="btn-pagar" onclick="abrirModalPagoDeuda('{{ d.id }}', '{{ d.cliente_nombre }}', {{ d.monto_deuda }})">
                         💰 Pagar
                     </button>
                 </div>
@@ -339,8 +363,8 @@
         {% else %}
             <div class="sin-deudores">
                 <span class="icono material-symbols-rounded">check_circle</span>
-                <p style="font-size: 18px; color: var(--text-primary);">🎉 No hay deudores pendientes</p>
-                <p style="color: var(--text-muted);">Todos los clientes están al día</p>
+                <p>🎉 No hay deudores pendientes</p>
+                <span class="sub">Todos los clientes están al día</span>
             </div>
         {% endif %}
     </div>
@@ -349,11 +373,14 @@
 <!-- ============================================
    MODAL PAGAR DEUDA
    ============================================ -->
-<div id="modalPagarDeuda" class="modal-dixon modal-pago-deuda">
+<div id="modalPagarDeuda" class="modal-dixon modal-deuda">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 style="color: #00ff66;">💰 Pagar Deuda</h3>
-            <button class="close-btn" onclick="cerrarModalPago()">
+            <h3 style="color: var(--accent-green);">
+                <span class="material-symbols-rounded" style="font-size: 24px;">payments</span>
+                Pagar Deuda
+            </h3>
+            <button class="close-btn" onclick="cerrarModalPagoDeuda()">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
@@ -398,13 +425,19 @@
 <div id="modalHistorialDeuda" class="modal-dixon">
     <div class="modal-content" style="max-width: 600px;">
         <div class="modal-header">
-            <h3 style="color: #4fc3f7;">📜 Historial de Deudas</h3>
+            <h3 style="color: #4fc3f7;">
+                <span class="material-symbols-rounded" style="font-size: 24px;">history</span>
+                Historial de Deudas
+            </h3>
             <button class="close-btn" onclick="cerrarModalHistorialDeuda()">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
         <div id="contenidoHistorialDeuda" style="max-height: 400px; overflow-y: auto;">
-            <div style="text-align:center;padding:20px;color:#888;">Cargando...</div>
+            <div style="text-align:center;padding:20px;color:var(--text-muted);">
+                <span class="material-symbols-rounded" style="font-size: 40px;">hourglass_empty</span>
+                <br>Cargando...
+            </div>
         </div>
     </div>
 </div>
@@ -415,7 +448,7 @@ const API_URL = 'https://ea-dixon-production.up.railway.app';
 // ============================================
 // ABRIR MODAL DE PAGO
 // ============================================
-function abrirModalPago(id, nombre, monto) {
+function abrirModalPagoDeuda(id, nombre, monto) {
     document.getElementById('modalDeudorId').value = id;
     document.getElementById('modalClienteNombre').textContent = nombre;
     document.getElementById('modalDeudaActual').textContent = '$' + monto.toLocaleString('es-CL');
@@ -441,7 +474,7 @@ function abrirModalPago(id, nombre, monto) {
     document.getElementById('modalPagarDeuda').classList.add('active');
 }
 
-function cerrarModalPago() {
+function cerrarModalPagoDeuda() {
     document.getElementById('modalPagarDeuda').classList.remove('active');
 }
 
@@ -493,7 +526,7 @@ function confirmarPagoDeuda() {
     .then(data => {
         if (data.success) {
             alert('✅ ' + data.mensaje);
-            cerrarModalPago();
+            cerrarModalPagoDeuda();
             location.reload();
         } else {
             alert('❌ Error: ' + (data.error || 'Desconocido'));
@@ -511,17 +544,17 @@ function confirmarPagoDeuda() {
 // ============================================
 // VER HISTORIAL
 // ============================================
-function verHistorial(nombre) {
+function verHistorialDeuda(nombre) {
     const modal = document.getElementById('modalHistorialDeuda');
     const contenido = document.getElementById('contenidoHistorialDeuda');
     modal.classList.add('active');
-    contenido.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">Cargando historial...</div>';
+    contenido.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);"><span class="material-symbols-rounded" style="font-size: 40px;">hourglass_empty</span><br>Cargando historial...</div>';
     
     fetch(`${API_URL}/api/deudores/historial/${encodeURIComponent(nombre)}`)
         .then(r => r.json())
         .then(data => {
             if (data.length === 0) {
-                contenido.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No hay historial de deudas</div>';
+                contenido.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">No hay historial de deudas</div>';
                 return;
             }
             
@@ -532,19 +565,19 @@ function verHistorial(nombre) {
                 const tipoEmoji = item.tipo === 'deuda' ? '⚠️' : '💰';
                 const tipoColor = item.tipo === 'deuda' ? '#ff6b6b' : '#00ff66';
                 html += `
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-subtle);">
                         <div>
                             <span style="color:${tipoColor};">${tipoEmoji}</span>
-                            <span style="color:#fff;">${item.tipo === 'deuda' ? 'Deuda' : 'Abono'}</span>
+                            <span style="color:var(--text-primary);">${item.tipo === 'deuda' ? 'Deuda' : 'Abono'}</span>
                             ${item.tipo === 'deuda' ? 
                                 `<span style="color:#ff6b6b;font-weight:600;">+$${item.monto_deuda.toLocaleString()}</span>` :
                                 `<span style="color:#00ff66;font-weight:600;">-$${item.monto_abonado.toLocaleString()}</span>`
                             }
                         </div>
-                        <div style="color:#888;font-size:12px;">
+                        <div style="color:var(--text-muted);font-size:12px;">
                             ${item.saldo_restante > 0 ? `Saldo: $${item.saldo_restante.toLocaleString()}` : '✅ Liquidado'}
                         </div>
-                        <div style="color:#666;font-size:11px;">${fechaStr}</div>
+                        <div style="color:var(--text-muted);font-size:11px;">${fechaStr}</div>
                     </div>
                 `;
             });
