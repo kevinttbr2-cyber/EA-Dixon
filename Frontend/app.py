@@ -186,10 +186,6 @@ def generar_firma_pdf(id_reg):
         str(id_reg).encode(),
         hashlib.sha256
     ).hexdigest()[:16]
-
-# ============================
-# CONTEXT PROCESSOR
-# ============================
 # ============================
 # CONTEXT PROCESSOR
 # ============================
@@ -1176,7 +1172,7 @@ def deudores():
     # Calcular total de deudas
     total_deudas = sum(d.get('monto_deuda', 0) for d in deudores)
     
-    return render_template("deudores.html", deudores=deudores, total_deudas=total_deudas)
+    return render_template("deudores.html", deudores=deudores, total_deudas=total_deudas. deudores_count=deudores_count))
 # ============================
 # VENTA RÁPIDA
 # ============================
