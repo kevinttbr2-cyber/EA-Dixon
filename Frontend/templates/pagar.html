@@ -235,7 +235,7 @@
 }
 
 /* ============================================
-   FORMULARIO COMPLETO (siempre visible)
+   FORMULARIO COMPLETO (siempre visible - FUERA del pago parcial)
    ============================================ */
 .pagar-container .form-control {
     background: var(--bg-input) !important;
@@ -317,9 +317,8 @@
     <!-- ============================================
     CLIENTE INFO (CON CÍRCULO DE ESTADO)
     ============================================ -->
-    <div class="cliente-info" id="clienteInfo">
+    <div class="cliente-info">
         <div class="info-left">
-            <!-- Círculo de estado (se carga con JS) -->
             <span class="circulo-estado" id="circuloEstado" 
                   style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: #888; box-shadow: none;">
             </span>
@@ -337,7 +336,7 @@
     MONTO TOTAL (EDITABLE - SIEMPRE VISIBLE)
     ============================================ -->
     <div class="monto-total">
-        <label class="label">💰 Monto total a pagar</label>
+        <label class="label">💰 Monto total del servicio</label>
         <input type="number" id="montoTotal" class="form-control" step="0.01" min="0" 
                placeholder="Ingresa el monto total del servicio..." 
                value="{{ registro.monto }}">
@@ -433,7 +432,6 @@ function cargarEstadoDeudor() {
     fetch(`${API_URL}/api/deudores/${encodeURIComponent(nombreCliente)}`)
         .then(r => {
             if (r.status === 404) {
-                // Cliente sin deuda
                 circulo.style.background = '#00ff66';
                 circulo.style.boxShadow = '0 0 8px rgba(0,255,102,0.3)';
                 badge.style.display = 'inline-block';
@@ -507,7 +505,6 @@ function calcularDiferencia() {
 }
 
 document.getElementById('montoTotal').addEventListener('input', function() {
-    // Si la sección parcial está abierta, recalcular
     if (document.getElementById('parcialSection').classList.contains('open')) {
         calcularDiferencia();
     }
@@ -516,9 +513,10 @@ document.getElementById('montoTotal').addEventListener('input', function() {
 document.getElementById('montoPagar').addEventListener('input', calcularDiferencia);
 
 // ============================================
-// CONFIRMAR PAGO
+// CONFIRMAR PAGO - MANEJA PAGO COMPLETO Y PARCIAL
 // ============================================
 function confirmarPago() {
+    // 1. OBTENER VALORES
     const montoTotal = parseFloat(document.getElementById('montoTotal').value) || 0;
     const parcialSection = document.getElementById('parcialSection');
     const montoPagar = parseFloat(document.getElementById('montoPagar').value) || 0;
@@ -527,9 +525,15 @@ function confirmarPago() {
     const diagnostico = document.getElementById('diagnosticoInput').value;
     const reparacion = document.getElementById('reparacionInput').value;
     const resultado = document.querySelector('input[name="resultado"]:checked')?.value || 'reparado';
-    const esPagoParcial = parcialSection.classList.contains('open') && montoPagar < montoTotal;
-    const diferencia = Math.max(0, montoTotal - montoPagar);
     
+    // 2. DETERMINAR SI ES PAGO PARCIAL
+    const esPagoParcial = parcialSection.classList.contains('open') && montoPagar < montoTotal;
+    
+    // 3. ✅ EL MONTO QUE SE REGISTRA EN CAJA ES SOLO LO QUE PAGA
+    const montoACobrar = esPagoParcial ? montoPagar : montoTotal;
+    const diferencia = Math.max(0, montoTotal - montoACobrar);
+    
+    // 4. VALIDACIONES
     if (montoTotal <= 0) {
         alert('⚠️ Ingresa el monto total del servicio');
         document.getElementById('montoTotal').focus();
@@ -547,28 +551,29 @@ function confirmarPago() {
         return;
     }
     
-    // Confirmar si hay deuda
+    // 5. CONFIRMAR
     if (esPagoParcial && diferencia > 0) {
         if (!confirm(`📊 Confirmar pago parcial\n\n` +
             `💰 Monto total del servicio: $${montoTotal.toLocaleString()}\n` +
-            `💵 Monto a pagar hoy: $${montoPagar.toLocaleString()}\n` +
-            `⚠️ Deuda generada: $${diferencia.toLocaleString()}\n\n` +
+            `💵 Monto que paga HOY: $${montoACobrar.toLocaleString()} (esto va a caja)\n` +
+            `⚠️ Deuda generada: $${diferencia.toLocaleString()} (se registra en deudores)\n\n` +
             `¿Confirmar?`)) {
             return;
         }
     } else {
-        if (!confirm(`✅ ¿Confirmar pago de $${montoTotal.toLocaleString()}?`)) {
+        if (!confirm(`✅ ¿Confirmar pago completo de $${montoACobrar.toLocaleString()}?`)) {
             return;
         }
     }
     
+    // 6. PROCESAR
     const btn = document.querySelector('.btn-primary');
     btn.disabled = true;
     btn.textContent = '⏳ Procesando...';
     
-    // 1. Registrar el pago
+    // 6a. REGISTRAR EL PAGO (SOLO LO QUE PAGÓ - ESTO VA A CAJA)
     const dataPago = {
-        monto: esPagoParcial ? montoPagar : montoTotal,
+        monto: montoACobrar,
         forma_pago: formaPago,
         diagnostico: diagnostico,
         reparacion: reparacion,
@@ -576,6 +581,8 @@ function confirmarPago() {
         resultado: resultado,
         atendido_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
     };
+    
+    console.log('💰 Registrando pago en caja:', dataPago);
     
     fetch(`${API_URL}/api/pagar/${idRegistro}`, {
         method: 'POST',
@@ -588,8 +595,9 @@ function confirmarPago() {
             throw new Error(result.error || 'Error al procesar pago');
         }
         
-        // 2. Si hay deuda, registrarla
+        // 6b. SI HAY DEUDA, REGISTRARLA EN DEUDORES
         if (esPagoParcial && diferencia > 0) {
+            console.log('📝 Registrando deuda:', diferencia);
             return fetch(`${API_URL}/api/deudores`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -600,7 +608,7 @@ function confirmarPago() {
                     monto_deuda: diferencia,
                     monto_original: diferencia,
                     id_registro: idRegistro,
-                    descripcion: `Deuda generada por pago parcial del servicio #${idRegistro}. Total: $${montoTotal.toLocaleString()}, Abonado: $${(esPagoParcial ? montoPagar : montoTotal).toLocaleString()}`
+                    descripcion: `Deuda generada por pago parcial del servicio #${idRegistro}. Total: $${montoTotal.toLocaleString()}, Abonado: $${montoACobrar.toLocaleString()}`
                 })
             });
         }
@@ -611,10 +619,12 @@ function confirmarPago() {
             console.warn('⚠️ La deuda no se pudo registrar:', resultDeuda.error);
         }
         
+        // 7. MENSAJE FINAL
         let mensaje = '✅ Pago registrado correctamente';
+        mensaje += `\n💰 Monto cobrado: $${montoACobrar.toLocaleString()}`;
         if (esPagoParcial && diferencia > 0) {
-            mensaje += `\n\n💰 Deuda generada: $${diferencia.toLocaleString()}`;
-            mensaje += `\n📌 El cliente debe $${diferencia.toLocaleString()}`;
+            mensaje += `\n⚠️ Deuda registrada: $${diferencia.toLocaleString()}`;
+            mensaje += `\n📌 El cliente debe: $${diferencia.toLocaleString()}`;
         }
         alert(mensaje);
         window.location.href = `/pago_exitoso/${idRegistro}`;
@@ -637,7 +647,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { passive: false });
     });
     
-    // Cargar estado del deudor
     cargarEstadoDeudor();
 });
 </script>
