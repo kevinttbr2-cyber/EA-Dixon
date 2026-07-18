@@ -80,12 +80,10 @@ def health():
 # ============================================
 @app.route('/api/repuestos', methods=['GET'])
 def obtener_repuestos():
-    """Obtiene todos los repuestos con sus categorías para la tabla"""
     try:
         from database import get_cursor
         conn, cur = get_cursor()
         
-        # ✅ IMPORTANTE: Incluir categoria_nombre en el SELECT
         cur.execute("""
             SELECT id, nombre, stock, costo_proveedor, 
                    costo_proveedor_pendiente, margen_ganancia, 
@@ -97,11 +95,6 @@ def obtener_repuestos():
         repuestos = [dict(row) for row in cur.fetchall()]
         cur.close()
         conn.close()
-        
-        # Log para verificar
-        if repuestos:
-            print(f"📦 Columnas devueltas: {list(repuestos[0].keys())}")
-            print(f"📦 categoria_nombre del primer producto: {repuestos[0].get('categoria_nombre')}")
         
         return jsonify(repuestos)
     except Exception as e:
