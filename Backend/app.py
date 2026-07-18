@@ -2018,6 +2018,35 @@ def obtener_todos_deudores():
         import traceback
         traceback.print_exc()
         return jsonify([])
+# ============================================
+# OBTENER DEUDA POR ID
+# ============================================
+@app.route('/api/deuda/<int:id_deuda>', methods=['GET'])
+def obtener_deuda(id_deuda):
+    """Obtiene los detalles de una deuda específica"""
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT id, cliente_nombre, patente, telefono, 
+                   monto_deuda, monto_original, estado, 
+                   fecha_deuda, fecha_actualizacion, ultimo_pago,
+                   observaciones, frecuencia_deudas, id_registro
+            FROM deudores 
+            WHERE id = %s AND monto_deuda > 0
+        """, (id_deuda,))
+        
+        deuda = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if deuda:
+            return jsonify(dict(deuda))
+        return jsonify({"error": "Deuda no encontrada o ya pagada"}), 404
+    except Exception as e:
+        print(f"❌ Error en obtener_deuda: {e}")
+        return jsonify({"error": str(e)}), 500
 
 # ============================
 # CREAR ADMIN AL INICIAR
