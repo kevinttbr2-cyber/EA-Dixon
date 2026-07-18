@@ -274,7 +274,34 @@
     font-weight: 600 !important;
 }
 
-/* DROPDOWN 3 PUNTOS - SIEMPRE POR ENCIMA */
+/* ============================================
+   CÍRCULOS DE ESTADO DE DEUDOR
+   ============================================ */
+.circulo-estado {
+    display: inline-block !important;
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+    transition: all 0.3s ease !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.circulo-estado:hover {
+    transform: scale(1.3) !important;
+}
+
+.cliente-nombre-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+    padding: 4px 0 !important;
+}
+
+/* ============================================
+   DROPDOWN 3 PUNTOS - SIEMPRE POR ENCIMA
+   ============================================ */
 .dropdown-3p {
     position: relative !important;
     display: inline-block !important;
@@ -851,7 +878,18 @@
                             {{ r.id }}
                         </a>
                     </td>
-                    <td>{{ r.nombre }}</td>
+                    <td>
+                        <div class="cliente-nombre-wrapper">
+                            <span id="circulo-{{ r.id }}" 
+                                  class="circulo-estado" 
+                                  data-cliente="{{ r.nombre }}"
+                                  data-patente="{{ r.patente }}"
+                                  title="Cargando estado..."
+                                  style="background: #888;">
+                            </span>
+                            {{ r.nombre }}
+                        </div>
+                    </td>
                     <td class="monto-cell">${{ "{:,.0f}".format(r.monto) }}</td>
                     <td style="font-size: 12px;">{{ r.fecha[:10] if r.fecha else '' }}</td>
                     <td>{{ r.patente }}</td>
@@ -961,7 +999,19 @@
             </div>
 
             <div class="grid-datos">
-                <div><span class="label">Cliente:</span> <span class="value">{{ r.nombre }}</span></div>
+                <div>
+                    <span class="label">Cliente:</span> 
+                    <span class="value">
+                        <span id="circulo-movil-{{ r.id }}" 
+                              class="circulo-estado" 
+                              data-cliente="{{ r.nombre }}"
+                              data-patente="{{ r.patente }}"
+                              title="Cargando estado..."
+                              style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #888; vertical-align: middle; margin-right: 4px;">
+                        </span>
+                        {{ r.nombre }}
+                    </span>
+                </div>
                 <div><span class="label">Fecha:</span> <span class="value">{{ r.fecha[:10] if r.fecha else '' }}</span></div>
                 <div><span class="label">Patente:</span> <span class="value">{{ r.patente }}</span></div>
                 <div><span class="label">Atendido:</span> <span class="value">{{ r.atendido_por or r.usuario or '-' }}</span></div>
@@ -1754,6 +1804,57 @@ function guardarEdicionRepuestos() {
 }
 
 // ============================================
+// CARGAR ESTADOS DE DEUDORES PARA REGISTROS
+// ============================================
+function cargarEstadosDeudores() {
+    document.querySelectorAll('.circulo-estado').forEach(el => {
+        const cliente = el.dataset.cliente;
+        if (!cliente) {
+            el.style.background = '#888';
+            el.title = 'Sin cliente';
+            return;
+        }
+        
+        fetch(`${API_URL}/api/deudores/${encodeURIComponent(cliente)}`)
+            .then(r => {
+                if (r.status === 404) {
+                    // Cliente sin deuda
+                    el.style.background = '#00ff66';
+                    el.title = '✅ Sin deuda';
+                    el.style.boxShadow = '0 0 8px rgba(0,255,102,0.3)';
+                    return null;
+                }
+                return r.json();
+            })
+            .then(data => {
+                if (data && data.monto_deuda > 0) {
+                    const estado = data.estado || 'verde';
+                    const colores = {
+                        'verde': { bg: '#00ff66', texto: '✅ Sin deuda', shadow: 'rgba(0,255,102,0.3)' },
+                        'amarillo': { bg: '#f1c40f', texto: '🟡 Deudor', shadow: 'rgba(241,196,15,0.3)' },
+                        'rojo': { bg: '#ff6b6b', texto: '🔴 Deudor crítico', shadow: 'rgba(255,107,107,0.3)' },
+                        'negro': { bg: '#333', texto: '⚫ Lista negra', shadow: 'rgba(0,0,0,0.3)' }
+                    };
+                    const config = colores[estado] || colores['verde'];
+                    el.style.background = config.bg;
+                    el.title = `${config.texto} - $${data.monto_deuda.toLocaleString()}`;
+                    el.style.boxShadow = `0 0 8px ${config.shadow}`;
+                    el.style.border = '1px solid rgba(255,255,255,0.1)';
+                } else {
+                    el.style.background = '#00ff66';
+                    el.title = '✅ Sin deuda';
+                    el.style.boxShadow = '0 0 8px rgba(0,255,102,0.3)';
+                }
+            })
+            .catch(() => {
+                el.style.background = '#888';
+                el.title = '❌ Error al cargar estado';
+                el.style.boxShadow = 'none';
+            });
+    });
+}
+
+// ============================================
 // BUSCADOR Y ORDENAMIENTO
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -1830,6 +1931,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         filasArray.forEach(fila => tbody.appendChild(fila));
     };
+
+    // ============================================
+    // CARGAR ESTADOS DE DEUDORES AL INICIO
+    // ============================================
+    cargarEstadosDeudores();
+    
+    // También ejecutar después de un tiempo (para esperar que los datos carguen)
+    setTimeout(cargarEstadosDeudores, 1500);
+    setTimeout(cargarEstadosDeudores, 3000);
 });
 </script>
 
