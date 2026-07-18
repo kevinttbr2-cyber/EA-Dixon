@@ -1792,27 +1792,27 @@ def registrar_deuda():
             else:
                 nuevo_estado = 'verde'
             
-            cur.execute("""
+           cur.execute("""
                 UPDATE deudores 
                 SET monto_deuda = %s,
                     monto_original = monto_original + %s,
                     estado = %s,
                     fecha_actualizacion = NOW() AT TIME ZONE 'America/Santiago',
                     observaciones = %s,
-                    frecuencia_deudas = %s
+                    frecuencia_deudas = %s,
+                    id_registro = COALESCE(id_registro, %s)
                 WHERE id = %s
-            """, (nuevo_monto, monto_original, nuevo_estado, descripcion, nueva_frecuencia, deudor_id))
-            
-            # Guardar en historial
+            """, (nuevo_monto, monto_original, nuevo_estado, descripcion, nueva_frecuencia, id_registro, deudor_id))
+        else:
+            # ✅ GUARDAR id_registro EN INSERT
             cur.execute("""
-                INSERT INTO historial_deudas 
-                (deudor_id, cliente_nombre, patente, monto_deuda, 
-                 monto_abonado, saldo_restante, tipo, descripcion, id_registro)
+                INSERT INTO deudores 
+                (cliente_nombre, patente, telefono, monto_deuda, 
+                 monto_original, estado, observaciones, frecuencia_deudas, id_registro)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                deudor_id, cliente_nombre, patente, monto_deuda,
-                0, nuevo_monto, 'deuda', descripcion, id_registro
-            ))
+                RETURNING id
+            """, (cliente_nombre, patente, telefono, monto_deuda, 
+                  monto_original, estado, descripcion, 1, id_registro))
             
             mensaje = f"✅ Deuda actualizada: ${nuevo_monto:,.0f} (Frecuencia: {nueva_frecuencia})"
         else:
