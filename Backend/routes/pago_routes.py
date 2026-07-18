@@ -550,7 +550,8 @@ def get_repuestos_lista():
                     nombre, 
                     COALESCE(costo_venta_final, 0) as costo,
                     proveedor,
-                    costo_proveedor_pendiente
+                    costo_proveedor_pendiente,
+                    categoria_nombre
                 FROM repuestos 
                 WHERE nombre ILIKE %s 
                 ORDER BY nombre 
@@ -566,7 +567,8 @@ def get_repuestos_lista():
                     margen_ganancia,
                     COALESCE(costo_venta_final, 0) as costo_venta_final,
                     proveedor,
-                    costo_proveedor_pendiente
+                    costo_proveedor_pendiente,
+                    categoria_nombre
                 FROM repuestos 
                 ORDER BY nombre
             """)
@@ -580,7 +582,8 @@ def get_repuestos_lista():
                     'margen_ganancia': float(row[3] or 30),
                     'costo_venta_final': float(row[4] or 0),
                     'proveedor': row[5] or '',
-                    'costo_proveedor_pendiente': row[6] or False
+                    'costo_proveedor_pendiente': row[6] or False,
+                    'categoria_nombre': row[7] if len(row) > 7 else None  # ✅ AÑADIDO
                 })
         
         cur.close()
@@ -589,7 +592,6 @@ def get_repuestos_lista():
     except Exception as e:
         print(f"Error en get_repuestos_lista: {e}")
         return jsonify([])
-
 
 # ============================
 # 12. REPUESTOS - CREAR
