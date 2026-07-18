@@ -422,6 +422,9 @@ def get_pendientes_validacion():
 # ============================
 # 10. VALIDAR PAGO (CORREGIDO CON estado_pago)
 # ============================
+# ============================
+# 10. VALIDAR PAGO (CON DESCUENTO DE STOCK)
+# ============================
 @pago_bp.route('/validar_pago/<int:id_reg>', methods=['POST'])
 def validar_pago(id_reg):
     data = request.json
@@ -443,17 +446,39 @@ def validar_pago(id_reg):
         
         print(f"🚛 ¿Es flota? {es_flota} → estado_pago: {estado_pago}")
         
+        # ✅ PROCESAR CADA REPUESTO CON DESCUENTO DE STOCK
         for item in detalles_repuestos:
             nombre = item.get('nombre', '').strip()
             cantidad = int(item.get('cantidad', 1) or 1)
             costo_unitario = float(item.get('costo_unitario', 0) or 0)
             
             if nombre:
-                cur.execute("SELECT id, costo_proveedor, costo_venta_final FROM repuestos WHERE nombre = %s", (nombre,))
+                cur.execute("SELECT id, stock, costo_proveedor, costo_venta_final FROM repuestos WHERE nombre = %s", (nombre,))
                 existente = cur.fetchone()
                 
                 if existente:
-                    id_existente, costo_prov, costo_venta_existente = existente
+                    id_existente, stock_actual, costo_prov, costo_venta_existente = existente
+                    
+                    # ✅ VERIFICAR STOCK DISPONIBLE (solo si no es flota)
+                    if not es_flota:
+                        if stock_actual is not None and stock_actual < cantidad:
+                            cur.close()
+                            conn.close()
+                            return jsonify({
+                                "error": f"Stock insuficiente para '{nombre}'. Disponible: {stock_actual}, Solicitado: {cantidad}"
+                            }), 400
+                        
+                        # ✅ DESCONTAR STOCK
+                        nuevo_stock = (stock_actual or 0) - cantidad
+                        cur.execute("""
+                            UPDATE repuestos 
+                            SET stock = %s,
+                                updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                            WHERE id = %s
+                        """, (nuevo_stock, id_existente))
+                        print(f"📦 Stock de '{nombre}': {stock_actual} → {nuevo_stock}")
+                    
+                    # Actualizar costo_venta_final si es 0
                     if costo_venta_existente == 0 and costo_unitario > 0:
                         cur.execute("""
                             UPDATE repuestos 
@@ -463,13 +488,15 @@ def validar_pago(id_reg):
                         """, (costo_unitario, id_existente))
                         print(f"✅ Repuesto '{nombre}' actualizado con costo_venta_final: ${costo_unitario}")
                 else:
+                    # Crear nuevo repuesto
                     iva = 1.19
                     costo_proveedor_estimado = int(costo_unitario / 1.19 / 1.3) if costo_unitario > 0 else 0
                     
                     cur.execute("""
                         INSERT INTO repuestos 
-                        (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, costo_proveedor_pendiente, created_at, updated_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, 
+                        (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, 
+                         stock, costo_proveedor_pendiente, created_at, updated_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, 
                                 NOW() AT TIME ZONE 'America/Santiago', 
                                 NOW() AT TIME ZONE 'America/Santiago')
                         RETURNING id
@@ -479,6 +506,7 @@ def validar_pago(id_reg):
                         30,
                         costo_unitario,
                         'Desde Validación',
+                        0,  # ✅ STOCK INICIAL 0
                         costo_proveedor_estimado == 0
                     ))
                     id_nuevo = cur.fetchone()[0]
