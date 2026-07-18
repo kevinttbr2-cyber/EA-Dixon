@@ -1876,7 +1876,7 @@ def pagar_deuda():
         monto_abonado = float(data.get('monto_abonado', 0))
         id_registro = data.get('id_registro')
         descripcion = data.get('descripcion', 'Pago de deuda')
-        forma_pago = data.get('forma_pago', 'efectivo')  # ✅ OBTENER FORMA DE PAGO
+        forma_pago = data.get('forma_pago', 'efectivo')
         
         print(f"👤 Cliente: {cliente_nombre}, 💰 Monto: {monto_abonado}, 📝 Desc: {descripcion}")
         
@@ -1954,8 +1954,7 @@ def pagar_deuda():
                 UPDATE pagos 
                 SET monto = monto + %s,
                     observaciones_pago = COALESCE(observaciones_pago || ' | ', '') || %s,
-                    hora = %s,
-                    updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                    hora = %s
                 WHERE id = %s
             """, (monto_abonado, f"Pago de deuda: {descripcion}", hora_ahora, id_pago))
             print(f"✅ Registro #{id_pago} actualizado con pago de deuda")
