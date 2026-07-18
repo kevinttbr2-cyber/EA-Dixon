@@ -36,6 +36,9 @@
     font-size: 14px;
 }
 
+/* ============================================
+   MONTO TOTAL (INFORMATIVO)
+   ============================================ */
 .pagar-container .monto-total {
     background: rgba(46, 204, 113, 0.04);
     border: 1px solid rgba(46, 204, 113, 0.15);
@@ -78,6 +81,7 @@
     gap: 8px;
     width: 100%;
     justify-content: center;
+    margin-bottom: 12px;
 }
 
 .btn-abonar-toggle:hover {
@@ -98,7 +102,7 @@
    ============================================ */
 .abono-section {
     display: none;
-    margin-top: 12px;
+    margin-bottom: 16px;
     padding: 16px;
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
@@ -108,12 +112,6 @@
 
 .abono-section.open {
     display: block;
-}
-
-.abono-section .grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
 }
 
 .abono-section .form-group {
@@ -238,6 +236,11 @@
     box-shadow: 0 0 30px rgba(0, 255, 102, 0.15);
 }
 
+.pagar-container .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .pagar-container .radio-group {
     display: flex;
     gap: 15px;
@@ -262,16 +265,9 @@
 }
 
 /* ============================================
-   MODAL HISTORIAL
+   RESPONSIVE
    ============================================ */
-.modal-dixon .modal-content {
-    max-width: 600px !important;
-}
-
 @media (max-width: 600px) {
-    .abono-section .grid-2 {
-        grid-template-columns: 1fr;
-    }
     .pagar-container .monto-total .valor {
         font-size: 20px;
     }
@@ -294,17 +290,15 @@
             <span class="patente">🚗 {{ registro.patente }}</span>
             {% endif %}
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            {% if deudor_info and deudor_info.monto_deuda > 0 %}
-            <span style="font-size: 12px; color: #ff6b6b; background: rgba(255,107,107,0.1); padding: 2px 10px; border-radius: 20px;">
-                ⚠️ Deuda: ${{ "{:,.0f}".format(deudor_info.monto_deuda) }}
-            </span>
-            {% endif %}
+        {% if deudor_info and deudor_info.monto_deuda > 0 %}
+        <div style="font-size: 12px; color: #ff6b6b; background: rgba(255,107,107,0.1); padding: 4px 12px; border-radius: 20px;">
+            ⚠️ Deuda: ${{ "{:,.0f}".format(deudor_info.monto_deuda) }}
         </div>
+        {% endif %}
     </div>
 
     <!-- ============================================
-    MONTO TOTAL A PAGAR (siempre visible)
+    MONTO TOTAL (INFORMATIVO - NO EDITABLE)
     ============================================ -->
     <div class="monto-total">
         <span class="label">💰 Monto total a pagar</span>
@@ -320,22 +314,26 @@
     </button>
 
     <!-- ============================================
-    SECCIÓN ABONO (expandible)
+    SECCIÓN ABONO (expandible - AQUÍ SE INGRESA EL MONTO)
     ============================================ -->
     <div class="abono-section" id="abonoSection">
-        <div class="grid-2">
-            <div class="form-group">
-                <label>💵 Monto que paga el cliente</label>
-                <input type="number" id="montoAbono" class="form-control" step="0.01" min="0" placeholder="Ej: 50000">
-            </div>
-            <div class="form-group">
-                <label>💳 Forma de Pago</label>
-                <select id="formaPago" class="form-control">
-                    <option value="efectivo">💵 Efectivo</option>
-                    <option value="tarjeta">💳 Tarjeta</option>
-                    <option value="transferencia">🏦 Transferencia</option>
-                </select>
-            </div>
+        <div class="form-group">
+            <label>💵 ¿Cuánto va a pagar el cliente?</label>
+            <input type="number" id="montoAbono" class="form-control" step="0.01" min="0" 
+                   placeholder="Ingresa el monto que pagará..." 
+                   value="{{ registro.monto }}">
+            <small style="color: var(--text-muted); font-size: 11px; display: block; margin-top: 4px;">
+                💡 El monto total es <strong>${{ "{:,.0f}".format(registro.monto) }}</strong>
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label>💳 Forma de Pago</label>
+            <select id="formaPago" class="form-control">
+                <option value="efectivo">💵 Efectivo</option>
+                <option value="tarjeta">💳 Tarjeta</option>
+                <option value="transferencia">🏦 Transferencia</option>
+            </select>
         </div>
 
         <!-- DEUDA GENERADA -->
@@ -354,7 +352,7 @@
     <!-- ============================================
     FORMULARIO COMPLETO (siempre visible)
     ============================================ -->
-    <div style="margin-top: 16px;">
+    <div>
 
         <div class="form-group">
             <label style="color: var(--text-secondary); font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">🩺 Diagnóstico</label>
@@ -387,28 +385,6 @@
 
 </div>
 
-<!-- ============================================
-   MODAL HISTORIAL DE DEUDA (MÁS PEQUEÑO)
-   ============================================ -->
-<div id="modalHistorialDeuda" class="modal-dixon" style="align-items: flex-start; padding-top: 80px;">
-    <div class="modal-content" style="max-width: 450px; max-height: 60vh; padding: 16px 20px;">
-        <div class="modal-header" style="padding-bottom: 8px; margin-bottom: 8px;">
-            <h3 style="color: #4fc3f7; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 6px;">
-                <span class="material-symbols-rounded" style="font-size: 20px;">history</span>
-                Historial de Deudas
-            </h3>
-            <button class="close-btn" onclick="cerrarModalHistorial()" style="font-size: 20px; padding: 0;">
-                <span class="material-symbols-rounded" style="font-size: 20px;">close</span>
-            </button>
-        </div>
-        <div id="contenidoHistorial" style="max-height: 200px; overflow-y: auto; font-size: 13px;">
-            <div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">
-                <span class="material-symbols-rounded" style="font-size: 24px;">hourglass_empty</span>
-                <br>Cargando...
-            </div>
-        </div>
-    </div>
-
 <script>
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 const idRegistro = '{{ id }}';
@@ -426,10 +402,8 @@ function toggleAbono() {
     section.classList.toggle('open');
     icon.classList.toggle('open');
     
-    // Si se abre, enfocar el campo
     if (section.classList.contains('open')) {
         document.getElementById('montoAbono').focus();
-        // Calcular diferencia inicial
         calcularDiferencia();
     }
 }
@@ -464,21 +438,22 @@ document.getElementById('montoAbono').addEventListener('input', calcularDiferenc
 // CONFIRMAR PAGO
 // ============================================
 function confirmarPago() {
-    const montoAbono = parseFloat(document.getElementById('montoAbono').value) || 0;
+    const abonoSection = document.getElementById('abonoSection');
     const formaPago = document.getElementById('formaPago').value;
     const diagnostico = document.getElementById('diagnosticoInput').value;
     const reparacion = document.getElementById('reparacionInput').value;
     const observaciones = document.getElementById('observacionesInput').value;
     const resultado = document.querySelector('input[name="resultado"]:checked')?.value || 'reparado';
     const registrarDeuda = document.getElementById('registrarDeuda').checked;
-    const diferencia = Math.max(0, montoTotal - montoAbono);
     
-    // Si NO se abrió la sección de abono, pagar el total
-    const abonoSection = document.getElementById('abonoSection');
     let montoPagar = montoTotal;
     let esPagoParcial = false;
+    let diferencia = 0;
     
+    // Si la sección de abono está abierta, usar el monto ingresado
     if (abonoSection.classList.contains('open')) {
+        const montoAbono = parseFloat(document.getElementById('montoAbono').value) || 0;
+        
         if (montoAbono <= 0) {
             alert('⚠️ Ingresa un monto válido para abonar');
             return;
@@ -488,6 +463,7 @@ function confirmarPago() {
             return;
         }
         montoPagar = montoAbono;
+        diferencia = montoTotal - montoAbono;
         esPagoParcial = true;
     }
     
@@ -571,13 +547,6 @@ function confirmarPago() {
 }
 
 // ============================================
-// CERRAR MODAL HISTORIAL
-// ============================================
-function cerrarModalHistorial() {
-    document.getElementById('modalHistorialDeuda').classList.remove('active');
-}
-
-// ============================================
 // DESHABILITAR SCROLL EN INPUTS NUMÉRICOS
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -587,6 +556,12 @@ document.addEventListener('DOMContentLoaded', function() {
             this.blur();
         }, { passive: false });
     });
+    
+    // Inicializar el campo de abono con el monto total
+    const montoAbono = document.getElementById('montoAbono');
+    if (montoAbono) {
+        montoAbono.value = montoTotal;
+    }
 });
 </script>
 
