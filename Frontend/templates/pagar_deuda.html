@@ -249,6 +249,7 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
     const clienteNombre = document.getElementById('clienteNombre').value;
     const montoMaximo = parseFloat(document.getElementById('montoMaximo').value) || 0;
     const montoPagar = parseFloat(document.getElementById('montoPagar').value) || 0;
+    const formaPago = document.getElementById('formaPago').value;
     const observaciones = document.getElementById('observacionesPago').value || 'Pago de deuda';
     
     if (montoPagar <= 0) {
@@ -267,6 +268,7 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
         `👤 Cliente: ${clienteNombre}\n` +
         `💰 Deuda actual: $${montoMaximo.toLocaleString()}\n` +
         `💵 Monto a pagar: $${montoPagar.toLocaleString()}\n` +
+        `💳 Forma de pago: ${formaPago}\n` +
         `📌 Saldo restante: $${saldoRestante.toLocaleString()}\n\n`;
     
     if (saldoRestante === 0) {
@@ -283,15 +285,20 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
     btn.disabled = true;
     btn.textContent = '⏳ Procesando...';
     
-    // 1. Registrar el pago en el backend (como un pago normal)
-    // Buscar el registro original del cliente para asociarlo
+    // 1. Registrar el pago en el backend (buscar registro o crear uno nuevo)
     fetch(`${API_URL}/api/registros?filtro=todos`)
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) {
+                throw new Error('Error al obtener registros');
+            }
+            return r.json();
+        })
         .then(registros => {
+            // Buscar el registro del cliente
             const registro = registros.find(r => r.nombre === clienteNombre);
             
             if (!registro) {
-                // Si no hay registro, crear uno nuevo
+                // Si no existe, crear uno nuevo
                 return fetch(`${API_URL}/api/agregar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -300,9 +307,14 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
                         patente: '',
                         monto: montoPagar,
                         tipo_venta: 'directa',
-                        forma_pago: 'efectivo'
+                        forma_pago: formaPago
                     })
-                }).then(r => r.json());
+                }).then(r => {
+                    if (!r.ok) {
+                        throw new Error('Error al crear registro');
+                    }
+                    return r.json();
+                });
             }
             
             // Si existe, registrar pago en el registro
@@ -311,20 +323,21 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     monto: montoPagar,
-                    forma_pago: 'efectivo',
+                    forma_pago: formaPago,
                     diagnostico: 'Pago de deuda',
                     reparacion: 'Pago de deuda',
                     observaciones_pago: observaciones,
                     resultado: 'reparado',
                     atendido_por: 'Sistema'
                 })
-            }).then(r => r.json());
+            }).then(r => {
+                if (!r.ok) {
+                    throw new Error('Error al registrar pago');
+                }
+                return r.json();
+            });
         })
         .then(result => {
-            if (!result.success) {
-                throw new Error('Error al registrar el pago');
-            }
-            
             // 2. Registrar el abono en la deuda
             return fetch(`${API_URL}/api/deudores/pagar`, {
                 method: 'POST',
@@ -333,14 +346,21 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
                     cliente_nombre: clienteNombre,
                     monto_abonado: montoPagar,
                     descripcion: observaciones,
-                    id_registro: result.id || null
+                    id_registro: null
                 })
             });
+        })
+        .then(r => {
+            if (!r.ok) {
+                throw new Error(`Error HTTP: ${r.status}`);
+            }
+            return r.json();
         })
         .then(result => {
             if (result && result.success) {
                 let mensaje = `✅ Pago registrado correctamente\n\n`;
                 mensaje += `💰 Monto pagado: $${montoPagar.toLocaleString()}\n`;
+                mensaje += `💳 Forma de pago: ${formaPago}\n`;
                 if (saldoRestante > 0) {
                     mensaje += `📌 Saldo restante: $${saldoRestante.toLocaleString()}`;
                 } else {
@@ -360,5 +380,4 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
         });
 });
 </script>
-
 {% endblock %}
