@@ -388,21 +388,26 @@
 </div>
 
 <!-- ============================================
-   MODAL HISTORIAL DE DEUDA
+   MODAL HISTORIAL DE DEUDA (MÁS PEQUEÑO)
    ============================================ -->
-<div id="modalHistorialDeuda" class="modal-dixon">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 style="color: #4fc3f7;">📜 Historial de Deudas</h3>
-            <button class="close-btn" onclick="cerrarModalHistorial()">
-                <span class="material-symbols-rounded">close</span>
+<div id="modalHistorialDeuda" class="modal-dixon" style="align-items: flex-start; padding-top: 80px;">
+    <div class="modal-content" style="max-width: 450px; max-height: 60vh; padding: 16px 20px;">
+        <div class="modal-header" style="padding-bottom: 8px; margin-bottom: 8px;">
+            <h3 style="color: #4fc3f7; font-size: 16px; margin: 0; display: flex; align-items: center; gap: 6px;">
+                <span class="material-symbols-rounded" style="font-size: 20px;">history</span>
+                Historial de Deudas
+            </h3>
+            <button class="close-btn" onclick="cerrarModalHistorial()" style="font-size: 20px; padding: 0;">
+                <span class="material-symbols-rounded" style="font-size: 20px;">close</span>
             </button>
         </div>
-        <div id="contenidoHistorial" style="max-height: 400px; overflow-y: auto;">
-            <div style="text-align:center;padding:20px;color:var(--text-muted);">Cargando...</div>
+        <div id="contenidoHistorial" style="max-height: 200px; overflow-y: auto; font-size: 13px;">
+            <div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">
+                <span class="material-symbols-rounded" style="font-size: 24px;">hourglass_empty</span>
+                <br>Cargando...
+            </div>
         </div>
     </div>
-</div>
 
 <script>
 const API_URL = 'https://ea-dixon-production.up.railway.app';
