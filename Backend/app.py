@@ -1508,17 +1508,21 @@ def obtener_repuestos_por_categoria(categoria_nombre):
     except Exception as e:
         print(f"❌ Error en obtener_repuestos_por_categoria: {e}")
         return jsonify([])
-# ============================================
-# IMPORTAR PRODUCTOS CON CATEGORÍAS Y STOCK
-# ============================================
 @app.route('/api/repuestos/importar', methods=['POST'])
 def importar_repuestos():
     """Importa productos desde Excel con categorías, subcategorías y stock"""
+    print("=" * 60)
+    print("🚀 IMPORTACIÓN INICIADA")
+    print("=" * 60)
+    
     try:
         data = request.json
+        print(f"📦 Datos recibidos: {len(data.get('productos', []))} productos")
+        
         productos = data.get('productos', [])
         
         if not productos:
+            print("❌ No hay productos")
             return jsonify({"error": "No hay productos para importar"}), 400
         
         from database import get_connection
@@ -1530,8 +1534,10 @@ def importar_repuestos():
         errores = []
         exitosos = []
         
-        for item in productos:
+        for idx, item in enumerate(productos):
             try:
+                print(f"\n📦 [{idx+1}/{len(productos)}] Procesando: {item.get('nombre', 'sin nombre')}")
+                
                 nombre = item.get('nombre', '').strip()
                 costo_proveedor = float(item.get('costo', 0))
                 precio_venta = float(item.get('precio_venta', 0))
@@ -1546,78 +1552,50 @@ def importar_repuestos():
                         "nombre": nombre or 'Sin nombre',
                         "error": "Faltan datos obligatorios (Producto, Costo o Precio)"
                     })
+                    print(f"   ❌ Faltan datos: nombre='{nombre}', costo={costo_proveedor}, precio={precio_venta}")
                     continue
                 
+                print(f"   ✅ Nombre: {nombre}")
+                print(f"   ✅ Costo: {costo_proveedor}")
+                print(f"   ✅ Precio: {precio_venta}")
+                print(f"   ✅ Proveedor: {proveedor}")
+                print(f"   ✅ Categoría: {categoria_nombre}")
+                print(f"   ✅ Subcategoría: {subcategoria_nombre}")
+                print(f"   ✅ Stock: {stock}")
+                
                 # ============================================
-                # 1. Gestionar CATEGORÍA (con manejo de errores)
+                # 1. Gestionar CATEGORÍA
                 # ============================================
                 categoria_id = None
                 if categoria_nombre:
                     try:
-                        # Verificar si la tabla existe
-                        cur.execute("""
-                            SELECT EXISTS (
-                                SELECT FROM information_schema.tables 
-                                WHERE table_name = 'categorias_repuestos'
-                            )
-                        """)
-                        tabla_existe = cur.fetchone()[0]
-                        
-                        if not tabla_existe:
-                            # Si no existe la tabla, crear temporalmente
-                            cur.execute("""
-                                CREATE TABLE IF NOT EXISTS categorias_repuestos (
-                                    id SERIAL PRIMARY KEY,
-                                    nombre VARCHAR(100) NOT NULL UNIQUE,
-                                    descripcion TEXT,
-                                    created_at TIMESTAMP DEFAULT NOW()
-                                )
-                            """)
-                            conn.commit()
-                        
+                        print(f"   🔍 Buscando categoría: {categoria_nombre}")
                         cur.execute("SELECT id FROM categorias_repuestos WHERE nombre = %s", (categoria_nombre,))
                         result = cur.fetchone()
                         if result:
                             categoria_id = result[0]
+                            print(f"   ✅ Categoría encontrada ID: {categoria_id}")
                         else:
+                            print(f"   📝 Creando categoría: {categoria_nombre}")
                             cur.execute("""
                                 INSERT INTO categorias_repuestos (nombre, descripcion)
                                 VALUES (%s, %s)
                                 RETURNING id
                             """, (categoria_nombre, f'Categoría importada: {categoria_nombre}'))
                             categoria_id = cur.fetchone()[0]
+                            print(f"   ✅ Categoría creada ID: {categoria_id}")
                     except Exception as e:
-                        print(f"⚠️ Error con categoría '{categoria_nombre}': {e}")
-                        # Si falla la categoría, continuar sin ella
+                        print(f"   ❌ Error con categoría: {e}")
                         categoria_nombre = None
                         categoria_id = None
                 
                 # ============================================
-                # 2. Gestionar SUBCATEGORÍA (con manejo de errores)
+                # 2. Gestionar SUBCATEGORÍA
                 # ============================================
                 subcategoria_id = None
                 if subcategoria_nombre and categoria_id:
                     try:
-                        cur.execute("""
-                            SELECT EXISTS (
-                                SELECT FROM information_schema.tables 
-                                WHERE table_name = 'subcategorias_repuestos'
-                            )
-                        """)
-                        tabla_existe = cur.fetchone()[0]
-                        
-                        if not tabla_existe:
-                            cur.execute("""
-                                CREATE TABLE IF NOT EXISTS subcategorias_repuestos (
-                                    id SERIAL PRIMARY KEY,
-                                    categoria_id INTEGER NOT NULL,
-                                    nombre VARCHAR(100) NOT NULL,
-                                    created_at TIMESTAMP DEFAULT NOW(),
-                                    UNIQUE(categoria_id, nombre)
-                                )
-                            """)
-                            conn.commit()
-                        
+                        print(f"   🔍 Buscando subcategoría: {subcategoria_nombre}")
                         cur.execute("""
                             SELECT id FROM subcategorias_repuestos 
                             WHERE nombre = %s AND categoria_id = %s
@@ -1625,15 +1603,18 @@ def importar_repuestos():
                         result = cur.fetchone()
                         if result:
                             subcategoria_id = result[0]
+                            print(f"   ✅ Subcategoría encontrada ID: {subcategoria_id}")
                         else:
+                            print(f"   📝 Creando subcategoría: {subcategoria_nombre}")
                             cur.execute("""
                                 INSERT INTO subcategorias_repuestos (categoria_id, nombre)
                                 VALUES (%s, %s)
                                 RETURNING id
                             """, (categoria_id, subcategoria_nombre))
                             subcategoria_id = cur.fetchone()[0]
+                            print(f"   ✅ Subcategoría creada ID: {subcategoria_id}")
                     except Exception as e:
-                        print(f"⚠️ Error con subcategoría '{subcategoria_nombre}': {e}")
+                        print(f"   ❌ Error con subcategoría: {e}")
                         subcategoria_nombre = None
                         subcategoria_id = None
                 
@@ -1646,16 +1627,18 @@ def importar_repuestos():
                     costo_con_iva = costo_proveedor * iva
                     margen = ((precio_venta / costo_con_iva) - 1) * 100
                     margen = round(margen, 1)
+                print(f"   ✅ Margen calculado: {margen}%")
                 
                 # ============================================
                 # 4. Insertar o actualizar REPUESTO
                 # ============================================
+                print(f"   🔍 Buscando repuesto existente: {nombre}")
                 cur.execute("SELECT id, stock FROM repuestos WHERE LOWER(nombre) = LOWER(%s)", (nombre,))
                 existente = cur.fetchone()
                 
                 if existente:
-                    # ✅ ACTUALIZAR: SUMAR STOCK
                     nuevo_stock = (existente[1] or 0) + stock
+                    print(f"   📝 Actualizando repuesto ID: {existente[0]}, stock: {existente[1]} -> {nuevo_stock}")
                     cur.execute("""
                         UPDATE repuestos 
                         SET costo_proveedor = %s,
@@ -1679,8 +1662,9 @@ def importar_repuestos():
                     ))
                     actualizados += 1
                     exitosos.append(f"{nombre} (stock: {nuevo_stock})")
+                    print(f"   ✅ Repuesto actualizado")
                 else:
-                    # ✅ CREAR NUEVO
+                    print(f"   📝 Creando nuevo repuesto")
                     cur.execute("""
                         INSERT INTO repuestos 
                         (nombre, costo_proveedor, costo_venta_final, margen_ganancia, proveedor, 
@@ -1700,11 +1684,15 @@ def importar_repuestos():
                     ))
                     importados += 1
                     exitosos.append(f"{nombre} (nuevo)")
+                    print(f"   ✅ Nuevo repuesto creado")
                 
                 conn.commit()
+                print(f"   ✅ Commit realizado")
                 
             except Exception as e:
-                print(f"❌ Error procesando producto '{item.get('nombre', 'desconocido')}': {e}")
+                print(f"   ❌❌❌ ERROR EN PRODUCTO: {e}")
+                import traceback
+                traceback.print_exc()
                 errores.append({
                     "nombre": item.get('nombre', 'desconocido'),
                     "error": str(e)
@@ -1715,6 +1703,11 @@ def importar_repuestos():
         cur.close()
         conn.close()
         
+        print("\n" + "=" * 60)
+        print(f"✅ IMPORTACIÓN COMPLETADA: {importados} nuevos, {actualizados} actualizados")
+        print(f"   Errores: {len(errores)}")
+        print("=" * 60)
+        
         return jsonify({
             "success": True,
             "importados": importados,
@@ -1724,7 +1717,7 @@ def importar_repuestos():
         })
         
     except Exception as e:
-        print(f"❌ Error en importar_repuestos: {e}")
+        print(f"❌❌❌ ERROR GENERAL: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
