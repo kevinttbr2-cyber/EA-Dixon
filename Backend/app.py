@@ -1742,7 +1742,23 @@ def registrar_deuda():
         conn = get_connection()
         cur = conn.cursor()
         
-        # Buscar si el cliente ya tiene deuda
+        # ============================================
+        # 1. CONTAR FRECUENCIA DE DEUDAS DEL CLIENTE
+        # ============================================
+        cur.execute("""
+            SELECT COUNT(*) as total_deudas
+            FROM historial_deudas 
+            WHERE cliente_nombre ILIKE %s AND tipo = 'deuda'
+        """, (cliente_nombre,))
+        frecuencia = cur.fetchone()[0] or 0
+        
+        # La nueva deuda cuenta como una más
+        nueva_frecuencia = frecuencia + 1
+        print(f"📊 Frecuencia de deudas para '{cliente_nombre}': {nueva_frecuencia}")
+        
+        # ============================================
+        # 2. BUSCAR SI EL CLIENTE YA TIENE DEUDA
+        # ============================================
         cur.execute("""
             SELECT id, monto_deuda, estado FROM deudores 
             WHERE cliente_nombre ILIKE %s
@@ -1756,12 +1772,22 @@ def registrar_deuda():
             deudor_id, monto_actual, estado_actual = existente
             nuevo_monto = monto_actual + monto_deuda
             
-            # Determinar nuevo estado
-            if estado_actual == 'negro':
+            # ============================================
+            # 3. DETERMINAR NUEVO ESTADO (Monto + Frecuencia)
+            # ============================================
+            # Si es la PRIMERA deuda (frecuencia == 1) → AMARILLO
+            # Si ya tiene historial (frecuencia >= 2) → evaluar por monto
+            if nueva_frecuencia == 1:
+                # Primera deuda: siempre amarillo (independiente del monto)
+                nuevo_estado = 'amarillo'
+                print(f"   🟡 Primera deuda: {cliente_nombre} -> AMARILLO (frecuencia: {nueva_frecuencia})")
+            elif estado_actual == 'negro':
                 nuevo_estado = 'negro'
             elif nuevo_monto > 100000:
                 nuevo_estado = 'rojo'
             elif nuevo_monto > 30000:
+                nuevo_estado = 'rojo'
+            elif nuevo_monto > 0:
                 nuevo_estado = 'amarillo'
             else:
                 nuevo_estado = 'verde'
@@ -1772,9 +1798,10 @@ def registrar_deuda():
                     monto_original = monto_original + %s,
                     estado = %s,
                     fecha_actualizacion = NOW() AT TIME ZONE 'America/Santiago',
-                    observaciones = %s
+                    observaciones = %s,
+                    frecuencia_deudas = %s
                 WHERE id = %s
-            """, (nuevo_monto, monto_original, nuevo_estado, descripcion, deudor_id))
+            """, (nuevo_monto, monto_original, nuevo_estado, descripcion, nueva_frecuencia, deudor_id))
             
             # Guardar en historial
             cur.execute("""
@@ -1787,24 +1814,22 @@ def registrar_deuda():
                 0, nuevo_monto, 'deuda', descripcion, id_registro
             ))
             
-            mensaje = f"✅ Deuda actualizada: ${nuevo_monto:,.0f}"
+            mensaje = f"✅ Deuda actualizada: ${nuevo_monto:,.0f} (Frecuencia: {nueva_frecuencia})"
         else:
-            # Determinar estado inicial
-            if monto_deuda > 100000:
-                estado = 'rojo'
-            elif monto_deuda > 30000:
-                estado = 'amarillo'
-            else:
-                estado = 'verde'
+            # ============================================
+            # 4. NUEVO CLIENTE: Primera deuda → AMARILLO
+            # ============================================
+            estado = 'amarillo'  # Siempre amarillo en la primera deuda
+            print(f"   🟡 Nueva deuda: {cliente_nombre} -> AMARILLO (primera vez)")
             
             cur.execute("""
                 INSERT INTO deudores 
                 (cliente_nombre, patente, telefono, monto_deuda, 
-                 monto_original, estado, observaciones)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                 monto_original, estado, observaciones, frecuencia_deudas)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (cliente_nombre, patente, telefono, monto_deuda, 
-                  monto_original, estado, descripcion))
+                  monto_original, estado, descripcion, 1))
             
             deudor_id = cur.fetchone()[0]
             
@@ -1818,7 +1843,7 @@ def registrar_deuda():
                 0, monto_deuda, 'deuda', descripcion, id_registro
             ))
             
-            mensaje = f"✅ Nueva deuda registrada: ${monto_deuda:,.0f}"
+            mensaje = f"✅ Nueva deuda registrada: ${monto_deuda:,.0f} (Primera vez → AMARILLO)"
         
         conn.commit()
         cur.close()
@@ -1830,7 +1855,8 @@ def registrar_deuda():
             "deudor": {
                 "cliente": cliente_nombre,
                 "monto_deuda": monto_deuda,
-                "estado": estado if not existente else nuevo_estado
+                "estado": estado if not existente else nuevo_estado,
+                "frecuencia": nueva_frecuencia
             }
         })
     except Exception as e:
@@ -1838,7 +1864,6 @@ def registrar_deuda():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/api/deudores/pagar', methods=['POST'])
 def pagar_deuda():
@@ -1858,7 +1883,7 @@ def pagar_deuda():
         cur = conn.cursor()
         
         cur.execute("""
-            SELECT id, monto_deuda, estado FROM deudores 
+            SELECT id, monto_deuda, estado, frecuencia_deudas FROM deudores 
             WHERE cliente_nombre ILIKE %s
             ORDER BY fecha_actualizacion DESC
             LIMIT 1
@@ -1868,17 +1893,23 @@ def pagar_deuda():
         if not deudor:
             return jsonify({"error": "Cliente sin deuda registrada"}), 404
         
-        deudor_id, monto_deuda, estado_actual = deudor
+        deudor_id, monto_deuda, estado_actual, frecuencia = deudor
         nuevo_monto = max(0, monto_deuda - monto_abonado)
         
-        # Determinar nuevo estado
+        # ============================================
+        # DETERMINAR NUEVO ESTADO (Monto + Frecuencia)
+        # ============================================
         if estado_actual == 'negro' and nuevo_monto > 0:
             nuevo_estado = 'negro'
         elif nuevo_monto == 0:
+            # Si liquida la deuda, vuelve a verde (independiente de la frecuencia)
             nuevo_estado = 'verde'
+            print(f"   🟢 Deuda liquidada: {cliente_nombre} -> VERDE")
         elif nuevo_monto > 100000:
             nuevo_estado = 'rojo'
         elif nuevo_monto > 30000:
+            nuevo_estado = 'rojo'
+        elif nuevo_monto > 0:
             nuevo_estado = 'amarillo'
         else:
             nuevo_estado = 'verde'
@@ -1915,14 +1946,14 @@ def pagar_deuda():
             "success": True,
             "mensaje": mensaje,
             "saldo_restante": nuevo_monto,
-            "estado": nuevo_estado
+            "estado": nuevo_estado,
+            "frecuencia": frecuencia
         })
     except Exception as e:
         print(f"❌ Error en pagar_deuda: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/api/deudores/historial/<cliente_nombre>', methods=['GET'])
 def historial_deudas_cliente(cliente_nombre):
