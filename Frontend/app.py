@@ -190,6 +190,9 @@ def generar_firma_pdf(id_reg):
 # ============================
 # CONTEXT PROCESSOR
 # ============================
+# ============================
+# CONTEXT PROCESSOR
+# ============================
 @app.context_processor
 def inject_globals():
     def fecha_espanol(fecha):
@@ -216,6 +219,9 @@ def inject_globals():
         meses_cortos = {1: 'Ene', 2: 'Feb', 3: 'Mar', 4: 'Abr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dic'}
         return f"{dias_cortos.get(fecha.weekday(), '')} {fecha.day} {meses_cortos.get(fecha.month, '')}"
     
+    # ============================================
+    # CONTADOR DE FLOTAS PENDIENTES
+    # ============================================
     flotas_pendientes_count = 0
     try:
         resp = requests.get(f"{BACKEND_URL}/api/flotas_pendientes_count", timeout=3)
@@ -225,6 +231,19 @@ def inject_globals():
         print(f"⚠️ Error al obtener flotas pendientes: {e}")
         flotas_pendientes_count = 0
     
+    # ============================================
+    # ✅ CONTADOR DE DEUDORES (DEFINIDO ANTES DE USARLO)
+    # ============================================
+    deudores_count = 0
+    try:
+        resp_deudores = requests.get(f"{BACKEND_URL}/api/deudores/todos", timeout=3)
+        if resp_deudores.status_code == 200:
+            deudores = resp_deudores.json()
+            deudores_count = len([d for d in deudores if d.get('monto_deuda', 0) > 0])
+    except Exception as e:
+        print(f"⚠️ Error al obtener deudores: {e}")
+        deudores_count = 0
+    
     vapid_public_key = os.environ.get("VAPID_PUBLIC_KEY", "")
     
     return dict(
@@ -232,23 +251,10 @@ def inject_globals():
         fecha_espanol=fecha_espanol,
         fecha_corta_espanol=fecha_corta_espanol,
         flotas_pendientes_count=flotas_pendientes_count,
-        deudores_count=deudores_count, 
+        deudores_count=deudores_count,  # ✅ AHORA SÍ ESTÁ DEFINIDO
         vapid_public_key=vapid_public_key
     )
-    # Dentro de inject_globals(), después de flotas_pendientes_count
 
-# ============================================
-# CONTADOR DE DEUDORES
-# ============================================
-deudores_count = 0
-try:
-    resp_deudores = requests.get(f"{BACKEND_URL}/api/deudores/todos", timeout=3)
-    if resp_deudores.status_code == 200:
-        deudores = resp_deudores.json()
-        deudores_count = len([d for d in deudores if d.get('monto_deuda', 0) > 0])
-except Exception as e:
-    print(f"⚠️ Error al obtener deudores: {e}")
-    deudores_count = 0
 
 # ============================
 # RUTAS PRINCIPALES
