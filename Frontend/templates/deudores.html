@@ -264,9 +264,9 @@
                         <span class="material-symbols-rounded" style="font-size: 16px;">history</span>
                     </button>
                     
-                    <a href="/pagar/{{ d.id_registro or 0 }}" class="btn-pagar" title="Ir a pagar">
-                        💰 Pagar
-                    </a>
+                   <button class="btn-pagar" onclick="irAPagar('{{ d.cliente_nombre }}', '{{ d.patente }}')">
+    💰 Pagar
+</button>
                 </div>
             </div>
             {% endfor %}
@@ -299,6 +299,30 @@ document.addEventListener('keydown', function(e) {
         document.querySelectorAll('.modal-dixon.active').forEach(m => m.classList.remove('active'));
     }
 });
+// ============================================
+// IR A PAGAR - BUSCA EL REGISTRO DEL CLIENTE
+// ============================================
+function irAPagar(nombre, patente) {
+    // Buscar el registro más reciente del cliente
+    fetch(`${API_URL}/api/registros?filtro=todos`)
+        .then(r => r.json())
+        .then(registros => {
+            // Buscar por nombre y patente
+            const registro = registros.find(r => 
+                r.nombre === nombre && r.patente === patente
+            );
+            
+            if (registro) {
+                window.location.href = `/pagar/${registro.id}`;
+            } else {
+                alert('⚠️ No se encontró un registro asociado a este cliente.\n\n' +
+                      'Por favor, crea un nuevo registro para este cliente.');
+            }
+        })
+        .catch(() => {
+            alert('❌ Error al buscar el registro del cliente');
+        });
+}
 
 // ============================================
 // CERRAR MODALES CLICK FUERA
