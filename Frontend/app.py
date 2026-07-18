@@ -1115,6 +1115,25 @@ def repuestos():
         logger.error(f"Error en /repuestos: {e}")
         repuestos = []
     return render_template("repuestos.html", repuestos=repuestos)
+# ============================================
+# API: OBTENER REPUESTOS (CON CATEGORÍA)
+# ============================================
+@app.route('/api/repuestos', methods=['GET'])
+@login_required
+@role_required(['admin', 'operador'])
+def api_repuestos():
+    """Obtiene todos los repuestos con sus categorías para la tabla"""
+    try:
+        # Reenviar la solicitud al backend
+        resp = requests.get(f"{BACKEND_URL}/api/repuestos", timeout=10)
+        if resp.status_code == 200:
+            return jsonify(resp.json())
+        else:
+            logger.error(f"❌ Error al obtener repuestos del backend: {resp.status_code}")
+            return jsonify([])
+    except Exception as e:
+        logger.error(f"❌ Error en api_repuestos: {e}")
+        return jsonify([])
 
 # ============================
 # VENTA RÁPIDA
