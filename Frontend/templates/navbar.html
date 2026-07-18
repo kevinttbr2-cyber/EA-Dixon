@@ -79,7 +79,7 @@
                 {% endif %}
                 
                 <!-- ====================
-                GESTIÓN (dropdown con Registros, Flotas, Flotas Pendientes, Repuestos, Auditoría)
+                GESTIÓN (dropdown con Registros, Flotas, Flotas Pendientes, Deudores, Repuestos, Auditoría)
                 ==================== -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item dropdown">
@@ -109,6 +109,18 @@
                                 Flotas Pendientes
                                 {% if flotas_pendientes_count > 0 %}
                                 <span class="badge-count">{{ flotas_pendientes_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <!-- ============================================ -->
+                        <!-- ✅ NUEVO: DEUDORES (con badge de cantidad)   -->
+                        <!-- ============================================ -->
+                        <li>
+                            <a class="dropdown-item" href="/deudores">
+                                <span class="material-symbols-rounded">payments</span>
+                                Deudores
+                                {% if deudores_count is defined and deudores_count > 0 %}
+                                <span class="badge-count" style="background: #ff6b6b;">{{ deudores_count }}</span>
                                 {% endif %}
                             </a>
                         </li>
