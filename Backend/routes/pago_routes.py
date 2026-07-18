@@ -1013,7 +1013,7 @@ def exportar_flota_pdf(flota):
 
 
 # ============================
-# 18. VENTA RÁPIDA (CON CANTIDAD)
+# 18. VENTA RÁPIDA (CON DESCUENTO DE STOCK)
 # ============================
 @pago_bp.route('/venta_rapida', methods=['POST'])
 def venta_rapida():
@@ -1034,26 +1034,73 @@ def venta_rapida():
         fecha_chile, hora_chile = get_fecha_hora_chile()
         
         detalles_repuestos = data.get('detalles_repuestos', [])
+        
+        # ✅ PROCESAR CADA REPUESTO CON DESCUENTO DE STOCK
         for item in detalles_repuestos:
             nombre = item.get('nombre', '').strip()
             cantidad = int(item.get('cantidad', 1) or 1)
             costo_unitario = float(item.get('costo_unitario', 0) or 0)
             
             if nombre and costo_unitario > 0:
-                cur.execute("SELECT id FROM repuestos WHERE nombre = %s", (nombre,))
-                if not cur.fetchone():
-                    cur.execute("""
-                        INSERT INTO repuestos (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, costo_proveedor_pendiente, created_at, updated_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    """, (nombre, 0, 30, costo_unitario, 'Desde Venta Rápida', True))
-                else:
+                # Buscar el repuesto en la base de datos
+                cur.execute("SELECT id, stock, costo_proveedor FROM repuestos WHERE nombre = %s", (nombre,))
+                existente = cur.fetchone()
+                
+                if existente:
+                    id_repuesto, stock_actual, costo_prov = existente
+                    
+                    # ✅ VERIFICAR STOCK DISPONIBLE
+                    if stock_actual is not None and stock_actual < cantidad:
+                        cur.close()
+                        conn.close()
+                        return jsonify({
+                            "error": f"Stock insuficiente para '{nombre}'. Disponible: {stock_actual}, Solicitado: {cantidad}"
+                        }), 400
+                    
+                    # ✅ DESCONTAR STOCK
+                    nuevo_stock = (stock_actual or 0) - cantidad
                     cur.execute("""
                         UPDATE repuestos 
-                        SET costo_venta_final = %s,
-                            updated_at = CURRENT_TIMESTAMP
-                        WHERE nombre = %s AND (costo_venta_final = 0 OR costo_venta_final IS NULL)
-                    """, (costo_unitario, nombre))
+                        SET stock = %s,
+                            updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                        WHERE id = %s
+                    """, (nuevo_stock, id_repuesto))
+                    print(f"📦 Stock de '{nombre}': {stock_actual} → {nuevo_stock}")
+                    
+                    # Si no tiene costo_proveedor, actualizarlo si se proporcionó
+                    if costo_prov == 0 and costo_unitario > 0:
+                        # Estimar costo proveedor
+                        iva = 1.19
+                        margen = 30
+                        costo_estimado = int(costo_unitario / 1.19 / (1 + margen/100))
+                        cur.execute("""
+                            UPDATE repuestos 
+                            SET costo_proveedor = %s,
+                                costo_proveedor_pendiente = FALSE,
+                                updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                            WHERE id = %s
+                        """, (costo_estimado, id_repuesto))
+                else:
+                    # ✅ CREAR NUEVO REPUESTO CON STOCK INICIAL (0)
+                    # El stock se descuenta, pero como es nuevo, se crea con 0
+                    cur.execute("""
+                        INSERT INTO repuestos (nombre, costo_proveedor, margen_ganancia, costo_venta_final, 
+                                               proveedor, stock, costo_proveedor_pendiente, created_at, updated_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, 
+                                NOW() AT TIME ZONE 'America/Santiago', 
+                                NOW() AT TIME ZONE 'America/Santiago')
+                    """, (
+                        nombre, 
+                        0, 
+                        30, 
+                        costo_unitario, 
+                        'Desde Venta Rápida',
+                        0,  # ✅ STOCK INICIAL 0 (ya que se está vendiendo)
+                        True
+                    ))
+                    print(f"📦 Nuevo repuesto '{nombre}' creado con stock 0")
         
+        # Insertar la venta
         cur.execute("""
             INSERT INTO pagos 
             (nombre, monto, fecha, hora, estado, tipo_venta, producto_vendido, 
@@ -1078,7 +1125,7 @@ def venta_rapida():
         cur.close()
         conn.close()
         
-        # ✅ NOTIFICACIÓN PUSH - VENTA RÁPIDA (CORREGIDO)
+        # Notificación
         enviar_notificacion_push(
             titulo="⚡ Venta Rápida",
             mensaje=f"Cliente: {data.get('nombre')}\nTotal: ${float(data.get('monto', 0)):,.0f}\nProductos: {len(detalles_repuestos)}",
