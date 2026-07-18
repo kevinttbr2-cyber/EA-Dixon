@@ -1402,6 +1402,27 @@ def cierre_caja():
                           gastos_efectivo=gastos_efectivo,
                           efectivo_esperado=efectivo_esperado,
                           historial_cierres=historial_cierres)
+# ============================
+# PAGAR DEUDA
+# ============================
+@app.route('/pagar_deuda/<int:id_deuda>')
+@login_required
+@role_required(['admin', 'operador'])
+def pagar_deuda(id_deuda):
+    """Página para pagar una deuda específica"""
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/deuda/{id_deuda}", timeout=10)
+        if resp.status_code == 200:
+            deuda = resp.json()
+        else:
+            flash('❌ Deuda no encontrada o ya fue pagada', 'error')
+            return redirect("/deudores")
+    except Exception as e:
+        logger.error(f"Error en /pagar_deuda: {e}")
+        flash('❌ Error al cargar la deuda', 'error')
+        return redirect("/deudores")
+    
+    return render_template("pagar_deuda.html", deuda=deuda)
 
 # ============================
 # RUTAS ESTÁTICAS
