@@ -2,19 +2,82 @@
 
 {% block content %}
 
-<div class="base-container" style="max-width: 600px; margin: 0 auto;">
-    <h2 style="color: #00ff66; font-weight: 700; text-align: center; margin-bottom: 20px;">
+<div class="base-container" style="max-width: 700px; margin: 0 auto;">
+    <h2 style="color: #00ff66; font-weight: 700; text-align: center; margin-bottom: 5px;">
         💰 Registrar Pago
     </h2>
+    <p style="color: #888; text-align: center; margin-bottom: 20px; font-size: 14px;">
+        Cliente: <strong style="color: #fff;">{{ registro.nombre }}</strong>
+        {% if registro.patente %}
+        · Patente: <strong style="color: #4fc3f7;">{{ registro.patente }}</strong>
+        {% endif %}
+    </p>
 
-    <form method="POST" action="https://ea-dixon-production.up.railway.app/api/pagar/{{ id }}">
+    <!-- ============================================
+         ESTADO DEL CLIENTE (DEUDOR)
+         ============================================ -->
+    <div id="estadoDeudor" style="display: none; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; border: 2px solid;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="circuloEstado" style="display: inline-block; width: 16px; height: 16px; border-radius: 50%;"></span>
+                <span id="textoEstado" style="font-weight: 700; font-size: 16px;"></span>
+            </div>
+            <div>
+                <span style="color: #888;">💰 Deuda pendiente:</span>
+                <span id="montoDeuda" style="font-weight: 700; font-size: 18px; color: #ff6b6b;">$0</span>
+            </div>
+        </div>
+        <div style="margin-top: 8px; font-size: 13px; color: #888;">
+            <span id="fechaDeuda"></span>
+            <button onclick="verHistorialDeuda()" style="
+                background: transparent;
+                color: #4fc3f7;
+                border: 1px solid rgba(79,195,247,0.3);
+                border-radius: 6px;
+                padding: 2px 12px;
+                font-size: 12px;
+                cursor: pointer;
+                margin-left: 10px;
+            ">
+                📜 Ver historial
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================
+         FORMULARIO DE PAGO
+         ============================================ -->
+    <form id="formPago">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" id="idRegistro" value="{{ id }}">
 
-        <div class="mb-3">
-            <label style="color: #90e0a0;">💰 Monto pagado</label>
-            <input type="number" name="monto" id="montoInput" class="form-control" required step="0.01" value="0">
+        <!-- SECCIÓN: MONTO Y ABONO -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="mb-3">
+                <label style="color: #90e0a0;">💰 Monto total a pagar</label>
+                <input type="number" name="monto_total" id="montoTotal" class="form-control" required step="0.01" value="{{ registro.monto or 0 }}" readonly style="background: rgba(255,255,255,0.04); color: #00ff66; font-weight: 700;">
+            </div>
+            <div class="mb-3">
+                <label style="color: #90e0a0;">💵 Monto que paga el cliente</label>
+                <input type="number" name="monto_abono" id="montoAbono" class="form-control" required step="0.01" value="{{ registro.monto or 0 }}" min="0">
+            </div>
         </div>
 
+        <!-- SECCIÓN: DEUDA GENERADA -->
+        <div style="background: rgba(255, 107, 107, 0.06); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; border: 1px solid rgba(255, 107, 107, 0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #888; font-size: 14px;">⚠️ Diferencia (deuda generada):</span>
+                <span id="diferenciaDeuda" style="color: #ff6b6b; font-weight: 700; font-size: 20px;">$0</span>
+            </div>
+            <div style="margin-top: 4px;">
+                <label style="color: #888; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="registrarDeuda" checked>
+                    Registrar esta diferencia como deuda
+                </label>
+            </div>
+        </div>
+
+        <!-- FORMULARIO COMPLETO -->
         <div class="mb-3">
             <label style="color: #90e0a0;">💳 Forma de Pago</label>
             <select name="forma_pago" id="formaPago" class="form-control" style="
@@ -66,12 +129,32 @@
             cursor: pointer;
         ">Confirmar Pago</button>
     </form>
+
+    <!-- MODAL HISTORIAL DE DEUDA -->
+    <div id="modalHistorial" class="modal-dixon">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 style="color: #4fc3f7;">📜 Historial de Deudas</h3>
+                <button class="close-btn" onclick="cerrarModalHistorial()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="contenidoHistorial" style="max-height: 400px; overflow-y: auto;">
+                <div style="text-align:center;padding:20px;color:#888;">Cargando...</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // ============================
+const API_URL = 'https://ea-dixon-production.up.railway.app';
+const idRegistro = '{{ id }}';
+const nombreCliente = '{{ registro.nombre }}';
+const patenteCliente = '{{ registro.patente }}';
+
+// ============================================
 // DESHABILITAR SCROLL EN INPUTS NUMÉRICOS
-// ============================
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('input[type="number"]').forEach(input => {
         input.addEventListener('wheel', function(e) {
@@ -79,56 +162,245 @@ document.addEventListener('DOMContentLoaded', function() {
             this.blur();
         }, { passive: false });
     });
+
+    // ============================================
+    // 1. CARGAR ESTADO DEL DEUDOR
+    // ============================================
+    cargarEstadoDeudor();
+
+    // ============================================
+    // 2. CALCULAR DIFERENCIA EN TIEMPO REAL
+    // ============================================
+    const montoTotal = document.getElementById('montoTotal');
+    const montoAbono = document.getElementById('montoAbono');
+    const diferenciaDeuda = document.getElementById('diferenciaDeuda');
+    
+    montoAbono.addEventListener('input', function() {
+        const total = parseFloat(montoTotal.value) || 0;
+        const abono = parseFloat(this.value) || 0;
+        const diferencia = Math.max(0, total - abono);
+        diferenciaDeuda.textContent = '$' + diferencia.toLocaleString('es-CL');
+        
+        // Si la diferencia es 0, ocultar el checkbox
+        const checkbox = document.getElementById('registrarDeuda');
+        if (diferencia === 0) {
+            checkbox.checked = false;
+            checkbox.disabled = true;
+            checkbox.parentElement.style.opacity = '0.5';
+        } else {
+            checkbox.disabled = false;
+            checkbox.parentElement.style.opacity = '1';
+        }
+    });
+    montoAbono.dispatchEvent(new Event('input'));
 });
-// ✅ UN SOLO SCRIPT
-document.querySelector('form').addEventListener('submit', function(e) {
-    e.preventDefault();
+
+// ============================================
+// FUNCIONES DE DEUDOR
+// ============================================
+function cargarEstadoDeudor() {
+    if (!nombreCliente) return;
     
-    // ✅ OBTENER VALORES
-    const monto = document.getElementById('montoInput').value;
-    const formaPago = document.getElementById('formaPago').value;  // 👈 ESTO DEBE FUNCIONAR
-    const diagnostico = document.getElementById('diagnosticoInput').value;
-    const reparacion = document.getElementById('reparacionInput').value;
-    const observaciones_pago = document.getElementById('observacionesInput').value;
-    const resultado = document.querySelector('input[name="resultado"]:checked').value;
+    fetch(`${API_URL}/api/deudores/${encodeURIComponent(nombreCliente)}`)
+        .then(r => {
+            if (r.status === 404) {
+                return null;
+            }
+            return r.json();
+        })
+        .then(data => {
+            if (data && data.monto_deuda > 0) {
+                mostrarEstadoDeudor(data);
+            } else {
+                document.getElementById('estadoDeudor').style.display = 'none';
+            }
+        })
+        .catch(() => {
+            document.getElementById('estadoDeudor').style.display = 'none';
+        });
+}
+
+function mostrarEstadoDeudor(data) {
+    const container = document.getElementById('estadoDeudor');
+    container.style.display = 'block';
     
-    // ✅ LOG PARA VERIFICAR (MUY IMPORTANTE)
-    console.log('📤 forma_pago SELECCIONADO:', formaPago);
-    console.log('📤 monto:', monto);
+    const estado = data.estado || 'verde';
+    const monto = data.monto_deuda || 0;
     
-    // ✅ SI EL LOG MUESTRA "efectivo" SIEMPRE, EL PROBLEMA ES EL SELECT
-    // SI EL LOG MUESTRA "transferencia" O "tarjeta", EL PROBLEMA ES EL BACKEND
+    const circulo = document.getElementById('circuloEstado');
+    const texto = document.getElementById('textoEstado');
+    const montoSpan = document.getElementById('montoDeuda');
+    const fechaSpan = document.getElementById('fechaDeuda');
     
-    const data = {
-        monto: monto || 0,
-        forma_pago: formaPago,  // 👈 ENVIAR EL VALOR CAPTURADO
-        diagnostico: diagnostico,
-        reparacion: reparacion,
-        observaciones_pago: observaciones_pago,
-        resultado: resultado,
-        atendido_por: '{{ session.get("nombre_completo", "Técnico") }}'
+    // Configurar colores
+    const colores = {
+        'verde': { bg: 'rgba(0,255,102,0.10)', border: '#00ff66', color: '#00ff66', text: '✅ Sin deuda' },
+        'amarillo': { bg: 'rgba(241,196,15,0.10)', border: '#f1c40f', color: '#f1c40f', text: '🟡 Deudor (bajo)' },
+        'rojo': { bg: 'rgba(255,107,107,0.10)', border: '#ff6b6b', color: '#ff6b6b', text: '🔴 Deudor crítico' },
+        'negro': { bg: 'rgba(0,0,0,0.30)', border: '#ffffff', color: '#888', text: '⚫ Lista negra' }
     };
     
-    console.log('📦 Data enviada:', data);  // 👈 VERIFICAR AQUÍ
+    const config = colores[estado] || colores['verde'];
     
-    const url = 'https://ea-dixon-production.up.railway.app/api/pagar/{{ id }}';
+    container.style.background = config.bg;
+    container.style.borderColor = config.border;
     
-    fetch(url, {
+    circulo.style.background = config.border;
+    texto.textContent = config.text;
+    texto.style.color = config.color;
+    
+    montoSpan.textContent = '$' + monto.toLocaleString('es-CL');
+    montoSpan.style.color = monto > 0 ? '#ff6b6b' : '#00ff66';
+    
+    const fecha = data.fecha_deuda ? new Date(data.fecha_deuda) : null;
+    fechaSpan.textContent = fecha ? `📅 Desde: ${fecha.toLocaleDateString('es-CL')}` : '';
+}
+
+function verHistorialDeuda() {
+    const modal = document.getElementById('modalHistorial');
+    modal.classList.add('active');
+    
+    const contenido = document.getElementById('contenidoHistorial');
+    contenido.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">Cargando historial...</div>';
+    
+    fetch(`${API_URL}/api/deudores/historial/${encodeURIComponent(nombreCliente)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.length === 0) {
+                contenido.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No hay historial de deudas</div>';
+                return;
+            }
+            
+            let html = `<div style="font-size:13px;">`;
+            data.forEach(item => {
+                const fecha = new Date(item.fecha);
+                const fechaStr = fecha.toLocaleDateString('es-CL') + ' ' + fecha.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
+                const tipoEmoji = item.tipo === 'deuda' ? '⚠️' : '💰';
+                const tipoColor = item.tipo === 'deuda' ? '#ff6b6b' : '#00ff66';
+                html += `
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+                        <div>
+                            <span style="color:${tipoColor};">${tipoEmoji}</span>
+                            <span style="color:#fff;">${item.tipo === 'deuda' ? 'Deuda' : 'Abono'}</span>
+                            ${item.tipo === 'deuda' ? 
+                                `<span style="color:#ff6b6b;font-weight:600;">+$${item.monto_deuda.toLocaleString()}</span>` :
+                                `<span style="color:#00ff66;font-weight:600;">-$${item.monto_abonado.toLocaleString()}</span>`
+                            }
+                        </div>
+                        <div style="color:#888;font-size:12px;">
+                            ${item.saldo_restante > 0 ? `Saldo: $${item.saldo_restante.toLocaleString()}` : '✅ Liquidado'}
+                        </div>
+                        <div style="color:#666;font-size:11px;">${fechaStr}</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            contenido.innerHTML = html;
+        })
+        .catch(() => {
+            contenido.innerHTML = '<div style="color:#ff6b6b;text-align:center;padding:20px;">❌ Error al cargar historial</div>';
+        });
+}
+
+function cerrarModalHistorial() {
+    document.getElementById('modalHistorial').classList.remove('active');
+}
+
+// ============================================
+// ENVIAR FORMULARIO CON DEUDA
+// ============================================
+document.getElementById('formPago').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const montoTotal = parseFloat(document.getElementById('montoTotal').value) || 0;
+    const montoAbono = parseFloat(document.getElementById('montoAbono').value) || 0;
+    const formaPago = document.getElementById('formaPago').value;
+    const diagnostico = document.getElementById('diagnosticoInput').value;
+    const reparacion = document.getElementById('reparacionInput').value;
+    const observaciones = document.getElementById('observacionesInput').value;
+    const resultado = document.querySelector('input[name="resultado"]:checked')?.value || 'reparado';
+    const registrarDeuda = document.getElementById('registrarDeuda').checked;
+    const diferencia = Math.max(0, montoTotal - montoAbono);
+    
+    // Validar
+    if (montoAbono <= 0) {
+        alert('⚠️ El monto a pagar debe ser mayor a 0');
+        return;
+    }
+    
+    if (montoAbono > montoTotal) {
+        alert('⚠️ El monto a pagar no puede ser mayor al total');
+        return;
+    }
+    
+    // Confirmar si hay deuda
+    if (diferencia > 0 && registrarDeuda) {
+        if (!confirm(`⚠️ El cliente pagará $${montoAbono.toLocaleString()} de un total de $${montoTotal.toLocaleString()}\n\n💰 Deuda generada: $${diferencia.toLocaleString()}\n\n¿Confirmar?`)) {
+            return;
+        }
+    }
+    
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = '⏳ Procesando...';
+    
+    // 1. Registrar el pago en el backend
+    const dataPago = {
+        monto: montoAbono,
+        forma_pago: formaPago,
+        diagnostico: diagnostico,
+        reparacion: reparacion,
+        observaciones_pago: observaciones,
+        resultado: resultado,
+        atendido_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
+    };
+    
+    fetch(`${API_URL}/api/pagar/${idRegistro}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(dataPago)
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = `/pago_exitoso/{{ id }}`;
-        } else {
-            alert('❌ Error: ' + (data.error || 'Error desconocido'));
+    .then(r => r.json())
+    .then(result => {
+        if (!result.success) {
+            throw new Error(result.error || 'Error al procesar pago');
         }
+        
+        // 2. Si hay deuda, registrarla
+        if (diferencia > 0 && registrarDeuda) {
+            return fetch(`${API_URL}/api/deudores`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cliente_nombre: nombreCliente,
+                    patente: patenteCliente,
+                    telefono: '{{ registro.telefono }}',
+                    monto_deuda: diferencia,
+                    monto_original: diferencia,
+                    id_registro: idRegistro,
+                    descripcion: `Deuda generada por pago parcial del servicio #${idRegistro}. Total: $${montoTotal.toLocaleString()}, Abonado: $${montoAbono.toLocaleString()}`
+                })
+            });
+        }
+        return Promise.resolve({ success: true });
+    })
+    .then(resultDeuda => {
+        if (resultDeuda && resultDeuda.success === false) {
+            console.warn('⚠️ La deuda no se pudo registrar:', resultDeuda.error);
+        }
+        
+        let mensaje = '✅ Pago registrado correctamente';
+        if (diferencia > 0 && registrarDeuda) {
+            mensaje += `\n\n💰 Deuda generada: $${diferencia.toLocaleString()}`;
+            mensaje += `\n📌 El cliente debe $${diferencia.toLocaleString()}`;
+        }
+        alert(mensaje);
+        window.location.href = `/pago_exitoso/${idRegistro}`;
     })
     .catch(error => {
-        console.error('❌ Error:', error);
-        alert('❌ Error de conexión: ' + error.message);
+        alert('❌ Error: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = 'Confirmar Pago';
     });
 });
 </script>
