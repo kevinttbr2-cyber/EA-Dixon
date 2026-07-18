@@ -1489,7 +1489,6 @@ function handleFileSelectProductos(e) {
 function procesarArchivoProductos(file) {
     console.log('📂 1. Iniciando procesamiento del archivo:', file.name);
     
-    // Verificar que sea un archivo Excel
     const validTypes = [
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'application/vnd.ms-excel',
@@ -1533,43 +1532,17 @@ function procesarArchivoProductos(file) {
                 return;
             }
             
-            // Mostrar columnas encontradas
             const columnas = Object.keys(jsonData[0]);
             console.log('📂 4. Columnas encontradas:', columnas);
             
-            // Buscar columnas de forma flexible
-            const colProducto = columnas.find(col => 
-                col.toLowerCase() === 'producto' || 
-                col.toLowerCase() === 'nombre'
-            );
-            
-            const colCosto = columnas.find(col => 
-                col.toLowerCase() === 'costo proveedor' || 
-                col.toLowerCase() === 'costo_proveedor'
-            );
-            
-            const colPrecio = columnas.find(col => 
-                col.toLowerCase() === 'precio venta' || 
-                col.toLowerCase() === 'precio_venta'
-            );
-            
-            const colProveedor = columnas.find(col => 
-                col.toLowerCase() === 'proveedor'
-            );
-            
-            const colCategoria = columnas.find(col => 
-                col.toLowerCase() === 'categoría' || 
-                col.toLowerCase() === 'categoria'
-            );
-            
-            const colSubcategoria = columnas.find(col => 
-                col.toLowerCase() === 'subcategoría' || 
-                col.toLowerCase() === 'subcategoria'
-            );
-            
-            const colStock = columnas.find(col => 
-                col.toLowerCase() === 'stock'
-            );
+            // ✅ BUSCAR COLUMNAS POR NOMBRE EXACTO (sin importar mayúsculas)
+            const colProducto = columnas.find(col => col.toLowerCase() === 'producto');
+            const colCosto = columnas.find(col => col.toLowerCase() === 'costo proveedor');
+            const colPrecio = columnas.find(col => col.toLowerCase() === 'precio venta');
+            const colProveedor = columnas.find(col => col.toLowerCase() === 'proveedor');
+            const colCategoria = columnas.find(col => col.toLowerCase() === 'categoría');
+            const colSubcategoria = columnas.find(col => col.toLowerCase() === 'subcategoría');
+            const colStock = columnas.find(col => col.toLowerCase() === 'stock');
             
             console.log('📂 5. Columnas mapeadas:');
             console.log('   - Producto:', colProducto);
@@ -1580,30 +1553,36 @@ function procesarArchivoProductos(file) {
             console.log('   - Subcategoría:', colSubcategoria);
             console.log('   - Stock:', colStock);
             
-            // Verificar columnas obligatorias
             if (!colProducto) {
-                alert('⚠️ No se encontró la columna "Producto" o "Nombre".\n\nColumnas encontradas: ' + columnas.join(', '));
+                alert('⚠️ No se encontró la columna "Producto".\n\nColumnas: ' + columnas.join(', '));
                 return;
             }
-            
             if (!colCosto) {
-                alert('⚠️ No se encontró la columna "Costo Proveedor".\n\nColumnas encontradas: ' + columnas.join(', '));
+                alert('⚠️ No se encontró la columna "Costo Proveedor".\n\nColumnas: ' + columnas.join(', '));
                 return;
             }
-            
             if (!colPrecio) {
-                alert('⚠️ No se encontró la columna "Precio Venta".\n\nColumnas encontradas: ' + columnas.join(', '));
+                alert('⚠️ No se encontró la columna "Precio Venta".\n\nColumnas: ' + columnas.join(', '));
                 return;
             }
             
-            // Procesar datos
+            // ✅ PROCESAR DATOS - Asegurar que categoria y subcategoria se capturan
             datosProductos = jsonData.map(row => {
                 const nombre = String(row[colProducto] || '').trim();
                 const costo = parseFloat(row[colCosto] || 0);
                 const precioVenta = parseFloat(row[colPrecio] || 0);
                 const proveedor = colProveedor ? String(row[colProveedor] || 'Importado').trim() : 'Importado';
-                const categoria = colCategoria ? String(row[colCategoria] || '').trim() : '';
-                const subcategoria = colSubcategoria ? String(row[colSubcategoria] || '').trim() : '';
+                
+                // ✅ CAPTURAR CATEGORÍA Y SUBCATEGORÍA
+                let categoria = '';
+                let subcategoria = '';
+                if (colCategoria) {
+                    categoria = String(row[colCategoria] || '').trim();
+                }
+                if (colSubcategoria) {
+                    subcategoria = String(row[colSubcategoria] || '').trim();
+                }
+                
                 const stock = colStock ? parseInt(row[colStock] || 1) : 1;
                 
                 let margenFinal = 0;
@@ -1614,19 +1593,28 @@ function procesarArchivoProductos(file) {
                     margenFinal = Math.round(margenFinal * 10) / 10;
                 }
                 
+                // ✅ VERIFICAR QUE LA CATEGORÍA SE CAPTURÓ
+                if (categoria) {
+                    console.log(`   ✅ Producto "${nombre}" tiene categoría: "${categoria}"`);
+                }
+                
                 return { 
                     nombre: nombre, 
                     costo: costo,
                     precio_venta: precioVenta,
                     margen: margenFinal,
                     proveedor: proveedor,
-                    categoria: categoria,
-                    subcategoria: subcategoria,
+                    categoria: categoria,      // ✅ Enviar categoría
+                    subcategoria: subcategoria, // ✅ Enviar subcategoría
                     stock: stock
                 };
             }).filter(item => item.nombre && item.costo > 0 && item.precio_venta > 0);
             
             console.log('📂 6. Productos procesados:', datosProductos.length);
+            
+            // ✅ CONTAR PRODUCTOS CON CATEGORÍA
+            const conCategoria = datosProductos.filter(p => p.categoria).length;
+            console.log(`📂 7. Productos con categoría: ${conCategoria} de ${datosProductos.length}`);
             
             if (datosProductos.length === 0) {
                 alert('⚠️ No hay datos válidos para importar.\n\nAsegúrate de que:\n- Los nombres no estén vacíos\n- Costo y Precio sean números mayores a 0');
@@ -1668,7 +1656,7 @@ function mostrarPreviewProductos(datos) {
     previewBody.innerHTML = '';
     const mostrar = datos.slice(0, 10);
     
-    // Contar categorías para mostrar resumen
+    // Contar categorías
     const categorias = {};
     datos.forEach(item => {
         if (item.categoria) {
@@ -1686,7 +1674,7 @@ function mostrarPreviewProductos(datos) {
             <td style="padding:4px 6px;color:#ffcc00;">$${item.costo.toLocaleString('es-CL')}</td>
             <td style="padding:4px 6px;color:#00ff66;">$${item.precio_venta.toLocaleString('es-CL')}</td>
             <td style="padding:4px 6px;color:#4fc3f7;">${item.margen}%</td>
-            <td style="padding:4px 6px;color:#f1c40f;font-weight:600;">${item.categoria || '⚠️ Sin categoría'}</td>
+            <td style="padding:4px 6px;color:#f1c40f;font-weight:bold;">${item.categoria || '⚠️ Sin categoría'}</td>
             <td style="padding:4px 6px;color:#9b59b6;">${item.subcategoria || '-'}</td>
             <td style="padding:4px 6px;color:#ff6b6b;font-weight:600;text-align:center;">${item.stock || 0}</td>
         `;
@@ -1699,13 +1687,12 @@ function mostrarPreviewProductos(datos) {
         previewBody.appendChild(tr);
     }
     
-    // Mostrar resumen de categorías
     const resumenCategorias = Object.entries(categorias)
         .map(([cat, count]) => `${cat} (${count})`)
         .join(', ');
     
     if (contador) {
-        contador.textContent = `${datos.length} registros | 📂 ${Object.keys(categorias).length} categorías`;
+        contador.textContent = `${datos.length} registros | 📂 ${Object.keys(categorias).length} categorías: ${resumenCategorias}`;
     }
     
     if (previewContainer) previewContainer.style.display = 'block';
@@ -1729,12 +1716,22 @@ async function importarProductos() {
         return;
     }
     
-    // Mostrar ejemplo de los datos para depurar
-    console.log('📦 Primer producto:', datosProductos[0]);
-    console.log('📦 Categorías encontradas:', datosProductos.map(p => p.categoria).filter(c => c));
-    console.log('📦 Subcategorías encontradas:', datosProductos.map(p => p.subcategoria).filter(s => s));
+    // ✅ VERIFICAR QUE LOS PRODUCTOS TENGAN CATEGORÍA
+    const conCategoria = datosProductos.filter(p => p.categoria && p.categoria.length > 0).length;
+    console.log(`📊 Productos con categoría: ${conCategoria} de ${datosProductos.length}`);
     
-    if (!confirm(`📊 ¿Importar ${datosProductos.length} productos?\n\nSe agregarán a la lista de repuestos con sus categorías y stock.`)) {
+    if (conCategoria === 0) {
+        alert('⚠️ Ningún producto tiene categoría.\n\nAsegúrate de que tu Excel tenga la columna "Categoría" con datos.');
+        return;
+    }
+    
+    // Mostrar ejemplo de los datos
+    console.log('📦 Primeros productos con categorías:');
+    datosProductos.slice(0, 5).forEach((p, i) => {
+        console.log(`   ${i+1}. ${p.nombre} -> Categoría: "${p.categoria}" | Subcategoría: "${p.subcategoria}"`);
+    });
+    
+    if (!confirm(`📊 ¿Importar ${datosProductos.length} productos?\n\n✅ ${conCategoria} con categoría\n⚠️ ${datosProductos.length - conCategoria} sin categoría`)) {
         return;
     }
     
@@ -1751,7 +1748,7 @@ async function importarProductos() {
         const url = `${API_URL}/api/repuestos/importar`;
         console.log('🌐 URL:', url);
         
-        // ✅ Asegurarse de enviar TODOS los campos: categoria y subcategoria
+        // ✅ CONSTRUIR PAYLOAD CON CATEGORÍAS
         const payload = {
             productos: datosProductos.map(p => ({
                 nombre: p.nombre,
@@ -1764,7 +1761,7 @@ async function importarProductos() {
             }))
         };
         
-        console.log('📦 Payload a enviar:', JSON.stringify(payload, null, 2).substring(0, 500) + '...');
+        console.log('📦 Payload a enviar (primeros 3):', JSON.stringify(payload.productos.slice(0, 3), null, 2));
         
         const resp = await fetch(url, {
             method: 'POST',
@@ -1800,16 +1797,6 @@ async function importarProductos() {
                     mensaje += `\n   ... y ${result.errores.length - 5} más`;
                 }
                 console.log('Errores detallados:', result.errores);
-            }
-            
-            // Mostrar qué categorías se importaron
-            const categoriasImportadas = [...new Set(result.exitosos?.map(e => {
-                const match = e.match(/\(categoría: ([^)]+)\)/);
-                return match ? match[1] : null;
-            }).filter(Boolean))];
-            
-            if (categoriasImportadas.length > 0) {
-                mensaje += `\n\n📂 Categorías: ${categoriasImportadas.join(', ')}`;
             }
             
             alert(mensaje);
