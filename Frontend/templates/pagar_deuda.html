@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+.pagar-deuda-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 10px 15px;
+}
+
+.pagar-deuda-container .cliente-info {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.pagar-deuda-container .cliente-info .nombre {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.pagar-deuda-container .cliente-info .patente {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.pagar-deuda-container .deuda-info {
+    background: rgba(255, 107, 107, 0.08);
+    border: 1px solid rgba(255, 107, 107, 0.20);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.pagar-deuda-container .deuda-info .monto-deuda {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ff6b6b;
+}
+
+.pagar-deuda-container .deuda-info .label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.pagar-deuda-container .form-group {
+    margin-bottom: 12px;
+}
+
+.pagar-deuda-container .form-group label {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.pagar-deuda-container .form-group input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-input);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.pagar-deuda-container .form-group input:focus {
+    outline: none;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
+}
+
+.pagar-deuda-container .btn-pagar {
+    background: var(--accent-green) !important;
+    color: var(--bg-primary) !important;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 14px;
+    width: 100%;
+    font-size: 18px;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 10px;
+}
+
+.pagar-deuda-container .btn-pagar:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 30px rgba(0, 255, 102, 0.15);
+}
+
+.pagar-deuda-container .btn-pagar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pagar-deuda-container .btn-volver {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    width: 100%;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 8px;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+.pagar-deuda-container .btn-volver:hover {
+    background: rgba(255,255,255,0.10);
+    color: var(--text-primary);
+}
+
+.pagar-deuda-container .observaciones {
+    margin-top: 12px;
+}
+
+.pagar-deuda-container .observaciones textarea {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 14px;
+    min-height: 60px;
+}
+
+.pagar-deuda-container .observaciones textarea:focus {
+    outline: none;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
+}
+
+.pagar-deuda-container .estado-badge {
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.pagar-deuda-container .estado-badge.amarillo {
+    background: rgba(241, 196, 15, 0.15);
+    color: #f1c40f;
+}
+
+.pagar-deuda-container .estado-badge.rojo {
+    background: rgba(255, 107, 107, 0.15);
+    color: #ff6b6b;
+}
+
+.pagar-deuda-container .estado-badge.negro {
+    background: rgba(0, 0, 0, 0.30);
+    color: #888;
+}
+
+@media (max-width: 600px) {
+    .pagar-deuda-container .deuda-info .monto-deuda {
+        font-size: 22px;
+    }
+}
+</style>
+
+<div class="base-container pagar-deuda-container">
+
+    <!-- CLIENTE INFO -->
+    <div class="cliente-info">
+        <div class="nombre">👤 {{ deuda.cliente_nombre }}</div>
+        {% if deuda.patente %}
+        <div class="patente">🚗 {{ deuda.patente }}</div>
+        {% endif %}
+        <div>
+            <span class="estado-badge 
+                {% if deuda.estado == 'amarillo' %}amarillo
+                {% elif deuda.estado == 'rojo' %}rojo
+                {% elif deuda.estado == 'negro' %}negro
+                {% endif %}">
+                {% if deuda.estado == 'amarillo' %}🟡 Deudor
+                {% elif deuda.estado == 'rojo' %}🔴 Deudor crítico
+                {% elif deuda.estado == 'negro' %}⚫ Lista negra
+                {% else %}🟢 Sin deuda
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- DEUDA ACTUAL -->
+    <div class="deuda-info">
+        <span class="label">💰 Deuda pendiente</span>
+        <div class="monto-deuda">${{ "{:,.0f}".format(deuda.monto_deuda) }}</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+            Desde: {{ deuda.fecha_deuda[:10] if deuda.fecha_deuda else '-' }}
+            {% if deuda.frecuencia_deudas > 1 %}
+            · 🔁 {{ deuda.frecuencia_deudas }} deudas acumuladas
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- FORMULARIO DE PAGO -->
+    <form id="formPagarDeuda">
+        <input type="hidden" id="deudaId" value="{{ deuda.id }}">
+        <input type="hidden" id="clienteNombre" value="{{ deuda.cliente_nombre }}">
+        <input type="hidden" id="montoMaximo" value="{{ deuda.monto_deuda }}">
+
+        <div class="form-group">
+            <label>💵 ¿Cuánto va a pagar?</label>
+            <input type="number" id="montoPagar" class="form-control" step="0.01" min="0" 
+                   placeholder="Ingresa el monto a pagar..." 
+                   value="{{ deuda.monto_deuda }}">
+        </div>
+
+        <div class="observaciones">
+            <label style="color: var(--text-secondary); font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">📝 Observaciones (opcional)</label>
+            <textarea id="observacionesPago" placeholder="Detalles del pago..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-pagar">
+            ✅ Pagar Deuda
+        </button>
+
+        <a href="/deudores" class="btn-volver">← Volver a Deudores</a>
+    </form>
+</div>
+
+<script>
+const API_URL = 'https://ea-dixon-production.up.railway.app';
+
+document.getElementById('formPagarDeuda').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const deudaId = document.getElementById('deudaId').value;
+    const clienteNombre = document.getElementById('clienteNombre').value;
+    const montoMaximo = parseFloat(document.getElementById('montoMaximo').value) || 0;
+    const montoPagar = parseFloat(document.getElementById('montoPagar').value) || 0;
+    const observaciones = document.getElementById('observacionesPago').value || 'Pago de deuda';
+    
+    if (montoPagar <= 0) {
+        alert('⚠️ Ingresa un monto válido para pagar');
+        return;
+    }
+    
+    if (montoPagar > montoMaximo) {
+        alert(`⚠️ El monto no puede ser mayor a $${montoMaximo.toLocaleString()}`);
+        return;
+    }
+    
+    const saldoRestante = montoMaximo - montoPagar;
+    
+    let mensajeConfirmacion = `📊 Confirmar pago de deuda\n\n` +
+        `👤 Cliente: ${clienteNombre}\n` +
+        `💰 Deuda actual: $${montoMaximo.toLocaleString()}\n` +
+        `💵 Monto a pagar: $${montoPagar.toLocaleString()}\n` +
+        `📌 Saldo restante: $${saldoRestante.toLocaleString()}\n\n`;
+    
+    if (saldoRestante === 0) {
+        mensajeConfirmacion += `🎉 ¡La deuda quedará LIQUIDADA!`;
+    } else {
+        mensajeConfirmacion += `⚠️ Quedará un saldo de $${saldoRestante.toLocaleString()}`;
+    }
+    
+    if (!confirm(mensajeConfirmacion)) {
+        return;
+    }
+    
+    const btn = document.querySelector('.btn-pagar');
+    btn.disabled = true;
+    btn.textContent = '⏳ Procesando...';
+    
+    // 1. Registrar el pago en el backend (como un pago normal)
+    // Buscar el registro original del cliente para asociarlo
+    fetch(`${API_URL}/api/registros?filtro=todos`)
+        .then(r => r.json())
+        .then(registros => {
+            const registro = registros.find(r => r.nombre === clienteNombre);
+            
+            if (!registro) {
+                // Si no hay registro, crear uno nuevo
+                return fetch(`${API_URL}/api/agregar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nombre: clienteNombre,
+                        patente: '',
+                        monto: montoPagar,
+                        tipo_venta: 'directa',
+                        forma_pago: 'efectivo'
+                    })
+                }).then(r => r.json());
+            }
+            
+            // Si existe, registrar pago en el registro
+            return fetch(`${API_URL}/api/pagar/${registro.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    monto: montoPagar,
+                    forma_pago: 'efectivo',
+                    diagnostico: 'Pago de deuda',
+                    reparacion: 'Pago de deuda',
+                    observaciones_pago: observaciones,
+                    resultado: 'reparado',
+                    atendido_por: 'Sistema'
+                })
+            }).then(r => r.json());
+        })
+        .then(result => {
+            if (!result.success) {
+                throw new Error('Error al registrar el pago');
+            }
+            
+            // 2. Registrar el abono en la deuda
+            return fetch(`${API_URL}/api/deudores/pagar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cliente_nombre: clienteNombre,
+                    monto_abonado: montoPagar,
+                    descripcion: observaciones,
+                    id_registro: result.id || null
+                })
+            });
+        })
+        .then(result => {
+            if (result && result.success) {
+                let mensaje = `✅ Pago registrado correctamente\n\n`;
+                mensaje += `💰 Monto pagado: $${montoPagar.toLocaleString()}\n`;
+                if (saldoRestante > 0) {
+                    mensaje += `📌 Saldo restante: $${saldoRestante.toLocaleString()}`;
+                } else {
+                    mensaje += `🎉 ¡DEUDA LIQUIDADA!`;
+                }
+                alert(mensaje);
+                window.location.href = `/deudores`;
+            } else {
+                throw new Error(result?.error || 'Error al registrar el abono');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+            alert('❌ Error al procesar el pago: ' + error.message);
+            btn.disabled = false;
+            btn.textContent = '✅ Pagar Deuda';
+        });
+});
+</script>
+
+{% endblock %}
