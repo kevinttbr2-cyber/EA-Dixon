@@ -535,7 +535,7 @@ def validar_pago(id_reg):
 
 
 # ============================
-# 11. REPUESTOS - OBTENER LISTA (CON CATEGORÍA)
+# 11. REPUESTOS - OBTENER LISTA (CON CATEGORÍA Y STOCK)
 # ============================
 @pago_bp.route('/repuestos', methods=['GET'])
 def get_repuestos_lista():
@@ -551,7 +551,8 @@ def get_repuestos_lista():
                     COALESCE(costo_venta_final, 0) as costo,
                     proveedor,
                     costo_proveedor_pendiente,
-                    categoria_nombre
+                    categoria_nombre,
+                    stock
                 FROM repuestos 
                 WHERE nombre ILIKE %s 
                 ORDER BY nombre 
@@ -568,7 +569,8 @@ def get_repuestos_lista():
                     COALESCE(costo_venta_final, 0) as costo_venta_final,
                     proveedor,
                     costo_proveedor_pendiente,
-                    categoria_nombre
+                    categoria_nombre,
+                    stock
                 FROM repuestos 
                 ORDER BY nombre
             """)
@@ -583,7 +585,8 @@ def get_repuestos_lista():
                     'costo_venta_final': float(row[4] or 0),
                     'proveedor': row[5] or '',
                     'costo_proveedor_pendiente': row[6] or False,
-                    'categoria_nombre': row[7] if len(row) > 7 else None
+                    'categoria_nombre': row[7] if len(row) > 7 else None,
+                    'stock': int(row[8]) if len(row) > 8 and row[8] is not None else 0  # ✅ AÑADIDO
                 })
         
         cur.close()
