@@ -535,7 +535,7 @@ def validar_pago(id_reg):
 
 
 # ============================
-# 11. REPUESTOS - OBTENER LISTA
+# 11. REPUESTOS - OBTENER LISTA (CON CATEGORÍA)
 # ============================
 @pago_bp.route('/repuestos', methods=['GET'])
 def get_repuestos_lista():
@@ -583,7 +583,7 @@ def get_repuestos_lista():
                     'costo_venta_final': float(row[4] or 0),
                     'proveedor': row[5] or '',
                     'costo_proveedor_pendiente': row[6] or False,
-                    'categoria_nombre': row[7] if len(row) > 7 else None  # ✅ AÑADIDO
+                    'categoria_nombre': row[7] if len(row) > 7 else None
                 })
         
         cur.close()
