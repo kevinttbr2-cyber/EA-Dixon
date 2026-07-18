@@ -12,7 +12,7 @@ import math
 import json
 import re
 from datetime import datetime
-import unicodedata  # ← NUEVO: Para normalizar tildes
+import unicodedata
 
 # Establecer zona horaria a Chile (UTC-3)
 os.environ['TZ'] = 'America/Santiago'
@@ -29,7 +29,6 @@ app.secret_key = Config.SECRET_KEY
 # ============================
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://ea-dixon.vercel.app")
 
-# Lista de orígenes permitidos (SOLO estos pueden acceder)
 ALLOWED_ORIGINS = [
     FRONTEND_URL,
     "https://ea-dixon-ktb2.vercel.app",
@@ -41,7 +40,6 @@ ALLOWED_ORIGINS = [
     "http://localhost:5000"
 ]
 
-# Configurar CORS con la lista de orígenes permitidos
 CORS(app, 
      origins=ALLOWED_ORIGINS,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -77,9 +75,42 @@ def health():
         "version": "2.0"
     })
 
-# ============================
+# ============================================
+# OBTENER TODOS LOS REPUESTOS (CON CATEGORÍA)
+# ============================================
+@app.route('/api/repuestos', methods=['GET'])
+def obtener_repuestos():
+    """Obtiene todos los repuestos con sus categorías para la tabla"""
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        
+        cur.execute("""
+            SELECT id, nombre, stock, costo_proveedor, 
+                   costo_proveedor_pendiente, margen_ganancia, 
+                   costo_venta_final, proveedor, categoria_nombre
+            FROM repuestos 
+            ORDER BY id DESC
+        """)
+        
+        repuestos = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        
+        # Log para verificar que se está enviando la categoría
+        if repuestos and len(repuestos) > 0:
+            print(f"📦 Primer repuesto - Categoría: {repuestos[0].get('categoria_nombre', 'NULL')}")
+        
+        return jsonify(repuestos)
+    except Exception as e:
+        print(f"❌ Error en obtener_repuestos: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify([])
+
+# ============================================
 # RUTA 1: EXPORTAR DB (SIN BORRAR) - SIN PANDAS
-# ============================
+# ============================================
 @app.route('/exportar_datos', methods=['GET'])
 def exportar_datos():
     """Exporta todos los registros a Excel SIN borrar nada"""
@@ -154,9 +185,9 @@ def exportar_datos():
         return jsonify({'error': str(e)}), 500
 
 
-# ============================
+# ============================================
 # RUTA 2: EXPORTAR Y BORRAR DB - SIN PANDAS
-# ============================
+# ============================================
 @app.route('/exportar_y_borrar', methods=['POST'])
 def exportar_y_borrar():
     """Exporta todos los registros a Excel y luego los elimina"""
@@ -239,12 +270,11 @@ def exportar_y_borrar():
         return jsonify({'error': str(e)}), 500
 
 
-# ============================
-# RUTA DE PRUEBA PARA NOTIFICACIONES (CORREGIDA)
-# ============================
+# ============================================
+# RUTA DE PRUEBA PARA NOTIFICACIONES
+# ============================================
 @app.route('/api/test_notificacion', methods=['GET'])
 def test_notificacion():
-    """Ruta para probar notificaciones push desde el navegador"""
     try:
         from services.notification_service import enviar_notificacion_push
         
@@ -286,12 +316,8 @@ def test_notificacion():
 # RUTAS PARA GESTIÓN DE GASTOS Y CIERRE DE CAJA
 # ============================================
 
-# ============================================
-# REGISTRAR GASTO
-# ============================================
 @app.route('/api/gastos', methods=['POST'])
 def registrar_gasto():
-    """Registra un nuevo gasto (efectivo o transferencia) con datos de factura"""
     try:
         data = request.json
         
@@ -334,9 +360,6 @@ def registrar_gasto():
         return jsonify({"error": str(e)}), 500
 
 
-# ============================================
-# OBTENER GASTOS POR FECHA
-# ============================================
 @app.route('/api/gastos', methods=['GET'])
 def obtener_gastos():
     try:
@@ -364,9 +387,6 @@ def obtener_gastos():
         return jsonify({"error": str(e)}), 500
 
 
-# ============================================
-# INICIAR CIERRE DE CAJA
-# ============================================
 @app.route('/api/cierre_caja', methods=['POST'])
 def iniciar_cierre_caja():
     try:
@@ -412,9 +432,6 @@ def iniciar_cierre_caja():
         return jsonify({"error": str(e)}), 500
 
 
-# ============================================
-# OBTENER CIERRE DE CAJA
-# ============================================
 @app.route('/api/cierre_caja/<fecha>', methods=['GET'])
 def obtener_cierre_caja(fecha):
     try:
@@ -462,9 +479,6 @@ def obtener_cierre_caja(fecha):
         return jsonify({"error": str(e)}), 500
 
 
-# ============================================
-# CERRAR CAJA DEL DÍA
-# ============================================
 @app.route('/api/cierre_caja/<fecha>/cerrar', methods=['POST'])
 def cerrar_caja(fecha):
     try:
@@ -552,9 +566,6 @@ def cerrar_caja(fecha):
         return jsonify({"error": str(e)}), 500
 
 
-# ============================================
-# HISTORIAL DE CIERRES
-# ============================================
 @app.route('/api/historial_cierres', methods=['GET'])
 def historial_cierres():
     try:
@@ -673,9 +684,6 @@ def crear_empleado():
         return jsonify({"error": str(e)}), 500
 
 
-# ============================================
-# REGISTRAR PLANILLA DE SUELDOS
-# ============================================
 @app.route('/api/planilla_sueldos', methods=['POST'])
 def registrar_planilla():
     try:
@@ -726,9 +734,6 @@ def registrar_planilla():
         return jsonify({"error": str(e)}), 500
 
 
-# ============================================
-# ELIMINAR EMPLEADO
-# ============================================
 @app.route('/api/empleados/<int:id_empleado>', methods=['DELETE'])
 def eliminar_empleado(id_empleado):
     try:
@@ -760,9 +765,6 @@ def eliminar_empleado(id_empleado):
         return jsonify({"error": str(e)}), 500
 
 
-# ============================================
-# ELIMINAR EMPLEADO DE LA PLANILLA
-# ============================================
 @app.route('/api/planilla_sueldos/empleado/<int:id_empleado>', methods=['DELETE'])
 def eliminar_empleado_planilla(id_empleado):
     try:
@@ -808,9 +810,6 @@ def eliminar_empleado_planilla(id_empleado):
         return jsonify({"error": str(e)}), 500
 
 
-# ============================================
-# OBTENER EMPLEADOS ACTIVOS
-# ============================================
 @app.route('/api/empleados/activos', methods=['GET'])
 def obtener_empleados_activos():
     try:
@@ -954,7 +953,7 @@ def generar_reporte_stock_bajo():
         
         query = """
             SELECT id, nombre, stock, costo_proveedor, costo_venta_final, 
-                   margen_ganancia, proveedor, costo_proveedor_pendiente
+                   margen_ganancia, proveedor, costo_proveedor_pendiente, categoria_nombre
             FROM repuestos 
             WHERE stock IS NOT NULL AND stock <= %s AND stock > 0
         """
@@ -1042,7 +1041,7 @@ def generar_reporte_stock_bajo():
         elementos.append(Spacer(1, 0.15 * inch))
         
         table_data = [
-            ['ID', 'Producto', 'Stock', 'Costo Proveedor ($)', 'Margen (%)', 'Precio Venta ($)', 'Proveedor']
+            ['ID', 'Producto', 'Stock', 'Costo Proveedor ($)', 'Margen (%)', 'Precio Venta ($)', 'Proveedor', 'Categoría']
         ]
         
         for p in productos:
@@ -1053,10 +1052,11 @@ def generar_reporte_stock_bajo():
                 f"{p['costo_proveedor']:,.0f}" if p['costo_proveedor'] else 'Pendiente',
                 f"{p['margen_ganancia']:.1f}%" if p['margen_ganancia'] else '0%',
                 f"{p['costo_venta_final']:,.0f}" if p['costo_venta_final'] else 'N/A',
-                p['proveedor'] or 'Sin proveedor'
+                p['proveedor'] or 'Sin proveedor',
+                p['categoria_nombre'] or 'Sin categoría'
             ])
         
-        col_widths = [0.5*inch, 2.5*inch, 0.7*inch, 1.0*inch, 0.8*inch, 1.0*inch, 1.2*inch]
+        col_widths = [0.5*inch, 2.5*inch, 0.7*inch, 1.0*inch, 0.8*inch, 1.0*inch, 1.2*inch, 1.2*inch]
         tabla = Table(table_data, colWidths=col_widths, repeatRows=1)
         tabla.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a4d2e')),
@@ -1355,12 +1355,8 @@ def registrar_gasto_interno(data):
         return False
 
 
-# ============================================
-# OBTENER GASTOS PARA BALANCE (TODOS)
-# ============================================
 @app.route('/api/gastos_balance', methods=['GET'])
 def obtener_gastos_balance():
-    """Obtiene TODOS los gastos operativos para el balance (sueldos, arriendo, etc)"""
     try:
         fecha_inicio = request.args.get('fecha_inicio')
         fecha_fin = request.args.get('fecha_fin')
@@ -1392,7 +1388,6 @@ def obtener_gastos_balance():
 # RUTAS PARA CATEGORÍAS DE REPUESTOS
 # ============================================
 
-# Obtener todas las categorías
 @app.route('/api/categorias_repuestos', methods=['GET'])
 def obtener_categorias_repuestos():
     try:
@@ -1412,7 +1407,7 @@ def obtener_categorias_repuestos():
         print(f"❌ Error en obtener_categorias_repuestos: {e}")
         return jsonify([])
 
-# Obtener subcategorías por categoría
+
 @app.route('/api/subcategorias_repuestos/<int:categoria_id>', methods=['GET'])
 def obtener_subcategorias_repuestos(categoria_id):
     try:
@@ -1431,7 +1426,7 @@ def obtener_subcategorias_repuestos(categoria_id):
         print(f"❌ Error en obtener_subcategorias_repuestos: {e}")
         return jsonify([])
 
-# Obtener todas las subcategorías
+
 @app.route('/api/subcategorias_repuestos', methods=['GET'])
 def obtener_todas_subcategorias_repuestos():
     try:
@@ -1451,7 +1446,7 @@ def obtener_todas_subcategorias_repuestos():
         print(f"❌ Error en obtener_todas_subcategorias_repuestos: {e}")
         return jsonify([])
 
-# Asignar categoría a un repuesto
+
 @app.route('/api/repuestos/<int:id_repuesto>/categoria', methods=['PUT'])
 def asignar_categoria_repuesto(id_repuesto):
     try:
@@ -1463,7 +1458,6 @@ def asignar_categoria_repuesto(id_repuesto):
         cur = conn.cursor()
         
         if subcategoria_id:
-            # Obtener nombre de la categoría
             cur.execute("""
                 SELECT c.nombre 
                 FROM subcategorias_repuestos s
@@ -1496,7 +1490,7 @@ def asignar_categoria_repuesto(id_repuesto):
         print(f"❌ Error en asignar_categoria_repuesto: {e}")
         return jsonify({"error": str(e)}), 500
 
-# Obtener repuestos por categoría
+
 @app.route('/api/repuestos/categoria/<categoria_nombre>', methods=['GET'])
 def obtener_repuestos_por_categoria(categoria_nombre):
     try:
@@ -1523,7 +1517,6 @@ def obtener_repuestos_por_categoria(categoria_nombre):
 def importar_repuestos():
     """Importa productos desde Excel con categorías, subcategorías y stock"""
     
-    # Manejar preflight OPTIONS
     if request.method == 'OPTIONS':
         response = make_response()
         origin = request.headers.get('Origin')
@@ -1554,11 +1547,6 @@ def importar_repuestos():
         errores = []
         exitosos = []
         
-        # ============================================
-        # FUNCIONES PARA NORMALIZAR TEXTO
-        # ============================================
-        import unicodedata
-        
         def normalizar_texto(texto):
             if not texto:
                 return texto
@@ -1572,29 +1560,17 @@ def importar_repuestos():
             texto_limpio = ' '.join(texto_limpio.split())
             return texto_limpio.strip()
         
-        # ============================================
-        # 1. Cargar TODAS las categorías en memoria
-        # ============================================
+        # Cargar categorías en memoria
         cur.execute("SELECT id, nombre FROM categorias_repuestos")
         categorias_db = cur.fetchall()
-        print(f"📂 Categorías en BD: {len(categorias_db)}")
-        for row in categorias_db:
-            print(f"   - ID: {row[0]}, Nombre: {row[1]}")
         
-        # Crear mapa de búsqueda
         categorias_map = {}
         for row in categorias_db:
-            # Guardar por nombre exacto
             categorias_map[row[1]] = row[0]
-            # Guardar por nombre normalizado (sin tildes)
             key_normalizado = normalizar_texto(row[1])
             categorias_map[key_normalizado] = row[0]
         
-        print(f"📂 Mapa de categorías: {list(categorias_map.keys())}")
-        
-        # ============================================
-        # 2. Procesar productos
-        # ============================================
+        # Procesar productos
         for idx, item in enumerate(productos):
             try:
                 if idx % 10 == 0:
@@ -1608,61 +1584,41 @@ def importar_repuestos():
                 subcategoria_nombre = limpiar_texto(item.get('subcategoria', '').strip())
                 stock = int(item.get('stock', 0))
                 
-                print(f"\n📦 [{idx+1}] {nombre}")
-                print(f"   Categoría recibida: '{categoria_nombre}'")
-                print(f"   Subcategoría recibida: '{subcategoria_nombre}'")
-                
                 if not nombre or costo_proveedor <= 0 or precio_venta <= 0:
                     errores.append({"nombre": nombre or 'Sin nombre', "error": "Faltan datos obligatorios"})
                     continue
                 
-                # ============================================
-                # 3. Buscar o crear CATEGORÍA (FORZADO)
-                # ============================================
+                # Buscar o crear categoría
                 categoria_id = None
                 categoria_nombre_final = None
                 
                 if categoria_nombre:
-                    # Buscar por nombre exacto
                     if categoria_nombre in categorias_map:
                         categoria_id = categorias_map[categoria_nombre]
                         categoria_nombre_final = categoria_nombre
-                        print(f"   ✅ Categoría encontrada: {categoria_nombre} (ID: {categoria_id})")
                     else:
-                        # Buscar por nombre normalizado
                         key_normalizado = normalizar_texto(categoria_nombre)
                         if key_normalizado in categorias_map:
                             categoria_id = categorias_map[key_normalizado]
-                            # Obtener nombre real
                             for row in categorias_db:
                                 if normalizar_texto(row[1]) == key_normalizado:
                                     categoria_nombre_final = row[1]
                                     break
-                            print(f"   ✅ Categoría encontrada por normalización: {categoria_nombre} -> {categoria_nombre_final} (ID: {categoria_id})")
                         else:
-                            # Crear nueva categoría
-                            print(f"   📝 Creando nueva categoría: {categoria_nombre}")
                             cur.execute("""
                                 INSERT INTO categorias_repuestos (nombre, descripcion)
                                 VALUES (%s, %s) RETURNING id
                             """, (categoria_nombre, f'Categoría importada: {categoria_nombre}'))
                             categoria_id = cur.fetchone()[0]
                             categoria_nombre_final = categoria_nombre
-                            # Actualizar caché
                             categorias_map[categoria_nombre] = categoria_id
                             categorias_map[normalizar_texto(categoria_nombre)] = categoria_id
                             categorias_db.append((categoria_id, categoria_nombre))
-                            print(f"   ✅ Categoría creada ID: {categoria_id}")
-                else:
-                    print(f"   ⚠️ No se recibió categoría para: {nombre}")
                 
-                # ============================================
-                # 4. Buscar o crear SUBCATEGORÍA
-                # ============================================
+                # Buscar o crear subcategoría
                 subcategoria_id = None
                 if subcategoria_nombre and categoria_id:
                     try:
-                        # Buscar subcategoría por nombre normalizado + categoria_id
                         cur.execute("""
                             SELECT id FROM subcategorias_repuestos 
                             WHERE LOWER(nombre) = LOWER(%s) AND categoria_id = %s
@@ -1670,49 +1626,37 @@ def importar_repuestos():
                         result = cur.fetchone()
                         if result:
                             subcategoria_id = result[0]
-                            print(f"   ✅ Subcategoría encontrada ID: {subcategoria_id}")
                         else:
-                            print(f"   📝 Creando subcategoría: {subcategoria_nombre}")
                             cur.execute("""
                                 INSERT INTO subcategorias_repuestos (categoria_id, nombre)
                                 VALUES (%s, %s) RETURNING id
                             """, (categoria_id, subcategoria_nombre))
                             subcategoria_id = cur.fetchone()[0]
-                            print(f"   ✅ Subcategoría creada ID: {subcategoria_id}")
                     except Exception as e:
                         print(f"   ⚠️ Error con subcategoría: {e}")
                         subcategoria_id = None
                 
-                # ============================================
-                # 5. Calcular margen
-                # ============================================
+                # Calcular margen
                 margen = 30
                 if costo_proveedor > 0 and precio_venta > 0:
                     iva = 1.19
                     costo_con_iva = costo_proveedor * iva
                     margen = round(((precio_venta / costo_con_iva) - 1) * 100, 1)
                 
-                # ============================================
-                # 6. Insertar o actualizar REPUESTO (FORZAR CATEGORÍA)
-                # ============================================
                 # Buscar si el producto ya existe
                 cur.execute("SELECT id, stock FROM repuestos WHERE LOWER(nombre) = LOWER(%s)", (nombre,))
                 existente = cur.fetchone()
                 
-                # Si no existe por nombre exacto, buscar por nombre normalizado
                 if not existente:
                     nombre_buscar = normalizar_texto(nombre)
                     cur.execute("SELECT id, stock, nombre FROM repuestos")
                     for row in cur.fetchall():
                         if normalizar_texto(row[2]) == nombre_buscar:
                             existente = (row[0], row[1])
-                            print(f"   ✅ Producto encontrado por normalización: {row[2]}")
                             break
                 
                 if existente:
                     nuevo_stock = (existente[1] or 0) + stock
-                    print(f"   📝 Actualizando repuesto ID: {existente[0]}")
-                    print(f"   📝 Asignando categoría: {categoria_nombre_final or 'NULL'}")
                     cur.execute("""
                         UPDATE repuestos 
                         SET costo_proveedor = %s,
@@ -1731,15 +1675,12 @@ def importar_repuestos():
                         proveedor,
                         nuevo_stock,
                         subcategoria_id,
-                        categoria_nombre_final,  # ✅ FORZAR CATEGORÍA
+                        categoria_nombre_final,
                         existente[0]
                     ))
                     actualizados += 1
                     exitosos.append(f"{nombre} (stock: {nuevo_stock}, categoría: {categoria_nombre_final})")
-                    print(f"   ✅ Repuesto actualizado con categoría: {categoria_nombre_final}")
                 else:
-                    print(f"   📝 Creando nuevo repuesto")
-                    print(f"   📝 Asignando categoría: {categoria_nombre_final or 'NULL'}")
                     cur.execute("""
                         INSERT INTO repuestos 
                         (nombre, costo_proveedor, costo_venta_final, margen_ganancia, proveedor, 
@@ -1754,16 +1695,14 @@ def importar_repuestos():
                         margen,
                         proveedor,
                         subcategoria_id,
-                        categoria_nombre_final,  # ✅ FORZAR CATEGORÍA
+                        categoria_nombre_final,
                         stock
                     ))
                     importados += 1
                     exitosos.append(f"{nombre} (nuevo, categoría: {categoria_nombre_final})")
-                    print(f"   ✅ Nuevo repuesto creado con categoría: {categoria_nombre_final}")
                 
                 conn.commit()
                 
-                # Commit cada 20 productos
                 if idx % 20 == 0:
                     conn.commit()
                 
@@ -1799,34 +1738,7 @@ def importar_repuestos():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-# ============================================
-# OBTENER TODOS LOS REPUESTOS (CON CATEGORÍA)
-# ============================================
-@app.route('/api/repuestos', methods=['GET'])
-def obtener_repuestos():
-    """Obtiene todos los repuestos con sus categorías para la tabla"""
-    try:
-        from database import get_cursor
-        conn, cur = get_cursor()
-        
-        cur.execute("""
-            SELECT id, nombre, stock, costo_proveedor, 
-                   costo_proveedor_pendiente, margen_ganancia, 
-                   costo_venta_final, proveedor, categoria_nombre
-            FROM repuestos 
-            ORDER BY id DESC
-        """)
-        
-        repuestos = [dict(row) for row in cur.fetchall()]
-        cur.close()
-        conn.close()
-        
-        return jsonify(repuestos)
-    except Exception as e:
-        print(f"❌ Error en obtener_repuestos: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify([])
+
 
 # ============================
 # CREAR ADMIN AL INICIAR
