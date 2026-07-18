@@ -1149,7 +1149,28 @@ def api_repuestos():
     except Exception as e:
         logger.error(f"❌ Error en api_repuestos: {e}")
         return jsonify([])
-
+# ============================
+# DEUDORES
+# ============================
+@app.route('/deudores')
+@login_required
+@role_required(['admin', 'operador'])
+def deudores():
+    """Lista todos los clientes con deudas pendientes"""
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/deudores/todos", timeout=10)
+        if resp.status_code == 200:
+            deudores = resp.json()
+        else:
+            deudores = []
+    except Exception as e:
+        logger.error(f"Error en /deudores: {e}")
+        deudores = []
+    
+    # Calcular total de deudas
+    total_deudas = sum(d.get('monto_deuda', 0) for d in deudores)
+    
+    return render_template("deudores.html", deudores=deudores, total_deudas=total_deudas)
 # ============================
 # VENTA RÁPIDA
 # ============================
