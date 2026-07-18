@@ -1703,7 +1703,7 @@ def obtener_deudor(cliente_nombre):
             SELECT id, cliente_nombre, patente, telefono, 
                    monto_deuda, monto_original, estado, 
                    fecha_deuda, fecha_actualizacion, ultimo_pago,
-                   observaciones
+                   observaciones, frecuencia_deudas, id_registro
             FROM deudores 
             WHERE cliente_nombre ILIKE %s
             ORDER BY fecha_actualizacion DESC
@@ -1792,7 +1792,7 @@ def registrar_deuda():
             else:
                 nuevo_estado = 'verde'
             
-           cur.execute("""
+            cur.execute("""
                 UPDATE deudores 
                 SET monto_deuda = %s,
                     monto_original = monto_original + %s,
@@ -1803,16 +1803,17 @@ def registrar_deuda():
                     id_registro = COALESCE(id_registro, %s)
                 WHERE id = %s
             """, (nuevo_monto, monto_original, nuevo_estado, descripcion, nueva_frecuencia, id_registro, deudor_id))
-        else:
-            # ✅ GUARDAR id_registro EN INSERT
+            
+            # Guardar en historial
             cur.execute("""
-                INSERT INTO deudores 
-                (cliente_nombre, patente, telefono, monto_deuda, 
-                 monto_original, estado, observaciones, frecuencia_deudas, id_registro)
+                INSERT INTO historial_deudas 
+                (deudor_id, cliente_nombre, patente, monto_deuda, 
+                 monto_abonado, saldo_restante, tipo, descripcion, id_registro)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id
-            """, (cliente_nombre, patente, telefono, monto_deuda, 
-                  monto_original, estado, descripcion, 1, id_registro))
+            """, (
+                deudor_id, cliente_nombre, patente, monto_deuda,
+                0, nuevo_monto, 'deuda', descripcion, id_registro
+            ))
             
             mensaje = f"✅ Deuda actualizada: ${nuevo_monto:,.0f} (Frecuencia: {nueva_frecuencia})"
         else:
@@ -1825,11 +1826,11 @@ def registrar_deuda():
             cur.execute("""
                 INSERT INTO deudores 
                 (cliente_nombre, patente, telefono, monto_deuda, 
-                 monto_original, estado, observaciones, frecuencia_deudas)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                 monto_original, estado, observaciones, frecuencia_deudas, id_registro)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (cliente_nombre, patente, telefono, monto_deuda, 
-                  monto_original, estado, descripcion, 1))
+                  monto_original, estado, descripcion, 1, id_registro))
             
             deudor_id = cur.fetchone()[0]
             
@@ -1864,6 +1865,7 @@ def registrar_deuda():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/deudores/pagar', methods=['POST'])
 def pagar_deuda():
@@ -1955,6 +1957,7 @@ def pagar_deuda():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/api/deudores/historial/<cliente_nombre>', methods=['GET'])
 def historial_deudas_cliente(cliente_nombre):
     """Obtiene el historial de deudas de un cliente"""
@@ -2015,6 +2018,7 @@ def obtener_todos_deudores():
         import traceback
         traceback.print_exc()
         return jsonify([])
+
 # ============================
 # CREAR ADMIN AL INICIAR
 # ============================
