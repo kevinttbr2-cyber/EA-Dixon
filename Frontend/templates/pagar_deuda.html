@@ -454,16 +454,17 @@ document.getElementById('formPagarDeuda').addEventListener('submit', function(e)
         })
         .then(result => {
             // 2. Registrar el abono en la deuda
-            return fetch(`${API_URL}/api/deudores/pagar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    cliente_nombre: clienteNombre,
-                    monto_abonado: montoPagar,
-                    descripcion: observaciones,
-                    id_registro: null
-                })
-            });
+return fetch(`${API_URL}/api/deudores/pagar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        cliente_nombre: clienteNombre,
+        monto_abonado: montoPagar,
+        descripcion: observaciones,
+        id_registro: null,
+        forma_pago: formaPago  // ✅ ENVIAR FORMA DE PAGO
+    })
+});
         })
         .then(r => {
             if (!r.ok) {
