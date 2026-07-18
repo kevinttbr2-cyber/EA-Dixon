@@ -1902,6 +1902,9 @@ def pagar_deuda():
             return jsonify({"error": "Cliente sin deuda registrada"}), 404
         
         deudor_id, monto_deuda, estado_actual, frecuencia = deudor
+        
+        # ✅ CONVERTIR Decimal a float
+        monto_deuda = float(monto_deuda) if monto_deuda else 0
         print(f"📊 Deuda encontrada: ID={deudor_id}, Monto={monto_deuda}, Estado={estado_actual}")
         
         nuevo_monto = max(0, monto_deuda - monto_abonado)
@@ -1948,9 +1951,8 @@ def pagar_deuda():
             print("✅ Historial registrado correctamente")
         except Exception as e:
             print(f"⚠️ Error al guardar historial: {e}")
-            # Si falla el historial, igual continuamos (ya se actualizó la deuda)
+            # Si falla el historial, intentar sin id_registro
             conn.rollback()
-            # Reintentar sin id_registro
             cur.execute("""
                 INSERT INTO historial_deudas 
                 (deudor_id, cliente_nombre, monto_deuda, monto_abonado, 
@@ -1962,8 +1964,6 @@ def pagar_deuda():
             ))
             conn.commit()
             print("✅ Historial registrado sin id_registro")
-            # Continuamos sin id_registro
-            id_registro = None
         
         conn.commit()
         cur.close()
