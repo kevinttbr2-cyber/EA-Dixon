@@ -896,23 +896,45 @@
                     <td>{{ r.marca }}</td>
                     <td>{{ r.modelo }}</td>
                     <td>{{ r.atendido_por or r.usuario or '-' }}</td>
-                    <td style="font-size: 12px;">
-                        {% if r.forma_pago %}
-                            {% if r.forma_pago == 'efectivo' %}
-                                <span style="color: var(--accent-green);">💵 Efectivo</span>
-                            {% elif r.forma_pago == 'tarjeta' %}
-                                <span style="color: var(--accent-blue);">💳 Tarjeta</span>
-                            {% elif r.forma_pago == 'transferencia' %}
-                                <span style="color: var(--accent-yellow);">🏦 Transferencia</span>
-                            {% elif r.forma_pago == 'cheque' %}
-                                <span style="color: var(--accent-red);">📄 Cheque</span>
-                            {% else %}
-                                <span style="color: var(--text-muted);">🔄 {{ r.forma_pago }}</span>
-                            {% endif %}
-                        {% else %}
-                            <span style="color: var(--text-muted);">—</span>
-                        {% endif %}
-                    </td>
+                   <td style="font-size: 12px;">
+    {% if r.tipo_venta == 'deuda' %}
+        <!-- Si es pago de deuda, mostrar el ícono y la forma de pago -->
+        <span style="color: #ff6b6b; font-weight: 600;">💰 Pago de deuda</span>
+        <span style="color: var(--text-muted); font-size: 10px;">·</span>
+        {% if r.forma_pago %}
+            {% if r.forma_pago == 'efectivo' %}
+                <span style="color: var(--accent-green);">💵 Efectivo</span>
+            {% elif r.forma_pago == 'tarjeta' %}
+                <span style="color: var(--accent-blue);">💳 Tarjeta</span>
+            {% elif r.forma_pago == 'transferencia' %}
+                <span style="color: var(--accent-yellow);">🏦 Transferencia</span>
+            {% elif r.forma_pago == 'cheque' %}
+                <span style="color: var(--accent-red);">📄 Cheque</span>
+            {% else %}
+                <span style="color: var(--text-muted);">🔄 {{ r.forma_pago }}</span>
+            {% endif %}
+        {% else %}
+            <span style="color: var(--text-muted);">—</span>
+        {% endif %}
+    {% else %}
+        <!-- Si es pago normal, mostrar solo la forma de pago -->
+        {% if r.forma_pago %}
+            {% if r.forma_pago == 'efectivo' %}
+                <span style="color: var(--accent-green);">💵 Efectivo</span>
+            {% elif r.forma_pago == 'tarjeta' %}
+                <span style="color: var(--accent-blue);">💳 Tarjeta</span>
+            {% elif r.forma_pago == 'transferencia' %}
+                <span style="color: var(--accent-yellow);">🏦 Transferencia</span>
+            {% elif r.forma_pago == 'cheque' %}
+                <span style="color: var(--accent-red);">📄 Cheque</span>
+            {% else %}
+                <span style="color: var(--text-muted);">🔄 {{ r.forma_pago }}</span>
+            {% endif %}
+        {% else %}
+            <span style="color: var(--text-muted);">—</span>
+        {% endif %}
+    {% endif %}
+</td>
                     <td>
                         <div class="dropdown-3p">
                             <button class="btn-3p" onclick="toggleMenu3p(this, {{ r.id }})" data-id="{{ r.id }}" data-nombre="{{ r.nombre }}">
