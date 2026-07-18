@@ -4,7 +4,7 @@
 
 <style>
 /* ============================================
-   ESTILOS PAGAR (CON ABONO EXPANDIBLE)
+   ESTILOS PAGAR
    ============================================ */
 .pagar-container {
     max-width: 700px;
@@ -37,7 +37,7 @@
 }
 
 /* ============================================
-   MONTO TOTAL (INFORMATIVO)
+   MONTO TOTAL (EDITABLE - CAMPO PRINCIPAL)
    ============================================ */
 .pagar-container .monto-total {
     background: rgba(46, 204, 113, 0.04);
@@ -45,22 +45,39 @@
     border-radius: var(--radius-md);
     padding: 14px 18px;
     margin-bottom: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
 }
 
 .pagar-container .monto-total .label {
     color: var(--text-secondary);
     font-size: 14px;
     font-weight: 500;
+    display: block;
+    margin-bottom: 6px;
 }
 
-.pagar-container .monto-total .valor {
+.pagar-container .monto-total input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-input);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 22px;
     font-weight: 700;
-    font-size: 24px;
-    color: var(--accent-green);
+    transition: var(--transition);
+}
+
+.pagar-container .monto-total input:focus {
+    outline: none;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
+}
+
+.pagar-container .monto-total .sugerencia {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
 }
 
 /* ============================================
@@ -126,7 +143,8 @@
     margin-bottom: 4px;
 }
 
-.abono-section .form-group input {
+.abono-section .form-group input,
+.abono-section .form-group select {
     width: 100%;
     padding: 8px 12px;
     background: var(--bg-input);
@@ -137,7 +155,8 @@
     transition: var(--transition);
 }
 
-.abono-section .form-group input:focus {
+.abono-section .form-group input:focus,
+.abono-section .form-group select:focus {
     outline: none;
     border-color: var(--accent-green);
     box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
@@ -268,8 +287,8 @@
    RESPONSIVE
    ============================================ */
 @media (max-width: 600px) {
-    .pagar-container .monto-total .valor {
-        font-size: 20px;
+    .pagar-container .monto-total input {
+        font-size: 18px;
     }
     .pagar-container .cliente-info {
         flex-direction: column;
@@ -298,35 +317,28 @@
     </div>
 
     <!-- ============================================
-    MONTO TOTAL (INFORMATIVO - NO EDITABLE)
+    MONTO TOTAL (EDITABLE - CAMPO PRINCIPAL)
     ============================================ -->
     <div class="monto-total">
-        <span class="label">💰 Monto total a pagar</span>
-        <span class="valor" id="montoTotalDisplay">${{ "{:,.0f}".format(registro.monto) }}</span>
+        <label class="label">💰 Monto que va a pagar el cliente</label>
+        <input type="number" id="montoPagar" class="form-control" step="0.01" min="0" 
+               placeholder="Ingresa el monto que pagará..." 
+               value="{{ registro.monto }}">
+        <span class="sugerencia">💡 Monto sugerido: ${{ "{:,.0f}".format(registro.monto) }}</span>
     </div>
 
     <!-- ============================================
-    BOTÓN ABONAR (expande la sección)
+    BOTÓN ABONAR (expande la sección para pago parcial)
     ============================================ -->
     <button class="btn-abonar-toggle" onclick="toggleAbono()">
         <span class="material-symbols-rounded icon">add</span>
-        💳 Abonar (pago parcial)
+        📝 Registrar como pago parcial (generar deuda)
     </button>
 
     <!-- ============================================
-    SECCIÓN ABONO (expandible - AQUÍ SE INGRESA EL MONTO)
+    SECCIÓN ABONO (expandible - para generar deuda)
     ============================================ -->
     <div class="abono-section" id="abonoSection">
-        <div class="form-group">
-            <label>💵 ¿Cuánto va a pagar el cliente?</label>
-            <input type="number" id="montoAbono" class="form-control" step="0.01" min="0" 
-                   placeholder="Ingresa el monto que pagará..." 
-                   value="{{ registro.monto }}">
-            <small style="color: var(--text-muted); font-size: 11px; display: block; margin-top: 4px;">
-                💡 El monto total es <strong>${{ "{:,.0f}".format(registro.monto) }}</strong>
-            </small>
-        </div>
-
         <div class="form-group">
             <label>💳 Forma de Pago</label>
             <select id="formaPago" class="form-control">
@@ -334,6 +346,11 @@
                 <option value="tarjeta">💳 Tarjeta</option>
                 <option value="transferencia">🏦 Transferencia</option>
             </select>
+        </div>
+
+        <div class="form-group">
+            <label>📝 Observaciones del pago</label>
+            <textarea id="observacionesAbono" class="form-control" rows="2" placeholder="Detalles del pago..."></textarea>
         </div>
 
         <!-- DEUDA GENERADA -->
@@ -365,11 +382,6 @@
         </div>
 
         <div class="form-group">
-            <label style="color: var(--text-secondary); font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">📝 Observaciones</label>
-            <textarea id="observacionesInput" class="form-control" rows="2"></textarea>
-        </div>
-
-        <div class="form-group">
             <label style="color: var(--text-secondary); font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">✅ Resultado</label>
             <div class="radio-group">
                 <label><input type="radio" name="resultado" value="reparado" checked> Reparado</label>
@@ -390,7 +402,7 @@ const API_URL = 'https://ea-dixon-production.up.railway.app';
 const idRegistro = '{{ id }}';
 const nombreCliente = '{{ registro.nombre }}';
 const patenteCliente = '{{ registro.patente }}';
-const montoTotal = {{ registro.monto }};
+const montoSugerido = {{ registro.monto }};
 
 // ============================================
 // TOGGLE ABONO (expandir/contraer)
@@ -403,7 +415,6 @@ function toggleAbono() {
     icon.classList.toggle('open');
     
     if (section.classList.contains('open')) {
-        document.getElementById('montoAbono').focus();
         calcularDiferencia();
     }
 }
@@ -412,8 +423,8 @@ function toggleAbono() {
 // CALCULAR DIFERENCIA (DEUDA)
 // ============================================
 function calcularDiferencia() {
-    const montoAbono = parseFloat(document.getElementById('montoAbono').value) || 0;
-    const diferencia = Math.max(0, montoTotal - montoAbono);
+    const montoPagar = parseFloat(document.getElementById('montoPagar').value) || 0;
+    const diferencia = Math.max(0, montoSugerido - montoPagar);
     
     const deudaDiv = document.getElementById('deudaGenerada');
     const diferenciaSpan = document.getElementById('diferenciaDeuda');
@@ -432,51 +443,39 @@ function calcularDiferencia() {
     }
 }
 
-document.getElementById('montoAbono').addEventListener('input', calcularDiferencia);
+document.getElementById('montoPagar').addEventListener('input', calcularDiferencia);
 
 // ============================================
 // CONFIRMAR PAGO
 // ============================================
 function confirmarPago() {
+    const montoPagar = parseFloat(document.getElementById('montoPagar').value) || 0;
+    
+    if (montoPagar <= 0) {
+        alert('⚠️ Ingresa un monto válido para pagar');
+        return;
+    }
+    
     const abonoSection = document.getElementById('abonoSection');
     const formaPago = document.getElementById('formaPago').value;
+    const observacionesAbono = document.getElementById('observacionesAbono').value;
     const diagnostico = document.getElementById('diagnosticoInput').value;
     const reparacion = document.getElementById('reparacionInput').value;
-    const observaciones = document.getElementById('observacionesInput').value;
     const resultado = document.querySelector('input[name="resultado"]:checked')?.value || 'reparado';
     const registrarDeuda = document.getElementById('registrarDeuda').checked;
-    
-    let montoPagar = montoTotal;
-    let esPagoParcial = false;
-    let diferencia = 0;
-    
-    // Si la sección de abono está abierta, usar el monto ingresado
-    if (abonoSection.classList.contains('open')) {
-        const montoAbono = parseFloat(document.getElementById('montoAbono').value) || 0;
-        
-        if (montoAbono <= 0) {
-            alert('⚠️ Ingresa un monto válido para abonar');
-            return;
-        }
-        if (montoAbono > montoTotal) {
-            alert(`⚠️ El monto no puede ser mayor a $${montoTotal.toLocaleString()}`);
-            return;
-        }
-        montoPagar = montoAbono;
-        diferencia = montoTotal - montoAbono;
-        esPagoParcial = true;
-    }
+    const diferencia = Math.max(0, montoSugerido - montoPagar);
+    const esPagoParcial = abonoSection.classList.contains('open') && diferencia > 0;
     
     // Confirmar si hay deuda
     if (diferencia > 0 && registrarDeuda && esPagoParcial) {
         if (!confirm(`📊 Confirmar pago parcial\n\n` +
-            `💰 Total del servicio: $${montoTotal.toLocaleString()}\n` +
+            `💰 Monto total sugerido: $${montoSugerido.toLocaleString()}\n` +
             `💵 Monto a pagar: $${montoPagar.toLocaleString()}\n` +
             `⚠️ Deuda generada: $${diferencia.toLocaleString()}\n\n` +
             `¿Confirmar?`)) {
             return;
         }
-    } else if (esPagoParcial && montoPagar === montoTotal) {
+    } else if (montoPagar === montoSugerido) {
         if (!confirm(`✅ ¿Confirmar pago completo de $${montoPagar.toLocaleString()}?`)) {
             return;
         }
@@ -492,7 +491,7 @@ function confirmarPago() {
         forma_pago: formaPago,
         diagnostico: diagnostico,
         reparacion: reparacion,
-        observaciones_pago: observaciones,
+        observaciones_pago: observacionesAbono || '',
         resultado: resultado,
         atendido_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
     };
@@ -520,7 +519,7 @@ function confirmarPago() {
                     monto_deuda: diferencia,
                     monto_original: diferencia,
                     id_registro: idRegistro,
-                    descripcion: `Deuda generada por pago parcial del servicio #${idRegistro}. Total: $${montoTotal.toLocaleString()}, Abonado: $${montoPagar.toLocaleString()}`
+                    descripcion: `Deuda generada por pago parcial del servicio #${idRegistro}. Total: $${montoSugerido.toLocaleString()}, Abonado: $${montoPagar.toLocaleString()}`
                 })
             });
         }
@@ -557,10 +556,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { passive: false });
     });
     
-    // Inicializar el campo de abono con el monto total
-    const montoAbono = document.getElementById('montoAbono');
-    if (montoAbono) {
-        montoAbono.value = montoTotal;
+    // Inicializar el monto de pago con el valor sugerido
+    const montoPagar = document.getElementById('montoPagar');
+    if (montoPagar) {
+        montoPagar.value = montoSugerido;
     }
 });
 </script>
