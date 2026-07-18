@@ -1171,8 +1171,12 @@ def deudores():
     
     # Calcular total de deudas
     total_deudas = sum(d.get('monto_deuda', 0) for d in deudores)
+    deudores_count = len([d for d in deudores if d.get('monto_deuda', 0) > 0])
     
-    return render_template("deudores.html", deudores=deudores, total_deudas=total_deudas. deudores_count=deudores_count))
+    return render_template("deudores.html", 
+                          deudores=deudores, 
+                          total_deudas=total_deudas,
+                          deudores_count=deudores_count)  # ✅ CORREGIDO
 # ============================
 # VENTA RÁPIDA
 # ============================
