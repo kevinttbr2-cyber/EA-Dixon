@@ -523,22 +523,25 @@
                     {% endif %}
                     
                     <!-- GESTIÓN -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown">
-                            <span class="material-symbols-rounded">settings</span>
-                            Gestión
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/registros"><span class="material-symbols-rounded">history</span> Registros</a></li>
-                            <li><a class="dropdown-item" href="/flotas"><span class="material-symbols-rounded">directions_car</span> Flotas</a></li>
-                            <li><a class="dropdown-item" href="/flotas_pendientes"><span class="material-symbols-rounded">pending_actions</span> Flotas Pendientes {% if flotas_pendientes_count > 0 %}<span class="badge-count">{{ flotas_pendientes_count }}</span>{% endif %}</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/repuestos"><span class="material-symbols-rounded">inventory_2</span> Repuestos</a></li>
-                            <li><a class="dropdown-item" href="/auditoria_descargas"><span class="material-symbols-rounded">download</span> Auditoría</a></li>
-                        </ul>
-                    </li>
-                    {% endif %}
+{% if session.get("rol") in ["admin", "operador"] %}
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown">
+        <span class="material-symbols-rounded">settings</span>
+        Gestión
+    </a>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="/registros"><span class="material-symbols-rounded">history</span> Registros</a></li>
+        <li><a class="dropdown-item" href="/flotas"><span class="material-symbols-rounded">directions_car</span> Flotas</a></li>
+        <li><a class="dropdown-item" href="/flotas_pendientes"><span class="material-symbols-rounded">pending_actions</span> Flotas Pendientes {% if flotas_pendientes_count > 0 %}<span class="badge-count">{{ flotas_pendientes_count }}</span>{% endif %}</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <!-- ✅ AGREGAR DEUDORES AQUÍ -->
+        <li><a class="dropdown-item" href="/deudores"><span class="material-symbols-rounded">payments</span> Deudores {% if deudores_count is defined and deudores_count > 0 %}<span class="badge-count" style="background:#ff6b6b;">{{ deudores_count }}</span>{% endif %}</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="/repuestos"><span class="material-symbols-rounded">inventory_2</span> Repuestos</a></li>
+        <li><a class="dropdown-item" href="/auditoria_descargas"><span class="material-symbols-rounded">download</span> Auditoría</a></li>
+    </ul>
+</li>
+{% endif %}
                     
                     <!-- VALIDAR PAGOS -->
                     {% if session.get("rol") in ["admin", "operador"] %}
