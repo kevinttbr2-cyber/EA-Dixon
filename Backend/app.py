@@ -1540,6 +1540,7 @@ def importar_repuestos():
     try:
         data = request.json
         productos = data.get('productos', [])
+        print(f"📦 Productos recibidos: {len(productos)}")
         
         if not productos:
             return jsonify({"error": "No hay productos para importar"}), 400
@@ -1554,19 +1555,17 @@ def importar_repuestos():
         exitosos = []
         
         # ============================================
-        # FUNCIÓN PARA NORMALIZAR TEXTO (quitar tildes)
+        # FUNCIONES PARA NORMALIZAR TEXTO
         # ============================================
         import unicodedata
         
         def normalizar_texto(texto):
-            """Elimina tildes y caracteres especiales para búsqueda"""
             if not texto:
                 return texto
             texto_normalizado = unicodedata.normalize('NFKD', texto).encode('ASCII', 'ignore').decode('ASCII')
             return texto_normalizado.lower().strip()
         
         def limpiar_texto(texto):
-            """Limpia texto para insertar en BD"""
             if not texto:
                 return texto
             texto_limpio = ''.join(c for c in texto if c.isprintable())
@@ -1578,8 +1577,11 @@ def importar_repuestos():
         # ============================================
         cur.execute("SELECT id, nombre FROM categorias_repuestos")
         categorias_db = cur.fetchall()
+        print(f"📂 Categorías en BD: {len(categorias_db)}")
+        for row in categorias_db:
+            print(f"   - ID: {row[0]}, Nombre: {row[1]}")
         
-        # Crear diccionario para búsqueda por nombre normalizado
+        # Crear mapa de búsqueda
         categorias_map = {}
         for row in categorias_db:
             # Guardar por nombre exacto
@@ -1588,26 +1590,10 @@ def importar_repuestos():
             key_normalizado = normalizar_texto(row[1])
             categorias_map[key_normalizado] = row[0]
         
-        print(f"📂 Categorías cargadas: {len(categorias_db)}")
-        for row in categorias_db:
-            print(f"   - {row[1]} (normalizado: {normalizar_texto(row[1])})")
+        print(f"📂 Mapa de categorías: {list(categorias_map.keys())}")
         
         # ============================================
-        # 2. Cargar TODAS las subcategorías en memoria
-        # ============================================
-        cur.execute("SELECT id, nombre, categoria_id FROM subcategorias_repuestos")
-        subcategorias_db = cur.fetchall()
-        
-        subcategorias_map = {}
-        for row in subcategorias_db:
-            # Guardar por nombre normalizado + categoria_id
-            key = f"{row[2]}_{normalizar_texto(row[1])}"
-            subcategorias_map[key] = row[0]
-        
-        print(f"📂 Subcategorías cargadas: {len(subcategorias_db)}")
-        
-        # ============================================
-        # 3. Procesar productos
+        # 2. Procesar productos
         # ============================================
         for idx, item in enumerate(productos):
             try:
@@ -1622,33 +1608,37 @@ def importar_repuestos():
                 subcategoria_nombre = limpiar_texto(item.get('subcategoria', '').strip())
                 stock = int(item.get('stock', 0))
                 
+                print(f"\n📦 [{idx+1}] {nombre}")
+                print(f"   Categoría recibida: '{categoria_nombre}'")
+                print(f"   Subcategoría recibida: '{subcategoria_nombre}'")
+                
                 if not nombre or costo_proveedor <= 0 or precio_venta <= 0:
                     errores.append({"nombre": nombre or 'Sin nombre', "error": "Faltan datos obligatorios"})
                     continue
                 
                 # ============================================
-                # 4. Buscar o crear CATEGORÍA
+                # 3. Buscar o crear CATEGORÍA (FORZADO)
                 # ============================================
                 categoria_id = None
-                categoria_encontrada = None
+                categoria_nombre_final = None
                 
                 if categoria_nombre:
                     # Buscar por nombre exacto
                     if categoria_nombre in categorias_map:
                         categoria_id = categorias_map[categoria_nombre]
-                        categoria_encontrada = categoria_nombre
-                        print(f"   ✅ Categoría encontrada exacta: {categoria_nombre} (ID: {categoria_id})")
+                        categoria_nombre_final = categoria_nombre
+                        print(f"   ✅ Categoría encontrada: {categoria_nombre} (ID: {categoria_id})")
                     else:
                         # Buscar por nombre normalizado
                         key_normalizado = normalizar_texto(categoria_nombre)
                         if key_normalizado in categorias_map:
                             categoria_id = categorias_map[key_normalizado]
-                            # Obtener el nombre real de la categoría
+                            # Obtener nombre real
                             for row in categorias_db:
                                 if normalizar_texto(row[1]) == key_normalizado:
-                                    categoria_encontrada = row[1]
+                                    categoria_nombre_final = row[1]
                                     break
-                            print(f"   ✅ Categoría encontrada por normalización: {categoria_nombre} -> {categoria_encontrada} (ID: {categoria_id})")
+                            print(f"   ✅ Categoría encontrada por normalización: {categoria_nombre} -> {categoria_nombre_final} (ID: {categoria_id})")
                         else:
                             # Crear nueva categoría
                             print(f"   📝 Creando nueva categoría: {categoria_nombre}")
@@ -1657,33 +1647,44 @@ def importar_repuestos():
                                 VALUES (%s, %s) RETURNING id
                             """, (categoria_nombre, f'Categoría importada: {categoria_nombre}'))
                             categoria_id = cur.fetchone()[0]
-                            categoria_encontrada = categoria_nombre
+                            categoria_nombre_final = categoria_nombre
                             # Actualizar caché
                             categorias_map[categoria_nombre] = categoria_id
                             categorias_map[normalizar_texto(categoria_nombre)] = categoria_id
+                            categorias_db.append((categoria_id, categoria_nombre))
                             print(f"   ✅ Categoría creada ID: {categoria_id}")
+                else:
+                    print(f"   ⚠️ No se recibió categoría para: {nombre}")
                 
                 # ============================================
-                # 5. Buscar o crear SUBCATEGORÍA
+                # 4. Buscar o crear SUBCATEGORÍA
                 # ============================================
                 subcategoria_id = None
                 if subcategoria_nombre and categoria_id:
-                    key = f"{categoria_id}_{normalizar_texto(subcategoria_nombre)}"
-                    if key in subcategorias_map:
-                        subcategoria_id = subcategorias_map[key]
-                        print(f"   ✅ Subcategoría encontrada: {subcategoria_nombre} (ID: {subcategoria_id})")
-                    else:
-                        print(f"   📝 Creando subcategoría: {subcategoria_nombre}")
+                    try:
+                        # Buscar subcategoría por nombre normalizado + categoria_id
                         cur.execute("""
-                            INSERT INTO subcategorias_repuestos (categoria_id, nombre)
-                            VALUES (%s, %s) RETURNING id
-                        """, (categoria_id, subcategoria_nombre))
-                        subcategoria_id = cur.fetchone()[0]
-                        subcategorias_map[key] = subcategoria_id
-                        print(f"   ✅ Subcategoría creada ID: {subcategoria_id}")
+                            SELECT id FROM subcategorias_repuestos 
+                            WHERE LOWER(nombre) = LOWER(%s) AND categoria_id = %s
+                        """, (subcategoria_nombre, categoria_id))
+                        result = cur.fetchone()
+                        if result:
+                            subcategoria_id = result[0]
+                            print(f"   ✅ Subcategoría encontrada ID: {subcategoria_id}")
+                        else:
+                            print(f"   📝 Creando subcategoría: {subcategoria_nombre}")
+                            cur.execute("""
+                                INSERT INTO subcategorias_repuestos (categoria_id, nombre)
+                                VALUES (%s, %s) RETURNING id
+                            """, (categoria_id, subcategoria_nombre))
+                            subcategoria_id = cur.fetchone()[0]
+                            print(f"   ✅ Subcategoría creada ID: {subcategoria_id}")
+                    except Exception as e:
+                        print(f"   ⚠️ Error con subcategoría: {e}")
+                        subcategoria_id = None
                 
                 # ============================================
-                # 6. Calcular margen
+                # 5. Calcular margen
                 # ============================================
                 margen = 30
                 if costo_proveedor > 0 and precio_venta > 0:
@@ -1692,23 +1693,26 @@ def importar_repuestos():
                     margen = round(((precio_venta / costo_con_iva) - 1) * 100, 1)
                 
                 # ============================================
-                # 7. Insertar o actualizar REPUESTO
+                # 6. Insertar o actualizar REPUESTO (FORZAR CATEGORÍA)
                 # ============================================
-                # Usar el nombre de categoría encontrado (con tilde correcta)
-                categoria_nombre_final = categoria_encontrada or categoria_nombre
+                # Buscar si el producto ya existe
+                cur.execute("SELECT id, stock FROM repuestos WHERE LOWER(nombre) = LOWER(%s)", (nombre,))
+                existente = cur.fetchone()
                 
-                # Buscar si el producto ya existe por nombre normalizado
-                nombre_buscar = normalizar_texto(nombre)
-                cur.execute("SELECT id, stock, nombre FROM repuestos")
-                existente = None
-                for row in cur.fetchall():
-                    if normalizar_texto(row[2]) == nombre_buscar:
-                        existente = (row[0], row[1])
-                        print(f"   ✅ Producto existente encontrado: {row[2]}")
-                        break
+                # Si no existe por nombre exacto, buscar por nombre normalizado
+                if not existente:
+                    nombre_buscar = normalizar_texto(nombre)
+                    cur.execute("SELECT id, stock, nombre FROM repuestos")
+                    for row in cur.fetchall():
+                        if normalizar_texto(row[2]) == nombre_buscar:
+                            existente = (row[0], row[1])
+                            print(f"   ✅ Producto encontrado por normalización: {row[2]}")
+                            break
                 
                 if existente:
                     nuevo_stock = (existente[1] or 0) + stock
+                    print(f"   📝 Actualizando repuesto ID: {existente[0]}")
+                    print(f"   📝 Asignando categoría: {categoria_nombre_final or 'NULL'}")
                     cur.execute("""
                         UPDATE repuestos 
                         SET costo_proveedor = %s,
@@ -1727,13 +1731,15 @@ def importar_repuestos():
                         proveedor,
                         nuevo_stock,
                         subcategoria_id,
-                        categoria_nombre_final,
+                        categoria_nombre_final,  # ✅ FORZAR CATEGORÍA
                         existente[0]
                     ))
                     actualizados += 1
                     exitosos.append(f"{nombre} (stock: {nuevo_stock}, categoría: {categoria_nombre_final})")
                     print(f"   ✅ Repuesto actualizado con categoría: {categoria_nombre_final}")
                 else:
+                    print(f"   📝 Creando nuevo repuesto")
+                    print(f"   📝 Asignando categoría: {categoria_nombre_final or 'NULL'}")
                     cur.execute("""
                         INSERT INTO repuestos 
                         (nombre, costo_proveedor, costo_venta_final, margen_ganancia, proveedor, 
@@ -1748,12 +1754,14 @@ def importar_repuestos():
                         margen,
                         proveedor,
                         subcategoria_id,
-                        categoria_nombre_final,
+                        categoria_nombre_final,  # ✅ FORZAR CATEGORÍA
                         stock
                     ))
                     importados += 1
                     exitosos.append(f"{nombre} (nuevo, categoría: {categoria_nombre_final})")
                     print(f"   ✅ Nuevo repuesto creado con categoría: {categoria_nombre_final}")
+                
+                conn.commit()
                 
                 # Commit cada 20 productos
                 if idx % 20 == 0:
@@ -1761,12 +1769,15 @@ def importar_repuestos():
                 
             except Exception as e:
                 print(f"   ❌ Error en producto: {e}")
-                errores.append({"nombre": item.get('nombre', 'desconocido'), "error": str(e)})
+                import traceback
+                traceback.print_exc()
+                errores.append({
+                    "nombre": item.get('nombre', 'desconocido'),
+                    "error": str(e)
+                })
                 conn.rollback()
                 continue
         
-        # Commit final
-        conn.commit()
         cur.close()
         conn.close()
         
