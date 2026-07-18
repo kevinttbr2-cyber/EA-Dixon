@@ -1721,17 +1721,15 @@ def obtener_deudor(cliente_nombre):
         print(f"❌ Error en obtener_deudor: {e}")
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/api/deudores', methods=['POST'])
 def registrar_deuda():
-    """Registra una nueva deuda o actualiza una existente"""
     try:
         data = request.json
         cliente_nombre = data.get('cliente_nombre', '').strip()
         patente = data.get('patente', '').strip().upper()
         telefono = data.get('telefono', '').strip()
-        monto_deuda = float(data.get('monto_deuda', 0))
-        monto_original = float(data.get('monto_original', monto_deuda))
+        monto_deuda = float(data.get('monto_deuda', 0))  # ✅ Convertir a float
+        monto_original = float(data.get('monto_original', monto_deuda))  # ✅ Convertir a float
         id_registro = data.get('id_registro')
         descripcion = data.get('descripcion', '')
         
