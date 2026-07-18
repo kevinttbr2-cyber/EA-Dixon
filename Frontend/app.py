@@ -1414,6 +1414,9 @@ def pagar_deuda(id_deuda):
         resp = requests.get(f"{BACKEND_URL}/api/deuda/{id_deuda}", timeout=10)
         if resp.status_code == 200:
             deuda = resp.json()
+            # ✅ Convertir a float por si acaso
+            deuda['monto_deuda'] = float(deuda['monto_deuda']) if deuda.get('monto_deuda') else 0
+            deuda['monto_original'] = float(deuda['monto_original']) if deuda.get('monto_original') else 0
         else:
             flash('❌ Deuda no encontrada o ya fue pagada', 'error')
             return redirect("/deudores")
@@ -1423,7 +1426,6 @@ def pagar_deuda(id_deuda):
         return redirect("/deudores")
     
     return render_template("pagar_deuda.html", deuda=deuda)
-
 # ============================
 # RUTAS ESTÁTICAS
 # ============================
