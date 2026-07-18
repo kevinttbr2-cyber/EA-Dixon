@@ -2042,7 +2042,11 @@ def obtener_deuda(id_deuda):
         conn.close()
         
         if deuda:
-            return jsonify(dict(deuda))
+            deuda_dict = dict(deuda)
+            # ✅ CONVERTIR A FLOAT
+            deuda_dict['monto_deuda'] = float(deuda_dict['monto_deuda']) if deuda_dict['monto_deuda'] else 0
+            deuda_dict['monto_original'] = float(deuda_dict['monto_original']) if deuda_dict['monto_original'] else 0
+            return jsonify(deuda_dict)
         return jsonify({"error": "Deuda no encontrada o ya pagada"}), 404
     except Exception as e:
         print(f"❌ Error en obtener_deuda: {e}")
