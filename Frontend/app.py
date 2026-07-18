@@ -1163,20 +1163,24 @@ def deudores():
         resp = requests.get(f"{BACKEND_URL}/api/deudores/todos", timeout=10)
         if resp.status_code == 200:
             deudores = resp.json()
+            # ✅ CONVERTIR monto_deuda A NÚMERO
+            for d in deudores:
+                if 'monto_deuda' in d:
+                    d['monto_deuda'] = float(d['monto_deuda']) if d['monto_deuda'] else 0
         else:
             deudores = []
     except Exception as e:
         logger.error(f"Error en /deudores: {e}")
         deudores = []
     
-    # Calcular total de deudas
+    # ✅ CALCULAR TOTAL (ahora con números)
     total_deudas = sum(d.get('monto_deuda', 0) for d in deudores)
     deudores_count = len([d for d in deudores if d.get('monto_deuda', 0) > 0])
     
     return render_template("deudores.html", 
                           deudores=deudores, 
                           total_deudas=total_deudas,
-                          deudores_count=deudores_count)  # ✅ CORREGIDO
+                          deudores_count=deudores_count)
 # ============================
 # VENTA RÁPIDA
 # ============================
