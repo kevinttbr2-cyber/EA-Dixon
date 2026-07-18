@@ -85,6 +85,7 @@ def obtener_repuestos():
         from database import get_cursor
         conn, cur = get_cursor()
         
+        # ✅ IMPORTANTE: Incluir categoria_nombre en el SELECT
         cur.execute("""
             SELECT id, nombre, stock, costo_proveedor, 
                    costo_proveedor_pendiente, margen_ganancia, 
@@ -97,9 +98,10 @@ def obtener_repuestos():
         cur.close()
         conn.close()
         
-        # Log para verificar que se está enviando la categoría
-        if repuestos and len(repuestos) > 0:
-            print(f"📦 Primer repuesto - Categoría: {repuestos[0].get('categoria_nombre', 'NULL')}")
+        # Log para verificar
+        if repuestos:
+            print(f"📦 Columnas devueltas: {list(repuestos[0].keys())}")
+            print(f"📦 categoria_nombre del primer producto: {repuestos[0].get('categoria_nombre')}")
         
         return jsonify(repuestos)
     except Exception as e:
@@ -107,7 +109,6 @@ def obtener_repuestos():
         import traceback
         traceback.print_exc()
         return jsonify([])
-
 # ============================================
 # RUTA 1: EXPORTAR DB (SIN BORRAR) - SIN PANDAS
 # ============================================
