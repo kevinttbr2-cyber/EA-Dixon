@@ -37,9 +37,9 @@
 }
 
 /* ============================================
-   MONTO TOTAL (EDITABLE - CAMPO PRINCIPAL)
+   MONTO A PAGAR (EDITABLE - SIEMPRE VISIBLE)
    ============================================ */
-.pagar-container .monto-total {
+.pagar-container .monto-pagar {
     background: rgba(46, 204, 113, 0.04);
     border: 1px solid rgba(46, 204, 113, 0.15);
     border-radius: var(--radius-md);
@@ -47,7 +47,7 @@
     margin-bottom: 16px;
 }
 
-.pagar-container .monto-total .label {
+.pagar-container .monto-pagar .label {
     color: var(--text-secondary);
     font-size: 14px;
     font-weight: 500;
@@ -55,7 +55,7 @@
     margin-bottom: 6px;
 }
 
-.pagar-container .monto-total input {
+.pagar-container .monto-pagar input {
     width: 100%;
     padding: 10px 14px;
     background: var(--bg-input);
@@ -67,21 +67,31 @@
     transition: var(--transition);
 }
 
-.pagar-container .monto-total input:focus {
+.pagar-container .monto-pagar input:focus {
     outline: none;
     border-color: var(--accent-green);
     box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
 }
 
-.pagar-container .monto-total .sugerencia {
+.pagar-container .monto-pagar .sugerencia {
     color: var(--text-muted);
     font-size: 12px;
     margin-top: 4px;
     display: block;
 }
 
+.pagar-container .monto-pagar .total-sugerido {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+    display: block;
+    padding: 4px 8px;
+    background: var(--bg-hover);
+    border-radius: var(--radius-sm);
+}
+
 /* ============================================
-   BOTÓN ABONAR (EXPANDIBLE)
+   BOTÓN ABONAR (expande la sección de deuda)
    ============================================ */
 .btn-abonar-toggle {
     background: rgba(79, 195, 247, 0.12);
@@ -115,27 +125,27 @@
 }
 
 /* ============================================
-   SECCIÓN ABONO (expandible)
+   SECCIÓN DEUDA (expandible)
    ============================================ */
-.abono-section {
+.deuda-section {
     display: none;
     margin-bottom: 16px;
     padding: 16px;
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    border-left: 3px solid #4fc3f7;
+    border-left: 3px solid #ff6b6b;
 }
 
-.abono-section.open {
+.deuda-section.open {
     display: block;
 }
 
-.abono-section .form-group {
+.deuda-section .form-group {
     margin-bottom: 10px;
 }
 
-.abono-section .form-group label {
+.deuda-section .form-group label {
     color: var(--text-secondary);
     font-size: 13px;
     font-weight: 500;
@@ -143,8 +153,8 @@
     margin-bottom: 4px;
 }
 
-.abono-section .form-group input,
-.abono-section .form-group select {
+.deuda-section .form-group select,
+.deuda-section .form-group textarea {
     width: 100%;
     padding: 8px 12px;
     background: var(--bg-input);
@@ -155,15 +165,15 @@
     transition: var(--transition);
 }
 
-.abono-section .form-group input:focus,
-.abono-section .form-group select:focus {
+.deuda-section .form-group select:focus,
+.deuda-section .form-group textarea:focus {
     outline: none;
     border-color: var(--accent-green);
     box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
 }
 
 /* ============================================
-   SECCIÓN DEUDA GENERADA
+   DEUDA GENERADA (se muestra automáticamente)
    ============================================ */
 .deuda-generada {
     display: none;
@@ -287,7 +297,7 @@
    RESPONSIVE
    ============================================ */
 @media (max-width: 600px) {
-    .pagar-container .monto-total input {
+    .pagar-container .monto-pagar input {
         font-size: 18px;
     }
     .pagar-container .cliente-info {
@@ -317,18 +327,20 @@
     </div>
 
     <!-- ============================================
-    MONTO TOTAL (EDITABLE - CAMPO PRINCIPAL)
+    MONTO A PAGAR (SIEMPRE EDITABLE)
     ============================================ -->
-    <div class="monto-total">
+    <div class="monto-pagar">
         <label class="label">💰 Monto que va a pagar el cliente</label>
         <input type="number" id="montoPagar" class="form-control" step="0.01" min="0" 
                placeholder="Ingresa el monto que pagará..." 
                value="{{ registro.monto }}">
-        <span class="sugerencia">💡 Monto sugerido: ${{ "{:,.0f}".format(registro.monto) }}</span>
+        <div class="total-sugerido">
+            💡 Monto total del servicio: <strong>${{ "{:,.0f}".format(registro.monto) }}</strong>
+        </div>
     </div>
 
     <!-- ============================================
-    BOTÓN ABONAR (expande la sección para pago parcial)
+    BOTÓN ABONAR (expande la sección de deuda)
     ============================================ -->
     <button class="btn-abonar-toggle" onclick="toggleAbono()">
         <span class="material-symbols-rounded icon">add</span>
@@ -336,9 +348,9 @@
     </button>
 
     <!-- ============================================
-    SECCIÓN ABONO (expandible - para generar deuda)
+    SECCIÓN DEUDA (expandible)
     ============================================ -->
-    <div class="abono-section" id="abonoSection">
+    <div class="deuda-section" id="deudaSection">
         <div class="form-group">
             <label>💳 Forma de Pago</label>
             <select id="formaPago" class="form-control">
@@ -353,7 +365,7 @@
             <textarea id="observacionesAbono" class="form-control" rows="2" placeholder="Detalles del pago..."></textarea>
         </div>
 
-        <!-- DEUDA GENERADA -->
+        <!-- DEUDA GENERADA (se calcula automáticamente) -->
         <div class="deuda-generada" id="deudaGenerada">
             <div class="row">
                 <span class="label">⚠️ Diferencia (deuda generada):</span>
@@ -402,13 +414,13 @@ const API_URL = 'https://ea-dixon-production.up.railway.app';
 const idRegistro = '{{ id }}';
 const nombreCliente = '{{ registro.nombre }}';
 const patenteCliente = '{{ registro.patente }}';
-const montoSugerido = {{ registro.monto }};
+const montoTotal = {{ registro.monto }};
 
 // ============================================
-// TOGGLE ABONO (expandir/contraer)
+// TOGGLE ABONO (expandir/contraer sección de deuda)
 // ============================================
 function toggleAbono() {
-    const section = document.getElementById('abonoSection');
+    const section = document.getElementById('deudaSection');
     const icon = document.querySelector('.btn-abonar-toggle .icon');
     
     section.classList.toggle('open');
@@ -424,7 +436,7 @@ function toggleAbono() {
 // ============================================
 function calcularDiferencia() {
     const montoPagar = parseFloat(document.getElementById('montoPagar').value) || 0;
-    const diferencia = Math.max(0, montoSugerido - montoPagar);
+    const diferencia = Math.max(0, montoTotal - montoPagar);
     
     const deudaDiv = document.getElementById('deudaGenerada');
     const diferenciaSpan = document.getElementById('diferenciaDeuda');
@@ -456,26 +468,26 @@ function confirmarPago() {
         return;
     }
     
-    const abonoSection = document.getElementById('abonoSection');
+    const deudaSection = document.getElementById('deudaSection');
     const formaPago = document.getElementById('formaPago').value;
     const observacionesAbono = document.getElementById('observacionesAbono').value;
     const diagnostico = document.getElementById('diagnosticoInput').value;
     const reparacion = document.getElementById('reparacionInput').value;
     const resultado = document.querySelector('input[name="resultado"]:checked')?.value || 'reparado';
     const registrarDeuda = document.getElementById('registrarDeuda').checked;
-    const diferencia = Math.max(0, montoSugerido - montoPagar);
-    const esPagoParcial = abonoSection.classList.contains('open') && diferencia > 0;
+    const diferencia = Math.max(0, montoTotal - montoPagar);
+    const esPagoParcial = deudaSection.classList.contains('open') && diferencia > 0;
     
     // Confirmar si hay deuda
     if (diferencia > 0 && registrarDeuda && esPagoParcial) {
         if (!confirm(`📊 Confirmar pago parcial\n\n` +
-            `💰 Monto total sugerido: $${montoSugerido.toLocaleString()}\n` +
+            `💰 Monto total del servicio: $${montoTotal.toLocaleString()}\n` +
             `💵 Monto a pagar: $${montoPagar.toLocaleString()}\n` +
             `⚠️ Deuda generada: $${diferencia.toLocaleString()}\n\n` +
             `¿Confirmar?`)) {
             return;
         }
-    } else if (montoPagar === montoSugerido) {
+    } else if (montoPagar === montoTotal) {
         if (!confirm(`✅ ¿Confirmar pago completo de $${montoPagar.toLocaleString()}?`)) {
             return;
         }
@@ -519,7 +531,7 @@ function confirmarPago() {
                     monto_deuda: diferencia,
                     monto_original: diferencia,
                     id_registro: idRegistro,
-                    descripcion: `Deuda generada por pago parcial del servicio #${idRegistro}. Total: $${montoSugerido.toLocaleString()}, Abonado: $${montoPagar.toLocaleString()}`
+                    descripcion: `Deuda generada por pago parcial del servicio #${idRegistro}. Total: $${montoTotal.toLocaleString()}, Abonado: $${montoPagar.toLocaleString()}`
                 })
             });
         }
@@ -556,10 +568,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { passive: false });
     });
     
-    // Inicializar el monto de pago con el valor sugerido
+    // Inicializar el monto de pago con el total del servicio
     const montoPagar = document.getElementById('montoPagar');
     if (montoPagar) {
-        montoPagar.value = montoSugerido;
+        montoPagar.value = montoTotal;
     }
 });
 </script>
