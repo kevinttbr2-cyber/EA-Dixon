@@ -1038,21 +1038,25 @@
                 <div><span class="label">Patente:</span> <span class="value">{{ r.patente }}</span></div>
                 <div><span class="label">Atendido:</span> <span class="value">{{ r.atendido_por or r.usuario or '-' }}</span></div>
                 <div class="full-width"><span class="label">Vehículo:</span> <span class="value">{{ r.marca }} {{ r.modelo }}</span></div>
-                <div class="full-width" style="margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border-subtle);">
-                    <span class="label">💳 Forma de Pago:</span>
-                    <span class="value">
-                        {% if r.forma_pago %}
-                            {% if r.forma_pago == 'efectivo' %}💵 Efectivo
-                            {% elif r.forma_pago == 'tarjeta' %}💳 Tarjeta
-                            {% elif r.forma_pago == 'transferencia' %}🏦 Transferencia
-                            {% elif r.forma_pago == 'cheque' %}📄 Cheque
-                            {% else %}🔄 {{ r.forma_pago }}
-                            {% endif %}
-                        {% else %}
-                            —
-                        {% endif %}
-                    </span>
-                </div>
+               <div class="full-width" style="margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border-subtle);">
+    <span class="label">💳 Forma de Pago:</span>
+    <span class="value">
+        {% if r.tipo_venta == 'deuda' %}
+            <span style="color: #ff6b6b; font-weight: 600;">💰 Deuda</span>
+            <span style="color: var(--text-muted);">·</span>
+        {% endif %}
+        {% if r.forma_pago %}
+            {% if r.forma_pago == 'efectivo' %}💵 Efectivo
+            {% elif r.forma_pago == 'tarjeta' %}💳 Tarjeta
+            {% elif r.forma_pago == 'transferencia' %}🏦 Transferencia
+            {% elif r.forma_pago == 'cheque' %}📄 Cheque
+            {% else %}🔄 {{ r.forma_pago }}
+            {% endif %}
+        {% else %}
+            —
+        {% endif %}
+    </span>
+</div>
             </div>
 
             <div class="observaciones">
