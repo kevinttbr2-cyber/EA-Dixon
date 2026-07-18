@@ -1986,24 +1986,35 @@ def obtener_todos_deudores():
         from database import get_cursor
         conn, cur = get_cursor()
         
+        # ✅ INCLUIR id_registro
         cur.execute("""
-            SELECT id, cliente_nombre, patente, telefono, 
-                   monto_deuda, monto_original, estado, 
-                   fecha_deuda, fecha_actualizacion, ultimo_pago
-            FROM deudores 
-            WHERE monto_deuda > 0
-            ORDER BY monto_deuda DESC
+            SELECT d.id, d.cliente_nombre, d.patente, d.telefono, 
+                   d.monto_deuda, d.monto_original, d.estado, 
+                   d.fecha_deuda, d.fecha_actualizacion, d.ultimo_pago,
+                   d.observaciones, d.frecuencia_deudas,
+                   d.id_registro
+            FROM deudores d
+            WHERE d.monto_deuda > 0
+            ORDER BY d.monto_deuda DESC
         """)
         
-        deudores = [dict(row) for row in cur.fetchall()]
+        deudores = []
+        for row in cur.fetchall():
+            d = dict(row)
+            # Convertir a float
+            d['monto_deuda'] = float(d['monto_deuda']) if d['monto_deuda'] else 0
+            d['monto_original'] = float(d['monto_original']) if d['monto_original'] else 0
+            deudores.append(d)
+        
         cur.close()
         conn.close()
         
         return jsonify(deudores)
     except Exception as e:
         print(f"❌ Error en obtener_todos_deudores: {e}")
-        return jsonify({"error": str(e)}), 500
-
+        import traceback
+        traceback.print_exc()
+        return jsonify([])
 # ============================
 # CREAR ADMIN AL INICIAR
 # ============================
