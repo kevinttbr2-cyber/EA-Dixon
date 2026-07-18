@@ -599,18 +599,18 @@ function confirmarPago() {
         if (esPagoParcial && diferencia > 0) {
             console.log('📝 Registrando deuda:', diferencia);
             return fetch(`${API_URL}/api/deudores`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    cliente_nombre: nombreCliente,
-                    patente: patenteCliente,
-                    telefono: '{{ registro.telefono }}',
-                    monto_deuda: diferencia,
-                    monto_original: diferencia,
-                    id_registro: idRegistro,
-                    descripcion: `Deuda generada por pago parcial del servicio #${idRegistro}. Total: $${montoTotal.toLocaleString()}, Abonado: $${montoACobrar.toLocaleString()}`
-                })
-            });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        cliente_nombre: nombreCliente,
+        patente: patenteCliente,
+        telefono: '{{ registro.telefono }}',
+        monto_deuda: diferencia,
+        monto_original: diferencia,
+        id_registro: idRegistro,  // ✅ AGREGAR ESTO
+        descripcion: `Deuda generada...`
+    })
+})
         }
         return Promise.resolve({ success: true });
     })
