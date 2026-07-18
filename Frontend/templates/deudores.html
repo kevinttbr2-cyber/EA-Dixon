@@ -264,8 +264,8 @@
                         <span class="material-symbols-rounded" style="font-size: 16px;">history</span>
                     </button>
                     
-                   <button class="btn-pagar" onclick="irAPagar({{ d.id_registro or 0 }})" title="Ir a pagar">
-    💰 Pagar
+                   <button class="btn-pagar" onclick="irAPagar({{ d.id }})" title="Pagar deuda">
+    💰 Pagar Deuda
 </button>
                 </div>
             </div>
@@ -302,11 +302,11 @@ document.addEventListener('keydown', function(e) {
 // ============================================
 // IR A PAGAR - BUSCA EL REGISTRO DEL CLIENTE
 // ============================================
-function irAPagar(idRegistro) {
-    if (idRegistro && idRegistro > 0) {
-        window.location.href = `/pagar/${idRegistro}`;
+function irAPagar(idDeuda) {
+    if (idDeuda && idDeuda > 0) {
+        window.location.href = `/pagar_deuda/${idDeuda}`;
     } else {
-        alert('⚠️ No hay un registro asociado a esta deuda.\n\nPor favor, crea un nuevo registro para este cliente.');
+        alert('⚠️ No se puede pagar esta deuda');
     }
 }
 // ============================================
