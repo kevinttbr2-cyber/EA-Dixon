@@ -1873,14 +1873,18 @@ def pagar_deuda():
     """Registra un pago de deuda: SUMA el abono al monto existente en pagos"""
     try:
         data = request.json
-        print("📥 Datos recibidos en pagar_deuda:", data)
+        print("=" * 60)
+        print("📥 PAGAR_DEUDA - Datos recibidos:")
+        print(data)
+        print("=" * 60)
         
         cliente_nombre = data.get('cliente_nombre', '').strip()
         monto_abonado = float(data.get('monto_abonado', 0))
         descripcion = data.get('descripcion', 'Pago de deuda')
         forma_pago = data.get('forma_pago', 'efectivo')
         
-        print(f"👤 Cliente: {cliente_nombre}, 💰 Monto: {monto_abonado}")
+        print(f"👤 Cliente: {cliente_nombre}")
+        print(f"💰 Monto abonado: {monto_abonado}")
         
         if not cliente_nombre or monto_abonado <= 0:
             return jsonify({"error": "Cliente y monto son obligatorios"}), 400
@@ -1906,12 +1910,15 @@ def pagar_deuda():
         
         deudor_id, monto_deuda, estado_actual, frecuencia, patente, id_registro_original = deudor
         
-        # Convertir Decimal a float
-        monto_deuda = float(monto_deuda) if monto_deuda else 0
-        print(f"📊 Deuda: ${monto_deuda}, Estado: {estado_actual}")
+        print(f"📊 DEUDOR ENCONTRADO:")
+        print(f"   - ID: {deudor_id}")
+        print(f"   - Monto deuda: {monto_deuda}")
+        print(f"   - Estado: {estado_actual}")
+        print(f"   - id_registro: {id_registro_original}")
         
-        # Calcular nuevo saldo de deuda
+        monto_deuda = float(monto_deuda) if monto_deuda else 0
         nuevo_monto = max(0, monto_deuda - monto_abonado)
+        
         print(f"💰 Nuevo saldo de deuda: {nuevo_monto}")
         
         # ============================================
@@ -1937,17 +1944,23 @@ def pagar_deuda():
         id_pago = None
         monto_actual_pagos = 0
         
-        # ✅ BUSCAR EL REGISTRO ORIGINAL usando id_registro
+        print("🔍 BUSCANDO REGISTRO EN pagos...")
+        
+        # ✅ BUSCAR POR id_registro
         if id_registro_original and id_registro_original > 0:
+            print(f"   - Buscando por id_registro: {id_registro_original}")
             cur.execute("SELECT id, monto FROM pagos WHERE id = %s", (id_registro_original,))
             registro = cur.fetchone()
             if registro:
                 id_pago = registro[0]
                 monto_actual_pagos = float(registro[1]) if registro[1] else 0
-                print(f"✅ Registro encontrado: ID={id_pago}, Monto actual=${monto_actual_pagos}")
+                print(f"   ✅ Registro encontrado por id_registro: ID={id_pago}, Monto=${monto_actual_pagos}")
+            else:
+                print(f"   ❌ No se encontró registro con id {id_registro_original}")
         
         # Si no se encontró, buscar el más reciente del cliente
         if not id_pago:
+            print(f"   - Buscando el más reciente del cliente: {cliente_nombre}")
             cur.execute("""
                 SELECT id, monto FROM pagos 
                 WHERE nombre ILIKE %s 
@@ -1958,7 +1971,9 @@ def pagar_deuda():
             if registro:
                 id_pago = registro[0]
                 monto_actual_pagos = float(registro[1]) if registro[1] else 0
-                print(f"✅ Registro más reciente: ID={id_pago}, Monto=${monto_actual_pagos}")
+                print(f"   ✅ Registro más reciente encontrado: ID={id_pago}, Monto=${monto_actual_pagos}")
+            else:
+                print(f"   ❌ No se encontró ningún registro para {cliente_nombre}")
         
         # ============================================
         # 4. ✅ CORRECCIÓN: SUMAR EL ABONO AL MONTO ACTUAL
@@ -1986,6 +2001,7 @@ def pagar_deuda():
             print(f"✅ pagos #{id_pago} ACTUALIZADO: ${monto_actual_pagos} → ${nuevo_monto_pagos}")
         else:
             # Si no hay registro, crear uno nuevo
+            print("📝 No se encontró registro, creando uno nuevo...")
             fecha_hoy = ahora.strftime('%Y-%m-%d')
             cur.execute("""
                 INSERT INTO pagos 
@@ -2041,6 +2057,7 @@ def pagar_deuda():
             f"Pago de deuda: {descripcion}", 
             id_pago
         ))
+        print("✅ Historial registrado correctamente")
         
         conn.commit()
         cur.close()
