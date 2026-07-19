@@ -1,3 +1,4 @@
+# Backend/models/pago.py
 class Pago:
     def __init__(self, id=None, nombre=None, monto=0, fecha=None, hora=None,
                  patente=None, marca=None, modelo=None, usuario=None, estado='pendiente',
@@ -7,7 +8,9 @@ class Pago:
                  tiempo_estimado='00:00:00', anio=None, costo_repuestos_real=0,
                  costo_mano_obra_real=0, costo_diagnostico_real=0, ganancia_neta=0,
                  validado=False, validado_por=None, fecha_validacion=None,
-                 detalles_repuestos=None, forma_pago=None):  # ✅ CORREGIDO
+                 detalles_repuestos=None, forma_pago=None, estado_pago='pendiente',
+                 fecha_pago_real=None, tipo_venta=None, producto_vendido=None):
+        
         self.id = id
         self.nombre = nombre
         self.monto = monto
@@ -18,6 +21,7 @@ class Pago:
         self.modelo = modelo
         self.usuario = usuario
         self.estado = estado
+        self.estado_pago = estado_pago
         self.observaciones_cliente = observaciones_cliente
         self.observaciones_pago = observaciones_pago
         self.telefono = telefono
@@ -39,7 +43,10 @@ class Pago:
         self.validado_por = validado_por
         self.fecha_validacion = fecha_validacion
         self.detalles_repuestos = detalles_repuestos or []
-        self.forma_pago = forma_pago  # ✅ AGREGADO
+        self.forma_pago = forma_pago
+        self.fecha_pago_real = fecha_pago_real
+        self.tipo_venta = tipo_venta
+        self.producto_vendido = producto_vendido
 
     def to_dict(self):
         return {
@@ -53,6 +60,7 @@ class Pago:
             "modelo": self.modelo,
             "usuario": self.usuario,
             "estado": self.estado,
+            "estado_pago": self.estado_pago,
             "observaciones_cliente": self.observaciones_cliente,
             "observaciones_pago": self.observaciones_pago,
             "telefono": self.telefono,
@@ -74,11 +82,16 @@ class Pago:
             "validado_por": self.validado_por,
             "fecha_validacion": self.fecha_validacion.strftime('%Y-%m-%d %H:%M') if self.fecha_validacion else None,
             "detalles_repuestos": self.detalles_repuestos,
-            "forma_pago": self.forma_pago  # ✅ AGREGADO
+            "forma_pago": self.forma_pago,
+            "fecha_pago_real": self.fecha_pago_real.strftime('%Y-%m-%d') if self.fecha_pago_real else None,
+            "tipo_venta": self.tipo_venta,
+            "producto_vendido": self.producto_vendido
         }
 
     @staticmethod
     def from_db_row(row):
+        if not row:
+            return None
         return Pago(
             id=row.get('id'),
             nombre=row.get('nombre'),
@@ -90,6 +103,7 @@ class Pago:
             modelo=row.get('modelo'),
             usuario=row.get('usuario'),
             estado=row.get('estado', 'pendiente'),
+            estado_pago=row.get('estado_pago', 'pendiente'),
             observaciones_cliente=row.get('observaciones_cliente'),
             observaciones_pago=row.get('observaciones_pago'),
             telefono=row.get('telefono'),
@@ -111,5 +125,8 @@ class Pago:
             validado_por=row.get('validado_por'),
             fecha_validacion=row.get('fecha_validacion'),
             detalles_repuestos=row.get('detalles_repuestos', []),
-            forma_pago=row.get('forma_pago')  # ✅ AGREGADO
+            forma_pago=row.get('forma_pago'),
+            fecha_pago_real=row.get('fecha_pago_real'),
+            tipo_venta=row.get('tipo_venta'),
+            producto_vendido=row.get('producto_vendido')
         )
