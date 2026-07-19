@@ -1,5 +1,9 @@
+# Backend/services/whatsapp_service.py
 import os
 from config import Config
+import logging
+
+logger = logging.getLogger(__name__)
 
 class WhatsAppService:
     
@@ -25,4 +29,5 @@ class WhatsAppService:
             return {"success": True, "sid": message.sid}
             
         except Exception as e:
+            logger.error(f"Error enviando WhatsApp: {e}")
             return {"success": False, "error": str(e)}
