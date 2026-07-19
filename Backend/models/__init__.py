@@ -1,4 +1,5 @@
-from models.usuario import Usuario
-from models.pago import Pago
+# Backend/models/__init__.py
+from .usuario import Usuario
+from .pago import Pago
 
 __all__ = ['Usuario', 'Pago']
