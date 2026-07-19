@@ -1,4 +1,8 @@
+# Backend/services/auth_service.py
 from repositories.usuario_repo import UsuarioRepository
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AuthService:
     
