@@ -1,3 +1,4 @@
+# Backend/services/pdf_service.py
 import io
 import hmac
 import hashlib
@@ -9,6 +10,9 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
+import logging
+
+logger = logging.getLogger(__name__)
 
 class PDFService:
     
@@ -29,9 +33,6 @@ class PDFService:
         """Genera un PDF con el formato formal de Dixon Electricidad Automotriz"""
         buffer = io.BytesIO()
         
-        # ============================
-        # CONFIGURACIÓN DE PÁGINA
-        # ============================
         doc = SimpleDocTemplate(
             buffer,
             pagesize=letter,
@@ -43,9 +44,6 @@ class PDFService:
         
         styles = getSampleStyleSheet()
         
-        # ============================
-        # COLORES CORPORATIVOS
-        # ============================
         verde_oscuro = colors.HexColor('#1a4d2e')
         verde_medio = colors.HexColor('#2a6d44')
         gris = colors.HexColor('#666666')
@@ -55,9 +53,6 @@ class PDFService:
         rojo = colors.HexColor('#cc0000')
         naranja = colors.HexColor('#e67e22')
         
-        # ============================
-        # ESTILOS
-        # ============================
         normal_style = ParagraphStyle(
             'Normal',
             parent=styles['Normal'],
@@ -140,12 +135,8 @@ class PDFService:
             fontName='Helvetica-Bold'
         )
         
-        # ============================
-        # ELEMENTOS DEL PDF
-        # ============================
         elementos = []
         
-        # Logo (opcional)
         logo_path = os.path.join('static', 'images', 'dixon-logo.png')
         if os.path.exists(logo_path):
             try:
@@ -160,12 +151,10 @@ class PDFService:
             except:
                 pass
         
-        # Título principal
         elementos.append(Paragraph("DIXON", titulo_dixon_centrado))
         elementos.append(Paragraph("Electricidad Automotriz", titulo_electricidad_centrado))
         elementos.append(Spacer(1, 0.02 * inch))
         
-        # Línea decorativa
         linea = Table([['']], colWidths=[7*inch])
         linea.setStyle(TableStyle([
             ('LINEABOVE', (0, 0), (-1, -1), 1.5, verde_oscuro),
@@ -177,9 +166,6 @@ class PDFService:
         elementos.append(Paragraph("ORDEN DE TRABAJO", subtitulo_centrado))
         elementos.append(Spacer(1, 0.04 * inch))
         
-        # ============================
-        # DATOS DEL CLIENTE (USANDO get() PARA EVITAR ERRORES)
-        # ============================
         fecha_str = ''
         if registro.get('fecha'):
             if hasattr(registro['fecha'], 'strftime'):
@@ -217,9 +203,6 @@ class PDFService:
         elementos.append(tabla_datos)
         elementos.append(Spacer(1, 0.06 * inch))
         
-        # ============================
-        # OBSERVACIONES DEL INGRESO
-        # ============================
         obs_cliente = registro.get('observaciones_cliente', '')
         if obs_cliente:
             elementos.append(Paragraph("Observaciones del ingreso", titulo_seccion))
@@ -233,9 +216,6 @@ class PDFService:
             elementos.append(obs_table)
             elementos.append(Spacer(1, 0.04 * inch))
         
-        # ============================
-        # DIAGNÓSTICO
-        # ============================
         diagnostico = registro.get('diagnostico', '')
         if diagnostico:
             elementos.append(Paragraph("Diagnóstico realizado", titulo_seccion))
@@ -249,9 +229,6 @@ class PDFService:
             elementos.append(diag_table)
             elementos.append(Spacer(1, 0.04 * inch))
         
-        # ============================
-        # REPARACIÓN REALIZADA
-        # ============================
         reparacion = registro.get('reparacion', '')
         if reparacion:
             elementos.append(Paragraph("Reparación realizada", titulo_seccion))
@@ -265,9 +242,6 @@ class PDFService:
             elementos.append(rep_table)
             elementos.append(Spacer(1, 0.04 * inch))
         
-        # ============================
-        # RESULTADO
-        # ============================
         resultado = registro.get('resultado', 'pendiente')
         resultado_map = {
             'reparado': ('✅ Reparado', verde_oscuro),
@@ -297,9 +271,6 @@ class PDFService:
         elementos.append(resultado_table)
         elementos.append(Spacer(1, 0.04 * inch))
         
-        # ============================
-        # OBSERVACIONES DEL PAGO
-        # ============================
         obs_pago = registro.get('observaciones_pago', '')
         if obs_pago:
             elementos.append(Paragraph("Observaciones", titulo_seccion))
@@ -313,9 +284,6 @@ class PDFService:
             elementos.append(obs_pago_table)
             elementos.append(Spacer(1, 0.04 * inch))
         
-        # ============================
-        # CONTROL INTERNO
-        # ============================
         elementos.append(Paragraph("CONTROL INTERNO", titulo_seccion))
         
         tecnico = registro.get('atendido_por', 'No registrado')
@@ -352,9 +320,6 @@ class PDFService:
         elementos.append(tabla_control)
         elementos.append(Spacer(1, 0.06 * inch))
         
-        # ============================
-        # LÍNEA FINAL
-        # ============================
         linea_final = Table([['']], colWidths=[7*inch])
         linea_final.setStyle(TableStyle([
             ('LINEABOVE', (0, 0), (-1, -1), 1, verde_oscuro),
@@ -363,9 +328,6 @@ class PDFService:
         elementos.append(linea_final)
         elementos.append(Spacer(1, 0.05 * inch))
         
-        # ============================
-        # PIE DE PÁGINA
-        # ============================
         pie_text = f"""
         <b>Dixon Electricidad Automotriz</b><br/>
         📱 +569 9855 0331 · 📍 Neptuno 163, Local C, Lo Prado, RM <br/>
@@ -374,15 +336,10 @@ class PDFService:
         pie = Paragraph(pie_text, pie_style)
         elementos.append(pie)
         
-        # ============================
-        # CONSTRUIR PDF
-        # ============================
         try:
             doc.build(elementos)
             buffer.seek(0)
             return buffer
         except Exception as e:
-            print(f"Error generando PDF: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Error generando PDF: {e}")
             return None
