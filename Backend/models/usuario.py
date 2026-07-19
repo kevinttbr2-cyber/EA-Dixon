@@ -1,5 +1,4 @@
-from datetime import datetime
-
+# Backend/models/usuario.py
 class Usuario:
     def __init__(self, id=None, username=None, password=None, rol=None, nombre_completo=None):
         self.id = id
@@ -18,6 +17,8 @@ class Usuario:
     
     @staticmethod
     def from_db_row(row):
+        if not row:
+            return None
         return Usuario(
             id=row.get('id'),
             username=row.get('username'),
