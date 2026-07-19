@@ -1,6 +1,8 @@
-from services.auth_service import AuthService
-from services.pago_service import PagoService
-from services.pdf_service import PDFService
-from services.whatsapp_service import WhatsAppService
+# Backend/services/__init__.py
+from .auth_service import AuthService
+from .pago_service import PagoService
+from .pdf_service import PDFService
+from .notification_service import enviar_notificacion_push
+from .whatsapp_service import WhatsAppService
 
-__all__ = ['AuthService', 'PagoService', 'PDFService', 'WhatsAppService']
+__all__ = ['AuthService', 'PagoService', 'PDFService', 'enviar_notificacion_push', 'WhatsAppService']
