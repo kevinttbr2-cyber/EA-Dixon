@@ -1,28 +1,20 @@
+# Backend/database.py
 import os
 import psycopg2
 import psycopg2.extras
 import time
+from config import Config
 
-# ============================
-# CONFIGURAR ZONA HORARIA (Chile)
-# ============================
-# Establecer zona horaria a Chile (UTC-3)
+# Establecer zona horaria a Chile
 os.environ['TZ'] = 'America/Santiago'
 time.tzset()
 
-
 def get_connection():
     """Obtiene conexión a Neon con SSL requerido y zona horaria Chile"""
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    
-    if not DATABASE_URL:
-        raise Exception("❌ DATABASE_URL no configurada")
-    
     try:
-        # Conexión directa con la URL completa y SSL requerido
-        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        conn = psycopg2.connect(Config.DATABASE_URL, sslmode='require')
         
-        # ✅ ESTABLECER ZONA HORARIA EN LA CONEXIÓN
+        # Establecer zona horaria en la conexión
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'America/Santiago';")
         cur.close()
