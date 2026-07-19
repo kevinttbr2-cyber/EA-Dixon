@@ -1,6 +1,11 @@
+# Backend/repositories/usuario_repo.py
 import bcrypt
 from database import get_connection, get_cursor
 from models.usuario import Usuario
+from config import Config
+import logging
+
+logger = logging.getLogger(__name__)
 
 class UsuarioRepository:
     
@@ -22,7 +27,7 @@ class UsuarioRepository:
             conn.close()
             return True
         except Exception as e:
-            print(f"Error crear usuario: {e}")
+            logger.error(f"Error crear usuario: {e}")
             return False
     
     @staticmethod
@@ -35,7 +40,7 @@ class UsuarioRepository:
             conn.close()
             return Usuario.from_db_row(row) if row else None
         except Exception as e:
-            print(f"Error obtener usuario: {e}")
+            logger.error(f"Error obtener usuario: {e}")
             return None
     
     @staticmethod
@@ -48,7 +53,7 @@ class UsuarioRepository:
             conn.close()
             return [Usuario.from_db_row(row) for row in rows]
         except Exception as e:
-            print(f"Error obtener usuarios: {e}")
+            logger.error(f"Error obtener usuarios: {e}")
             return []
     
     @staticmethod
@@ -62,7 +67,7 @@ class UsuarioRepository:
             conn.close()
             return True
         except Exception as e:
-            print(f"Error eliminar usuario: {e}")
+            logger.error(f"Error eliminar usuario: {e}")
             return False
     
     @staticmethod
@@ -73,26 +78,24 @@ class UsuarioRepository:
                 if bcrypt.checkpw(password.encode('utf-8'), usuario.password.encode('utf-8')):
                     return usuario
             except Exception as e:
-                print(f"Error verificando password: {e}")
+                logger.error(f"Error verificando password: {e}")
         return None
     
     @staticmethod
     def crear_admin_si_no_existe():
         try:
-            from config import Config
             usuario = UsuarioRepository.obtener_por_username('admin')
             if not usuario:
                 UsuarioRepository.crear('admin', Config.ADMIN_PASSWORD, 'admin', 'Administrador')
-                print(f"✅ Admin creado: admin / {Config.ADMIN_PASSWORD}")
+                logger.info(f"✅ Admin creado: admin / {Config.ADMIN_PASSWORD}")
             return True
         except Exception as e:
-            print(f"Error creando admin: {e}")
+            logger.error(f"Error creando admin: {e}")
             return False
     
     @staticmethod
     def cambiar_password(username, nueva_password):
         try:
-            import bcrypt
             conn = get_connection()
             cur = conn.cursor()
             
@@ -103,5 +106,5 @@ class UsuarioRepository:
             conn.close()
             return True
         except Exception as e:
-            print(f"Error cambiar password: {e}")
+            logger.error(f"Error cambiar password: {e}")
             return False
