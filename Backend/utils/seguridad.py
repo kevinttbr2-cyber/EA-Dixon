@@ -1,10 +1,16 @@
 # Backend/utils/seguridad.py
+# Backend/utils/seguridad.py
 import secrets
 import hmac
 import hashlib
 import re
 from config import Config
 from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+
+# ============================================
+# FUNCIONES EXISTENTES (MANTENER)
+# ============================================
 
 def generar_csrf():
     return secrets.token_hex(32)
@@ -184,21 +190,6 @@ def validar_estado(estado: str) -> bool:
     estados_permitidos = ['pendiente', 'pagado', 'reparado', 'derivado', 'cancelado']
     return estado in estados_permitidos
 
-def validar_email(email: str) -> bool:
-    """
-    Valida que el email tenga formato correcto
-    
-    Args:
-        email: String con el email
-    
-    Returns:
-        True si es válido, False en caso contrario
-    """
-    if not email:
-        return False
-    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return bool(re.match(patron, email))
-
 def validar_fecha(fecha: str) -> bool:
     """
     Valida que una fecha tenga formato YYYY-MM-DD
@@ -213,3 +204,18 @@ def validar_fecha(fecha: str) -> bool:
         return False
     patron = r'^\d{4}-\d{2}-\d{2}$'
     return bool(re.match(patron, fecha))
+
+def validar_hora(hora: str) -> bool:
+    """
+    Valida que una hora tenga formato HH:MM:SS
+    
+    Args:
+        hora: String con la hora
+    
+    Returns:
+        True si es válida, False en caso contrario
+    """
+    if not hora:
+        return False
+    patron = r'^\d{2}:\d{2}:\d{2}$'
+    return bool(re.match(patron, hora))
