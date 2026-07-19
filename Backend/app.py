@@ -1866,7 +1866,7 @@ def registrar_deuda():
 
 
 # ============================================
-# PAGAR DEUDA (CON UPDATE - SUMA EN EL REGISTRO ORIGINAL)
+# PAGAR DEUDA (CON UPDATE - USA SIEMPRE id_registro)
 # ============================================
 @app.route('/api/deudores/pagar', methods=['POST'])
 def pagar_deuda():
@@ -1910,6 +1910,7 @@ def pagar_deuda():
         # Convertir Decimal a float
         monto_deuda = float(monto_deuda) if monto_deuda else 0
         print(f"📊 Deuda encontrada: ID={deudor_id}, Monto={monto_deuda}, Estado={estado_actual}")
+        print(f"📋 id_registro original: {id_registro_original}")
         
         # Calcular nuevo saldo de deuda
         nuevo_monto = max(0, monto_deuda - monto_abonado)
@@ -1940,14 +1941,16 @@ def pagar_deuda():
         id_pago = None
         monto_original = 0
         
-        # Primero, buscar por el id_registro guardado en la deuda
-        if id_registro_original:
+        # ✅ FORZAR: Usar SIEMPRE el id_registro original guardado en deudores
+        if id_registro_original and id_registro_original > 0:
             cur.execute("SELECT id, monto FROM pagos WHERE id = %s", (id_registro_original,))
             registro = cur.fetchone()
             if registro:
                 id_pago = registro[0]
                 monto_original = float(registro[1]) if registro[1] else 0
-                print(f"✅ Registro original encontrado: ID={id_pago}, Monto={monto_original}")
+                print(f"✅ Registro original ENCONTRADO: ID={id_pago}, Monto={monto_original}")
+            else:
+                print(f"⚠️ id_registro {id_registro_original} no existe en pagos")
         
         # Si no se encontró por id_registro, buscar el más reciente del cliente
         if not id_pago:
@@ -1987,7 +1990,7 @@ def pagar_deuda():
             ))
             print(f"✅ Registro #{id_pago} ACTUALIZADO: ${monto_original:,.0f} → ${nuevo_monto_total:,.0f}")
         else:
-            # Si no hay registro, crear uno nuevo (caso extremo)
+            # Si no hay registro, crear uno nuevo
             fecha_hoy = ahora.strftime('%Y-%m-%d')
             cur.execute("""
                 INSERT INTO pagos 
@@ -2012,17 +2015,28 @@ def pagar_deuda():
             print(f"✅ Nuevo registro #{id_pago} creado (no se encontró registro original)")
         
         # ============================================
-        # 5. ACTUALIZAR LA DEUDA
+        # 5. ACTUALIZAR LA DEUDA (MANTENER id_registro ORIGINAL)
         # ============================================
         cur.execute("""
             UPDATE deudores 
             SET monto_deuda = %s,
                 estado = %s,
                 ultimo_pago = NOW() AT TIME ZONE 'America/Santiago',
-                fecha_actualizacion = NOW() AT TIME ZONE 'America/Santiago',
-                id_registro = %s
+                fecha_actualizacion = NOW() AT TIME ZONE 'America/Santiago'
             WHERE id = %s
-        """, (nuevo_monto, nuevo_estado, id_pago, deudor_id))
+        """, (nuevo_monto, nuevo_estado, deudor_id))
+        
+        # ✅ NO actualizar id_registro si ya existe
+        # Solo actualizar si no tiene id_registro
+        if not id_registro_original or id_registro_original == 0:
+            cur.execute("""
+                UPDATE deudores 
+                SET id_registro = %s
+                WHERE id = %s
+            """, (id_pago, deudor_id))
+            print(f"✅ id_registro actualizado a {id_pago}")
+        else:
+            print(f"✅ Manteniendo id_registro original: {id_registro_original}")
         
         # ============================================
         # 6. GUARDAR EN HISTORIAL DE DEUDAS
@@ -2074,28 +2088,6 @@ def pagar_deuda():
         print(f"❌ Error en pagar_deuda: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-@app.route('/api/deudores/historial/<cliente_nombre>', methods=['GET'])
-def historial_deudas_cliente(cliente_nombre):
-    """Obtiene el historial de deudas de un cliente"""
-    try:
-        from database import get_cursor
-        conn, cur = get_cursor()
-        
-        cur.execute("""
-            SELECT * FROM historial_deudas 
-            WHERE cliente_nombre ILIKE %s
-            ORDER BY fecha DESC
-            LIMIT 50
-        """, (cliente_nombre,))
-        
-        historial = [dict(row) for row in cur.fetchall()]
-        cur.close()
-        conn.close()
-        
-        return jsonify(historial)
-    except Exception as e:
-        print(f"❌ Error en historial_deudas_cliente: {e}")
         return jsonify({"error": str(e)}), 500
 
 
