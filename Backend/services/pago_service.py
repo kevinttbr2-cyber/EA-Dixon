@@ -166,3 +166,51 @@ def obtener_meses_disponibles():
     except Exception as e:
         logger.error(f"Error obtener meses disponibles: {e}")
         return []
+
+# 2. ❌ FALTA: obtener_flotas_pendientes_count()
+@staticmethod
+def obtener_flotas_pendientes_count():
+    """Obtiene el número de flotas pendientes de pago"""
+    return PagoRepository.obtener_flotas_pendientes_count()
+
+# 3. ❌ FALTA: obtener_gastos_balance()
+@staticmethod
+def obtener_gastos_balance(fecha_inicio, fecha_fin):
+    """Obtiene gastos para el balance"""
+    return PagoRepository.obtener_gastos_balance(fecha_inicio, fecha_fin)
+
+# 4. ❌ FALTA: obtener_cierre_caja()
+@staticmethod
+def obtener_cierre_caja(fecha):
+    """Obtiene el cierre de caja para una fecha"""
+    return PagoRepository.obtener_cierre_caja(fecha)
+
+# 5. ❌ FALTA: crear_cierre_caja()
+@staticmethod
+def crear_cierre_caja(fecha, efectivo_inicial):
+    """Crea un nuevo cierre de caja"""
+    return PagoRepository.crear_cierre_caja(fecha, efectivo_inicial)
+
+# 6. ❌ FALTA: cerrar_cierre_caja()
+@staticmethod
+def cerrar_cierre_caja(fecha, data):
+    """Cierra un cierre de caja"""
+    return PagoRepository.cerrar_cierre_caja(fecha, data)
+
+# 7. ❌ FALTA: obtener_historial_cierres()
+@staticmethod
+def obtener_historial_cierres(limit=30):
+    """Obtiene el historial de cierres de caja"""
+    return PagoRepository.obtener_historial_cierres(limit)
+
+# 8. ❌ FALTA: obtener_repuestos_con_stock()
+@staticmethod
+def obtener_repuestos_con_stock(stock_minimo=5, proveedor=None):
+    """Obtiene repuestos con stock bajo"""
+    return PagoRepository.obtener_repuestos_con_stock(stock_minimo, proveedor)
+
+# 9. ❌ FALTA: obtener_proveedores_repuestos()
+@staticmethod
+def obtener_proveedores_repuestos():
+    """Obtiene la lista de proveedores de repuestos"""
+    return PagoRepository.obtener_proveedores_repuestos()
