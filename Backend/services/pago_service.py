@@ -108,3 +108,61 @@ class PagoService:
     def obtener_balance_ventas(filtro, fecha):
         """Obtiene datos para el balance de ventas"""
         return PagoRepository.obtener_balance_ventas(filtro, fecha)
+        # 1. obtener_pagados_con_filtro()
+@staticmethod
+def obtener_pagados_con_filtro(filtro, fecha):
+    """Obtiene pagos pagados con filtro para el balance general"""
+    return PagoRepository.obtener_pagados_con_filtro(filtro, fecha)
+
+# 2. obtener_flotas_disponibles()
+@staticmethod
+def obtener_flotas_disponibles():
+    """Obtiene todas las flotas registradas"""
+    return PagoRepository.obtener_flotas_disponibles()
+
+# 3. obtener_balance_completo()
+@staticmethod
+def obtener_balance_completo(filtro, fecha):
+    """Obtiene el balance completo con totales"""
+    return PagoRepository.obtener_balance_completo(filtro, fecha)
+
+# 4. actualizar_repuestos_venta()
+@staticmethod
+def actualizar_repuestos_venta(id_reg, data):
+    """Actualiza solo los repuestos y costos de una venta"""
+    return PagoRepository.actualizar_repuestos_venta(id_reg, data)
+
+# 5. obtener_dashboard_data()
+@staticmethod
+def obtener_dashboard_data(fecha_desde):
+    """Obtiene datos para el dashboard"""
+    return PagoRepository.obtener_dashboard_data(fecha_desde)
+
+# 6. obtener_meses_disponibles() - Para el dashboard
+@staticmethod
+def obtener_meses_disponibles():
+    """Obtiene los meses con datos para el dashboard"""
+    try:
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT DISTINCT 
+                EXTRACT(YEAR FROM fecha) as anio,
+                EXTRACT(MONTH FROM fecha) as mes
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha IS NOT NULL
+            ORDER BY anio DESC, mes DESC
+        """)
+        meses = []
+        for row in cur.fetchall():
+            meses.append({
+                'anio': int(row[0]),
+                'mes': int(row[1])
+            })
+        cur.close()
+        conn.close()
+        return meses
+    except Exception as e:
+        logger.error(f"Error obtener meses disponibles: {e}")
+        return []
