@@ -31,6 +31,20 @@ def get_hora_chile():
 def get_fecha_hora_chile():
     ahora = now_santiago()
     return ahora.date(), ahora.time()
+# ============================================
+# FUNCIÓN SANITIZAR BOOLEANO
+# ============================================
+def sanitizar_booleano(valor):
+    """Convierte un valor a booleano de forma segura"""
+    if valor is None:
+        return False
+    if isinstance(valor, bool):
+        return valor
+    if isinstance(valor, str):
+        return valor.lower() in ('true', '1', 'yes', 'si', 'sí')
+    if isinstance(valor, (int, float)):
+        return valor != 0
+    return False
 
 # ============================
 # 1. ESTADO
