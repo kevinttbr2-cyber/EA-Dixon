@@ -1,4 +1,4 @@
-# Backend/app.py - VERSIÓN FINAL LIMPIA
+# Backend/app.py - VERSIÓN FINAL CON TODOS LOS BLUEPRINTS
 import os
 import time
 import logging
@@ -8,7 +8,7 @@ from config import Config
 from routes import (
     auth_bp, pago_bp, catalogo_bp, flota_bp, pdf_bp, 
     auditoria_bp, gasto_bp, cierre_bp, deudor_bp, 
-    venta_bp, export_bp
+    venta_bp, export_bp, categoria_bp, reporte_bp, scanner_bp
 )
 from services.auth_service import AuthService
 
@@ -59,6 +59,9 @@ app.register_blueprint(cierre_bp)
 app.register_blueprint(deudor_bp)
 app.register_blueprint(venta_bp)
 app.register_blueprint(export_bp)
+app.register_blueprint(categoria_bp)
+app.register_blueprint(reporte_bp)
+app.register_blueprint(scanner_bp)
 
 # ============================
 # HEALTH CHECK
@@ -71,7 +74,8 @@ def health():
         "version": "3.0",
         "blueprints": [
             "auth", "pago", "catalogo", "flota", "pdf", 
-            "auditoria", "gasto", "cierre", "deudor", "venta", "export"
+            "auditoria", "gasto", "cierre", "deudor", "venta", 
+            "export", "categoria", "reporte", "scanner"
         ]
     })
 
