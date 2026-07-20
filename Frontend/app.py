@@ -547,16 +547,6 @@ def pago_exitoso(id_reg):
         registro['firma'] = firma
         url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
         
-        nombre_cliente = registro.get('nombre', 'Cliente')
-        monto = registro.get('monto', 0)
-        forma_pago = registro.get('forma_pago', 'efectivo')
-        
-        enviar_notificacion_push(
-            titulo="💰 Pago Confirmado",
-            mensaje=f"Cliente: {nombre_cliente}\nMonto: ${float(monto):,.0f}\nForma: {forma_pago}",
-            url=f"/pago_exitoso/{id_reg}",
-            id_reg=id_reg
-        )
             
     except Exception as e:
         logger.error(f"❌ Error en /pago_exitoso: {str(e)}")
