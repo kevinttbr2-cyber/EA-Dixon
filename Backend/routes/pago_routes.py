@@ -1623,3 +1623,6 @@ def enviar_notificacion_desde_frontend():
         logger.error(f"Error en enviar_notificacion: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+# ============================
+# FIN DEL ARCHIVO - NO HAY CÓDIGO FUERA DE FUNCIONES
+# ============================
