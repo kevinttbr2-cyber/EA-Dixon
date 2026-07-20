@@ -1633,7 +1633,7 @@ def crear_repuesto():
         return jsonify({"error": str(e)}), 500
 
 # ============================
-# ACTUALIZAR REPUESTO - CON AUTOCOMMIT
+# ACTUALIZAR REPUESTO - CORREGIDO (SIN AUTOCOMMIT)
 # ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
@@ -1649,7 +1649,7 @@ def actualizar_repuesto(id_repuesto):
         proveedor = sanitizar_input(data.get('proveedor', '').strip())
         costo_venta_final = sanitizar_numero(data.get('costo_venta_final', 0), min_val=0)
         
-        # 🔥 STOCK
+        # 🔥 STOCK - Conversión segura a entero
         stock_raw = data.get('stock', 0)
         try:
             stock = int(stock_raw) if stock_raw is not None else 0
@@ -1669,6 +1669,9 @@ def actualizar_repuesto(id_repuesto):
             except (ValueError, TypeError):
                 subcategoria_id = None
         
+        logger.info(f"📂 Categoría: '{categoria_nombre}'")
+        logger.info(f"📂 Subcategoria ID: {subcategoria_id}")
+        
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
         
@@ -1680,9 +1683,8 @@ def actualizar_repuesto(id_repuesto):
         
         costo_proveedor_pendiente = costo_proveedor == 0
         
-        # 🔥 CONEXIÓN CON AUTOCOMMIT
+        # 🔥 CONEXIÓN NORMAL (SIN AUTOCOMMIT)
         conn = get_connection()
-        conn.autocommit = True  # 🔥 ACTIVAR AUTOCOMMIT
         cur = conn.cursor()
         
         # 🔥 VERIFICAR REPUESTO EXISTENTE
@@ -1695,7 +1697,7 @@ def actualizar_repuesto(id_repuesto):
         
         logger.info(f"📦 ANTES: {existente[1]} - Stock: {existente[2]} - Subcat: {existente[3]}")
         
-        # 🔥 ACTUALIZAR
+        # 🔥 ACTUALIZAR - SIN AT TIME ZONE (usamos NOW() sin conversión)
         cur.execute("""
             UPDATE repuestos 
             SET nombre = %s, 
@@ -1707,19 +1709,27 @@ def actualizar_repuesto(id_repuesto):
                 categoria_nombre = %s,
                 subcategoria_id = %s,
                 costo_proveedor_pendiente = %s,
-                updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                updated_at = NOW()
             WHERE id = %s
             RETURNING id, stock, subcategoria_id
         """, (
-            nombre, costo_proveedor, margen_ganancia, proveedor, 
-            costo_venta_final, stock, categoria_nombre, subcategoria_id,
-            costo_proveedor_pendiente, id_repuesto
+            nombre,                  # 1
+            costo_proveedor,         # 2
+            margen_ganancia,         # 3
+            proveedor,               # 4
+            costo_venta_final,       # 5
+            stock,                   # 6 ← STOCK
+            categoria_nombre,        # 7
+            subcategoria_id,         # 8 ← SUBCATEGORIA
+            costo_proveedor_pendiente, # 9
+            id_repuesto              # 10
         ))
         
         result = cur.fetchone()
         
-        # 🔥 CON AUTOCOMMIT, NO NECESITAMOS commit() EXPLÍCITO
-        logger.info(f"📊 Resultado: {result}")
+        # 🔥 CONFIRMAR LA TRANSACCIÓN
+        conn.commit()
+        logger.info("✅ Transacción confirmada (commit)")
         
         # 🔥 VERIFICAR QUE EL CAMBIO SE GUARDÓ
         cur.execute("SELECT id, nombre, stock, subcategoria_id FROM repuestos WHERE id = %s", (id_repuesto,))
