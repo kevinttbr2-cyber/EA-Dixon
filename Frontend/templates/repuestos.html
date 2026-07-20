@@ -514,7 +514,8 @@
                     <div><label style="color:#90e0a0;font-size:11px;">💰 Costo Proveedor</label><input type="number" id="scan_costo_proveedor" class="form-control" style="font-size:13px;" readonly></div>
                     <div><label style="color:#90e0a0;font-size:11px;">📈 Margen (%)</label><input type="number" id="scan_margen" class="form-control" style="font-size:13px;" readonly></div>
                     <div><label style="color:#90e0a0;font-size:11px;">🏢 Proveedor</label><input type="text" id="scan_proveedor" class="form-control" style="font-size:13px;" readonly></div>
-                    <div><label style="color:#90e0a0;font-size:11px;">📦 Stock</label><input type="number" id="scan_stock" class="form-control" value="1" min="1" style="font-size:13px;"></div>
+                    <div><label style="color:#90e0a0;font-size:11px;">📦 Stock</label>
+<input type="number" id="scan_stock" class="form-control" value="1" min="1" style="font-size:13px;"></div>
                     <div><label style="color:#90e0a0;font-size:11px;">🔢 Código</label><input type="text" id="scan_codigo" class="form-control" style="font-size:13px;" readonly></div>
                 </div>
                 
@@ -664,10 +665,10 @@
             
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div class="mb-3">
-    <label style="color:#90e0a0;font-size:13px;">📦 Stock</label>
-    <input type="number" name="stock" id="editStockRepuesto" class="form-control" min="0" step="1">
-    <small style="color:#666;font-size:10px;">⚠️ Solo números enteros, no puede ser negativo</small>
-</div>
+                    <label style="color:#90e0a0;font-size:13px;">📦 Stock inicial</label>
+                    <!-- ✅ CORREGIDO: inputStockRepuesto en lugar de editStockRepuesto -->
+                    <input type="number" name="stock" id="inputStockRepuesto" class="form-control" value="1" min="0">
+                </div>
                 <div class="mb-3">
                     <label style="color:#90e0a0;font-size:13px;">💰 Costo Proveedor ($) *</label>
                     <input type="number" name="costo_proveedor" id="inputCostoProveedor" class="form-control" step="0.01" required>
@@ -702,7 +703,6 @@
         </form>
     </div>
 </div>
-
 <!-- ============================================
      MODAL: EDITAR REPUESTO (CON CÁLCULO AUTOMÁTICO)
      ============================================ -->
