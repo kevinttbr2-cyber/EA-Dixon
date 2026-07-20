@@ -1633,7 +1633,7 @@ def crear_repuesto():
         return jsonify({"error": str(e)}), 500
 
 # ============================
-# ACTUALIZAR REPUESTO - CON LOGS DETALLADOS
+# ACTUALIZAR REPUESTO - CON AUTOCOMMIT
 # ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
@@ -1649,7 +1649,7 @@ def actualizar_repuesto(id_repuesto):
         proveedor = sanitizar_input(data.get('proveedor', '').strip())
         costo_venta_final = sanitizar_numero(data.get('costo_venta_final', 0), min_val=0)
         
-        # 🔥 STOCK - Conversión segura a entero
+        # 🔥 STOCK
         stock_raw = data.get('stock', 0)
         try:
             stock = int(stock_raw) if stock_raw is not None else 0
@@ -1657,6 +1657,8 @@ def actualizar_repuesto(id_repuesto):
             stock = 0
         if stock < 0:
             stock = 0
+        
+        logger.info(f"📦 Stock a guardar: {stock}")
         
         # 🔥 CATEGORÍA
         categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
@@ -1666,10 +1668,6 @@ def actualizar_repuesto(id_repuesto):
                 subcategoria_id = int(subcategoria_id)
             except (ValueError, TypeError):
                 subcategoria_id = None
-        
-        logger.info(f"📦 Stock procesado: {stock} (original: {stock_raw})")
-        logger.info(f"📂 Categoría: '{categoria_nombre}'")
-        logger.info(f"📂 Subcategoria ID: {subcategoria_id}")
         
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
@@ -1682,7 +1680,9 @@ def actualizar_repuesto(id_repuesto):
         
         costo_proveedor_pendiente = costo_proveedor == 0
         
+        # 🔥 CONEXIÓN CON AUTOCOMMIT
         conn = get_connection()
+        conn.autocommit = True  # 🔥 ACTIVAR AUTOCOMMIT
         cur = conn.cursor()
         
         # 🔥 VERIFICAR REPUESTO EXISTENTE
@@ -1693,10 +1693,9 @@ def actualizar_repuesto(id_repuesto):
             conn.close()
             return jsonify({"error": "Repuesto no encontrado"}), 404
         
-        logger.info(f"📦 Antes: {existente[1]} - Stock: {existente[2]} - Subcat: {existente[3]}")
-        logger.info(f"📦 Después: Stock: {stock} - Subcat: {subcategoria_id}")
+        logger.info(f"📦 ANTES: {existente[1]} - Stock: {existente[2]} - Subcat: {existente[3]}")
         
-        # 🔥 ACTUALIZAR CON EL ORDEN CORRECTO DE PARÁMETROS
+        # 🔥 ACTUALIZAR
         cur.execute("""
             UPDATE repuestos 
             SET nombre = %s, 
@@ -1712,30 +1711,20 @@ def actualizar_repuesto(id_repuesto):
             WHERE id = %s
             RETURNING id, stock, subcategoria_id
         """, (
-            nombre,                  # 1
-            costo_proveedor,         # 2
-            margen_ganancia,         # 3
-            proveedor,               # 4
-            costo_venta_final,       # 5
-            stock,                   # 6 ← STOCK
-            categoria_nombre,        # 7
-            subcategoria_id,         # 8 ← SUBCATEGORIA
-            costo_proveedor_pendiente, # 9
-            id_repuesto              # 10
+            nombre, costo_proveedor, margen_ganancia, proveedor, 
+            costo_venta_final, stock, categoria_nombre, subcategoria_id,
+            costo_proveedor_pendiente, id_repuesto
         ))
         
-        # 🔥 OBTENER EL RESULTADO
         result = cur.fetchone()
-        logger.info(f"📊 Resultado del UPDATE: {result}")
         
-        # 🔥 CONFIRMAR LA TRANSACCIÓN
-        conn.commit()
-        logger.info("✅ Transacción confirmada (commit)")
+        # 🔥 CON AUTOCOMMIT, NO NECESITAMOS commit() EXPLÍCITO
+        logger.info(f"📊 Resultado: {result}")
         
         # 🔥 VERIFICAR QUE EL CAMBIO SE GUARDÓ
         cur.execute("SELECT id, nombre, stock, subcategoria_id FROM repuestos WHERE id = %s", (id_repuesto,))
         verificado = cur.fetchone()
-        logger.info(f"📦 Verificado después de commit: {verificado[1]} - Stock: {verificado[2]} - Subcat: {verificado[3]}")
+        logger.info(f"📦 DESPUÉS: {verificado[1]} - Stock: {verificado[2]} - Subcat: {verificado[3]}")
         
         cur.close()
         conn.close()
@@ -1743,7 +1732,7 @@ def actualizar_repuesto(id_repuesto):
         if not result:
             return jsonify({"error": "Repuesto no encontrado"}), 404
         
-        logger.info(f"✅ Repuesto actualizado: {nombre} (ID: {id_repuesto}) - Stock: {result[1]} - Subcat: {result[2]}")
+        logger.info(f"✅ Repuesto actualizado: {nombre} - Stock: {result[1]}")
         return jsonify({
             "success": True, 
             "stock_guardado": result[1],
