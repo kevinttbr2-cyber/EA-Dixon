@@ -2425,38 +2425,6 @@ async function importarProductos() {
 // FUNCIONES DE IMPORTACIÓN DE PRODUCTOS
 // ============================================
 
-function abrirModalImportarProductos() {
-    console.log('📂 Abriendo modal importar');
-    
-    const modal = document.getElementById('modalImportarProductos');
-    if (!modal) {
-        console.error('❌ Modal no encontrado');
-        return;
-    }
-    modal.classList.add('active');
-    
-    const preview = document.getElementById('previewProductos');
-    if (preview) preview.style.display = 'none';
-    
-    const btnImportar = document.getElementById('btnImportarProductos');
-    if (btnImportar) btnImportar.style.display = 'none';
-    
-    const resultado = document.getElementById('resultadoImportacion');
-    if (resultado) resultado.style.display = 'none';
-    
-    const fileInput = document.getElementById('fileInputProductos');
-    if (fileInput) fileInput.value = '';
-    
-    datosProductos = [];
-}
-
-function cerrarModalImportarProductos() {
-    console.log('📂 Cerrando modal importar');
-    const modal = document.getElementById('modalImportarProductos');
-    if (modal) {
-        modal.classList.remove('active');
-    }
-}
 
 function handleDropProductos(e) {
     e.preventDefault();
