@@ -104,6 +104,29 @@
     border: 1px solid var(--border-subtle);
 }
 
+/* ✅ ESTILO PARA TIPO DE GASTO */
+.gasto-card .tipo-gasto {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+.gasto-card .tipo-gasto.venta {
+    background: rgba(79, 195, 247, 0.15);
+    color: #4fc3f7;
+    border: 1px solid rgba(79, 195, 247, 0.20);
+}
+.gasto-card .tipo-gasto.trabajo {
+    background: rgba(255, 200, 0, 0.15);
+    color: #ffcc00;
+    border: 1px solid rgba(255, 200, 0, 0.20);
+}
+.gasto-card .tipo-gasto.general {
+    background: rgba(255, 255, 255, 0.05);
+    color: #888;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .sin-gastos {
     text-align: center;
     padding: 60px 20px;
@@ -145,6 +168,12 @@
 .form-gasto .grid-3 {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+}
+
+.form-gasto .grid-4 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 12px;
 }
 
@@ -459,6 +488,17 @@
             <div style="color:#ffcc00;font-size:16px;font-weight:700;" id="gastosSueldosDisplay">$0</div>
             <div style="color:#666;font-size:9px;" id="gastosSueldosCount">0</div>
         </div>
+        <!-- ✅ NUEVO: Resumen por tipo de gasto -->
+        <div style="background:rgba(79,195,247,0.06);border-radius:10px;padding:8px 12px;border:1px solid rgba(79,195,247,0.12);text-align:center;">
+            <div style="color:#888;font-size:10px;">🛒 Gastos Venta</div>
+            <div style="color:#4fc3f7;font-size:16px;font-weight:700;" id="gastosVentaDisplay">$0</div>
+            <div style="color:#666;font-size:9px;" id="gastosVentaCount">0</div>
+        </div>
+        <div style="background:rgba(255,200,0,0.06);border-radius:10px;padding:8px 12px;border:1px solid rgba(255,200,0,0.12);text-align:center;">
+            <div style="color:#888;font-size:10px;">🔧 Gastos Trabajo</div>
+            <div style="color:#ffcc00;font-size:16px;font-weight:700;" id="gastosTrabajoDisplay">$0</div>
+            <div style="color:#666;font-size:9px;" id="gastosTrabajoCount">0</div>
+        </div>
     </div>
 
     <!-- BOTÓN ESCANEAR FACTURA -->
@@ -478,7 +518,8 @@
     <div class="form-gasto">
         <h4 style="color: var(--text-secondary); margin-bottom: 12px; font-size: 16px;">➕ Registrar Gasto Manual</h4>
         <form id="formGasto">
-            <div class="grid-3">
+            <!-- ✅ NUEVO: Tipo de gasto (Venta / Trabajo / General) -->
+            <div class="grid-4">
                 <div>
                     <label>📂 Categoría *</label>
                     <select id="categoria" class="form-control" required>
@@ -503,6 +544,14 @@
                         <option value="efectivo">💵 Efectivo</option>
                         <option value="transferencia">🏦 Transferencia</option>
                         <option value="tarjeta">💳 Tarjeta</option>
+                    </select>
+                </div>
+                <div>
+                    <label>🎯 Tipo de Gasto *</label>
+                    <select id="tipo_gasto" class="form-control" required>
+                        <option value="general">📋 General</option>
+                        <option value="venta">🛒 Venta</option>
+                        <option value="trabajo">🔧 Trabajo</option>
                     </select>
                 </div>
             </div>
@@ -554,6 +603,16 @@ MODAL: FACTURA ESCANEADA
             <button class="close-btn" onclick="cerrarModalFactura()">
                 <span class="material-symbols-rounded">close</span>
             </button>
+        </div>
+
+        <!-- ✅ TIPO DE GASTO PARA LA FACTURA -->
+        <div style="margin-bottom:12px;">
+            <label style="color:var(--text-secondary);font-size:13px;font-weight:500;display:block;margin-bottom:4px;">🎯 Tipo de Gasto *</label>
+            <select id="facturaTipoGasto" class="form-control" style="background: var(--bg-input) !important; color: var(--text-primary) !important; border: 2px solid transparent !important; border-radius: var(--radius-sm) !important; padding: 8px 12px !important; font-size: 14px !important; width: 100% !important;">
+                <option value="general">📋 General</option>
+                <option value="venta">🛒 Venta</option>
+                <option value="trabajo">🔧 Trabajo</option>
+            </select>
         </div>
 
         <!-- Datos de la factura -->
@@ -949,13 +1008,21 @@ async function procesarFacturaEscaneada() {
     }
     
     const total = productosFactura.reduce((sum, p) => sum + (p.cantidad * p.precio_unitario), 0);
+    const tipoGasto = document.getElementById('facturaTipoGasto').value;
+    
+    const tipoLabels = {
+        'general': '📋 General',
+        'venta': '🛒 Venta',
+        'trabajo': '🔧 Trabajo'
+    };
     
     if (!confirm(
         `📊 ¿Procesar factura?\n\n` +
         `🏢 Proveedor: ${datosFactura.proveedor}\n` +
         `📄 Folio: ${datosFactura.folio}\n` +
         `📦 Productos: ${productosFactura.length}\n` +
-        `💰 Total: $${total.toLocaleString('es-CL')}\n\n` +
+        `💰 Total: $${total.toLocaleString('es-CL')}\n` +
+        `🎯 Tipo: ${tipoLabels[tipoGasto]}\n\n` +
         `✅ Los productos se actualizarán en el stock\n` +
         `✅ Se registrará el gasto en la lista\n\n` +
         `¿Confirmar?`
@@ -968,7 +1035,7 @@ async function procesarFacturaEscaneada() {
     btn.textContent = '⏳ Procesando...';
     
     try {
-        // 1. Registrar el gasto
+        // 1. Registrar el gasto con el tipo
         const gastoData = {
             categoria: 'Repuestos',
             monto: total,
@@ -978,7 +1045,8 @@ async function procesarFacturaEscaneada() {
             folio: datosFactura.folio,
             fecha: datosFactura.fecha || new Date().toISOString().split('T')[0],
             hora: new Date().toTimeString().split(' ')[0],
-            registrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
+            registrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}',
+            tipo_gasto: tipoGasto  // ✅ NUEVO: guardar el tipo
         };
         
         const gastoResp = await fetch(`${API_URL}/api/gastos`, {
@@ -992,20 +1060,18 @@ async function procesarFacturaEscaneada() {
             throw new Error('Error al registrar el gasto: ' + (gastoResult.error || 'Desconocido'));
         }
         
-        // 2. Procesar cada producto y actualizar stock
+        // 2. Procesar productos (misma lógica que antes)
         let actualizados = 0;
         let nuevos = 0;
         let errores = [];
         
         for (const producto of productosFactura) {
             try {
-                // Buscar si el producto existe
                 const searchResp = await fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(producto.nombre)}`);
                 const repuestos = await searchResp.json();
                 const existente = repuestos.find(r => r.nombre.toLowerCase() === producto.nombre.toLowerCase());
                 
                 if (existente) {
-                    // Actualizar stock
                     const nuevoStock = (existente.stock || 0) + producto.cantidad;
                     const updateResp = await fetch(`${API_URL}/api/repuestos/${existente.id}`, {
                         method: 'PUT',
@@ -1022,12 +1088,10 @@ async function procesarFacturaEscaneada() {
                     
                     if (updateResp.ok) {
                         actualizados++;
-                        console.log(`✅ Stock de "${producto.nombre}" actualizado: +${producto.cantidad} → ${nuevoStock}`);
                     } else {
                         errores.push(`${producto.nombre} (no se pudo actualizar stock)`);
                     }
                 } else {
-                    // Crear nuevo repuesto
                     const precioVenta = Math.round(producto.precio_unitario * 1.3 * 1.19);
                     const createResp = await fetch(`${API_URL}/api/repuestos`, {
                         method: 'POST',
@@ -1044,7 +1108,6 @@ async function procesarFacturaEscaneada() {
                     
                     if (createResp.ok) {
                         nuevos++;
-                        console.log(`✅ Nuevo repuesto "${producto.nombre}" creado con stock: ${producto.cantidad}`);
                     } else {
                         errores.push(`${producto.nombre} (no se pudo crear)`);
                     }
@@ -1054,9 +1117,9 @@ async function procesarFacturaEscaneada() {
             }
         }
         
-        // 3. Mostrar resumen
         let mensaje = `✅ Factura procesada correctamente!\n\n`;
         mensaje += `💰 Total: $${total.toLocaleString('es-CL')}\n`;
+        mensaje += `🎯 Tipo: ${tipoLabels[tipoGasto]}\n`;
         mensaje += `📦 ${actualizados} productos actualizados en stock\n`;
         mensaje += `🆕 ${nuevos} productos nuevos agregados\n`;
         
@@ -1066,7 +1129,6 @@ async function procesarFacturaEscaneada() {
         
         alert(mensaje);
         
-        // Recargar página para ver los cambios
         cerrarModalFactura();
         cargarGastos();
         setTimeout(() => location.reload(), 1500);
@@ -1129,9 +1191,13 @@ function mostrarGastos(gastos) {
     let efectivo = 0;
     let transferencia = 0;
     let sueldos = 0;
+    let venta = 0;
+    let trabajo = 0;
     let efectivoCount = 0;
     let transferenciaCount = 0;
     let sueldosCount = 0;
+    let ventaCount = 0;
+    let trabajoCount = 0;
     
     gastos.forEach(g => {
         const monto = parseFloat(g.monto) || 0;
@@ -1149,6 +1215,15 @@ function mostrarGastos(gastos) {
             sueldos += monto;
             sueldosCount++;
         }
+        
+        // ✅ CONTAR POR TIPO DE GASTO
+        if (g.tipo_gasto === 'venta') {
+            venta += monto;
+            ventaCount++;
+        } else if (g.tipo_gasto === 'trabajo') {
+            trabajo += monto;
+            trabajoCount++;
+        }
     });
     
     // Actualizar resumen
@@ -1160,14 +1235,33 @@ function mostrarGastos(gastos) {
     document.getElementById('gastosTransferenciaCount').textContent = transferenciaCount + ' gastos';
     document.getElementById('gastosSueldosCount').textContent = sueldosCount + ' gastos';
     
+    // ✅ ACTUALIZAR RESUMEN POR TIPO
+    document.getElementById('gastosVentaDisplay').textContent = '$' + venta.toLocaleString('es-CL');
+    document.getElementById('gastosTrabajoDisplay').textContent = '$' + trabajo.toLocaleString('es-CL');
+    document.getElementById('gastosVentaCount').textContent = ventaCount + ' gastos';
+    document.getElementById('gastosTrabajoCount').textContent = trabajoCount + ' gastos';
+    
     // Mostrar lista
     let html = '';
     gastos.forEach(g => {
         const monto = parseFloat(g.monto) || 0;
+        const tipoGasto = g.tipo_gasto || 'general';
+        const tipoLabels = {
+            'general': '📋 General',
+            'venta': '🛒 Venta',
+            'trabajo': '🔧 Trabajo'
+        };
+        const tipoClass = {
+            'general': 'general',
+            'venta': 'venta',
+            'trabajo': 'trabajo'
+        };
+        
         html += `
             <div class="gasto-card" data-id="${g.id}">
                 <div class="info">
                     <span class="categoria">${g.categoria}</span>
+                    <span class="tipo-gasto ${tipoClass[tipoGasto]}">${tipoLabels[tipoGasto]}</span>
                     ${g.descripcion ? `<span class="descripcion">📝 ${g.descripcion}</span>` : ''}
                     ${g.proveedor ? `<span class="descripcion" style="color: #4fc3f7;">🏢 ${g.proveedor}</span>` : ''}
                     <span class="metodo">
@@ -1203,7 +1297,8 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
         folio: document.getElementById('folio').value,
         fecha: new Date().toISOString().split('T')[0],
         hora: new Date().toTimeString().split(' ')[0],
-        registrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
+        registrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}',
+        tipo_gasto: document.getElementById('tipo_gasto').value  // ✅ NUEVO
     };
     
     if (!data.categoria || data.monto <= 0) {
