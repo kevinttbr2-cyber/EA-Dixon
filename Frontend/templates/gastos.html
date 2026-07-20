@@ -321,17 +321,6 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span class="monto">-${{ "{:,.0f}".format(g.monto) }}</span>
-                    <button onclick="eliminarGasto({{ g.id }})" style="
-                        background: transparent;
-                        border: none;
-                        color: #ff6b6b;
-                        cursor: pointer;
-                        font-size: 16px;
-                        opacity: 0.3;
-                        transition: var(--transition);
-                    " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">delete</span>
-                    </button>
                 </div>
             </div>
             {% endfor %}
@@ -402,35 +391,6 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
         btn.innerHTML = '<span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">add</span> Registrar Gasto';
     });
 });
-
-// ============================================
-// ELIMINAR GASTO
-// ============================================
-function eliminarGasto(id) {
-    if (!confirm('⚠️ ¿Eliminar este gasto permanentemente?')) return;
-    
-    fetch(`${API_URL}/api/gastos/${id}`, {
-        method: 'DELETE'
-    })
-    .then(r => {
-        if (!r.ok) {
-            throw new Error(`Error ${r.status}`);
-        }
-        return r.json();
-    })
-    .then(result => {
-        if (result.success) {
-            alert('✅ Gasto eliminado');
-            location.reload();
-        } else {
-            alert('❌ Error: ' + (result.error || 'Desconocido'));
-        }
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        alert('❌ Error al eliminar el gasto');
-    });
-}
 </script>
 
 {% endblock %}
