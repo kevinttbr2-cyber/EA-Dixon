@@ -191,7 +191,8 @@ def pagar_deuda():
         cur = conn.cursor()
         
         cur.execute("""
-            SELECT id, monto_deuda, estado, frecuencia_deudas, patente, id_registro 
+            SELECT id, monto_deuda, estado, frecuencia_deudas, patente, id_registro,
+                   marca, modelo, anio, telefono
             FROM deudores 
             WHERE cliente_nombre ILIKE %s
             ORDER BY fecha_actualizacion DESC
@@ -202,7 +203,7 @@ def pagar_deuda():
         if not deudor:
             return jsonify({"error": "Cliente sin deuda registrada"}), 404
         
-        deudor_id, monto_deuda, estado_actual, frecuencia, patente, id_registro_original = deudor
+        deudor_id, monto_deuda, estado_actual, frecuencia, patente, id_registro_original, marca, modelo, anio, telefono = deudor
         monto_deuda = float(monto_deuda) if monto_deuda else 0
         nuevo_monto = max(0, monto_deuda - monto_abonado)
         
@@ -213,20 +214,36 @@ def pagar_deuda():
         
         ahora = now_santiago()
         hora_ahora = ahora.strftime('%H:%M:%S')
+        fecha_hoy = ahora.strftime('%Y-%m-%d')
         
+        # ============================================
+        # 1. BUSCAR O CREAR REGISTRO EN pagos
+        # ============================================
         id_pago = None
-        monto_actual_pagos = 0
+        monto_deuda_original = 0  # ✅ El monto total de la deuda (NO se actualiza)
         
+        # Buscar por id_registro
         if id_registro_original and id_registro_original > 0:
-            cur.execute("SELECT id, monto FROM pagos WHERE id = %s", (id_registro_original,))
+            cur.execute("""
+                SELECT id, monto, marca, modelo, patente, nombre 
+                FROM pagos WHERE id = %s
+            """, (id_registro_original,))
             registro = cur.fetchone()
             if registro:
                 id_pago = registro[0]
-                monto_actual_pagos = float(registro[1]) if registro[1] else 0
+                monto_deuda_original = float(registro[1]) if registro[1] else 0
+                # ✅ OBTENER MARCA Y MODELO DEL REGISTRO ORIGINAL
+                if not marca:
+                    marca = registro[2]
+                if not modelo:
+                    modelo = registro[3]
+                if not patente:
+                    patente = registro[4]
         
+        # Si no se encontró, buscar por nombre
         if not id_pago:
             cur.execute("""
-                SELECT id, monto FROM pagos 
+                SELECT id, monto, marca, modelo, patente FROM pagos 
                 WHERE nombre ILIKE %s 
                 ORDER BY fecha DESC, id DESC
                 LIMIT 1
@@ -234,66 +251,81 @@ def pagar_deuda():
             registro = cur.fetchone()
             if registro:
                 id_pago = registro[0]
-                monto_actual_pagos = float(registro[1]) if registro[1] else 0
+                monto_deuda_original = float(registro[1]) if registro[1] else 0
+                if not marca:
+                    marca = registro[2]
+                if not modelo:
+                    modelo = registro[3]
+                if not patente:
+                    patente = registro[4]
         
-        if id_pago:
-            nuevo_monto_pagos = monto_actual_pagos + monto_abonado
-            cur.execute("""
-                UPDATE pagos 
-                SET monto = %s,
-                    observaciones_pago = COALESCE(observaciones_pago || ' | ', '') || %s,
-                    hora = %s,
-                    forma_pago = %s,
-                    updated_at = NOW() AT TIME ZONE 'America/Santiago'
-                WHERE id = %s
-            """, (
-                nuevo_monto_pagos,
-                f"💰 Pago de deuda: {descripcion} | Deuda restante: ${nuevo_monto:,.0f}",
-                hora_ahora,
-                forma_pago,
-                id_pago
-            ))
-        else:
-            fecha_hoy = ahora.strftime('%Y-%m-%d')
-            cur.execute("""
-                INSERT INTO pagos 
-                (nombre, patente, monto, fecha, hora, estado, tipo_venta, 
-                 observaciones_pago, atendido_por, forma_pago, diagnostico, reparacion)
-                VALUES (%s, %s, %s, %s, %s, 'pagado', 'deuda', %s, %s, %s, %s, %s)
-                RETURNING id
-            """, (
-                cliente_nombre,
-                patente or '',
-                monto_abonado,
-                fecha_hoy,
-                hora_ahora,
-                f"💰 Pago de deuda: {descripcion} | Deuda restante: ${nuevo_monto:,.0f}",
-                'Sistema',
-                forma_pago,
-                'Pago de deuda',
-                'Pago de deuda'
-            ))
-            id_pago = cur.fetchone()[0]
-            nuevo_monto_pagos = monto_abonado
+        # ============================================
+        # 2. CREAR NUEVO REGISTRO DE PAGO (ABONO)
+        # ============================================
+        # ✅ NUEVO: Registrar el abono como un registro independiente en pagos
+        cur.execute("""
+            INSERT INTO pagos 
+            (nombre, patente, marca, modelo, anio, telefono,
+             monto, fecha, hora, estado, tipo_venta, 
+             observaciones_pago, atendido_por, forma_pago, 
+             diagnostico, reparacion, estado_pago,
+             created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, 'pagado', 'deuda', 
+                    %s, %s, %s, 
+                    %s, %s, 'pagado',
+                    NOW() AT TIME ZONE 'America/Santiago',
+                    NOW() AT TIME ZONE 'America/Santiago')
+            RETURNING id
+        """, (
+            cliente_nombre,
+            patente or '',
+            marca or '',
+            modelo or '',
+            anio or 0,
+            telefono or '',
+            monto_abonado,  # ✅ El abono (lo que paga hoy)
+            fecha_hoy,
+            hora_ahora,
+            f"💰 Pago de deuda: {descripcion} | Deuda restante: ${nuevo_monto:,.0f} | Deuda original: ${monto_deuda:,.0f}",
+            'Sistema',
+            forma_pago,
+            f"Pago de deuda #{deudor_id} - Abono de ${monto_abonado:,.0f}",
+            f"Deuda original: ${monto_deuda:,.0f}"
+        ))
+        id_abono = cur.fetchone()[0]
         
+        # ============================================
+        # 3. ACTUALIZAR LA DEUDA EN deudores
+        # ============================================
         cur.execute("""
             UPDATE deudores 
             SET monto_deuda = %s,
                 estado = %s,
                 ultimo_pago = NOW() AT TIME ZONE 'America/Santiago',
                 fecha_actualizacion = NOW() AT TIME ZONE 'America/Santiago',
-                id_registro = %s
+                id_registro = %s  -- ✅ Guardar el ID del abono (no el original)
             WHERE id = %s
-        """, (nuevo_monto, nuevo_estado, id_pago, deudor_id))
+        """, (nuevo_monto, nuevo_estado, id_abono, deudor_id))
         
+        # ============================================
+        # 4. GUARDAR EN HISTORIAL DE DEUDAS
+        # ============================================
         cur.execute("""
             INSERT INTO historial_deudas 
             (deudor_id, cliente_nombre, patente, monto_deuda, monto_abonado, 
              saldo_restante, tipo, descripcion, id_registro)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
-            deudor_id, cliente_nombre, patente or '', monto_deuda, monto_abonado,
-            nuevo_monto, 'abono', f"Pago de deuda: {descripcion}", id_pago
+            deudor_id, 
+            cliente_nombre, 
+            patente or '', 
+            monto_deuda, 
+            monto_abonado,
+            nuevo_monto, 
+            'abono', 
+            f"Pago de deuda: {descripcion} | Abono: ${monto_abonado:,.0f} | Saldo: ${nuevo_monto:,.0f}", 
+            id_abono
         ))
         
         conn.commit()
@@ -301,7 +333,7 @@ def pagar_deuda():
         conn.close()
         
         mensaje = f"✅ Pago de deuda registrado correctamente\n\n"
-        mensaje += f"💰 Monto pagado: ${monto_abonado:,.0f}\n"
+        mensaje += f"💰 Abono registrado: ${monto_abonado:,.0f}\n"
         mensaje += f"📌 Saldo restante: ${nuevo_monto:,.0f}\n"
         if nuevo_monto == 0:
             mensaje += f"🟢 ¡DEUDA LIQUIDADA!"
@@ -313,8 +345,10 @@ def pagar_deuda():
             "mensaje": mensaje,
             "saldo_restante": nuevo_monto,
             "estado": nuevo_estado,
-            "id_pago": id_pago,
-            "monto_total": nuevo_monto_pagos
+            "id_abono": id_abono,  # ✅ ID del abono registrado
+            "id_deuda_original": id_registro_original,  # ✅ ID de la deuda original
+            "monto_abonado": monto_abonado,
+            "monto_total_original": monto_deuda
         })
     except Exception as e:
         logger.error(f"Error en pagar_deuda: {e}")
