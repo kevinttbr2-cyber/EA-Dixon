@@ -777,9 +777,6 @@ def registros():
         filtro=filtro
     )
 
-# ============================
-# BALANCE (CORREGIDO - SOLO UNA VEZ)
-# ============================
 @app.route('/balance')
 @login_required
 @role_required(['admin'])
@@ -787,7 +784,9 @@ def balance():
     filtro = request.args.get('filtro', 'hoy')
     hoy = datetime.now().date()
     
+    # ============================================
     # 1. OBTENER VENTAS
+    # ============================================
     try:
         resp = requests.get(f"{BACKEND_URL}/api/balance?filtro={filtro}", timeout=10)
         if resp.status_code == 200:
@@ -799,16 +798,29 @@ def balance():
             total_diagnostico = data.get('total_diagnostico', 0)
             ganancia_neta = data.get('ganancia_neta', 0)
         else:
-            registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
+            registros = []
+            total_pagado = 0
+            total_repuestos = 0
+            total_mano_obra = 0
+            total_diagnostico = 0
+            ganancia_neta = 0
     except Exception as e:
         logger.error(f"Error en /balance (ventas): {e}")
-        registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
+        registros = []
+        total_pagado = 0
+        total_repuestos = 0
+        total_mano_obra = 0
+        total_diagnostico = 0
+        ganancia_neta = 0
     
+    # ============================================
     # 2. OBTENER GASTOS DEL MES ACTUAL
+    # ============================================
     gastos_operativos = []
     total_gastos = 0
     
     try:
+        # SIEMPRE buscar gastos del mes actual
         primer_dia_mes = hoy.replace(day=1).strftime('%Y-%m-%d')
         ultimo_dia_mes = hoy.strftime('%Y-%m-%d')
         
@@ -833,7 +845,9 @@ def balance():
         gastos_operativos = []
         total_gastos = 0
     
+    # ============================================
     # 3. CALCULAR GANANCIA REAL
+    # ============================================
     ganancia_real = total_pagado - total_repuestos - total_mano_obra - total_gastos
     
     logger.info(f"📊 Balance final:")
@@ -843,7 +857,9 @@ def balance():
     logger.info(f"   Gastos: ${total_gastos}")
     logger.info(f"   Ganancia Real: ${ganancia_real}")
     
+    # ============================================
     # 4. FILTROS PARA LA VISTA
+    # ============================================
     hoy_list = [r for r in registros if r.get('fecha') == hoy.strftime('%Y-%m-%d')]
     semana_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')]
     mes_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
@@ -851,6 +867,7 @@ def balance():
     
     logger.info(f"📊 ENVIANDO AL TEMPLATE: gastos_operativos={len(gastos_operativos)}, total_gastos={total_gastos}")
     
+    # ✅ ESTE ES EL RETURN QUE DEBE ESTAR AL FINAL
     return render_template(
         "balance.html",
         registros=registros,
@@ -868,7 +885,6 @@ def balance():
         mes=mes_list,
         todos=todos_list
     )
-
 # ============================
 # MODELOS
 # ============================
