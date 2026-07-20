@@ -803,3 +803,221 @@ def verificar_duplicado():
     except Exception as e:
         logger.error(f"Error en verificar_duplicado: {e}")
         return jsonify({"duplicado": False}), 500
+# 1. obtener_pagados_con_filtro() - Para el balance general
+@staticmethod
+def obtener_pagados_con_filtro(filtro, fecha):
+    """Obtiene pagos pagados con filtro para el balance general"""
+    try:
+        if not validar_filtro(filtro):
+            filtro = 'todos'
+        
+        conn, cur = get_cursor()
+        query = "SELECT * FROM pagos WHERE estado = 'pagado' AND estado_pago = 'pagado'"
+        params = []
+        
+        if filtro == 'hoy':
+            query += " AND fecha = %s"
+            params.append(fecha.strftime('%Y-%m-%d'))
+        elif filtro == '7d':
+            query += " AND fecha >= %s"
+            params.append((fecha - timedelta(days=7)).strftime('%Y-%m-%d'))
+        elif filtro == 'mes':
+            query += " AND fecha >= %s"
+            params.append((fecha - timedelta(days=30)).strftime('%Y-%m-%d'))
+        
+        query += " ORDER BY fecha DESC, hora DESC"
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"Error obtener pagados con filtro: {e}")
+        return []
+
+# 2. obtener_flotas_disponibles() - Para el autocompletado de flotas
+@staticmethod
+def obtener_flotas_disponibles():
+    """Obtiene todas las flotas registradas (nombres únicos)"""
+    try:
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT DISTINCT flota FROM pagos 
+            WHERE flota IS NOT NULL AND flota != '' 
+            ORDER BY flota
+        """)
+        flotas = [row[0] for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return flotas
+    except Exception as e:
+        logger.error(f"Error obtener flotas disponibles: {e}")
+        return []
+
+# 3. obtener_balance_completo() - Para el balance con totales
+@staticmethod
+def obtener_balance_completo(filtro, fecha):
+    """Obtiene el balance completo con totales"""
+    try:
+        if not validar_filtro(filtro):
+            filtro = 'todos'
+        
+        conn, cur = get_cursor()
+        query = """
+            SELECT 
+                *,
+                COALESCE(SUM(monto) OVER(), 0) as total_pagado,
+                COALESCE(SUM(costo_repuestos_real) OVER(), 0) as total_repuestos,
+                COALESCE(SUM(costo_mano_obra_real) OVER(), 0) as total_mano_obra,
+                COALESCE(SUM(costo_diagnostico_real) OVER(), 0) as total_diagnostico
+            FROM pagos 
+            WHERE estado = 'pagado' AND estado_pago = 'pagado'
+        """
+        params = []
+        
+        if filtro == 'hoy':
+            query += " AND fecha = %s"
+            params.append(fecha.strftime('%Y-%m-%d'))
+        elif filtro == '7d':
+            query += " AND fecha >= %s"
+            params.append((fecha - timedelta(days=7)).strftime('%Y-%m-%d'))
+        elif filtro == 'mes':
+            query += " AND fecha >= %s"
+            params.append((fecha - timedelta(days=30)).strftime('%Y-%m-%d'))
+        
+        query += " ORDER BY fecha DESC, hora DESC"
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"Error obtener balance completo: {e}")
+        return []
+
+# 4. actualizar_repuestos_venta() - Para editar repuestos de venta
+@staticmethod
+def actualizar_repuestos_venta(id_reg, data):
+    """Actualiza solo los repuestos y costos de una venta"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            UPDATE pagos 
+            SET detalles_repuestos = %s::jsonb,
+                costo_repuestos_real = %s,
+                costo_mano_obra_real = %s,
+                costo_diagnostico_real = %s,
+                ganancia_neta = %s,
+                monto = %s,
+                actualizado_en = NOW() AT TIME ZONE 'America/Santiago'
+            WHERE id = %s
+        """, (
+            json.dumps(data.get('detalles_repuestos', [])),
+            data.get('costo_repuestos_real', 0),
+            data.get('costo_mano_obra_real', 0),
+            data.get('costo_diagnostico_real', 0),
+            data.get('ganancia_neta', 0),
+            data.get('monto', 0),
+            id_reg
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.error(f"Error actualizar repuestos venta: {e}")
+        return False
+
+# 5. obtener_dashboard_data() - Para el dashboard
+@staticmethod
+def obtener_dashboard_data(fecha_desde):
+    """Obtiene datos para el dashboard"""
+    try:
+        conn, cur = get_cursor()
+        
+        # Totales
+        cur.execute("""
+            SELECT 
+                COALESCE(SUM(monto), 0) as total_facturado,
+                COALESCE(SUM(costo_repuestos_real), 0) as total_repuestos,
+                COALESCE(SUM(costo_mano_obra_real), 0) as total_mano_obra,
+                COALESCE(SUM(costo_diagnostico_real), 0) as total_diagnostico,
+                COUNT(*) as total_servicios
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha >= %s
+        """, (fecha_desde,))
+        totales = cur.fetchone()
+        
+        # Ventas diarias
+        cur.execute("""
+            SELECT 
+                fecha,
+                COALESCE(SUM(monto), 0) as total
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha >= %s
+            GROUP BY fecha
+            ORDER BY fecha ASC
+        """, (fecha_desde,))
+        ventas = cur.fetchall()
+        
+        # Ganancia acumulada
+        cur.execute("""
+            SELECT 
+                fecha,
+                COALESCE(SUM(monto - COALESCE(costo_repuestos_real, 0) - COALESCE(costo_mano_obra_real, 0) - COALESCE(costo_diagnostico_real, 0)), 0) as ganancia
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha >= %s
+            GROUP BY fecha
+            ORDER BY fecha ASC
+        """, (fecha_desde,))
+        ganancias = cur.fetchall()
+        
+        # Top clientes
+        cur.execute("""
+            SELECT 
+                nombre,
+                COALESCE(SUM(monto), 0) as total_gastado
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND nombre IS NOT NULL
+            AND fecha >= %s
+            GROUP BY nombre
+            ORDER BY total_gastado DESC
+            LIMIT 5
+        """, (fecha_desde,))
+        clientes = cur.fetchall()
+        
+        # Promedio diario
+        cur.execute("""
+            SELECT 
+                COALESCE(AVG(monto), 0) as promedio_diario
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha >= %s
+        """, (fecha_desde,))
+        promedio = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        
+        return {
+            'totales': totales,
+            'ventas': ventas,
+            'ganancias': ganancias,
+            'clientes': clientes,
+            'promedio_diario': promedio[0] if promedio else 0
+        }
+    except Exception as e:
+        logger.error(f"Error obtener dashboard data: {e}")
+        return None
