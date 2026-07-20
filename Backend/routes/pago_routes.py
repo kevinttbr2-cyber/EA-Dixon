@@ -1218,3 +1218,40 @@ def buscar_repuestos():
     except Exception as e:
         logger.error(f"Error en buscar_repuestos: {e}")
         return jsonify([])
+
+
+# AGREGAR AL FINAL DEL ARCHIVO
+
+# ============================
+# TEST NOTIFICACIÓN PUSH
+# ============================
+@pago_bp.route('/test_notificacion', methods=['GET'])
+def test_notificacion():
+    """Prueba de notificaciones push"""
+    try:
+        from services.notification_service import enviar_notificacion_push
+        
+        logger.info("📨 TEST_NOTIFICACION - Iniciando prueba...")
+        
+        enviados = enviar_notificacion_push(
+            titulo="🔔 Notificación de Prueba (Backend)",
+            mensaje="¡Las notificaciones push funcionan correctamente desde el backend!",
+            url="/estado"
+        )
+        
+        if enviados > 0:
+            return jsonify({
+                "success": True,
+                "mensaje": f"Notificación enviada a {enviados} dispositivos"
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "mensaje": "No hay dispositivos suscritos. Acepta las notificaciones en tu navegador."
+            })
+    except Exception as e:
+        logger.error(f"Error en test_notificacion: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
