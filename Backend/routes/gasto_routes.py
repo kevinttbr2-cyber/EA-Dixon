@@ -18,10 +18,17 @@ def registrar_gasto():
         conn = get_connection()
         cur = conn.cursor()
         
+        # ✅ CONSULTA CORRECTA CON ZONA HORARIA CHILE
         cur.execute("""
             INSERT INTO gastos 
-            (categoria, monto, metodo_pago, descripcion, proveedor, folio, fecha, hora, registrado_por)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (categoria, monto, metodo_pago, descripcion, proveedor, folio, 
+             fecha, hora, registrado_por, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, 
+                    NOW() AT TIME ZONE 'America/Santiago'::date, 
+                    NOW() AT TIME ZONE 'America/Santiago'::time, 
+                    %s,
+                    NOW() AT TIME ZONE 'America/Santiago',
+                    NOW() AT TIME ZONE 'America/Santiago')
             RETURNING id
         """, (
             sanitizar_input(data.get('categoria')),
@@ -30,8 +37,6 @@ def registrar_gasto():
             sanitizar_input(data.get('descripcion', '')),
             sanitizar_input(data.get('proveedor', '')),
             sanitizar_input(data.get('folio', '')),
-            data.get('fecha'),
-            data.get('hora'),
             sanitizar_input(data.get('registrado_por', 'Sistema'))
         ))
         
@@ -40,7 +45,7 @@ def registrar_gasto():
         cur.close()
         conn.close()
         
-        logger.info(f"✅ Gasto registrado ID: {id_gasto}")
+        logger.info(f"✅ Gasto registrado ID: {id_gasto} - Fecha Chile: {datetime.now().astimezone(pytz.timezone('America/Santiago')).strftime('%Y-%m-%d')}")
         return jsonify({"success": True, "id": id_gasto})
         
     except Exception as e:
@@ -60,17 +65,13 @@ def obtener_gastos():
         cur.close()
         conn.close()
         
-        # ✅ CONVERTIR time a string
         gastos = []
         for row in rows:
             g = dict(row)
-            # Convertir hora (time) a string
             if g.get('hora') and hasattr(g['hora'], 'strftime'):
                 g['hora'] = g['hora'].strftime('%H:%M:%S')
-            # Convertir fecha (date) a string
             if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
                 g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
-            # Convertir timestamps a string
             if g.get('created_at') and hasattr(g['created_at'], 'strftime'):
                 g['created_at'] = g['created_at'].strftime('%Y-%m-%d %H:%M:%S')
             if g.get('updated_at') and hasattr(g['updated_at'], 'strftime'):
@@ -103,7 +104,6 @@ def obtener_gastos_balance():
         cur.close()
         conn.close()
         
-        # Convertir a diccionarios
         gastos = []
         for row in rows:
             g = dict(row)
@@ -124,12 +124,8 @@ def obtener_gastos_balance():
         logger.error(f"Error en obtener_gastos_balance: {e}")
         return jsonify([])
 
-# ============================================
-# ELIMINAR GASTO
-# ============================================
 @gasto_bp.route('/gastos/<int:id_gasto>', methods=['DELETE'])
 def eliminar_gasto(id_gasto):
-    """Elimina un gasto por ID"""
     try:
         conn = get_connection()
         cur = conn.cursor()
