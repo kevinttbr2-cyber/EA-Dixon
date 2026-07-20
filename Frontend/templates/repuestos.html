@@ -1758,19 +1758,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-// ============================================
-// FORMULARIO EDITAR - CORREGIDO (CON SUBCATEGORÍA)
-// ============================================
-// ============================================
-// FORMULARIO EDITAR - VERSIÓN CORREGIDA
-// ============================================
+
+// Formulario editar - CORREGIDO (guarda categoría padre)
 const formEditar = document.getElementById('formEditarRepuesto');
 if (formEditar) {
-    // ✅ ELIMINAR EVENTOS ANTERIORES (para evitar duplicados)
-    const nuevoForm = formEditar.cloneNode(true);
-    formEditar.parentNode.replaceChild(nuevoForm, formEditar);
-    
-    nuevoForm.addEventListener('submit', function(e) {
+    formEditar.addEventListener('submit', function(e) {
         e.preventDefault();
         
         const id = document.getElementById('editRepuestoId')?.value;
@@ -1783,9 +1775,16 @@ if (formEditar) {
         const categoriaSelect = document.getElementById('editCategoriaRepuesto');
         const categoriaId = categoriaSelect?.value || '';
         
-        console.log('🔍 VALORES DEL FORMULARIO:');
-        console.log('  ID:', id);
+        // ✅ OBTENER LA CATEGORÍA PADRE (optgroup)
+        let categoriaPadre = '';
+        if (categoriaSelect) {
+            const selectedOption = categoriaSelect.options[categoriaSelect.selectedIndex];
+            categoriaPadre = selectedOption?.parentElement?.label || '';
+        }
+        
+        console.log('📤 EDITANDO REPUESTO:');
         console.log('  Categoría ID:', categoriaId);
+        console.log('  Categoría Padre:', categoriaPadre);
         
         if (!nombre) {
             alert('⚠️ El nombre del repuesto es obligatorio');
@@ -1797,20 +1796,19 @@ if (formEditar) {
             return;
         }
         
-        // ✅ CONSTRUIR DATOS CON SUBCATEGORÍA
+        // ✅ CONSTRUIR DATOS
         const data = {
             nombre: nombre,
             costo_proveedor: costoProveedor,
             margen_ganancia: margen,
             proveedor: proveedor || 'Importado',
             stock: stock,
-            costo_venta_final: precioVenta
+            costo_venta_final: precioVenta,
+            categoria_nombre: categoriaPadre || ''  // ✅ GUARDAR CATEGORÍA PADRE
         };
         
-        // ✅ SIEMPRE enviar subcategoria_id si hay valor
         if (categoriaId && categoriaId !== '') {
             data.subcategoria_id = parseInt(categoriaId);
-            console.log('  ✅ subcategoria_id:', data.subcategoria_id);
         }
         
         console.log('📤 Enviando:', data);
