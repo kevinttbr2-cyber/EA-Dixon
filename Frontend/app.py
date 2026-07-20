@@ -385,10 +385,7 @@ def agregar_cliente():
         tz = pytz.timezone('America/Santiago')
         hoy = datetime.now(tz)
         
-        # ✅ Fecha en formato YYYY-MM-DD (para el backend)
         hoy_iso = hoy.strftime('%Y-%m-%d')
-        
-        # ✅ Fecha en formato DD/MM/YYYY (para mostrar)
         hoy_formateada = hoy.strftime('%d/%m/%Y')
         
         resp_flotas = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=5)
@@ -408,8 +405,8 @@ def agregar_cliente():
                           flotas=flotas, 
                           marcas=marcas, 
                           modelos=[],
-                          hoy=hoy_iso,           # Para el backend
-                          hoy_formateada=hoy_formateada)  # Para mostrar
+                          hoy=hoy_iso,
+                          hoy_formateada=hoy_formateada)
     
 @app.route('/agregar', methods=['POST'])
 @login_required
@@ -856,8 +853,10 @@ def balance():
         mes=mes_list,
         todos=todos_list
     )
-# Frontend/app.py - Agregar estas rutas después de los imports
 
+# ============================
+# API MARCAS Y MODELOS
+# ============================
 @app.route('/api/marcas', methods=['GET'])
 @login_required
 def api_marcas():
@@ -1104,6 +1103,9 @@ def exportar_flota_pdf(flota):
         logger.error(f"Error en /exportar_flota_pdf: {e}")
         return f"❌ Error: {str(e)}", 500
 
+# ============================
+# DASHBOARD (CORREGIDO)
+# ============================
 @app.route('/dashboard')
 @login_required
 @role_required(['admin'])
@@ -1137,9 +1139,7 @@ def dashboard():
     gastos_labels = []
     
     try:
-        # Si el backend no envió gastos, obtenerlos
         if 'gastos_operativos' not in data or not data.get('gastos_operativos'):
-            # Definir fechas según el filtro
             hoy = datetime.now().date()
             if filtro == '7d':
                 fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
@@ -1157,7 +1157,6 @@ def dashboard():
                 fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
                 fecha_fin = hoy.strftime('%Y-%m-%d')
             
-            # Obtener gastos del backend
             resp_gastos = requests.get(
                 f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}",
                 timeout=10
@@ -1200,7 +1199,6 @@ def dashboard():
             })
         gastos_por_categoria.sort(key=lambda x: x['total'], reverse=True)
         
-        # Gastos diarios para gráfico
         gastos_dia = defaultdict(float)
         for g in gastos_operativos:
             fecha = g.get('fecha', '')
@@ -1217,39 +1215,36 @@ def dashboard():
     total_repuestos = data.get('total_repuestos', 0)
     total_mano_obra = data.get('total_mano_obra', 0)
     
-    # Si el backend no envió ganancia_real, calcularla
     if 'ganancia_real' not in data or data.get('ganancia_real') == 0:
         ganancia_real = total_facturado - total_repuestos - total_mano_obra - total_gastos
     else:
         ganancia_real = data.get('ganancia_real', 0)
     
-# ============================================
-# 4. CALCULAR TOTAL DIRECTA Y TRABAJO (CORREGIDO)
-# ============================================
-total_directa = 0
-total_trabajo = 0
-registros = data.get('registros', [])
-
-if registros:
-    for r in registros:
-        # ✅ CALCULAR VENTA DE REPUESTOS PARA CADA REGISTRO
-        total_repuestos = 0
-        detalles = r.get('detalles_repuestos', [])
-        if detalles and len(detalles) > 0:
-            for item in detalles:
-                cantidad = int(item.get('cantidad', 1) or 1)
-                precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
-                total_repuestos += cantidad * precio
-        else:
-            total_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
-        
-        # ✅ CLASIFICAR POR TIPO DE VENTA
-        es_directa = r.get('tipo_venta') == 'directa'
-        
-        if es_directa:
-            total_directa += total_repuestos  # ✅ VENTA DIRECTA
-        else:
-            total_trabajo += total_repuestos  # ✅ VENTA DE TRABAJO
+    # ============================================
+    # 4. CALCULAR TOTAL DIRECTA Y TRABAJO (CORREGIDO)
+    # ============================================
+    total_directa = 0
+    total_trabajo = 0
+    registros = data.get('registros', [])
+    
+    if registros:
+        for r in registros:
+            total_repuestos_reg = 0
+            detalles = r.get('detalles_repuestos', [])
+            if detalles and len(detalles) > 0:
+                for item in detalles:
+                    cantidad = int(item.get('cantidad', 1) or 1)
+                    precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+                    total_repuestos_reg += cantidad * precio
+            else:
+                total_repuestos_reg = float(r.get('costo_repuestos_real', 0) or 0)
+            
+            es_directa = r.get('tipo_venta') == 'directa'
+            
+            if es_directa:
+                total_directa += total_repuestos_reg
+            else:
+                total_trabajo += total_repuestos_reg
     
     # ============================================
     # 5. VALORES POR DEFECTO
@@ -1284,12 +1279,10 @@ if registros:
         "gastos_labels": gastos_labels
     }
     
-    # Actualizar con los datos del backend
     for key, value in default_data.items():
         if key not in data or data[key] is None:
             data[key] = value
     
-    # Asegurar que los gastos estén en data
     data['gastos_operativos'] = gastos_operativos
     data['total_gastos'] = total_gastos
     data['ganancia_real'] = ganancia_real
@@ -1299,7 +1292,6 @@ if registros:
     data['gastos_diarios'] = gastos_diarios
     data['gastos_labels'] = gastos_labels
     
-    # Log para depuración
     logger.info(f"📊 Dashboard - Gastos: {len(gastos_operativos)}, Total: ${total_gastos}")
     logger.info(f"📊 Dashboard - Ganancia Real: ${ganancia_real}")
     logger.info(f"📊 Dashboard - Directa: ${total_directa}, Trabajo: ${total_trabajo}")
@@ -1509,7 +1501,6 @@ def ver_logs():
 @login_required
 @role_required(['admin', 'operador'])
 def gastos():
-    # ✅ USAR MES ACTUAL (TODOS LOS GASTOS DEL MES)
     hoy = datetime.now(pytz.timezone('America/Santiago'))
     primer_dia_mes = hoy.replace(day=1).strftime('%Y-%m-%d')
     ultimo_dia_mes = hoy.strftime('%Y-%m-%d')
