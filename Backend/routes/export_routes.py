@@ -1,5 +1,5 @@
 # Backend/routes/export_routes.py
-from flask import Blueprint, request, jsonify, make_response, send_file
+from flask import Blueprint, request, jsonify, make_response
 from database import get_connection, get_cursor
 import logging
 from io import BytesIO
