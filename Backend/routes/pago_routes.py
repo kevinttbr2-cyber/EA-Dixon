@@ -1636,7 +1636,6 @@ def actualizar_repuesto(id_repuesto):
         stock = int(sanitizar_numero(data.get('stock', 0), min_val=0))
         categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
         
-        # ✅ OBTENER SUBCATEGORÍA_ID
         subcategoria_id = data.get('subcategoria_id')
         if subcategoria_id:
             subcategoria_id = int(subcategoria_id)
@@ -1645,13 +1644,11 @@ def actualizar_repuesto(id_repuesto):
             subcategoria_id = None
             logger.info(f"📂 Sin subcategoria_id")
         
-        # ✅ LOG DEL STOCK RECIBIDO
         logger.info(f"📦 Stock recibido: {stock}")
         
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
         
-        # Si no hay precio de venta, calcularlo
         if costo_venta_final == 0 and costo_proveedor > 0:
             iva = 1.19
             costo_con_iva = costo_proveedor * iva
@@ -1663,7 +1660,6 @@ def actualizar_repuesto(id_repuesto):
         conn = get_connection()
         cur = conn.cursor()
         
-        # ✅ INCLUIR stock Y subcategoria_id EN EL UPDATE
         cur.execute("""
             UPDATE repuestos 
             SET nombre = %s, 
@@ -1679,16 +1675,9 @@ def actualizar_repuesto(id_repuesto):
             WHERE id = %s
             RETURNING id
         """, (
-            nombre, 
-            costo_proveedor, 
-            margen_ganancia, 
-            proveedor, 
-            costo_venta_final, 
-            stock,  # ✅ STOCK SE GUARDA CORRECTAMENTE
-            categoria_nombre, 
-            subcategoria_id,
-            costo_proveedor_pendiente, 
-            id_repuesto
+            nombre, costo_proveedor, margen_ganancia, proveedor, 
+            costo_venta_final, stock, categoria_nombre, subcategoria_id,
+            costo_proveedor_pendiente, id_repuesto
         ))
         
         if cur.fetchone() is None:
@@ -1708,6 +1697,7 @@ def actualizar_repuesto(id_repuesto):
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+        
 # ============================
 # ELIMINAR REPUESTO
 # ============================
