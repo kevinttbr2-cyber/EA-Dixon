@@ -1761,7 +1761,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     // FORMULARIO EDITAR - CORREGIDO (GUARDA CATEGORÍAS)
     // ============================================
-   const formEditar = document.getElementById('formEditarRepuesto');
+   // Formulario editar - CORREGIDO (con subcategoria_id)
+const formEditar = document.getElementById('formEditarRepuesto');
 if (formEditar) {
     formEditar.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -1772,11 +1773,24 @@ if (formEditar) {
         const stock = parseInt(document.getElementById('editStockRepuesto')?.value || 0);
         const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
         const precioVenta = parseFloat(document.getElementById('editPrecioVenta')?.value || 0);
+        
+        // ✅ OBTENER EL ID DE LA CATEGORÍA SELECCIONADA
         const categoriaSelect = document.getElementById('editCategoriaRepuesto');
         const categoriaId = categoriaSelect?.value || '';
         
-        console.log('📤 Categoría seleccionada:', categoriaId);
+        console.log('📤 Categoría seleccionada en el submit:', categoriaId);
         
+        if (!nombre) {
+            alert('⚠️ El nombre del repuesto es obligatorio');
+            return;
+        }
+        
+        if (precioVenta <= 0) {
+            alert('⚠️ El precio de venta debe ser mayor a 0');
+            return;
+        }
+        
+        // ✅ CONSTRUIR DATOS CON LA CATEGORÍA
         const data = {
             nombre: nombre,
             costo_proveedor: costoProveedor,
@@ -1786,42 +1800,42 @@ if (formEditar) {
             costo_venta_final: precioVenta
         };
         
+        // ✅ SI HAY UNA CATEGORÍA SELECCIONADA, ENVIAR SU ID
         if (categoriaId && categoriaId !== '') {
             data.subcategoria_id = parseInt(categoriaId);
             console.log('📤 Enviando subcategoria_id:', data.subcategoria_id);
+        } else {
+            console.log('📤 Sin categoría seleccionada');
         }
         
-        console.log('📤 Datos completos:', data);
+        console.log('📤 Datos completos a enviar:', data);
+        
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = '⏳ Guardando...';
+        
+        fetch(`${API_URL}/api/repuestos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                alert('✅ Repuesto actualizado correctamente');
+                cerrarModalEditar();
+                location.reload();
+            } else {
+                alert('❌ Error: ' + (resp.error || 'Desconocido'));
             }
-            
-            console.log('📤 Enviando datos de edición:', data);
-            
-            const btn = this.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.textContent = '⏳ Guardando...';
-            
-            fetch(`${API_URL}/api/repuestos/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(r => r.json())
-            .then(resp => {
-                if (resp.success) {
-                    alert('✅ Repuesto actualizado correctamente');
-                    cerrarModalEditar();
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + (resp.error || 'Desconocido'));
-                }
-            })
-            .catch(() => alert('❌ Error de conexión'))
-            .finally(() => {
-                btn.disabled = false;
-                btn.textContent = '💾 Guardar cambios';
-            });
+        })
+        .catch(() => alert('❌ Error de conexión'))
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = '💾 Guardar cambios';
         });
-    }
+    });
+}
 
     // Editar botones - SELECCIÓN DE CATEGORÍA CORREGIDA
 document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
