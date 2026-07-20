@@ -159,7 +159,7 @@
 }
 
 /* ============================================
-   AUTOCOMPLETADO (marca y modelo)
+   AUTOCOMPLETADO (marca y modelo) - MEJORADO
    ============================================ */
 .autocomplete-wrapper {
     position: relative;
@@ -174,20 +174,27 @@
     background: var(--bg-secondary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
-    max-height: 180px;
+    max-height: 220px;
     overflow-y: auto;
     z-index: 9999;
     margin-top: 2px;
     box-shadow: var(--shadow-hover);
 }
 
+.autocomplete-wrapper .sugerencias.show {
+    display: block;
+}
+
 .autocomplete-wrapper .sugerencias .item {
-    padding: 8px 14px;
+    padding: 10px 14px;
     cursor: pointer;
     color: var(--text-primary);
     font-size: 14px;
     transition: var(--transition);
     border-bottom: 1px solid rgba(255,255,255,0.03);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .autocomplete-wrapper .sugerencias .item:hover {
@@ -195,12 +202,26 @@
     color: var(--accent-green);
 }
 
+.autocomplete-wrapper .sugerencias .item.active {
+    background: var(--bg-hover);
+    color: var(--accent-green);
+    border-left: 3px solid var(--accent-green);
+}
+
 .autocomplete-wrapper .sugerencias .item:last-child {
     border-bottom: none;
 }
 
+.autocomplete-wrapper .sugerencias .item .badge-cantidad {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 12px;
+}
+
 .autocomplete-wrapper .sugerencias .no-resultados {
-    padding: 12px 14px;
+    padding: 14px 16px;
     color: var(--text-muted);
     font-size: 13px;
     text-align: center;
@@ -214,6 +235,23 @@
 
 .autocomplete-wrapper .sugerencias .no-resultados .crear-link:hover {
     text-decoration: underline;
+}
+
+.autocomplete-wrapper .sugerencias .cargando {
+    padding: 14px 16px;
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+}
+
+.autocomplete-wrapper .sugerencias .cargando .spinner {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .autocomplete-wrapper .sugerencias::-webkit-scrollbar {
@@ -375,6 +413,9 @@
         align-items: stretch;
         gap: 6px;
     }
+    .autocomplete-wrapper .sugerencias {
+        max-height: 160px;
+    }
 }
 </style>
 
@@ -464,11 +505,11 @@
             <!-- Fecha + Año -->
             <div class="grid-2">
                 <div class="form-group">
-    <label>📅 Fecha</label>
-    <input type="text" name="fecha" class="form-control" value="{{ hoy_formateada }}" readonly style="background:rgba(255,255,255,0.03); color: var(--text-muted);">
-    <input type="hidden" name="fecha_iso" value="{{ hoy }}">
-    <small style="color: var(--text-muted); font-size: 10px;">📌 Fecha de Chile ({{ hoy_formateada }})</small>
-</div>
+                    <label>📅 Fecha</label>
+                    <input type="text" name="fecha" class="form-control" value="{{ hoy_formateada }}" readonly style="background:rgba(255,255,255,0.03); color: var(--text-muted);">
+                    <input type="hidden" name="fecha_iso" value="{{ hoy }}">
+                    <small style="color: var(--text-muted); font-size: 10px;">📌 Fecha de Chile ({{ hoy_formateada }})</small>
+                </div>
                 <div class="form-group">
                     <label>📆 Año <span class="opcional">(opcional)</span></label>
                     <input type="number" name="anio" class="form-control" placeholder="Ej: 2020" min="1900" max="2099">
@@ -477,33 +518,33 @@
         </div>
 
         <!-- ============================================
-             SECCIÓN 3: MARCA Y MODELO (CON BÚSQUEDA)
+             SECCIÓN 3: MARCA Y MODELO (CON CATÁLOGO)
              ============================================ -->
         <div class="section-card">
             <div class="section-title">
                 <span class="icon">🏷️</span> Marca y Modelo
             </div>
 
-            <!-- Marca (con autocompletado) -->
+            <!-- Marca (con catálogo desplegable) -->
             <div class="form-group">
                 <label>🏷️ Marca *</label>
                 <div class="autocomplete-wrapper">
-                    <input type="text" id="marcaInput" class="form-control" placeholder="Escribe la marca..." autocomplete="off">
+                    <input type="text" id="marcaInput" class="form-control" placeholder="Escribe o selecciona la marca..." autocomplete="off">
                     <input type="hidden" id="marcaHidden" name="marca" value="">
                     <div class="sugerencias" id="sugerenciasMarca"></div>
                 </div>
-                <small style="color: var(--text-muted); font-size: 11px;">Escribe las primeras letras y selecciona de la lista</small>
+                <small style="color: var(--text-muted); font-size: 11px;">💡 Haz clic para ver el catálogo o escribe para filtrar</small>
             </div>
 
-            <!-- Modelo (con autocompletado) -->
+            <!-- Modelo (con catálogo desplegable) -->
             <div class="form-group">
                 <label>📐 Modelo *</label>
                 <div class="autocomplete-wrapper">
-                    <input type="text" id="modeloInput" class="form-control" placeholder="Escribe el modelo..." autocomplete="off" disabled>
+                    <input type="text" id="modeloInput" class="form-control" placeholder="Escribe o selecciona el modelo..." autocomplete="off" disabled>
                     <input type="hidden" id="modeloHidden" name="modelo" value="">
                     <div class="sugerencias" id="sugerenciasModelo"></div>
                 </div>
-                <small style="color: var(--text-muted); font-size: 11px;">Primero selecciona una marca</small>
+                <small style="color: var(--text-muted); font-size: 11px;">💡 Haz clic para ver el catálogo o escribe para filtrar</small>
             </div>
 
             <!-- Kilometraje -->
@@ -553,7 +594,7 @@
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
 // ============================================
-// 1. AUTOCOMPLETADO DE MARCAS
+// 1. AUTOCOMPLETADO DE MARCAS (CON CATÁLOGO)
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const marcaInput = document.getElementById('marcaInput');
@@ -566,177 +607,318 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let marcas = [];
     let modelos = [];
+    let marcaSeleccionada = '';
+    let itemActivoMarca = -1;
+    let itemActivoModelo = -1;
     
-    // ✅ Cargar marcas desde el backend (usando la ruta proxy del frontend)
-    fetch('/api/marcas')
-        .then(r => {
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            return r.json();
-        })
-        .then(data => {
-            marcas = data;
-            console.log('✅ Marcas cargadas:', marcas.length);
-            if (marcas.length === 0) {
-                console.warn('⚠️ No se cargaron marcas. Verifica el backend.');
-            }
-        })
-        .catch(e => {
-            console.error('❌ Error cargando marcas:', e);
-            // Intentar con URL directa del backend como fallback
-            fetch(`${API_URL}/api/marcas`)
-                .then(r => r.json())
-                .then(data => {
-                    marcas = data;
-                    console.log('✅ Marcas cargadas (fallback):', marcas.length);
-                })
-                .catch(err => console.error('❌ Error fallback:', err));
-        });
-    
-    // Evento de búsqueda en marca
-    marcaInput.addEventListener('input', function() {
-        const texto = this.value.toLowerCase().trim();
+    // ============================================
+    // CARGAR MARCAS
+    // ============================================
+    function cargarMarcas() {
+        sugerenciasMarca.innerHTML = `<div class="cargando"><span class="spinner">⏳</span> Cargando marcas...</div>`;
+        sugerenciasMarca.classList.add('show');
         
-        if (texto.length < 2) {
-            sugerenciasMarca.style.display = 'none';
+        fetch('/api/marcas')
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
+            .then(data => {
+                marcas = data.sort();
+                console.log('✅ Marcas cargadas:', marcas.length);
+                mostrarSugerenciasMarca(marcas);
+            })
+            .catch(e => {
+                console.error('❌ Error cargando marcas:', e);
+                // Fallback directo al backend
+                fetch(`${API_URL}/api/marcas`)
+                    .then(r => r.json())
+                    .then(data => {
+                        marcas = data.sort();
+                        console.log('✅ Marcas cargadas (fallback):', marcas.length);
+                        mostrarSugerenciasMarca(marcas);
+                    })
+                    .catch(err => {
+                        sugerenciasMarca.innerHTML = `<div class="no-resultados">❌ Error al cargar marcas</div>`;
+                    });
+            });
+    }
+    
+    function mostrarSugerenciasMarca(lista) {
+        if (!lista || lista.length === 0) {
+            sugerenciasMarca.innerHTML = `<div class="no-resultados">No hay marcas disponibles</div>`;
+            sugerenciasMarca.classList.add('show');
             return;
         }
         
-        const filtradas = marcas.filter(m => m.toLowerCase().includes(texto));
+        const texto = marcaInput.value.toLowerCase().trim();
+        const filtradas = texto ? lista.filter(m => m.toLowerCase().includes(texto)) : lista;
         
         if (filtradas.length === 0) {
             sugerenciasMarca.innerHTML = `
                 <div class="no-resultados">
-                    No hay resultados. 
+                    No hay resultados para "<strong>${texto}</strong>". 
                     <span class="crear-link" onclick="crearMarcaManual()">Crear "${texto}"</span>
                 </div>
             `;
-            sugerenciasMarca.style.display = 'block';
+            sugerenciasMarca.classList.add('show');
             return;
         }
         
-        sugerenciasMarca.innerHTML = filtradas.slice(0, 15).map(m => `
-            <div class="item" onclick="seleccionarMarca('${m.replace(/'/g, "\\'")}')">${m}</div>
+        sugerenciasMarca.innerHTML = filtradas.map((m, index) => `
+            <div class="item ${index === itemActivoMarca ? 'active' : ''}" 
+                 data-index="${index}"
+                 onclick="seleccionarMarca('${m.replace(/'/g, "\\'")}')">
+                <span>${m}</span>
+                <span class="badge-cantidad">${m.length} caracteres</span>
+            </div>
         `).join('');
-        sugerenciasMarca.style.display = 'block';
-    });
+        sugerenciasMarca.classList.add('show');
+    }
     
-    // Cerrar sugerencias al hacer clic fuera
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.autocomplete-wrapper')) {
-            sugerenciasMarca.style.display = 'none';
-            sugerenciasModelo.style.display = 'none';
+    // ============================================
+    // EVENTOS DE MARCA
+    // ============================================
+    // Al hacer clic en el input, mostrar catálogo
+    marcaInput.addEventListener('click', function() {
+        if (marcas.length === 0) {
+            cargarMarcas();
+        } else {
+            mostrarSugerenciasMarca(marcas);
         }
     });
     
+    // Al escribir, filtrar
+    marcaInput.addEventListener('input', function() {
+        itemActivoMarca = -1;
+        if (marcas.length === 0) {
+            cargarMarcas();
+        } else {
+            mostrarSugerenciasMarca(marcas);
+        }
+    });
+    
+    // Al perder foco, cerrar sugerencias (con delay para permitir clicks)
+    marcaInput.addEventListener('blur', function() {
+        setTimeout(() => {
+            sugerenciasMarca.classList.remove('show');
+        }, 200);
+    });
+    
     // ============================================
-    // 2. SELECCIONAR MARCA
+    // SELECCIONAR MARCA
     // ============================================
     window.seleccionarMarca = function(marca) {
         marcaInput.value = marca;
         marcaHidden.value = marca;
-        sugerenciasMarca.style.display = 'none';
+        marcaSeleccionada = marca;
+        sugerenciasMarca.classList.remove('show');
+        itemActivoMarca = -1;
         
         // Habilitar modelo y cargar modelos
         modeloInput.disabled = false;
-        modeloInput.placeholder = 'Cargando modelos...';
         modeloInput.value = '';
         modeloHidden.value = '';
+        modeloInput.placeholder = 'Cargando modelos...';
         
-        // ✅ Usar la ruta proxy del frontend
+        cargarModelos(marca);
+    };
+    
+    // ============================================
+    // CARGAR MODELOS
+    // ============================================
+    function cargarModelos(marca) {
+        sugerenciasModelo.innerHTML = `<div class="cargando"><span class="spinner">⏳</span> Cargando modelos...</div>`;
+        sugerenciasModelo.classList.add('show');
+        
         fetch(`/api/modelos/${encodeURIComponent(marca)}`)
             .then(r => {
                 if (!r.ok) throw new Error(`HTTP ${r.status}`);
                 return r.json();
             })
             .then(data => {
-                modelos = data;
-                modeloInput.placeholder = 'Escribe el modelo...';
-                modeloInput.disabled = false;
+                modelos = data.sort();
                 console.log(`✅ Modelos de "${marca}":`, modelos.length);
+                mostrarSugerenciasModelo(modelos);
+                modeloInput.placeholder = 'Escribe o selecciona el modelo...';
             })
             .catch(e => {
                 console.error('Error cargando modelos:', e);
-                // Fallback directo al backend
                 fetch(`${API_URL}/api/modelos/${encodeURIComponent(marca)}`)
                     .then(r => r.json())
                     .then(data => {
-                        modelos = data;
-                        modeloInput.placeholder = 'Escribe el modelo...';
-                        modeloInput.disabled = false;
+                        modelos = data.sort();
+                        mostrarSugerenciasModelo(modelos);
+                        modeloInput.placeholder = 'Escribe o selecciona el modelo...';
                     })
                     .catch(err => {
+                        sugerenciasModelo.innerHTML = `<div class="no-resultados">❌ Error al cargar modelos</div>`;
                         modeloInput.placeholder = 'Error al cargar modelos';
-                        modeloInput.disabled = false;
                     });
             });
+    }
+    
+    function mostrarSugerenciasModelo(lista) {
+        if (!lista || lista.length === 0) {
+            sugerenciasModelo.innerHTML = `<div class="no-resultados">No hay modelos disponibles para "${marcaSeleccionada}"</div>`;
+            sugerenciasModelo.classList.add('show');
+            return;
+        }
+        
+        const texto = modeloInput.value.toLowerCase().trim();
+        const filtradas = texto ? lista.filter(m => m.toLowerCase().includes(texto)) : lista;
+        
+        if (filtradas.length === 0) {
+            sugerenciasModelo.innerHTML = `
+                <div class="no-resultados">
+                    No hay resultados para "<strong>${texto}</strong>". 
+                    <span class="crear-link" onclick="crearModeloManual()">Crear "${texto}"</span>
+                </div>
+            `;
+            sugerenciasModelo.classList.add('show');
+            return;
+        }
+        
+        sugerenciasModelo.innerHTML = filtradas.map((m, index) => `
+            <div class="item ${index === itemActivoModelo ? 'active' : ''}" 
+                 data-index="${index}"
+                 onclick="seleccionarModelo('${m.replace(/'/g, "\\'")}')">
+                <span>${m}</span>
+                <span class="badge-cantidad">${m.length} caracteres</span>
+            </div>
+        `).join('');
+        sugerenciasModelo.classList.add('show');
+    }
+    
+    // ============================================
+    // EVENTOS DE MODELO
+    // ============================================
+    modeloInput.addEventListener('click', function() {
+        if (modelos.length > 0) {
+            mostrarSugerenciasModelo(modelos);
+        } else if (marcaSeleccionada) {
+            cargarModelos(marcaSeleccionada);
+        }
+    });
+    
+    modeloInput.addEventListener('input', function() {
+        itemActivoModelo = -1;
+        if (modelos.length > 0) {
+            mostrarSugerenciasModelo(modelos);
+        }
+    });
+    
+    modeloInput.addEventListener('blur', function() {
+        setTimeout(() => {
+            sugerenciasModelo.classList.remove('show');
+        }, 200);
+    });
+    
+    // ============================================
+    // SELECCIONAR MODELO
+    // ============================================
+    window.seleccionarModelo = function(modelo) {
+        modeloInput.value = modelo;
+        modeloHidden.value = modelo;
+        sugerenciasModelo.classList.remove('show');
+        itemActivoModelo = -1;
     };
     
     // ============================================
-    // 3. CREAR MARCA MANUAL
+    // CREAR MARCA MANUAL
     // ============================================
     window.crearMarcaManual = function() {
         const texto = marcaInput.value.trim();
         if (!texto) return;
         
         if (confirm(`¿Crear la marca "${texto}"?`)) {
+            marcas.push(texto);
+            marcas.sort();
             seleccionarMarca(texto);
         }
     };
     
     // ============================================
-    // 4. AUTOCOMPLETADO DE MODELOS
-    // ============================================
-    modeloInput.addEventListener('input', function() {
-        const texto = this.value.toLowerCase().trim();
-        
-        if (texto.length < 2 || !marcaHidden.value) {
-            sugerenciasModelo.style.display = 'none';
-            return;
-        }
-        
-        const filtrados = modelos.filter(m => m.toLowerCase().includes(texto));
-        
-        if (filtrados.length === 0) {
-            sugerenciasModelo.innerHTML = `
-                <div class="no-resultados">
-                    No hay resultados. 
-                    <span class="crear-link" onclick="crearModeloManual()">Crear "${texto}"</span>
-                </div>
-            `;
-            sugerenciasModelo.style.display = 'block';
-            return;
-        }
-        
-        sugerenciasModelo.innerHTML = filtrados.slice(0, 15).map(m => `
-            <div class="item" onclick="seleccionarModelo('${m.replace(/'/g, "\\'")}')">${m}</div>
-        `).join('');
-        sugerenciasModelo.style.display = 'block';
-    });
-    
-    // ============================================
-    // 5. SELECCIONAR MODELO
-    // ============================================
-    window.seleccionarModelo = function(modelo) {
-        modeloInput.value = modelo;
-        modeloHidden.value = modelo;
-        sugerenciasModelo.style.display = 'none';
-    };
-    
-    // ============================================
-    // 6. CREAR MODELO MANUAL
+    // CREAR MODELO MANUAL
     // ============================================
     window.crearModeloManual = function() {
         const texto = modeloInput.value.trim();
         if (!texto) return;
         
-        if (confirm(`¿Crear el modelo "${texto}" para la marca "${marcaHidden.value}"?`)) {
-            seleccionarModelo(texto);
+        if (confirm(`¿Crear el modelo "${texto}" para la marca "${marcaSeleccionada}"?`)) {
             modelos.push(texto);
+            modelos.sort();
+            seleccionarModelo(texto);
         }
     };
     
     // ============================================
-    // 7. FLOTA
+    // NAVEGACIÓN CON TECLADO (FLECHAS + ENTER)
+    // ============================================
+    marcaInput.addEventListener('keydown', function(e) {
+        const items = sugerenciasMarca.querySelectorAll('.item');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            itemActivoMarca = Math.min(itemActivoMarca + 1, items.length - 1);
+            items.forEach((el, i) => {
+                el.classList.toggle('active', i === itemActivoMarca);
+                if (i === itemActivoMarca) el.scrollIntoView({ block: 'nearest' });
+            });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            itemActivoMarca = Math.max(itemActivoMarca - 1, 0);
+            items.forEach((el, i) => {
+                el.classList.toggle('active', i === itemActivoMarca);
+                if (i === itemActivoMarca) el.scrollIntoView({ block: 'nearest' });
+            });
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (itemActivoMarca >= 0 && items[itemActivoMarca]) {
+                items[itemActivoMarca].click();
+            }
+        } else if (e.key === 'Escape') {
+            sugerenciasMarca.classList.remove('show');
+        }
+    });
+    
+    modeloInput.addEventListener('keydown', function(e) {
+        const items = sugerenciasModelo.querySelectorAll('.item');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            itemActivoModelo = Math.min(itemActivoModelo + 1, items.length - 1);
+            items.forEach((el, i) => {
+                el.classList.toggle('active', i === itemActivoModelo);
+                if (i === itemActivoModelo) el.scrollIntoView({ block: 'nearest' });
+            });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            itemActivoModelo = Math.max(itemActivoModelo - 1, 0);
+            items.forEach((el, i) => {
+                el.classList.toggle('active', i === itemActivoModelo);
+                if (i === itemActivoModelo) el.scrollIntoView({ block: 'nearest' });
+            });
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (itemActivoModelo >= 0 && items[itemActivoModelo]) {
+                items[itemActivoModelo].click();
+            }
+        } else if (e.key === 'Escape') {
+            sugerenciasModelo.classList.remove('show');
+        }
+    });
+    
+    // Cerrar sugerencias al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.autocomplete-wrapper')) {
+            sugerenciasMarca.classList.remove('show');
+            sugerenciasModelo.classList.remove('show');
+        }
+    });
+    
+    // ============================================
+    // FLOTA
     // ============================================
     const flotaSelect = document.getElementById('flotaSelect');
     const flotaNuevaInput = document.getElementById('flotaNuevaInput');
@@ -780,7 +962,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ============================================
-    // 8. ENVÍO DEL FORMULARIO
+    // ENVÍO DEL FORMULARIO
     // ============================================
     const form = document.getElementById('formAgregar');
     const submitBtn = document.getElementById('btnGuardarCliente');
@@ -851,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 9. BUSCAR ESTADO DEL CLIENTE
+// BUSCAR ESTADO DEL CLIENTE
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const inputNombre = document.querySelector('input[name="nombre"]');
@@ -987,31 +1169,6 @@ function verHistorialCliente() {
                 '<div style="color:#ff6b6b;text-align:center;padding:20px;">❌ Error al cargar historial</div>';
         });
 }
-
-// ============================================
-// 10. KEYBOARD: Enter para seleccionar primera sugerencia
-// ============================================
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        const active = document.activeElement;
-        
-        if (active.id === 'marcaInput') {
-            const sugerencias = document.querySelectorAll('#sugerenciasMarca .item');
-            if (sugerencias.length > 0) {
-                e.preventDefault();
-                sugerencias[0].click();
-            }
-        }
-        
-        if (active.id === 'modeloInput') {
-            const sugerencias = document.querySelectorAll('#sugerenciasModelo .item');
-            if (sugerencias.length > 0) {
-                e.preventDefault();
-                sugerencias[0].click();
-            }
-        }
-    }
-});
 </script>
 
 {% endblock %}
