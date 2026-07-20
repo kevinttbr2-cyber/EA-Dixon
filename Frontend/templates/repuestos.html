@@ -1762,10 +1762,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // FORMULARIO EDITAR - CORREGIDO (GUARDA CATEGORÍAS)
     // ============================================
    // Formulario editar - CORREGIDO (con subcategoria_id)
+// Formulario editar - CON LOGS
 const formEditar = document.getElementById('formEditarRepuesto');
 if (formEditar) {
     formEditar.addEventListener('submit', function(e) {
         e.preventDefault();
+        
+        // ✅ OBTENER VALORES
         const id = document.getElementById('editRepuestoId')?.value;
         const nombre = document.getElementById('editNombreRepuesto')?.value.trim() || '';
         const costoProveedor = parseFloat(document.getElementById('editCostoProveedor')?.value || 0);
@@ -1773,12 +1776,17 @@ if (formEditar) {
         const stock = parseInt(document.getElementById('editStockRepuesto')?.value || 0);
         const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
         const precioVenta = parseFloat(document.getElementById('editPrecioVenta')?.value || 0);
-        
-        // ✅ OBTENER EL ID DE LA CATEGORÍA SELECCIONADA
         const categoriaSelect = document.getElementById('editCategoriaRepuesto');
         const categoriaId = categoriaSelect?.value || '';
         
-        console.log('📤 Categoría seleccionada en el submit:', categoriaId);
+        // ✅ MOSTRAR LOGS
+        console.log('📤 EDITAR REPUESTO - Datos:');
+        console.log('  ID:', id);
+        console.log('  Nombre:', nombre);
+        console.log('  Costo:', costoProveedor);
+        console.log('  Precio:', precioVenta);
+        console.log('  Categoría ID:', categoriaId);
+        console.log('  Categoría texto:', categoriaSelect?.options[categoriaSelect.selectedIndex]?.text);
         
         if (!nombre) {
             alert('⚠️ El nombre del repuesto es obligatorio');
