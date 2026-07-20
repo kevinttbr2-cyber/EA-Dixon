@@ -1021,7 +1021,6 @@ def obtener_dashboard_data(fecha_desde):
     except Exception as e:
         logger.error(f"Error obtener dashboard data: {e}")
         return None
-# 1. Balance de ganancia (get_balance)
 # Backend/routes/pago_routes.py
 
 @pago_bp.route('/balance', methods=['GET'])
@@ -1064,7 +1063,7 @@ def get_balance():
         ganancia_neta = total_pagado - (total_repuestos + total_mano_obra + total_diagnostico)
         
         # ============================================
-        # 2. OBTENER GASTOS OPERATIVOS (NUEVO)
+        # 2. OBTENER GASTOS OPERATIVOS (CORREGIDO)
         # ============================================
         # Definir fechas según el filtro
         if filtro == 'hoy':
