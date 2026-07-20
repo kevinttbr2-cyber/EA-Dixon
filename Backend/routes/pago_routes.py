@@ -1633,41 +1633,49 @@ def crear_repuesto():
         return jsonify({"error": str(e)}), 500
 
 # ============================
-# ACTUALIZAR REPUESTO (CON LOGS Y STOCK CORREGIDO)
+# ACTUALIZAR REPUESTO (VERSIÓN CORREGIDA)
 # ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
     try:
         data = request.json
         logger.info(f"📥 ACTUALIZAR REPUESTO ID {id_repuesto}")
-        logger.info(f"📥 Datos recibidos: {json.dumps(data, indent=2)}")
+        logger.info(f"📥 Datos recibidos: {data}")
         
-        # 🔥 LOG ESPECÍFICO PARA STOCK Y CATEGORÍA
-        stock_raw = data.get('stock', 0)
-        logger.info(f"📦 Stock recibido: {stock_raw} (tipo: {type(stock_raw)})")
-        logger.info(f"📂 Categoría recibida: {data.get('categoria_nombre', 'NO ENVIADA')}")
-        
+        # Obtener y sanitizar todos los campos
         nombre = sanitizar_input(data.get('nombre', '').strip())
         costo_proveedor = sanitizar_numero(data.get('costo_proveedor', 0), min_val=0)
         margen_ganancia = sanitizar_numero(data.get('margen_ganancia', 30), min_val=0)
         proveedor = sanitizar_input(data.get('proveedor', '').strip())
         costo_venta_final = sanitizar_numero(data.get('costo_venta_final', 0), min_val=0)
-        stock = int(sanitizar_numero(data.get('stock', 0), min_val=0))
-        categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
         
+        # 🔥 STOCK - Conversión segura a entero
+        stock_raw = data.get('stock', 0)
+        try:
+            stock = int(stock_raw) if stock_raw is not None else 0
+        except (ValueError, TypeError):
+            stock = 0
+        if stock < 0:
+            stock = 0
+        logger.info(f"📦 Stock procesado: {stock} (original: {stock_raw})")
+        
+        # 🔥 CATEGORÍA - Obtener nombre y subcategoria_id
+        categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
         subcategoria_id = data.get('subcategoria_id')
         if subcategoria_id:
-            subcategoria_id = int(subcategoria_id)
-            logger.info(f"📂 subcategoria_id recibido: {subcategoria_id}")
-        else:
-            subcategoria_id = None
-            logger.info(f"📂 Sin subcategoria_id")
+            try:
+                subcategoria_id = int(subcategoria_id)
+            except (ValueError, TypeError):
+                subcategoria_id = None
         
-        logger.info(f"📦 Stock recibido: {stock}")
+        logger.info(f"📂 Categoría: '{categoria_nombre}'")
+        logger.info(f"📂 Subcategoria ID: {subcategoria_id}")
         
+        # Validaciones
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
         
+        # Calcular precio si es necesario
         if costo_venta_final == 0 and costo_proveedor > 0:
             iva = 1.19
             costo_con_iva = costo_proveedor * iva
@@ -1679,6 +1687,18 @@ def actualizar_repuesto(id_repuesto):
         conn = get_connection()
         cur = conn.cursor()
         
+        # 🔥 VERIFICAR REPUESTO EXISTENTE
+        cur.execute("SELECT id, nombre, stock FROM repuestos WHERE id = %s", (id_repuesto,))
+        existente = cur.fetchone()
+        if not existente:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Repuesto no encontrado"}), 404
+        
+        logger.info(f"📦 Repuesto existente: {existente[1]} - Stock actual: {existente[2]}")
+        logger.info(f"📦 Nuevo stock a guardar: {stock}")
+        
+        # 🔥 ACTUALIZAR REPUESTO
         cur.execute("""
             UPDATE repuestos 
             SET nombre = %s, 
@@ -1692,24 +1712,34 @@ def actualizar_repuesto(id_repuesto):
                 costo_proveedor_pendiente = %s,
                 updated_at = NOW() AT TIME ZONE 'America/Santiago'
             WHERE id = %s
-            RETURNING id
+            RETURNING id, stock, categoria_nombre
         """, (
-            nombre, costo_proveedor, margen_ganancia, proveedor, 
-            costo_venta_final, stock, categoria_nombre, subcategoria_id,
-            costo_proveedor_pendiente, id_repuesto
+            nombre, 
+            costo_proveedor, 
+            margen_ganancia, 
+            proveedor, 
+            costo_venta_final, 
+            stock,  # 🔥 Asegurar que es un entero
+            categoria_nombre, 
+            subcategoria_id,
+            costo_proveedor_pendiente, 
+            id_repuesto
         ))
         
-        if cur.fetchone() is None:
-            cur.close()
-            conn.close()
-            return jsonify({"error": "Repuesto no encontrado"}), 404
-        
+        result = cur.fetchone()
         conn.commit()
         cur.close()
         conn.close()
         
-        logger.info(f"✅ Repuesto actualizado: {nombre} (ID: {id_repuesto}) - Stock: {stock} - subcategoria_id: {subcategoria_id}")
-        return jsonify({"success": True})
+        if not result:
+            return jsonify({"error": "Repuesto no encontrado"}), 404
+        
+        logger.info(f"✅ Repuesto actualizado: {nombre} (ID: {id_repuesto}) - Stock: {stock} - Categoría: '{categoria_nombre}'")
+        return jsonify({
+            "success": True, 
+            "stock_guardado": stock,
+            "categoria_guardada": categoria_nombre
+        })
         
     except Exception as e:
         logger.error(f"Error en actualizar_repuesto: {e}")
