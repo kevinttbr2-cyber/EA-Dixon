@@ -779,7 +779,7 @@ def balance():
     hoy = datetime.now().date()
     
     # ============================================
-    # 1. OBTENER VENTAS
+    # 1. OBTENER VENTAS DESDE EL BACKEND
     # ============================================
     try:
         resp = requests.get(f"{BACKEND_URL}/api/balance?filtro={filtro}", timeout=10)
@@ -798,7 +798,7 @@ def balance():
         registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     
     # ============================================
-    # 2. OBTENER GASTOS POR SEPARADO
+    # 2. OBTENER GASTOS POR SEPARADO (DESDE gastos_balance)
     # ============================================
     gastos_operativos = []
     total_gastos = 0
@@ -821,8 +821,7 @@ def balance():
             fecha_inicio = hoy.strftime('%Y-%m-%d')
             fecha_fin = hoy.strftime('%Y-%m-%d')
         
-        logger.info(f"📊 Balance - Buscando gastos entre {fecha_inicio} y {fecha_fin}")
-        
+        # Llamar a gastos_balance
         resp_gastos = requests.get(
             f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}",
             timeout=10
@@ -841,9 +840,12 @@ def balance():
         total_gastos = 0
     
     # ============================================
-    # 3. CALCULAR GANANCIA REAL
+    # 3. CALCULAR GANANCIA REAL (SIN DIAGNÓSTICO)
     # ============================================
+    # Fórmula: Ganancia Real = Ingresos - Repuestos - Mano de Obra - Gastos Operativos
     ganancia_real = total_pagado - total_repuestos - total_mano_obra - total_gastos
+    
+    logger.info(f"📊 Balance final: Ingresos=${total_pagado}, Repuestos=${total_repuestos}, MO=${total_mano_obra}, Gastos=${total_gastos}, Ganancia=${ganancia_real}")
     
     # ============================================
     # 4. FILTROS PARA LA VISTA
