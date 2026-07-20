@@ -14,7 +14,7 @@ from logging.handlers import RotatingFileHandler
 import sys
 import re
 import json
-
+import pytz
 # ============================
 # CONFIGURACIÓN DE LA APP
 # ============================
@@ -94,6 +94,21 @@ time.tzset()
 
 app.jinja_env.filters['strftime'] = lambda date, fmt: date.strftime(fmt) if date else ''
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
+
+def get_fecha_chile():
+    """Retorna fecha actual en zona horaria Chile"""
+    tz = pytz.timezone('America/Santiago')
+    return datetime.now(tz).date()
+
+def get_fecha_chile_str():
+    """Retorna fecha actual en zona horaria Chile como string YYYY-MM-DD"""
+    tz = pytz.timezone('America/Santiago')
+    return datetime.now(tz).strftime('%Y-%m-%d')
+def get_mes_anio_chile():
+    """Retorna mes y año actual en zona horaria Chile"""
+    tz = pytz.timezone('America/Santiago')
+    ahora = datetime.now(tz)
+    return ahora.month, ahora.year
 
 # ============================
 # FUNCIÓN CENTRALIZADA PARA ENVIAR NOTIFICACIONES (NUEVO)
@@ -1409,13 +1424,15 @@ def ver_logs():
     except Exception as e:
         logger.error(f"Error al leer logs: {str(e)}")
         return render_template("ver_logs.html", logs=f"Error al leer logs: {str(e)}")
+        
 @app.route('/gastos')
 @login_required
 @role_required(['admin', 'operador'])
 def gastos():
-    hoy = datetime.now().strftime('%Y-%m-%d')
-    mes_actual = datetime.now().month
-    anio_actual = datetime.now().year
+    # ✅ USAR FECHA DE CHILE
+    hoy = get_fecha_chile_str()
+    mes_actual = datetime.now(pytz.timezone('America/Santiago')).month
+    anio_actual = datetime.now(pytz.timezone('America/Santiago')).year
     
     try:
         resp = requests.get(f"{BACKEND_URL}/api/gastos?fecha={hoy}", timeout=10)
