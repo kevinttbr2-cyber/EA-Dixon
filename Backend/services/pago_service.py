@@ -85,10 +85,9 @@ class PagoService:
     def obtener_flotas():
         return PagoRepository.obtener_flotas()
     
-    @staticmethod
-    def obtener_pagados_por_filtro(filtro, fecha):
-        """Obtiene pagos pagados según filtro"""
-        return PagoRepository.obtener_pagados_por_filtro(filtro, fecha)
+    # ============================================
+    # 🆕 NUEVAS FUNCIONES AGREGADAS
+    # ============================================
     
     @staticmethod
     def obtener_flotas_pendientes():
@@ -96,6 +95,16 @@ class PagoService:
         return PagoRepository.obtener_flotas_pendientes()
     
     @staticmethod
+    def obtener_pagados_por_filtro(filtro, fecha):
+        """Obtiene pagos pagados según filtro"""
+        return PagoRepository.obtener_pagados_por_filtro(filtro, fecha)
+    
+    @staticmethod
     def verificar_duplicado(nombre, patente):
         """Verifica si existe un duplicado"""
         return PagoRepository.verificar_duplicado(nombre, patente)
+    
+    @staticmethod
+    def obtener_balance_ventas(filtro, fecha):
+        """Obtiene datos para el balance de ventas"""
+        return PagoRepository.obtener_balance_ventas(filtro, fecha)
