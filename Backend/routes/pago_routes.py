@@ -1619,10 +1619,7 @@ def crear_repuesto():
         return jsonify({"error": str(e)}), 500
 
 # ============================
-# ACTUALIZAR REPUESTO (CON SUBCATEGORÍA)
-# ============================
-# ============================
-# ACTUALIZAR REPUESTO (CON LOGS)
+# ACTUALIZAR REPUESTO (CON LOGS Y STOCK CORREGIDO)
 # ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
@@ -1648,6 +1645,9 @@ def actualizar_repuesto(id_repuesto):
             subcategoria_id = None
             logger.info(f"📂 Sin subcategoria_id")
         
+        # ✅ LOG DEL STOCK RECIBIDO
+        logger.info(f"📦 Stock recibido: {stock}")
+        
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
         
@@ -1663,7 +1663,7 @@ def actualizar_repuesto(id_repuesto):
         conn = get_connection()
         cur = conn.cursor()
         
-        # ✅ INCLUIR subcategoria_id EN EL UPDATE
+        # ✅ INCLUIR stock Y subcategoria_id EN EL UPDATE
         cur.execute("""
             UPDATE repuestos 
             SET nombre = %s, 
@@ -1679,9 +1679,16 @@ def actualizar_repuesto(id_repuesto):
             WHERE id = %s
             RETURNING id
         """, (
-            nombre, costo_proveedor, margen_ganancia, proveedor, 
-            costo_venta_final, stock, categoria_nombre, subcategoria_id,
-            costo_proveedor_pendiente, id_repuesto
+            nombre, 
+            costo_proveedor, 
+            margen_ganancia, 
+            proveedor, 
+            costo_venta_final, 
+            stock,  # ✅ STOCK SE GUARDA CORRECTAMENTE
+            categoria_nombre, 
+            subcategoria_id,
+            costo_proveedor_pendiente, 
+            id_repuesto
         ))
         
         if cur.fetchone() is None:
@@ -1693,7 +1700,7 @@ def actualizar_repuesto(id_repuesto):
         cur.close()
         conn.close()
         
-        logger.info(f"✅ Repuesto actualizado: {nombre} (ID: {id_repuesto}) - subcategoria_id: {subcategoria_id}")
+        logger.info(f"✅ Repuesto actualizado: {nombre} (ID: {id_repuesto}) - Stock: {stock} - subcategoria_id: {subcategoria_id}")
         return jsonify({"success": True})
         
     except Exception as e:
