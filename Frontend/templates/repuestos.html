@@ -1860,21 +1860,17 @@ if (formEditar) {
     });
 }
 // ============================================
+// // ============================================
 // BOTONES EDITAR - CORREGIDO
 // ============================================
 document.addEventListener('click', function(e) {
-    // Buscar si el click fue en un botón editar o en su interior
     const boton = e.target.closest('.btn-editar-repuesto');
     if (!boton) return;
     
-    // Prevenir comportamiento por defecto
     e.preventDefault();
     e.stopPropagation();
     
     const id = boton.dataset.id;
-    console.log('📝 Editando repuesto ID:', id);
-    
-    // Buscar la fila correspondiente
     const fila = document.querySelector(`.fila-repuesto-lista[data-id="${id}"]`);
     if (!fila) {
         console.error('❌ Fila no encontrada para ID:', id);
@@ -1882,27 +1878,35 @@ document.addEventListener('click', function(e) {
         return;
     }
     
-    // Obtener datos de la fila
+    // 🔥 OBTENER DATOS DE LA FILA - COLUMNAS EXACTAS
     const nombre = fila.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+    
+    // 🔥 IMPORTANTE: Stock está en la columna 3 (tercera columna)
     const stockText = fila.querySelector('td:nth-child(3)')?.textContent.trim() || '0';
     const stock = parseInt(stockText) || 0;
+    
     const costoText = fila.querySelector('td:nth-child(4)')?.textContent.replace(/[$,⚠️]/g, '').trim() || '0';
     const costo = parseFloat(costoText) || 0;
+    
     const margenText = fila.querySelector('td:nth-child(5)')?.textContent.replace('%', '').trim() || '0';
     const margen = parseFloat(margenText) || 0;
+    
     const proveedor = fila.querySelector('td:nth-child(7)')?.textContent.trim() || '';
     const categoriaText = fila.querySelector('td:nth-child(8)')?.textContent.trim() || '';
+    
     const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
     const precioVenta = parseFloat(precioText) || 0;
     
+    // 🔥 LOG PARA VERIFICAR
     console.log('📊 DATOS DE LA FILA:');
     console.log('  ID:', id);
     console.log('  Nombre:', nombre);
-    console.log('  Stock:', stock);
+    console.log('  Stock (de la tabla):', stock);
+    console.log('  Stock Texto:', stockText);
     console.log('  Categoría:', categoriaText);
     console.log('  Precio:', precioVenta);
     
-    // Asignar valores al modal
+    // 🔥 ASIGNAR VALORES AL MODAL - STOCK DEBE SER EL DE LA TABLA
     const editId = document.getElementById('editRepuestoId');
     const editNombre = document.getElementById('editNombreRepuesto');
     const editCosto = document.getElementById('editCostoProveedor');
@@ -1910,15 +1914,19 @@ document.addEventListener('click', function(e) {
     const editProveedor = document.getElementById('editProveedorRepuesto');
     const editStock = document.getElementById('editStockRepuesto');
     const editPrecio = document.getElementById('editPrecioVenta');
-    const editGananciaLabel = document.getElementById('editGananciaLabel');
-    const editMargenLabel = document.getElementById('editMargenCalculadoLabel');
     
     if (editId) editId.value = id;
     if (editNombre) editNombre.value = nombre;
     if (editCosto) editCosto.value = costo;
     if (editMargen) editMargen.value = margen;
     if (editProveedor) editProveedor.value = proveedor === '-' ? '' : proveedor;
-    if (editStock) editStock.value = stock;
+    
+    // 🔥 FORZAR EL STOCK CORRECTO - DEBE SER EL VALOR DE LA TABLA
+    if (editStock) {
+        editStock.value = stock;
+        console.log('✅ Stock asignado al input:', editStock.value);
+    }
+    
     if (editPrecio) editPrecio.value = precioVenta;
     
     // Calcular ganancia
