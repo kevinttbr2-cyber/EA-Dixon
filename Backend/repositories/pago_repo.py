@@ -148,16 +148,39 @@ class PagoRepository:
             logger.error(f"Error obtener flotas: {e}")
             return []
     
+    # ============================================
+    # 🆕 NUEVAS FUNCIONES AGREGADAS
+    # ============================================
+    
+    @staticmethod
+    def obtener_flotas_pendientes():
+        """Obtiene flotas pendientes de pago"""
+        try:
+            conn, cur = get_cursor()
+            cur.execute("""
+                SELECT * FROM pagos 
+                WHERE estado = 'pagado' 
+                AND estado_pago = 'pendiente'
+                AND flota IS NOT NULL 
+                AND flota != ''
+                ORDER BY flota, fecha DESC
+            """)
+            rows = cur.fetchall()
+            cur.close()
+            conn.close()
+            return [dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"Error obtener flotas pendientes: {e}")
+            return []
+    
     @staticmethod
     def obtener_pagados_por_filtro(filtro, fecha):
-        """Obtiene pagos pagados según filtro (SEGURO)"""
+        """Obtiene pagos pagados según filtro"""
         try:
-            # Validar filtro
             if not validar_filtro(filtro):
                 filtro = 'todos'
             
             conn, cur = get_cursor()
-            
             query = "SELECT * FROM pagos WHERE estado = 'pagado' AND estado_pago = 'pagado'"
             params = []
             
@@ -182,29 +205,8 @@ class PagoRepository:
             return []
     
     @staticmethod
-    def obtener_flotas_pendientes():
-        """Obtiene flotas pendientes de pago (SEGURO)"""
-        try:
-            conn, cur = get_cursor()
-            cur.execute("""
-                SELECT * FROM pagos 
-                WHERE estado = 'pagado' 
-                AND estado_pago = 'pendiente'
-                AND flota IS NOT NULL 
-                AND flota != ''
-                ORDER BY flota, fecha DESC
-            """)
-            rows = cur.fetchall()
-            cur.close()
-            conn.close()
-            return [dict(row) for row in rows]
-        except Exception as e:
-            logger.error(f"Error obtener flotas pendientes: {e}")
-            return []
-    
-    @staticmethod
     def verificar_duplicado(nombre, patente):
-        """Verifica si existe un duplicado (SEGURO)"""
+        """Verifica si existe un duplicado"""
         try:
             nombre = sanitizar_input(nombre)
             patente = sanitizar_patente(patente)
@@ -226,3 +228,34 @@ class PagoRepository:
         except Exception as e:
             logger.error(f"Error verificar duplicado: {e}")
             return False
+    
+    @staticmethod
+    def obtener_balance_ventas(filtro, fecha):
+        """Obtiene datos para el balance de ventas"""
+        try:
+            if not validar_filtro(filtro):
+                filtro = 'todos'
+            
+            conn, cur = get_cursor()
+            query = "SELECT * FROM pagos WHERE estado = 'pagado' AND estado_pago = 'pagado'"
+            params = []
+            
+            if filtro == 'hoy':
+                query += " AND fecha = %s"
+                params.append(fecha.strftime('%Y-%m-%d'))
+            elif filtro == '7d':
+                query += " AND fecha >= %s"
+                params.append((fecha - timedelta(days=7)).strftime('%Y-%m-%d'))
+            elif filtro == 'mes':
+                query += " AND fecha >= %s"
+                params.append((fecha - timedelta(days=30)).strftime('%Y-%m-%d'))
+            
+            query += " ORDER BY fecha DESC, hora DESC"
+            cur.execute(query, params)
+            rows = cur.fetchall()
+            cur.close()
+            conn.close()
+            return [dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"Error obtener balance ventas: {e}")
+            return []
