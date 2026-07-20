@@ -58,7 +58,7 @@ def test_login():
     try:
         response = requests.post(
             f"{BASE_URL}/api/login",
-            json={"username": "admin", "password": "ad12345"},
+            json={"username": "admin", "password": "admin123"},
             timeout=5
         )
         status = response.status_code == 200
@@ -283,7 +283,7 @@ def test_repuestos():
     except Exception as e:
         print_test("Obtener Repuestos", False, f"Error: {e}")
     
-    # Buscar repuestos
+    # Buscar repuestos (si la ruta existe)
     for query in ['filtro', 'aceite', 'bateria']:
         try:
             response = requests.get(
@@ -291,8 +291,12 @@ def test_repuestos():
                 params={"q": query},
                 timeout=5
             )
-            status = response.status_code == 200
-            print_test(f"Buscar Repuestos ('{query}')", status, f"Status: {response.status_code}")
+            if response.status_code == 200:
+                print_test(f"Buscar Repuestos ('{query}')", True, f"Status: {response.status_code}")
+                data = response.json()
+                print(f"   Encontrados: {len(data)}")
+            else:
+                print_test(f"Buscar Repuestos ('{query}')", False, f"Status: {response.status_code} (ruta no existe)")
         except Exception as e:
             print_test(f"Buscar Repuestos ('{query}')", False, f"Error: {e}")
 
@@ -315,7 +319,7 @@ def test_categorias():
     except Exception as e:
         print_test("Obtener Categorías", False, f"Error: {e}")
     
-    # Obtener subcategorías de una categoría
+    # Obtener subcategorías
     try:
         response = requests.get(f"{BASE_URL}/api/subcategorias_repuestos", timeout=5)
         status = response.status_code == 200
@@ -354,8 +358,6 @@ def test_gastos():
 def test_cierre_caja():
     """Prueba los endpoints de cierre de caja"""
     print_section("CIERRE DE CAJA")
-    
-    hoy = datetime.now().strftime('%Y-%m-%d')
     
     # Obtener historial de cierres
     try:
@@ -398,14 +400,15 @@ def test_notificaciones():
     """Prueba los endpoints de notificaciones"""
     print_section("NOTIFICACIONES")
     
-    # Test de notificaciones
+    # Test de notificaciones (si la ruta existe)
     try:
         response = requests.get(f"{BASE_URL}/api/test_notificacion", timeout=5)
-        status = response.status_code == 200
-        print_test("Test Notificación", status, f"Status: {response.status_code}")
-        if status:
+        if response.status_code == 200:
+            print_test("Test Notificación", True, f"Status: {response.status_code}")
             data = response.json()
             print(f"   Mensaje: {data.get('mensaje', 'N/A')}")
+        else:
+            print_test("Test Notificación", False, f"Status: {response.status_code} (ruta no existe)")
     except Exception as e:
         print_test("Test Notificación", False, f"Error: {e}")
 
@@ -450,6 +453,121 @@ def test_catalogo():
         print_test("Obtener Marcas", False, f"Error: {e}")
 
 # ============================================
+# PRUEBAS POST (CREAR/ACTUALIZAR)
+# ============================================
+
+def test_post_repuestos():
+    """Prueba la creación de un repuesto (POST)"""
+    print_section("POST - CREAR REPUESTO")
+    
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/repuestos",
+            json={
+                "nombre": "Batería Test Post",
+                "costo_proveedor": 50000,
+                "margen_ganancia": 30,
+                "proveedor": "Test Proveedor",
+                "costo_venta_final": 85000,
+                "stock": 10,
+                "categoria_nombre": "Arranque y Carga"
+            },
+            timeout=5
+        )
+        status = response.status_code in [200, 201]
+        print_test("Crear Repuesto", status, f"Status: {response.status_code}")
+        if status:
+            data = response.json()
+            print(f"   ID creado: {data.get('id')}")
+            print(f"   Precio venta: ${data.get('costo_venta_final', 0):,.0f}")
+        else:
+            print(f"   Error: {response.text}")
+    except Exception as e:
+        print_test("Crear Repuesto", False, f"Error: {e}")
+
+def test_post_guardar_suscripcion():
+    """Prueba guardar suscripción push"""
+    print_section("POST - GUARDAR SUSCRIPCIÓN")
+    
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/guardar_suscripcion",
+            json={
+                "endpoint": "https://fcm.googleapis.com/fcm/send/test",
+                "keys": {
+                    "auth": "test_auth",
+                    "p256dh": "test_p256dh"
+                }
+            },
+            timeout=5
+        )
+        status = response.status_code == 200
+        print_test("Guardar Suscripción", status, f"Status: {response.status_code}")
+        if status:
+            data = response.json()
+            print(f"   Success: {data.get('success')}")
+        else:
+            print(f"   Error: {response.text}")
+    except Exception as e:
+        print_test("Guardar Suscripción", False, f"Error: {e}")
+
+def test_post_enviar_notificacion():
+    """Prueba enviar notificación push"""
+    print_section("POST - ENVIAR NOTIFICACIÓN")
+    
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/enviar_notificacion",
+            json={
+                "titulo": "Prueba de Notificación",
+                "mensaje": "Esta es una prueba desde el backend",
+                "url": "/estado",
+                "id": 1
+            },
+            timeout=5
+        )
+        status = response.status_code == 200
+        print_test("Enviar Notificación", status, f"Status: {response.status_code}")
+        if status:
+            data = response.json()
+            print(f"   Success: {data.get('success')}")
+            print(f"   Enviados: {data.get('enviados', 0)}")
+        else:
+            print(f"   Error: {response.text}")
+    except Exception as e:
+        print_test("Enviar Notificación", False, f"Error: {e}")
+
+def test_post_agregar_cliente():
+    """Prueba agregar un cliente (POST)"""
+    print_section("POST - AGREGAR CLIENTE")
+    
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/agregar",
+            json={
+                "nombre": "Cliente Test Post",
+                "patente": "XX-00-XX",
+                "marca": "Toyota",
+                "modelo": "Corolla",
+                "telefono": "+56912345678",
+                "observaciones": "Cliente de prueba",
+                "kilometraje": 50000,
+                "anio": 2020,
+                "usuario": "admin"
+            },
+            timeout=5
+        )
+        status = response.status_code == 200
+        print_test("Agregar Cliente", status, f"Status: {response.status_code}")
+        if status:
+            data = response.json()
+            print(f"   ID creado: {data.get('id')}")
+        else:
+            print(f"   Error: {response.text}")
+    except Exception as e:
+        print_test("Agregar Cliente", False, f"Error: {e}")
+
+# ============================================
 # EJECUTAR TODAS LAS PRUEBAS
 # ============================================
 
@@ -462,7 +580,7 @@ def run_all_tests():
     
     resultados = []
     
-    # Ejecutar pruebas
+    # Ejecutar pruebas GET
     tests = [
         ('Health Check', test_health),
         ('Login', test_login),
@@ -493,6 +611,26 @@ def run_all_tests():
             print_test(name, False, f"Error: {e}")
             resultados.append((name, False))
     
+    # Ejecutar pruebas POST
+    tests_post = [
+        ('POST - Crear Repuesto', test_post_repuestos),
+        ('POST - Guardar Suscripción', test_post_guardar_suscripcion),
+        ('POST - Enviar Notificación', test_post_enviar_notificacion),
+        ('POST - Agregar Cliente', test_post_agregar_cliente),
+    ]
+    
+    print(f"\n{BLUE}{'='*60}{RESET}")
+    print(f"{BLUE}📋 PRUEBAS POST (CREAR/ACTUALIZAR){RESET}")
+    print(f"{BLUE}{'='*60}{RESET}")
+    
+    for name, test_func in tests_post:
+        try:
+            result = test_func()
+            resultados.append((name, result))
+        except Exception as e:
+            print_test(name, False, f"Error: {e}")
+            resultados.append((name, False))
+    
     # Resumen final
     print(f"\n{YELLOW}{'='*60}{RESET}")
     print(f"{YELLOW}📊 RESUMEN DE PRUEBAS{RESET}")
@@ -514,6 +652,11 @@ def run_all_tests():
         print(f"\n{GREEN}🎉 TODAS LAS PRUEBAS PASARON EXITOSAMENTE{RESET}")
     else:
         print(f"\n{YELLOW}⚠️ Algunas pruebas fallaron. Revisa los detalles arriba.{RESET}")
+        print(f"\n{YELLOW}💡 Sugerencia: Verifica que las rutas POST estén implementadas:{RESET}")
+        print(f"   - /api/repuestos (POST) - Crear repuesto")
+        print(f"   - /api/guardar_suscripcion (POST) - Guardar suscripción")
+        print(f"   - /api/enviar_notificacion (POST) - Enviar notificación")
+        print(f"   - /api/agregar (POST) - Agregar cliente")
 
 if __name__ == "__main__":
     # Verificar si se pasó una URL personalizada
