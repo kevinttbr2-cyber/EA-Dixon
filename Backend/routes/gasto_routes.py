@@ -76,6 +76,8 @@ def obtener_gastos_balance():
             return jsonify({"error": "Fechas requeridas"}), 400
         
         conn, cur = get_cursor()
+        
+        # ✅ CONSULTA PARAMETRIZADA
         cur.execute("""
             SELECT * FROM gastos 
             WHERE fecha BETWEEN %s AND %s
@@ -86,6 +88,7 @@ def obtener_gastos_balance():
         cur.close()
         conn.close()
         
+        logger.info(f"📊 Gastos obtenidos: {len(gastos)} en el rango {fecha_inicio} - {fecha_fin}")
         return jsonify(gastos)
         
     except Exception as e:
