@@ -1752,86 +1752,118 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ============================================
-    // FORMULARIO EDITAR - CORREGIDO
-    // ============================================
-    const formEditar = document.getElementById('formEditarRepuesto');
-    if (formEditar) {
-        formEditar.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const id = document.getElementById('editRepuestoId')?.value;
-            const nombre = document.getElementById('editNombreRepuesto')?.value.trim() || '';
-            const stockInput = document.getElementById('editStockRepuesto');
-            const stock = parseInt(stockInput?.value) || 0;
-            const costoProveedor = parseFloat(document.getElementById('editCostoProveedor')?.value || 0);
-            const proveedor = document.getElementById('editProveedorRepuesto')?.value.trim() || '';
-            const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
-            const precioVenta = parseFloat(document.getElementById('editPrecioVenta')?.value || 0);
-            const categoriaSelect = document.getElementById('editCategoriaRepuesto');
-            const categoriaId = categoriaSelect?.value || '';
-            
-            console.log('📤 EDITANDO REPUESTO:');
-            console.log('  ID:', id);
-            console.log('  Stock (CORRECTO):', stock);
-            console.log('  Categoría ID:', categoriaId);
-            
-            if (!nombre) {
-                alert('⚠️ El nombre del repuesto es obligatorio');
-                return;
+   // ============================================
+// FORMULARIO EDITAR - CORREGIDO COMPLETAMENTE
+// ============================================
+const formEditar = document.getElementById('formEditarRepuesto');
+if (formEditar) {
+    formEditar.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 🔥 OBTENER TODOS LOS VALORES
+        const id = document.getElementById('editRepuestoId')?.value;
+        const nombre = document.getElementById('editNombreRepuesto')?.value.trim() || '';
+        const stockInput = document.getElementById('editStockRepuesto');
+        const stock = parseInt(stockInput?.value) || 0;
+        const costoProveedor = parseFloat(document.getElementById('editCostoProveedor')?.value || 0);
+        const proveedor = document.getElementById('editProveedorRepuesto')?.value.trim() || '';
+        const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
+        const precioVenta = parseFloat(document.getElementById('editPrecioVenta')?.value || 0);
+        
+        // 🔥 OBTENER CATEGORÍA CORRECTAMENTE
+        const categoriaSelect = document.getElementById('editCategoriaRepuesto');
+        let categoriaId = categoriaSelect?.value || '';
+        let categoriaNombre = '';
+        
+        // Si hay un valor seleccionado, obtener el nombre de la categoría padre
+        if (categoriaId && categoriaId !== '') {
+            const selectedOption = categoriaSelect.options[categoriaSelect.selectedIndex];
+            if (selectedOption && selectedOption.parentElement) {
+                categoriaNombre = selectedOption.parentElement.label || '';
             }
-            
-            if (stock < 0) {
-                alert('⚠️ El stock no puede ser negativo');
-                return;
+        }
+        
+        console.log('📤 EDITANDO REPUESTO:');
+        console.log('  ID:', id);
+        console.log('  Nombre:', nombre);
+        console.log('  Stock:', stock);
+        console.log('  Costo:', costoProveedor);
+        console.log('  Precio Venta:', precioVenta);
+        console.log('  Margen:', margen);
+        console.log('  Proveedor:', proveedor);
+        console.log('  Categoría ID:', categoriaId);
+        console.log('  Categoría Nombre:', categoriaNombre);
+        
+        // VALIDACIONES
+        if (!nombre) {
+            alert('⚠️ El nombre del repuesto es obligatorio');
+            return;
+        }
+        
+        if (stock < 0) {
+            alert('⚠️ El stock no puede ser negativo');
+            return;
+        }
+        
+        if (precioVenta <= 0) {
+            alert('⚠️ El precio de venta debe ser mayor a 0');
+            return;
+        }
+        
+        // 🔥 CONSTRUIR DATA CORRECTAMENTE
+        const data = {
+            nombre: nombre,
+            costo_proveedor: costoProveedor,
+            margen_ganancia: margen,
+            proveedor: proveedor || 'Importado',
+            stock: stock,  // 🔥 Asegurar que sea el valor del campo stock
+            costo_venta_final: precioVenta,
+            categoria_nombre: categoriaNombre || ''  // 🔥 Enviar el nombre de la categoría
+        };
+        
+        // Si hay subcategoria_id, agregarlo
+        if (categoriaId && categoriaId !== '') {
+            data.subcategoria_id = parseInt(categoriaId);
+        }
+        
+        console.log('📤 Enviando datos al backend:', JSON.stringify(data, null, 2));
+        
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = '⏳ Guardando...';
+        
+        fetch(`${API_URL}/api/repuestos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(async r => {
+            const resp = await r.json();
+            console.log('📥 Respuesta del backend:', resp);
+            if (!r.ok) {
+                throw new Error(resp.error || 'Error en el servidor');
             }
-            
-            if (precioVenta <= 0) {
-                alert('⚠️ El precio de venta debe ser mayor a 0');
-                return;
+            return resp;
+        })
+        .then(resp => {
+            if (resp.success) {
+                alert('✅ Repuesto actualizado correctamente');
+                cerrarModalEditar();
+                location.reload();
+            } else {
+                alert('❌ Error: ' + (resp.error || 'Desconocido'));
             }
-            
-            const data = {
-                nombre: nombre,
-                costo_proveedor: costoProveedor,
-                margen_ganancia: margen,
-                proveedor: proveedor || 'Importado',
-                stock: stock,
-                costo_venta_final: precioVenta
-            };
-            
-            if (categoriaId && categoriaId !== '') {
-                data.subcategoria_id = parseInt(categoriaId);
-            }
-            
-            console.log('📤 Enviando datos:', data);
-            
-            const btn = this.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.textContent = '⏳ Guardando...';
-            
-            fetch(`${API_URL}/api/repuestos/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(r => r.json())
-            .then(resp => {
-                if (resp.success) {
-                    alert('✅ Repuesto actualizado correctamente');
-                    cerrarModalEditar();
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + (resp.error || 'Desconocido'));
-                }
-            })
-            .catch(() => alert('❌ Error de conexión'))
-            .finally(() => {
-                btn.disabled = false;
-                btn.textContent = '💾 Guardar cambios';
-            });
+        })
+        .catch(err => {
+            console.error('❌ Error:', err);
+            alert('❌ Error: ' + err.message);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = '💾 Guardar cambios';
         });
-    }
+    });
+}
 
 // ============================================
 // BOTONES EDITAR - CORREGIDO
