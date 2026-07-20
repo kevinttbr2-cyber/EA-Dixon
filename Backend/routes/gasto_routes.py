@@ -43,7 +43,7 @@ def obtener_gastos():
         return jsonify({"error": str(e)}), 500
 
 # ============================================
-# RUTA POST - REGISTRAR GASTO
+# RUTA POST - REGISTRAR GASTO (CON TIPO_GASTO)
 # ============================================
 @gasto_bp.route('/gastos', methods=['POST'])
 def registrar_gasto():
@@ -53,17 +53,22 @@ def registrar_gasto():
         if not data.get('categoria') or not data.get('monto'):
             return jsonify({"error": "Categoría y monto son obligatorios"}), 400
         
+        # ✅ OBTENER TIPO DE GASTO
+        tipo_gasto = sanitizar_input(data.get('tipo_gasto', 'general').strip())
+        if tipo_gasto not in ['venta', 'trabajo', 'general']:
+            tipo_gasto = 'general'
+        
         conn = get_connection()
         cur = conn.cursor()
         
         cur.execute("""
             INSERT INTO gastos 
             (categoria, monto, metodo_pago, descripcion, proveedor, folio, 
-             fecha, hora, registrado_por, created_at, updated_at)
+             fecha, hora, registrado_por, tipo_gasto, created_at, updated_at)
             VALUES (%s, %s, %s, %s, %s, %s, 
                     CAST(NOW() AT TIME ZONE 'America/Santiago' AS date), 
                     CAST(NOW() AT TIME ZONE 'America/Santiago' AS time), 
-                    %s,
+                    %s, %s,
                     NOW() AT TIME ZONE 'America/Santiago',
                     NOW() AT TIME ZONE 'America/Santiago')
             RETURNING id
@@ -74,7 +79,8 @@ def registrar_gasto():
             sanitizar_input(data.get('descripcion', '')),
             sanitizar_input(data.get('proveedor', '')),
             sanitizar_input(data.get('folio', '')),
-            sanitizar_input(data.get('registrado_por', 'Sistema'))
+            sanitizar_input(data.get('registrado_por', 'Sistema')),
+            tipo_gasto  # ✅ NUEVO: guardar tipo de gasto
         ))
         
         id_gasto = cur.fetchone()[0]
@@ -82,7 +88,7 @@ def registrar_gasto():
         cur.close()
         conn.close()
         
-        logger.info(f"✅ Gasto registrado ID: {id_gasto}")
+        logger.info(f"✅ Gasto registrado ID: {id_gasto} - Tipo: {tipo_gasto}")
         return jsonify({"success": True, "id": id_gasto})
         
     except Exception as e:
@@ -90,7 +96,7 @@ def registrar_gasto():
         return jsonify({"error": str(e)}), 500
 
 # ============================================
-# RUTA GET - GASTOS PARA BALANCE
+# RUTA GET - GASTOS PARA BALANCE (CON TIPO_GASTO)
 # ============================================
 @gasto_bp.route('/gastos_balance', methods=['GET'])
 def obtener_gastos_balance():
