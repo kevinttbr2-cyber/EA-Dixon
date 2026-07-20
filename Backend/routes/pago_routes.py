@@ -1021,3 +1021,168 @@ def obtener_dashboard_data(fecha_desde):
     except Exception as e:
         logger.error(f"Error obtener dashboard data: {e}")
         return None
+# 1. Balance de ganancia (get_balance)
+@pago_bp.route('/balance', methods=['GET'])
+def get_balance():
+    """Obtiene el balance de ganancia con filtros"""
+    try:
+        filtro = request.args.get('filtro', 'hoy')
+        
+        if not validar_filtro(filtro):
+            return jsonify({"error": "Filtro inválido"}), 400
+        
+        hoy = get_fecha_chile()
+        registros = PagoService.obtener_balance_completo(filtro, hoy)
+        
+        if not registros:
+            return jsonify({
+                "registros": [],
+                "total_pagado": 0,
+                "total_repuestos": 0,
+                "total_mano_obra": 0,
+                "total_diagnostico": 0,
+                "ganancia_neta": 0
+            })
+        
+        # Calcular totales desde los registros
+        total_pagado = sum(r.get('monto', 0) or 0 for r in registros)
+        total_repuestos = sum(r.get('costo_repuestos_real', 0) or 0 for r in registros)
+        total_mano_obra = sum(r.get('costo_mano_obra_real', 0) or 0 for r in registros)
+        total_diagnostico = sum(r.get('costo_diagnostico_real', 0) or 0 for r in registros)
+        ganancia_neta = total_pagado - (total_repuestos + total_mano_obra + total_diagnostico)
+        
+        return jsonify({
+            "registros": registros,
+            "total_pagado": total_pagado,
+            "total_repuestos": total_repuestos,
+            "total_mano_obra": total_mano_obra,
+            "total_diagnostico": total_diagnostico,
+            "ganancia_neta": ganancia_neta
+        })
+    except Exception as e:
+        logger.error(f"Error en get_balance: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# 2. Editar repuestos de venta
+@pago_bp.route('/editar_repuestos_venta/<int:id_reg>', methods=['POST'])
+def editar_repuestos_venta(id_reg):
+    """Actualiza solo los repuestos y costos de una venta"""
+    try:
+        data = request.json
+        resultado = PagoService.actualizar_repuestos_venta(id_reg, data)
+        if resultado:
+            return jsonify({"success": True})
+        return jsonify({"error": "Error al actualizar"}), 500
+    except Exception as e:
+        logger.error(f"Error en editar_repuestos_venta: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# 3. Eliminar registro
+@pago_bp.route('/eliminar_registro/<int:id_reg>', methods=['DELETE'])
+def eliminar_registro(id_reg):
+    """Elimina un registro por ID"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM pagos WHERE id = %s", (id_reg,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        logger.error(f"Error en eliminar_registro: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# 4. Flotas disponibles (para autocompletado)
+@pago_bp.route('/flotas_disponibles', methods=['GET'])
+def get_flotas_disponibles():
+    """Obtiene todas las flotas registradas para autocompletado"""
+    try:
+        flotas = PagoService.obtener_flotas_disponibles()
+        return jsonify(flotas)
+    except Exception as e:
+        logger.error(f"Error en get_flotas_disponibles: {e}")
+        return jsonify([])
+
+# 5. Dashboard
+@pago_bp.route('/dashboard', methods=['GET'])
+def get_dashboard():
+    """Obtiene datos para el dashboard"""
+    try:
+        filtro = request.args.get('filtro', '7d')
+        mes = request.args.get('mes')
+        anio = request.args.get('anio')
+        
+        hoy = get_fecha_chile()
+        
+        if filtro == '7d':
+            fecha_desde = hoy - timedelta(days=7)
+        elif filtro == '30d':
+            fecha_desde = hoy - timedelta(days=30)
+        elif filtro == '90d':
+            fecha_desde = hoy - timedelta(days=90)
+        elif filtro == 'mes' and mes and anio:
+            try:
+                fecha_desde = datetime(int(anio), int(mes), 1).date()
+            except:
+                fecha_desde = hoy - timedelta(days=30)
+        else:
+            fecha_desde = hoy - timedelta(days=7)
+        
+        data = PagoService.obtener_dashboard_data(fecha_desde)
+        if not data:
+            return jsonify({"error": "Error al obtener datos"}), 500
+        
+        # Procesar datos para el frontend
+        totales = data['totales']
+        ventas = data['ventas']
+        ganancias = data['ganancias']
+        clientes = data['clientes']
+        promedio_diario = data['promedio_diario']
+        
+        labels = []
+        ventas_data = []
+        for row in ventas:
+            if row[0]:
+                labels.append(row[0].strftime('%d/%m'))
+                ventas_data.append(float(row[1]))
+        
+        ganancia_data = []
+        acumulado = 0
+        for row in ganancias:
+            acumulado += float(row[1])
+            ganancia_data.append(acumulado)
+        
+        # Proyección
+        proyeccion = []
+        proyeccion_labels = []
+        for i in range(1, 8):
+            fecha_futura = hoy + timedelta(days=i)
+            proyeccion_labels.append(fecha_futura.strftime('%d/%m'))
+            proyeccion.append(round(promedio_diario * 0.85, 0))
+        
+        meses_disponibles = PagoService.obtener_meses_disponibles()
+        
+        return jsonify({
+            "total_facturado": float(totales[0]),
+            "total_repuestos": float(totales[1]),
+            "total_mano_obra": float(totales[2]),
+            "total_diagnostico": float(totales[3]),
+            "total_servicios": totales[4],
+            "ganancia_total": float(totales[0]) - float(totales[1]) - float(totales[2]) - float(totales[3]),
+            "promedio_diario": promedio_diario,
+            "labels": labels,
+            "ventas": ventas_data,
+            "ganancia_acumulada": ganancia_data,
+            "proyeccion_labels": proyeccion_labels,
+            "proyeccion": proyeccion,
+            "clientes_labels": [row[0] for row in clientes],
+            "clientes_data": [float(row[1]) for row in clientes],
+            "meses_disponibles": meses_disponibles,
+            "filtro_actual": filtro,
+            "mes_actual": mes,
+            "anio_actual": anio
+        })
+    except Exception as e:
+        logger.error(f"Error en get_dashboard: {e}")
+        return jsonify({"error": str(e)}), 500
