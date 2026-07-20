@@ -56,9 +56,26 @@ def obtener_gastos():
         
         conn, cur = get_cursor()
         cur.execute("SELECT * FROM gastos WHERE fecha = %s ORDER BY hora DESC", (fecha,))
-        gastos = [dict(row) for row in cur.fetchall()]
+        rows = cur.fetchall()
         cur.close()
         conn.close()
+        
+        # ✅ CONVERTIR time a string
+        gastos = []
+        for row in rows:
+            g = dict(row)
+            # Convertir hora (time) a string
+            if g.get('hora') and hasattr(g['hora'], 'strftime'):
+                g['hora'] = g['hora'].strftime('%H:%M:%S')
+            # Convertir fecha (date) a string
+            if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
+                g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
+            # Convertir timestamps a string
+            if g.get('created_at') and hasattr(g['created_at'], 'strftime'):
+                g['created_at'] = g['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            if g.get('updated_at') and hasattr(g['updated_at'], 'strftime'):
+                g['updated_at'] = g['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+            gastos.append(g)
         
         return jsonify(gastos)
         
@@ -76,17 +93,29 @@ def obtener_gastos_balance():
             return jsonify({"error": "Fechas requeridas"}), 400
         
         conn, cur = get_cursor()
-        
-        # ✅ CONSULTA PARAMETRIZADA
         cur.execute("""
             SELECT * FROM gastos 
             WHERE fecha BETWEEN %s AND %s
             ORDER BY fecha DESC, hora DESC
         """, (fecha_inicio, fecha_fin))
         
-        gastos = [dict(row) for row in cur.fetchall()]
+        rows = cur.fetchall()
         cur.close()
         conn.close()
+        
+        # ✅ CONVERTIR time a string
+        gastos = []
+        for row in rows:
+            g = dict(row)
+            if g.get('hora') and hasattr(g['hora'], 'strftime'):
+                g['hora'] = g['hora'].strftime('%H:%M:%S')
+            if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
+                g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
+            if g.get('created_at') and hasattr(g['created_at'], 'strftime'):
+                g['created_at'] = g['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            if g.get('updated_at') and hasattr(g['updated_at'], 'strftime'):
+                g['updated_at'] = g['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+            gastos.append(g)
         
         logger.info(f"📊 Gastos obtenidos: {len(gastos)} en el rango {fecha_inicio} - {fecha_fin}")
         return jsonify(gastos)
@@ -105,14 +134,12 @@ def eliminar_gasto(id_gasto):
         conn = get_connection()
         cur = conn.cursor()
         
-        # Verificar que el gasto existe
         cur.execute("SELECT id FROM gastos WHERE id = %s", (id_gasto,))
         if cur.fetchone() is None:
             cur.close()
             conn.close()
             return jsonify({"error": "Gasto no encontrado"}), 404
         
-        # Eliminar gasto
         cur.execute("DELETE FROM gastos WHERE id = %s", (id_gasto,))
         conn.commit()
         cur.close()
