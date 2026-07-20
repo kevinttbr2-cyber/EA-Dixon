@@ -472,6 +472,87 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- ============================================
+     BANNER DE ACTUALIZACIÓN
+     ============================================ -->
+<div id="updateBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:99999; background: linear-gradient(135deg, #2d2d2d, #1a1a1a); border-top: 3px solid #00ff66; padding: 16px 20px; box-shadow: 0 -4px 30px rgba(0,0,0,0.8);">
+    <div style="max-width:900px; margin:0 auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:200px;">
+            <span style="font-size:32px;">🔄</span>
+            <div>
+                <div style="color:#00ff66; font-weight:700; font-size:16px;">Nueva actualización disponible!</div>
+                <div style="color:#888; font-size:13px;" id="updateMessage">Versión actual: v1.0.0 → Nueva: v1.1.0</div>
+                <div style="color:#666; font-size:12px; margin-top:4px;" id="updateNotes">📌 Corrección de errores y mejoras</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button onclick="ejecutarActualizacion()" id="btnUpdate" style="
+                background: #00ff66;
+                color: #000;
+                border: none;
+                border-radius: 10px;
+                padding: 10px 24px;
+                font-weight: 700;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            ">
+                🔄 Actualizar ahora
+            </button>
+            <button onclick="cerrarBanner()" style="
+                background: rgba(255,255,255,0.06);
+                color: #888;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 8px;
+                padding: 8px 16px;
+                cursor: pointer;
+                font-size: 13px;
+            ">
+                Recordar después
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE PROGRESO -->
+<div id="updateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:999999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div style="background:rgba(20,20,20,0.98); border:2px solid #00ff66; border-radius:16px; padding:30px 40px; max-width:500px; width:95%; text-align:center;">
+        <div style="font-size:60px; margin-bottom:15px;">⚙️</div>
+        <h3 style="color:#00ff66; margin-bottom:10px;">Actualizando aplicación...</h3>
+        <p style="color:#888; font-size:14px;">Por favor espera, esto puede tomar unos segundos</p>
+        
+        <!-- Barra de progreso -->
+        <div style="width:100%; height:6px; background:rgba(255,255,255,0.06); border-radius:4px; margin:20px 0; overflow:hidden;">
+            <div id="progressBar" style="width:0%; height:100%; background:#00ff66; border-radius:4px; transition:width 0.5s ease;"></div>
+        </div>
+        
+        <div id="updateLog" style="
+            background:rgba(0,0,0,0.40);
+            border-radius:8px;
+            padding:12px;
+            font-size:12px;
+            color:#888;
+            text-align:left;
+            max-height:150px;
+            overflow-y:auto;
+            font-family:monospace;
+            margin:10px 0;
+            border:1px solid rgba(255,255,255,0.04);
+        "></div>
+        
+        <button id="btnCloseUpdate" onclick="cerrarModalActualizacion()" style="
+            background:rgba(255,255,255,0.06);
+            color:#888;
+            border:1px solid rgba(255,255,255,0.08);
+            border-radius:8px;
+            padding:8px 20px;
+            cursor:pointer;
+            display:none;
+        ">
+            ✅ Cerrar
+        </button>
+    </div>
+</div>
 
     <!-- ============================
     NAVBAR
