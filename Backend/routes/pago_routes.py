@@ -1619,13 +1619,15 @@ def crear_repuesto():
         return jsonify({"error": str(e)}), 500
 
 # ============================
-# ACTUALIZAR REPUESTO (CORREGIDO CON SUBCATEGORÍA)
+# ACTUALIZAR REPUESTO (CON SUBCATEGORÍA)
 # ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
     """Actualiza un repuesto existente"""
     try:
         data = request.json
+        logger.info(f"📥 Actualizando repuesto ID {id_repuesto} - Datos recibidos: {data}")
+        
         nombre = sanitizar_input(data.get('nombre', '').strip())
         costo_proveedor = sanitizar_numero(data.get('costo_proveedor', 0), min_val=0)
         margen_ganancia = sanitizar_numero(data.get('margen_ganancia', 30), min_val=0)
@@ -1634,12 +1636,14 @@ def actualizar_repuesto(id_repuesto):
         stock = int(sanitizar_numero(data.get('stock', 0), min_val=0))
         categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
         
-        # ✅ OBTENER SUBCATEGORÍA_ID (ENVIADO DESDE EL FRONTEND)
+        # ✅ OBTENER SUBCATEGORÍA_ID
         subcategoria_id = data.get('subcategoria_id')
         if subcategoria_id:
             subcategoria_id = int(subcategoria_id)
         else:
             subcategoria_id = None
+        
+        logger.info(f"📂 subcategoria_id recibido: {subcategoria_id}")
         
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
@@ -1686,11 +1690,13 @@ def actualizar_repuesto(id_repuesto):
         cur.close()
         conn.close()
         
-        logger.info(f"✅ Repuesto actualizado: {nombre} (ID: {id_repuesto})")
+        logger.info(f"✅ Repuesto actualizado: {nombre} (ID: {id_repuesto}) - subcategoria_id: {subcategoria_id}")
         return jsonify({"success": True})
         
     except Exception as e:
         logger.error(f"Error en actualizar_repuesto: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 # ============================
 # ELIMINAR REPUESTO
