@@ -1327,13 +1327,21 @@ def ver_logs():
 @login_required
 @role_required(['admin', 'operador'])
 def gastos():
-    # ✅ USAR FECHA DE CHILE
-    hoy = get_fecha_chile_str()
-    mes_actual = datetime.now(pytz.timezone('America/Santiago')).month
-    anio_actual = datetime.now(pytz.timezone('America/Santiago')).year
+    # ✅ USAR MES ACTUAL (TODOS LOS GASTOS DEL MES)
+    hoy = datetime.now(pytz.timezone('America/Santiago'))
+    primer_dia_mes = hoy.replace(day=1).strftime('%Y-%m-%d')
+    ultimo_dia_mes = hoy.strftime('%Y-%m-%d')
+    
+    mes_actual = hoy.month
+    anio_actual = hoy.year
+    
+    logger.info(f"📊 Gastos - Buscando gastos del mes: {primer_dia_mes} a {ultimo_dia_mes}")
     
     try:
-        resp = requests.get(f"{BACKEND_URL}/api/gastos?fecha={hoy}", timeout=10)
+        resp = requests.get(
+            f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={primer_dia_mes}&fecha_fin={ultimo_dia_mes}",
+            timeout=10
+        )
         if resp.status_code == 200:
             gastos = resp.json()
             for g in gastos:
@@ -1351,6 +1359,8 @@ def gastos():
     gastos_efectivo_count = len([g for g in gastos if g.get('metodo_pago') == 'efectivo'])
     gastos_transferencia_count = len([g for g in gastos if g.get('metodo_pago') == 'transferencia'])
     gastos_sueldos_count = len([g for g in gastos if g.get('categoria') == 'Sueldos'])
+    
+    logger.info(f"✅ Gastos encontrados: {len(gastos)} - Total: ${total_gastos}")
     
     return render_template("gastos.html",
                           gastos=gastos,
