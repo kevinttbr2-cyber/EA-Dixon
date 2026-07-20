@@ -1021,8 +1021,9 @@ def obtener_dashboard_data(fecha_desde):
     except Exception as e:
         logger.error(f"Error obtener dashboard data: {e}")
         return None
-# Backend/routes/pago_routes.py
-
+# ============================
+# 6. BALANCE DE GANANCIA (CON GASTOS)
+# ============================
 @pago_bp.route('/balance', methods=['GET'])
 def get_balance():
     filtro = request.args.get('filtro', 'hoy')
@@ -1063,7 +1064,7 @@ def get_balance():
         ganancia_neta = total_pagado - (total_repuestos + total_mano_obra + total_diagnostico)
         
         # ============================================
-        # 2. OBTENER GASTOS OPERATIVOS (CORREGIDO)
+        # 2. OBTENER GASTOS OPERATIVOS
         # ============================================
         # Definir fechas según el filtro
         if filtro == 'hoy':
@@ -1112,6 +1113,9 @@ def get_balance():
         cur.close()
         conn.close()
         
+        # ============================================
+        # 4. RESPUESTA CON GASTOS INCLUIDOS
+        # ============================================
         return jsonify({
             "registros": registros,
             "total_pagado": total_pagado,
@@ -1119,9 +1123,9 @@ def get_balance():
             "total_mano_obra": total_mano_obra,
             "total_diagnostico": total_diagnostico,
             "ganancia_neta": ganancia_neta,
-            "total_gastos": total_gastos,           # ✅ NUEVO
-            "gastos_operativos": gastos_operativos,  # ✅ NUEVO
-            "ganancia_real": ganancia_real           # ✅ NUEVO
+            "total_gastos": total_gastos,
+            "gastos_operativos": gastos_operativos,
+            "ganancia_real": ganancia_real
         })
     except Exception as e:
         print(f"Error en get_balance: {e}")
