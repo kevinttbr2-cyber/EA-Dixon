@@ -91,3 +91,33 @@ def obtener_gastos_balance():
     except Exception as e:
         logger.error(f"Error en obtener_gastos_balance: {e}")
         return jsonify([])
+
+# ============================================
+# ELIMINAR GASTO
+# ============================================
+@gasto_bp.route('/gastos/<int:id_gasto>', methods=['DELETE'])
+def eliminar_gasto(id_gasto):
+    """Elimina un gasto por ID"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Verificar que el gasto existe
+        cur.execute("SELECT id FROM gastos WHERE id = %s", (id_gasto,))
+        if cur.fetchone() is None:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Gasto no encontrado"}), 404
+        
+        # Eliminar gasto
+        cur.execute("DELETE FROM gastos WHERE id = %s", (id_gasto,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        logger.info(f"✅ Gasto eliminado: ID {id_gasto}")
+        return jsonify({"success": True})
+        
+    except Exception as e:
+        logger.error(f"Error en eliminar_gasto: {e}")
+        return jsonify({"error": str(e)}), 500
