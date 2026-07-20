@@ -1617,9 +1617,7 @@ def crear_repuesto():
     except Exception as e:
         logger.error(f"Error en crear_repuesto: {e}")
         return jsonify({"error": str(e)}), 500
-# ============================
-# ACTUALIZAR REPUESTO (CORREGIDO CON SUBCATEGORÍA)
-# ============================
+
 # ============================
 # ACTUALIZAR REPUESTO (CORREGIDO CON SUBCATEGORÍA)
 # ============================
