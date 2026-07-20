@@ -847,9 +847,15 @@ def balance():
     # ============================================
     # 3. CALCULAR GANANCIA REAL (SIN DIAGNÓSTICO)
     # ============================================
+    # ✅ FÓRMULA CORRECTA: Ingresos - Repuestos - Mano de Obra - Gastos Operativos
     ganancia_real = total_pagado - total_repuestos - total_mano_obra - total_gastos
     
-    logger.info(f"📊 Balance final: Ingresos=${total_pagado}, Repuestos=${total_repuestos}, MO=${total_mano_obra}, Gastos=${total_gastos}, Ganancia=${ganancia_real}")
+    logger.info(f"📊 Balance final:")
+    logger.info(f"   Ingresos: ${total_pagado}")
+    logger.info(f"   Repuestos: ${total_repuestos}")
+    logger.info(f"   Mano de Obra: ${total_mano_obra}")
+    logger.info(f"   Gastos: ${total_gastos}")
+    logger.info(f"   Ganancia Real: ${ganancia_real}")
     
     # ============================================
     # 4. FILTROS PARA LA VISTA
