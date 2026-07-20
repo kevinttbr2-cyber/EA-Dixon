@@ -1257,6 +1257,88 @@ def get_dashboard():
         logger.error(f"Error en get_dashboard: {e}")
         return jsonify({"error": str(e)}), 500
 # AGREGAR AL FINAL DEL ARCHIVO
+# Obtener gastos del período
+gastos_query = """
+    SELECT * FROM gastos 
+    WHERE fecha >= %s
+    ORDER BY fecha DESC
+"""
+cur.execute(gastos_query, (fecha_desde,))
+gastos_rows = cur.fetchall()
+
+gastos_operativos = []
+total_gastos = 0
+
+for row in gastos_rows:
+    g = dict(row)
+    if g.get('hora') and hasattr(g['hora'], 'strftime'):
+        g['hora'] = g['hora'].strftime('%H:%M:%S')
+    if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
+        g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
+    gastos_operativos.append(g)
+    total_gastos += float(g.get('monto', 0) or 0)
+
+# Gastos por categoría
+from collections import defaultdict
+gastos_dict = defaultdict(float)
+for g in gastos_operativos:
+    categoria = g.get('categoria', 'Otros')
+    gastos_dict[categoria] += float(g.get('monto', 0) or 0)
+
+gastos_por_categoria = []
+total_gastos_cat = sum(gastos_dict.values())
+for cat, monto in gastos_dict.items():
+    porcentaje = round((monto / total_gastos_cat) * 100, 1) if total_gastos_cat > 0 else 0
+    gastos_por_categoria.append({
+        'categoria': cat,
+        'total': monto,
+        'porcentaje': porcentaje
+    })
+gastos_por_categoria.sort(key=lambda x: x['total'], reverse=True)
+
+# Gastos diarios para gráfico
+gastos_dia = defaultdict(float)
+for g in gastos_operativos:
+    fecha = g.get('fecha', '')
+    if fecha:
+        gastos_dia[fecha] += float(g.get('monto', 0) or 0)
+
+gastos_labels = sorted(gastos_dia.keys())
+gastos_diarios = [gastos_dia[f] for f in gastos_labels]
+
+# ============================================
+# AGREGAR AL RETURN
+# ============================================
+
+return jsonify({
+    "total_facturado": float(totales[0]),
+    "total_repuestos": float(totales[1]),
+    "total_mano_obra": float(totales[2]),
+    "total_diagnostico": float(totales[3]),
+    "total_servicios": totales[4],
+    "ganancia_total": float(totales[0]) - float(totales[1]) - float(totales[2]) - float(totales[3]),
+    "promedio_diario": promedio_diario,
+    "labels": labels,
+    "ventas": ventas_data,
+    "ganancia_acumulada": ganancia_data,
+    "proyeccion_labels": proyeccion_labels,
+    "proyeccion": proyeccion,
+    "clientes_labels": [row[0] for row in clientes],
+    "clientes_data": [float(row[1]) for row in clientes],
+    "meses_disponibles": meses_disponibles,
+    "filtro_actual": filtro,
+    "mes_actual": mes,
+    "anio_actual": anio,
+    # ✅ NUEVOS CAMPOS
+    "total_gastos": total_gastos,
+    "gastos_operativos": gastos_operativos,
+    "ganancia_real": float(totales[0]) - float(totales[1]) - float(totales[2]) - total_gastos,
+    "total_directa": 0,  # Lo calcularás en el frontend si tienes los datos
+    "total_trabajo": 0,  # Lo calcularás en el frontend si tienes los datos
+    "gastos_por_categoria": gastos_por_categoria,
+    "gastos_diarios": gastos_diarios,
+    "gastos_labels": gastos_labels
+})
 
 # ============================
 # BUSCAR REPUESTOS (AUTOCOMPLETADO)
