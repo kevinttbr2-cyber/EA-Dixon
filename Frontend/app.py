@@ -382,6 +382,10 @@ def estado():
 @login_required
 def agregar_cliente():
     try:
+        # ✅ OBTENER FECHA DE CHILE
+        tz = pytz.timezone('America/Santiago')
+        hoy = datetime.now(tz).strftime('%Y-%m-%d')
+        
         resp_flotas = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=5)
         flotas = resp_flotas.json() if resp_flotas.status_code == 200 else []
         
@@ -395,12 +399,13 @@ def agregar_cliente():
         flotas = []
         marcas = []
         modelos = []
+        hoy = datetime.now(pytz.timezone('America/Santiago')).strftime('%Y-%m-%d')
     
     return render_template("agregar_cliente.html", 
                           flotas=flotas, 
                           marcas=marcas, 
-                          modelos=modelos)
-
+                          modelos=modelos,
+                          hoy=hoy)  # ✅ PASAR FECHA DE CHILE
 @app.route('/agregar', methods=['POST'])
 @login_required
 def agregar():
