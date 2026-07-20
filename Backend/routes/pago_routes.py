@@ -1326,9 +1326,9 @@ def get_dashboard():
             es_directa = r.get('tipo_venta') == 'directa'
             
             if es_directa:
-                total_directa += total_repuestos  # ✅ VENTA DIRECTA = REPUESTOS VENDIDOS DIRECTAMENTE
+                total_directa += total_repuestos
             else:
-                total_trabajo += total_repuestos  # ✅ VENTA DE TRABAJO = REPUESTOS VENDIDOS EN SERVICIOS
+                total_trabajo += total_repuestos
         
         # ============================================
         # 4. OBTENER GASTOS DEL PERÍODO
@@ -1345,7 +1345,6 @@ def get_dashboard():
         
         for row in gastos_rows:
             g = dict(row)
-            # Convertir time a string
             if g.get('hora') and hasattr(g['hora'], 'strftime'):
                 g['hora'] = g['hora'].strftime('%H:%M:%S')
             if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
@@ -1405,7 +1404,6 @@ def get_dashboard():
             acumulado += float(row[1])
             ganancia_data.append(acumulado)
         
-        # Proyección
         proyeccion = []
         proyeccion_labels = []
         for i in range(1, 8):
@@ -1425,7 +1423,6 @@ def get_dashboard():
         # 9. RESPUESTA COMPLETA
         # ============================================
         return jsonify({
-            # Ventas
             "total_facturado": float(totales[0]),
             "total_repuestos": float(totales[1]),
             "total_mano_obra": float(totales[2]),
@@ -1445,7 +1442,6 @@ def get_dashboard():
             "mes_actual": mes,
             "anio_actual": anio,
             "registros": [dict(row) for row in registros_rows],
-            # Gastos
             "total_gastos": total_gastos,
             "gastos_operativos": gastos_operativos,
             "ganancia_real": float(totales[0]) - float(totales[1]) - float(totales[2]) - total_gastos,
@@ -1460,7 +1456,6 @@ def get_dashboard():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 # ============================
 # BUSCAR REPUESTOS (AUTOCOMPLETADO)
 # ============================
