@@ -1173,11 +1173,12 @@ def get_flotas_disponibles():
     except Exception as e:
         logger.error(f"Error en get_flotas_disponibles: {e}")
         return jsonify([])
-
-# 5. Dashboard
+# ============================
+# 5. DASHBOARD (COMPLETO CON GASTOS)
+# ============================
 @pago_bp.route('/dashboard', methods=['GET'])
 def get_dashboard():
-    """Obtiene datos para el dashboard"""
+    """Obtiene datos para el dashboard con gastos incluidos"""
     try:
         filtro = request.args.get('filtro', '7d')
         mes = request.args.get('mes')
@@ -1185,6 +1186,9 @@ def get_dashboard():
         
         hoy = get_fecha_chile()
         
+        # ============================================
+        # 1. DETERMINAR FECHAS SEGÚN FILTRO
+        # ============================================
         if filtro == '7d':
             fecha_desde = hoy - timedelta(days=7)
         elif filtro == '30d':
@@ -1199,17 +1203,171 @@ def get_dashboard():
         else:
             fecha_desde = hoy - timedelta(days=7)
         
-        data = PagoService.obtener_dashboard_data(fecha_desde)
-        if not data:
-            return jsonify({"error": "Error al obtener datos"}), 500
+        fecha_desde_str = fecha_desde.strftime('%Y-%m-%d')
+        fecha_hasta_str = hoy.strftime('%Y-%m-%d')
         
-        # Procesar datos para el frontend
-        totales = data['totales']
-        ventas = data['ventas']
-        ganancias = data['ganancias']
-        clientes = data['clientes']
-        promedio_diario = data['promedio_diario']
+        conn, cur = get_cursor()
         
+        # ============================================
+        # 2. OBTENER DATOS DE VENTAS
+        # ============================================
+        cur.execute("""
+            SELECT 
+                COALESCE(SUM(monto), 0) as total_facturado,
+                COALESCE(SUM(costo_repuestos_real), 0) as total_repuestos,
+                COALESCE(SUM(costo_mano_obra_real), 0) as total_mano_obra,
+                COALESCE(SUM(costo_diagnostico_real), 0) as total_diagnostico,
+                COUNT(*) as total_servicios
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha >= %s
+        """, (fecha_desde_str,))
+        totales = cur.fetchone()
+        
+        # Ventas diarias
+        cur.execute("""
+            SELECT 
+                fecha,
+                COALESCE(SUM(monto), 0) as total
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha >= %s
+            GROUP BY fecha
+            ORDER BY fecha ASC
+        """, (fecha_desde_str,))
+        ventas = cur.fetchall()
+        
+        # Ganancia acumulada
+        cur.execute("""
+            SELECT 
+                fecha,
+                COALESCE(SUM(monto - COALESCE(costo_repuestos_real, 0) - COALESCE(costo_mano_obra_real, 0) - COALESCE(costo_diagnostico_real, 0)), 0) as ganancia
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha >= %s
+            GROUP BY fecha
+            ORDER BY fecha ASC
+        """, (fecha_desde_str,))
+        ganancias = cur.fetchall()
+        
+        # Top clientes
+        cur.execute("""
+            SELECT 
+                nombre,
+                COALESCE(SUM(monto), 0) as total_gastado
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND nombre IS NOT NULL
+            AND fecha >= %s
+            GROUP BY nombre
+            ORDER BY total_gastado DESC
+            LIMIT 5
+        """, (fecha_desde_str,))
+        clientes = cur.fetchall()
+        
+        # Promedio diario
+        cur.execute("""
+            SELECT 
+                COALESCE(AVG(monto), 0) as promedio_diario
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha >= %s
+        """, (fecha_desde_str,))
+        promedio = cur.fetchone()
+        promedio_diario = float(promedio[0]) if promedio and promedio[0] else 0
+        
+        # ============================================
+        # 3. OBTENER REGISTROS PARA TOTAL DIRECTA/TRABAJO
+        # ============================================
+        cur.execute("""
+            SELECT id, monto, marca, modelo, tipo_venta 
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha >= %s
+        """, (fecha_desde_str,))
+        registros = cur.fetchall()
+        
+        total_directa = 0
+        total_trabajo = 0
+        
+        for row in registros:
+            r = dict(row)
+            tiene_vehiculo = r.get('marca') and r.get('marca').strip() != '' and r.get('modelo') and r.get('modelo').strip() != ''
+            es_directa = r.get('tipo_venta') == 'directa' or not tiene_vehiculo
+            monto = float(r.get('monto', 0) or 0)
+            if es_directa:
+                total_directa += monto
+            else:
+                total_trabajo += monto
+        
+        # ============================================
+        # 4. OBTENER GASTOS DEL PERÍODO
+        # ============================================
+        cur.execute("""
+            SELECT * FROM gastos 
+            WHERE fecha BETWEEN %s AND %s
+            ORDER BY fecha DESC, hora DESC
+        """, (fecha_desde_str, fecha_hasta_str))
+        gastos_rows = cur.fetchall()
+        
+        gastos_operativos = []
+        total_gastos = 0
+        
+        for row in gastos_rows:
+            g = dict(row)
+            # Convertir time a string
+            if g.get('hora') and hasattr(g['hora'], 'strftime'):
+                g['hora'] = g['hora'].strftime('%H:%M:%S')
+            if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
+                g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
+            if g.get('created_at') and hasattr(g['created_at'], 'strftime'):
+                g['created_at'] = g['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            if g.get('updated_at') and hasattr(g['updated_at'], 'strftime'):
+                g['updated_at'] = g['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+            gastos_operativos.append(g)
+            total_gastos += float(g.get('monto', 0) or 0)
+        
+        # ============================================
+        # 5. GASTOS POR CATEGORÍA
+        # ============================================
+        from collections import defaultdict
+        gastos_dict = defaultdict(float)
+        for g in gastos_operativos:
+            categoria = g.get('categoria', 'Otros')
+            gastos_dict[categoria] += float(g.get('monto', 0) or 0)
+        
+        gastos_por_categoria = []
+        total_gastos_cat = sum(gastos_dict.values())
+        for cat, monto in gastos_dict.items():
+            porcentaje = round((monto / total_gastos_cat) * 100, 1) if total_gastos_cat > 0 else 0
+            gastos_por_categoria.append({
+                'categoria': cat,
+                'total': monto,
+                'porcentaje': porcentaje
+            })
+        gastos_por_categoria.sort(key=lambda x: x['total'], reverse=True)
+        
+        # ============================================
+        # 6. GASTOS DIARIOS PARA GRÁFICO
+        # ============================================
+        gastos_dia = defaultdict(float)
+        for g in gastos_operativos:
+            fecha = g.get('fecha', '')
+            if fecha:
+                gastos_dia[fecha] += float(g.get('monto', 0) or 0)
+        
+        gastos_labels = sorted(gastos_dia.keys())
+        gastos_diarios = [gastos_dia[f] for f in gastos_labels]
+        
+        # ============================================
+        # 7. PROCESAR DATOS PARA EL FRONTEND
+        # ============================================
         labels = []
         ventas_data = []
         for row in ventas:
@@ -1233,7 +1391,17 @@ def get_dashboard():
         
         meses_disponibles = PagoService.obtener_meses_disponibles()
         
+        # ============================================
+        # 8. CERRAR CONEXIÓN
+        # ============================================
+        cur.close()
+        conn.close()
+        
+        # ============================================
+        # 9. RESPUESTA COMPLETA
+        # ============================================
         return jsonify({
+            # Ventas
             "total_facturado": float(totales[0]),
             "total_repuestos": float(totales[1]),
             "total_mano_obra": float(totales[2]),
@@ -1251,94 +1419,24 @@ def get_dashboard():
             "meses_disponibles": meses_disponibles,
             "filtro_actual": filtro,
             "mes_actual": mes,
-            "anio_actual": anio
+            "anio_actual": anio,
+            "registros": [dict(row) for row in registros],
+            # Gastos
+            "total_gastos": total_gastos,
+            "gastos_operativos": gastos_operativos,
+            "ganancia_real": float(totales[0]) - float(totales[1]) - float(totales[2]) - total_gastos,
+            "total_directa": total_directa,
+            "total_trabajo": total_trabajo,
+            "gastos_por_categoria": gastos_por_categoria,
+            "gastos_diarios": gastos_diarios,
+            "gastos_labels": gastos_labels
         })
     except Exception as e:
         logger.error(f"Error en get_dashboard: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-# AGREGAR AL FINAL DEL ARCHIVO
-# Obtener gastos del período
-gastos_query = """
-    SELECT * FROM gastos 
-    WHERE fecha >= %s
-    ORDER BY fecha DESC
-"""
-cur.execute(gastos_query, (fecha_desde,))
-gastos_rows = cur.fetchall()
 
-gastos_operativos = []
-total_gastos = 0
-
-for row in gastos_rows:
-    g = dict(row)
-    if g.get('hora') and hasattr(g['hora'], 'strftime'):
-        g['hora'] = g['hora'].strftime('%H:%M:%S')
-    if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
-        g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
-    gastos_operativos.append(g)
-    total_gastos += float(g.get('monto', 0) or 0)
-
-# Gastos por categoría
-from collections import defaultdict
-gastos_dict = defaultdict(float)
-for g in gastos_operativos:
-    categoria = g.get('categoria', 'Otros')
-    gastos_dict[categoria] += float(g.get('monto', 0) or 0)
-
-gastos_por_categoria = []
-total_gastos_cat = sum(gastos_dict.values())
-for cat, monto in gastos_dict.items():
-    porcentaje = round((monto / total_gastos_cat) * 100, 1) if total_gastos_cat > 0 else 0
-    gastos_por_categoria.append({
-        'categoria': cat,
-        'total': monto,
-        'porcentaje': porcentaje
-    })
-gastos_por_categoria.sort(key=lambda x: x['total'], reverse=True)
-
-# Gastos diarios para gráfico
-gastos_dia = defaultdict(float)
-for g in gastos_operativos:
-    fecha = g.get('fecha', '')
-    if fecha:
-        gastos_dia[fecha] += float(g.get('monto', 0) or 0)
-
-gastos_labels = sorted(gastos_dia.keys())
-gastos_diarios = [gastos_dia[f] for f in gastos_labels]
-
-# ============================================
-# AGREGAR AL RETURN
-# ============================================
-
-return jsonify({
-    "total_facturado": float(totales[0]),
-    "total_repuestos": float(totales[1]),
-    "total_mano_obra": float(totales[2]),
-    "total_diagnostico": float(totales[3]),
-    "total_servicios": totales[4],
-    "ganancia_total": float(totales[0]) - float(totales[1]) - float(totales[2]) - float(totales[3]),
-    "promedio_diario": promedio_diario,
-    "labels": labels,
-    "ventas": ventas_data,
-    "ganancia_acumulada": ganancia_data,
-    "proyeccion_labels": proyeccion_labels,
-    "proyeccion": proyeccion,
-    "clientes_labels": [row[0] for row in clientes],
-    "clientes_data": [float(row[1]) for row in clientes],
-    "meses_disponibles": meses_disponibles,
-    "filtro_actual": filtro,
-    "mes_actual": mes,
-    "anio_actual": anio,
-    # ✅ NUEVOS CAMPOS
-    "total_gastos": total_gastos,
-    "gastos_operativos": gastos_operativos,
-    "ganancia_real": float(totales[0]) - float(totales[1]) - float(totales[2]) - total_gastos,
-    "total_directa": 0,  # Lo calcularás en el frontend si tienes los datos
-    "total_trabajo": 0,  # Lo calcularás en el frontend si tienes los datos
-    "gastos_por_categoria": gastos_por_categoria,
-    "gastos_diarios": gastos_diarios,
-    "gastos_labels": gastos_labels
-})
 
 # ============================
 # BUSCAR REPUESTOS (AUTOCOMPLETADO)
@@ -1370,9 +1468,6 @@ def buscar_repuestos():
     except Exception as e:
         logger.error(f"Error en buscar_repuestos: {e}")
         return jsonify([])
-
-
-# AGREGAR AL FINAL DEL ARCHIVO
 
 # ============================
 # TEST NOTIFICACIÓN PUSH
