@@ -32,10 +32,6 @@ def get_cursor():
     conn = get_connection()
     return conn, conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-# ============================================
-# 🆕 NUEVA FUNCIÓN AGREGADA
-# ============================================
-
 def ejecutar_consulta(query, params=None):
     """
     Ejecuta una consulta SQL con parámetros y retorna los resultados
