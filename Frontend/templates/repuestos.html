@@ -1833,10 +1833,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-   // ============================================
-// BOTONES EDITAR - CORREGIDO CON DELEGACIÓN DE EVENTOS
 // ============================================
-// ✅ Usar delegación de eventos en lugar de asignar directamente
+// BOTONES EDITAR - CORREGIDO
+// ============================================
 document.addEventListener('click', function(e) {
     // Buscar si el click fue en un botón editar o en su interior
     const boton = e.target.closest('.btn-editar-repuesto');
@@ -1885,6 +1884,8 @@ document.addEventListener('click', function(e) {
     const editProveedor = document.getElementById('editProveedorRepuesto');
     const editStock = document.getElementById('editStockRepuesto');
     const editPrecio = document.getElementById('editPrecioVenta');
+    const editGananciaLabel = document.getElementById('editGananciaLabel');
+    const editMargenLabel = document.getElementById('editMargenCalculadoLabel');
     
     if (editId) editId.value = id;
     if (editNombre) editNombre.value = nombre;
@@ -1896,9 +1897,6 @@ document.addEventListener('click', function(e) {
     
     // Calcular ganancia
     const ganancia = precioVenta - costo;
-    const editGananciaLabel = document.getElementById('editGananciaLabel');
-    const editMargenLabel = document.getElementById('editMargenCalculadoLabel');
-    
     if (editGananciaLabel) {
         editGananciaLabel.textContent = `💰 Ganancia: $${ganancia.toLocaleString('es-CL')}`;
     }
@@ -1906,14 +1904,15 @@ document.addEventListener('click', function(e) {
         editMargenLabel.textContent = `📊 Margen calculado: ${margen}%`;
     }
     
-    // Cargar categorías si no están cargadas
-    if (!categoriasCargadas) {
-        cargarCategoriasEnEditar().then(() => {
-            seleccionarCategoria(categoriaText);
-        });
-    } else {
+    // 🔥 CORREGIDO: Cargar categorías y luego seleccionar
+    async function cargarYSeleccionarCategoria() {
+        if (!categoriasCargadas) {
+            await cargarCategoriasEnEditar();
+        }
         seleccionarCategoria(categoriaText);
     }
+    
+    cargarYSeleccionarCategoria();
     
     // Abrir modal
     const modal = document.getElementById('modalEditarRepuesto');
@@ -1965,7 +1964,6 @@ function seleccionarCategoria(categoriaText) {
         console.log('ℹ️ Categoría no encontrada:', categoriaClean);
     }
 }
-
     // Eliminar repuesto
     document.querySelectorAll('.btn-eliminar-repuesto-lista').forEach(btn => {
         btn.addEventListener('click', function() {
