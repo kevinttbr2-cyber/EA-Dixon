@@ -130,162 +130,160 @@
             <div class="numero">{{ todos|length }}</div>
         </a>
     </div>
-<!-- ============================
-     RESUMEN DE BALANCE (CON GASTOS)
-     ============================ -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px;">
-    <!-- Total Ingresos -->
-    <div style="background:rgba(0,255,102,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(0,255,102,0.12);text-align:center;">
-        <div style="color:#888;font-size:11px;">💰 Total Ingresos</div>
-        <div style="color:#00ff66;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_pagado|float) }}</div>
-    </div>
-    <!-- Repuestos -->
-    <div style="background:rgba(255,200,0,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(255,200,0,0.12);text-align:center;">
-        <div style="color:#888;font-size:11px;">📦 Repuestos</div>
-        <div style="color:#ffcc00;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_repuestos|float) }}</div>
-    </div>
-    <!-- Mano de Obra -->
-    <div style="background:rgba(79,195,247,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(79,195,247,0.12);text-align:center;">
-        <div style="color:#888;font-size:11px;">👨‍🔧 Mano de Obra</div>
-        <div style="color:#4fc3f7;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_mano_obra|float) }}</div>
-    </div>
-    <!-- ✅ GASTOS OPERATIVOS (NUEVO) -->
-    <div style="background:rgba(255,107,107,0.12);border-radius:10px;padding:12px 16px;border:2px solid #ff6b6b;text-align:center;">
-        <div style="color:#888;font-size:11px;">📊 GASTOS OPERATIVOS</div>
-        <div style="color:#ff6b6b;font-size:20px;font-weight:700;">-${{ "{:,.0f}".format(total_gastos|float) }}</div>
-        <div style="color:#666;font-size:9px;">{{ gastos_operativos|length }} gastos</div>
-    </div>
-    <!-- ✅ GANANCIA REAL -->
-    <div style="background:rgba(0,255,102,0.15);border-radius:10px;padding:12px 16px;border:2px solid #00ff66;text-align:center;">
-        <div style="color:#888;font-size:11px;">📊 GANANCIA REAL</div>
-        <div style="color:{% if ganancia_real|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %};font-size:24px;font-weight:800;">
-            ${{ "{:,.0f}".format(ganancia_real|float) }}
-        </div>
-        <div style="color:#666;font-size:9px;margin-top:2px;">
-            ({{ total_pagado|float }} - {{ total_repuestos|float }} - {{ total_mano_obra|float }} - {{ total_gastos|float }})
-        </div>
-    </div>
-</div>
 
     <!-- ============================
-     TABLA DE DETALLE (VENTAS + GASTOS)
-     ============================ -->
-<div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(79, 195, 247, 0.15); background: #141414;">
-    <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 900px; width: 100%;">
-        <thead style="background: #4fc3f7 !important; color: #000 !important;">
-            <tr>
-                <th style="padding: 8px 10px; text-align: center;">ID</th>
-                <th style="padding: 8px 10px; text-align: center;">Cliente / Concepto</th>
-                <th style="padding: 8px 10px; text-align: center;">Tipo</th>
-                <th style="padding: 8px 10px; text-align: center;">Monto</th>
-                <th style="padding: 8px 10px; text-align: center;">Detalle</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- VENTAS -->
-            {% for r in registros %}
-            <tr>
-                <td style="text-align: center; font-weight: 600;">#{{ r.id }}</td>
-                <td style="text-align: center;">{{ r.nombre }}</td>
-                <td style="text-align: center;">
-                    <span style="color: #00ff66; font-weight: 600;">✅ Venta</span>
-                    {% if r.tipo_venta == 'directa' %}
-                    <span style="font-size: 9px; color: #4fc3f7; display: block;">⚡ Directa</span>
-                    {% else %}
-                    <span style="font-size: 9px; color: #ffcc00; display: block;">🔧 Trabajo</span>
-                    {% endif %}
-                </td>
-                <td style="text-align: center; color: #00ff66; font-weight: 600;">
-                    ${{ "{:,.0f}".format(r.monto|float) }}
-                </td>
-                <td style="text-align: center; font-size: 11px; color: #888;">
-                    Rep: ${{ "{:,.0f}".format(r.costo_repuestos_real|float or 0) }}
-                    <br>MO: ${{ "{:,.0f}".format(r.costo_mano_obra_real|float or 0) }}
-                    <br><span style="color: {% if r.ganancia_neta|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight:600;">
-                        Ganancia: ${{ "{:,.0f}".format(r.ganancia_neta|float or 0) }}
-                    </span>
-                </td>
-            </tr>
-            {% endfor %}
+         RESUMEN DE BALANCE (CON GASTOS)
+         ============================ -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px;">
+        <div style="background:rgba(0,255,102,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(0,255,102,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">💰 Total Ingresos</div>
+            <div style="color:#00ff66;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_pagado|float) }}</div>
+        </div>
+        <div style="background:rgba(255,200,0,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(255,200,0,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">📦 Repuestos</div>
+            <div style="color:#ffcc00;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_repuestos|float) }}</div>
+        </div>
+        <div style="background:rgba(79,195,247,0.06);border-radius:10px;padding:12px 16px;border:1px solid rgba(79,195,247,0.12);text-align:center;">
+            <div style="color:#888;font-size:11px;">👨‍🔧 Mano de Obra</div>
+            <div style="color:#4fc3f7;font-size:20px;font-weight:700;">${{ "{:,.0f}".format(total_mano_obra|float) }}</div>
+        </div>
+        <!-- ✅ GASTOS OPERATIVOS -->
+        <div style="background:rgba(255,107,107,0.12);border-radius:10px;padding:12px 16px;border:2px solid #ff6b6b;text-align:center;">
+            <div style="color:#888;font-size:11px;">📊 GASTOS OPERATIVOS</div>
+            <div style="color:#ff6b6b;font-size:20px;font-weight:700;">-${{ "{:,.0f}".format(total_gastos|float) }}</div>
+            <div style="color:#666;font-size:9px;">{{ gastos_operativos|length }} gastos</div>
+        </div>
+        <!-- ✅ GANANCIA REAL -->
+        <div style="background:rgba(0,255,102,0.15);border-radius:10px;padding:12px 16px;border:2px solid #00ff66;text-align:center;">
+            <div style="color:#888;font-size:11px;">📊 GANANCIA REAL</div>
+            <div style="color:{% if ganancia_real|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %};font-size:24px;font-weight:800;">
+                ${{ "{:,.0f}".format(ganancia_real|float) }}
+            </div>
+            <div style="color:#666;font-size:9px;margin-top:2px;">
+                ({{ total_pagado|float }} - {{ total_repuestos|float }} - {{ total_mano_obra|float }} - {{ total_gastos|float }})
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================
+         TABLA DE DETALLE (VENTAS + GASTOS)
+         ============================ -->
+    <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(79, 195, 247, 0.15); background: #141414;">
+        <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 900px; width: 100%;">
+            <thead style="background: #4fc3f7 !important; color: #000 !important;">
+                <tr>
+                    <th style="padding: 8px 10px; text-align: center;">ID</th>
+                    <th style="padding: 8px 10px; text-align: center;">Cliente / Concepto</th>
+                    <th style="padding: 8px 10px; text-align: center;">Tipo</th>
+                    <th style="padding: 8px 10px; text-align: center;">Monto</th>
+                    <th style="padding: 8px 10px; text-align: center;">Detalle</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- VENTAS -->
+                {% for r in registros %}
+                <tr>
+                    <td style="text-align: center; font-weight: 600;">#{{ r.id }}</td>
+                    <td style="text-align: center;">{{ r.nombre }}</td>
+                    <td style="text-align: center;">
+                        <span style="color: #00ff66; font-weight: 600;">✅ Venta</span>
+                        {% if r.tipo_venta == 'directa' %}
+                        <span style="font-size: 9px; color: #4fc3f7; display: block;">⚡ Directa</span>
+                        {% else %}
+                        <span style="font-size: 9px; color: #ffcc00; display: block;">🔧 Trabajo</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center; color: #00ff66; font-weight: 600;">
+                        ${{ "{:,.0f}".format(r.monto|float) }}
+                    </td>
+                    <td style="text-align: center; font-size: 11px; color: #888;">
+                        Rep: ${{ "{:,.0f}".format(r.costo_repuestos_real|float or 0) }}
+                        <br>MO: ${{ "{:,.0f}".format(r.costo_mano_obra_real|float or 0) }}
+                        <br><span style="color: {% if r.ganancia_neta|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight:600;">
+                            Ganancia: ${{ "{:,.0f}".format(r.ganancia_neta|float or 0) }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+                
+                <!-- ==================== GASTOS OPERATIVOS ==================== -->
+                {% for g in gastos_operativos %}
+                <tr class="gasto-row" style="background: rgba(255, 107, 107, 0.05) !important;">
+                    <td style="text-align: center; font-weight: 600; color: #ff6b6b;">G-{{ g.id }}</td>
+                    <td style="text-align: center; color: #ff6b6b;">{{ g.categoria }}</td>
+                    <td style="text-align: center;">
+                        <span style="color: #ff6b6b; font-weight: 600;">📉 Gasto</span>
+                        {% if g.metodo_pago == 'efectivo' %}
+                        <span style="font-size: 9px; color: #00ff66;">💵 Efectivo</span>
+                        {% elif g.metodo_pago == 'transferencia' %}
+                        <span style="font-size: 9px; color: #4fc3f7;">🏦 Transferencia</span>
+                        {% elif g.metodo_pago == 'tarjeta' %}
+                        <span style="font-size: 9px; color: #9b59b6;">💳 Tarjeta</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center; color: #ff6b6b; font-weight: 700;" class="monto-gasto">
+                        -${{ "{:,.0f}".format(g.monto|float) }}
+                    </td>
+                    <td style="text-align: center; font-size: 11px; color: #888;">
+                        {{ g.descripcion or 'Sin descripción' }}
+                        {% if g.proveedor %}
+                        <br>🏢 {{ g.proveedor }}
+                        {% endif %}
+                        {% if g.folio %}
+                        <br>📄 Folio: {{ g.folio }}
+                        {% endif %}
+                        <br><span style="color: #666; font-size: 10px;">{{ g.fecha }} {{ g.hora }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+                
+                <!-- SIN REGISTROS -->
+                {% if not registros and not gastos_operativos %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #666; padding: 40px 0;">
+                        <i class="fa-solid fa-chart-simple" style="font-size: 48px; color: #4fc3f7; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
+                        <p style="font-size: 16px;">No hay registros en este período</p>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
             
-            <!-- ✅ GASTOS OPERATIVOS -->
-            {% for g in gastos_operativos %}
-            <tr class="gasto-row" style="background: rgba(255, 107, 107, 0.05) !important;">
-                <td style="text-align: center; font-weight: 600; color: #ff6b6b;">G-{{ g.id }}</td>
-                <td style="text-align: center; color: #ff6b6b;">{{ g.categoria }}</td>
-                <td style="text-align: center;">
-                    <span style="color: #ff6b6b; font-weight: 600;">📉 Gasto</span>
-                    {% if g.metodo_pago == 'efectivo' %}
-                    <span style="font-size: 9px; color: #00ff66;">💵 Efectivo</span>
-                    {% elif g.metodo_pago == 'transferencia' %}
-                    <span style="font-size: 9px; color: #4fc3f7;">🏦 Transferencia</span>
-                    {% elif g.metodo_pago == 'tarjeta' %}
-                    <span style="font-size: 9px; color: #9b59b6;">💳 Tarjeta</span>
-                    {% endif %}
-                </td>
-                <td style="text-align: center; color: #ff6b6b; font-weight: 700;" class="monto-gasto">
-                    -${{ "{:,.0f}".format(g.monto|float) }}
-                </td>
-                <td style="text-align: center; font-size: 11px; color: #888;">
-                    {{ g.descripcion or 'Sin descripción' }}
-                    {% if g.proveedor %}
-                    <br>🏢 {{ g.proveedor }}
-                    {% endif %}
-                    {% if g.folio %}
-                    <br>📄 Folio: {{ g.folio }}
-                    {% endif %}
-                    <br><span style="color: #666; font-size: 10px;">{{ g.fecha }} {{ g.hora }}</span>
-                </td>
-            </tr>
-            {% endfor %}
-            
-            <!-- SIN REGISTROS -->
-            {% if not registros and not gastos_operativos %}
-            <tr>
-                <td colspan="5" style="text-align: center; color: #666; padding: 40px 0;">
-                    <i class="fa-solid fa-chart-simple" style="font-size: 48px; color: #4fc3f7; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
-                    <p style="font-size: 16px;">No hay registros en este período</p>
-                </td>
-            </tr>
-            {% endif %}
-        </tbody>
-        
-        <!-- PIE DE TABLA -->
-        <tfoot style="background: rgba(0,255,102,0.06);">
-            <tr class="total-row">
-                <th colspan="3" style="text-align: right; padding: 10px 10px; color: #90e0a0;">TOTAL INGRESOS</th>
-                <th style="text-align: center; color: #00ff66; font-weight: 700; font-size: 18px;">
-                    ${{ "{:,.0f}".format(total_pagado|float) }}
-                </th>
-                <th style="text-align: center; font-size: 11px; color: #888;">
-                    {{ registros|length }} ventas
-                </th>
-            </tr>
-            {% if gastos_operativos %}
-            <tr class="total-row" style="background: rgba(255,107,107,0.08);">
-                <th colspan="3" style="text-align: right; padding: 10px 10px; color: #ff6b6b;">TOTAL GASTOS</th>
-                <th style="text-align: center; color: #ff6b6b; font-weight: 700; font-size: 18px;">
-                    -${{ "{:,.0f}".format(total_gastos|float) }}
-                </th>
-                <th style="text-align: center; font-size: 11px; color: #888;">
-                    {{ gastos_operativos|length }} gastos
-                </th>
-            </tr>
-            {% endif %}
-            <tr class="total-row" style="background: rgba(0,255,102,0.12); border-top: 2px solid #00ff66;">
-                <th colspan="3" style="text-align: right; padding: 10px 10px; color: #00ff66; font-size: 16px;">
-                    📊 GANANCIA REAL
-                </th>
-                <th style="text-align: center; color: {% if ganancia_real|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight: 800; font-size: 22px;">
-                    ${{ "{:,.0f}".format(ganancia_real|float) }}
-                </th>
-                <th style="text-align: center; font-size: 11px; color: #888;">
-                    ({{ total_pagado|float }} - {{ total_repuestos|float }} - {{ total_mano_obra|float }} - {{ total_gastos|float }})
-                </th>
-            </tr>
-        </tfoot>
-    </table>
-</div>
+            <!-- ==================== PIE DE TABLA ==================== -->
+            <tfoot style="background: rgba(0,255,102,0.06);">
+                <tr class="total-row">
+                    <th colspan="3" style="text-align: right; padding: 10px 10px; color: #90e0a0;">TOTAL INGRESOS</th>
+                    <th style="text-align: center; color: #00ff66; font-weight: 700; font-size: 18px;">
+                        ${{ "{:,.0f}".format(total_pagado|float) }}
+                    </th>
+                    <th style="text-align: center; font-size: 11px; color: #888;">
+                        {{ registros|length }} ventas
+                    </th>
+                </tr>
+                {% if gastos_operativos %}
+                <tr class="total-row" style="background: rgba(255,107,107,0.08);">
+                    <th colspan="3" style="text-align: right; padding: 10px 10px; color: #ff6b6b;">TOTAL GASTOS</th>
+                    <th style="text-align: center; color: #ff6b6b; font-weight: 700; font-size: 18px;">
+                        -${{ "{:,.0f}".format(total_gastos|float) }}
+                    </th>
+                    <th style="text-align: center; font-size: 11px; color: #888;">
+                        {{ gastos_operativos|length }} gastos
+                    </th>
+                </tr>
+                {% endif %}
+                <tr class="total-row" style="background: rgba(0,255,102,0.12); border-top: 2px solid #00ff66;">
+                    <th colspan="3" style="text-align: right; padding: 10px 10px; color: #00ff66; font-size: 16px;">
+                        📊 GANANCIA REAL
+                    </th>
+                    <th style="text-align: center; color: {% if ganancia_real|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight: 800; font-size: 22px;">
+                        ${{ "{:,.0f}".format(ganancia_real|float) }}
+                    </th>
+                    <th style="text-align: center; font-size: 11px; color: #888;">
+                        ({{ total_pagado|float }} - {{ total_repuestos|float }} - {{ total_mano_obra|float }} - {{ total_gastos|float }})
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
 </div>
 
 {% endblock %}
