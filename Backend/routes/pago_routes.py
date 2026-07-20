@@ -1633,7 +1633,7 @@ def crear_repuesto():
         return jsonify({"error": str(e)}), 500
 
 # ============================
-# ACTUALIZAR REPUESTO (VERSIÓN CORREGIDA)
+# ACTUALIZAR REPUESTO (CORREGIDO)
 # ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
@@ -1657,9 +1657,8 @@ def actualizar_repuesto(id_repuesto):
             stock = 0
         if stock < 0:
             stock = 0
-        logger.info(f"📦 Stock procesado: {stock} (original: {stock_raw})")
         
-        # 🔥 CATEGORÍA - Obtener nombre y subcategoria_id
+        # 🔥 CATEGORÍA
         categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
         subcategoria_id = data.get('subcategoria_id')
         if subcategoria_id:
@@ -1668,14 +1667,13 @@ def actualizar_repuesto(id_repuesto):
             except (ValueError, TypeError):
                 subcategoria_id = None
         
+        logger.info(f"📦 Stock procesado: {stock} (original: {stock_raw})")
         logger.info(f"📂 Categoría: '{categoria_nombre}'")
         logger.info(f"📂 Subcategoria ID: {subcategoria_id}")
         
-        # Validaciones
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
         
-        # Calcular precio si es necesario
         if costo_venta_final == 0 and costo_proveedor > 0:
             iva = 1.19
             costo_con_iva = costo_proveedor * iva
@@ -1688,17 +1686,17 @@ def actualizar_repuesto(id_repuesto):
         cur = conn.cursor()
         
         # 🔥 VERIFICAR REPUESTO EXISTENTE
-        cur.execute("SELECT id, nombre, stock FROM repuestos WHERE id = %s", (id_repuesto,))
+        cur.execute("SELECT id, nombre, stock, subcategoria_id FROM repuestos WHERE id = %s", (id_repuesto,))
         existente = cur.fetchone()
         if not existente:
             cur.close()
             conn.close()
             return jsonify({"error": "Repuesto no encontrado"}), 404
         
-        logger.info(f"📦 Repuesto existente: {existente[1]} - Stock actual: {existente[2]}")
-        logger.info(f"📦 Nuevo stock a guardar: {stock}")
+        logger.info(f"📦 Antes: {existente[1]} - Stock: {existente[2]} - Subcat: {existente[3]}")
+        logger.info(f"📦 Después: Stock: {stock} - Subcat: {subcategoria_id}")
         
-        # 🔥 ACTUALIZAR REPUESTO
+        # 🔥 IMPORTANTE: EL ORDEN DE LOS CAMPOS DEBE SER EXACTO
         cur.execute("""
             UPDATE repuestos 
             SET nombre = %s, 
@@ -1712,18 +1710,18 @@ def actualizar_repuesto(id_repuesto):
                 costo_proveedor_pendiente = %s,
                 updated_at = NOW() AT TIME ZONE 'America/Santiago'
             WHERE id = %s
-            RETURNING id, stock, categoria_nombre
+            RETURNING id, stock, subcategoria_id
         """, (
-            nombre, 
-            costo_proveedor, 
-            margen_ganancia, 
-            proveedor, 
-            costo_venta_final, 
-            stock,  # 🔥 Asegurar que es un entero
-            categoria_nombre, 
-            subcategoria_id,
-            costo_proveedor_pendiente, 
-            id_repuesto
+            nombre,                  # 1
+            costo_proveedor,         # 2
+            margen_ganancia,         # 3
+            proveedor,               # 4
+            costo_venta_final,       # 5
+            stock,                   # 6 ← STOCK AQUÍ
+            categoria_nombre,        # 7
+            subcategoria_id,         # 8 ← SUBCATEGORIA_ID AQUÍ
+            costo_proveedor_pendiente, # 9
+            id_repuesto              # 10
         ))
         
         result = cur.fetchone()
@@ -1734,11 +1732,11 @@ def actualizar_repuesto(id_repuesto):
         if not result:
             return jsonify({"error": "Repuesto no encontrado"}), 404
         
-        logger.info(f"✅ Repuesto actualizado: {nombre} (ID: {id_repuesto}) - Stock: {stock} - Categoría: '{categoria_nombre}'")
+        logger.info(f"✅ Repuesto actualizado: {nombre} (ID: {id_repuesto}) - Stock: {result[1]} - Subcat: {result[2]}")
         return jsonify({
             "success": True, 
-            "stock_guardado": stock,
-            "categoria_guardada": categoria_nombre
+            "stock_guardado": result[1],
+            "subcategoria_guardada": result[2]
         })
         
     except Exception as e:
@@ -1746,7 +1744,6 @@ def actualizar_repuesto(id_repuesto):
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-        
 # ============================
 # ELIMINAR REPUESTO
 # ============================
