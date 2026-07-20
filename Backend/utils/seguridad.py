@@ -1,5 +1,4 @@
 # Backend/utils/seguridad.py
-# Backend/utils/seguridad.py
 import secrets
 import hmac
 import hashlib
@@ -9,7 +8,7 @@ from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
 
 # ============================================
-# FUNCIONES EXISTENTES (MANTENER)
+# FUNCIONES EXISTENTES
 # ============================================
 
 def generar_csrf():
@@ -31,7 +30,7 @@ def verificar_firma_pdf(id_reg, firma):
     return firma == generar_firma_pdf(id_reg)
 
 # ============================================
-# NUEVAS FUNCIONES DE SEGURIDAD
+# FUNCIONES DE SANITIZACIÓN
 # ============================================
 
 def sanitizar_input(texto: Optional[str], max_len: int = 500) -> str:
@@ -151,6 +150,10 @@ def sanitizar_dict(data: Dict) -> Dict:
     
     return sanitizado
 
+# ============================================
+# FUNCIONES DE VALIDACIÓN
+# ============================================
+
 def validar_filtro(filtro: str) -> bool:
     """
     Valida que el filtro sea uno de los permitidos
@@ -219,3 +222,33 @@ def validar_hora(hora: str) -> bool:
         return False
     patron = r'^\d{2}:\d{2}:\d{2}$'
     return bool(re.match(patron, hora))
+
+def validar_email(email: str) -> bool:
+    """
+    Valida que el email tenga formato correcto
+    
+    Args:
+        email: String con el email
+    
+    Returns:
+        True si es válido, False en caso contrario
+    """
+    if not email:
+        return False
+    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(patron, email))
+
+def validar_telefono(telefono: str) -> bool:
+    """
+    Valida que el teléfono tenga formato correcto
+    
+    Args:
+        telefono: String con el teléfono
+    
+    Returns:
+        True si es válido, False en caso contrario
+    """
+    if not telefono:
+        return False
+    patron = r'^\+?[0-9\s\-]{8,15}$'
+    return bool(re.match(patron, telefono.strip()))
