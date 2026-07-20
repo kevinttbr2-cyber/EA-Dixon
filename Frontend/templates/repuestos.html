@@ -1866,87 +1866,89 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================
-    // BOTONES EDITAR
-    // ============================================
-    document.addEventListener('click', function(e) {
-        const boton = e.target.closest('.btn-editar-repuesto');
-        if (!boton) return;
-        
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const id = boton.dataset.id;
-        const fila = document.querySelector(`.fila-repuesto-lista[data-id="${id}"]`);
-        if (!fila) {
-            console.error('❌ Fila no encontrada para ID:', id);
-            alert('Error: No se encontró el repuesto');
-            return;
+// BOTONES EDITAR - CORREGIDO
+// ============================================
+document.addEventListener('click', function(e) {
+    const boton = e.target.closest('.btn-editar-repuesto');
+    if (!boton) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const id = boton.dataset.id;
+    const fila = document.querySelector(`.fila-repuesto-lista[data-id="${id}"]`);
+    if (!fila) {
+        console.error('❌ Fila no encontrada para ID:', id);
+        alert('Error: No se encontró el repuesto');
+        return;
+    }
+    
+    const nombre = fila.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+    const stockText = fila.querySelector('td:nth-child(3)')?.textContent.trim() || '0';
+    const stock = parseInt(stockText) || 0;
+    const costoText = fila.querySelector('td:nth-child(4)')?.textContent.replace(/[$,⚠️]/g, '').trim() || '0';
+    const costo = parseFloat(costoText) || 0;
+    const margenText = fila.querySelector('td:nth-child(5)')?.textContent.replace('%', '').trim() || '0';
+    const margen = parseFloat(margenText) || 0;
+    const proveedor = fila.querySelector('td:nth-child(7)')?.textContent.trim() || '';
+    const categoriaText = fila.querySelector('td:nth-child(8)')?.textContent.trim() || '';
+    const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
+    const precioVenta = parseFloat(precioText) || 0;
+    
+    console.log('📊 DATOS DE LA FILA:');
+    console.log('  ID:', id);
+    console.log('  Stock:', stock);
+    console.log('  Categoría:', categoriaText);
+    
+    const editId = document.getElementById('editRepuestoId');
+    const editNombre = document.getElementById('editNombreRepuesto');
+    const editCosto = document.getElementById('editCostoProveedor');
+    const editMargen = document.getElementById('editMargenGanancia');
+    const editProveedor = document.getElementById('editProveedorRepuesto');
+    const editStock = document.getElementById('editStockRepuesto');
+    const editPrecio = document.getElementById('editPrecioVenta');
+    const editGananciaLabel = document.getElementById('editGananciaLabel');
+    // 🔥 CORREGIDO: usar editMargenCalculadoLabel en lugar de editMargenLabel
+    const editMargenCalculadoLabel = document.getElementById('editMargenCalculadoLabel');
+    
+    if (editId) editId.value = id;
+    if (editNombre) editNombre.value = nombre;
+    if (editCosto) editCosto.value = costo;
+    if (editMargen) editMargen.value = margen;
+    if (editProveedor) editProveedor.value = proveedor === '-' ? '' : proveedor;
+    if (editStock) editStock.value = stock;
+    if (editPrecio) editPrecio.value = precioVenta;
+    
+    const ganancia = precioVenta - costo;
+    if (editGananciaLabel) {
+        editGananciaLabel.textContent = `💰 Ganancia: $${ganancia.toLocaleString('es-CL')}`;
+    }
+    // 🔥 CORREGIDO: usar editMargenCalculadoLabel
+    if (editMargenCalculadoLabel) {
+        editMargenCalculadoLabel.textContent = `📊 Margen calculado: ${margen}%`;
+    }
+    
+    // Cargar categorías
+    async function cargarYSeleccionarCategoria() {
+        if (!categoriasCargadas) {
+            await cargarCategoriasEnEditar();
         }
-        
-        const nombre = fila.querySelector('td:nth-child(2)')?.textContent.trim() || '';
-        const stockText = fila.querySelector('td:nth-child(3)')?.textContent.trim() || '0';
-        const stock = parseInt(stockText) || 0;
-        const costoText = fila.querySelector('td:nth-child(4)')?.textContent.replace(/[$,⚠️]/g, '').trim() || '0';
-        const costo = parseFloat(costoText) || 0;
-        const margenText = fila.querySelector('td:nth-child(5)')?.textContent.replace('%', '').trim() || '0';
-        const margen = parseFloat(margenText) || 0;
-        const proveedor = fila.querySelector('td:nth-child(7)')?.textContent.trim() || '';
-        const categoriaText = fila.querySelector('td:nth-child(8)')?.textContent.trim() || '';
-        const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
-        const precioVenta = parseFloat(precioText) || 0;
-        
-        console.log('📊 DATOS DE LA FILA:');
-        console.log('  ID:', id);
-        console.log('  Stock:', stock);
-        console.log('  Categoría:', categoriaText);
-        
-        const editId = document.getElementById('editRepuestoId');
-        const editNombre = document.getElementById('editNombreRepuesto');
-        const editCosto = document.getElementById('editCostoProveedor');
-        const editMargen = document.getElementById('editMargenGanancia');
-        const editProveedor = document.getElementById('editProveedorRepuesto');
-        const editStock = document.getElementById('editStockRepuesto');
-        const editPrecio = document.getElementById('editPrecioVenta');
-        const editGananciaLabel = document.getElementById('editGananciaLabel');
-        const editMargenLabel = document.getElementById('editMargenCalculadoLabel');
-        
-        if (editId) editId.value = id;
-        if (editNombre) editNombre.value = nombre;
-        if (editCosto) editCosto.value = costo;
-        if (editMargen) editMargen.value = margen;
-        if (editProveedor) editProveedor.value = proveedor === '-' ? '' : proveedor;
-        if (editStock) editStock.value = stock;
-        if (editPrecio) editPrecio.value = precioVenta;
-        
-        const ganancia = precioVenta - costo;
-        if (editGananciaLabel) {
-            editGananciaLabel.textContent = `💰 Ganancia: $${ganancia.toLocaleString('es-CL')}`;
+        seleccionarCategoria(categoriaText);
+    }
+    
+    cargarYSeleccionarCategoria();
+    
+    const modal = document.getElementById('modalEditarRepuesto');
+    if (modal) modal.classList.add('active');
+    
+    setTimeout(function() {
+        const stockInput = document.getElementById('editStockRepuesto');
+        if (stockInput) {
+            stockInput.value = stock;
+            console.log('✅ Stock forzado después de abrir:', stockInput.value);
         }
-        if (editMargenLabel) {
-            editMargenLabel.textContent = `📊 Margen calculado: ${margen}%`;
-        }
-        
-        async function cargarYSeleccionarCategoria() {
-            if (!categoriasCargadas) {
-                await cargarCategoriasEnEditar();
-            }
-            seleccionarCategoria(categoriaText);
-        }
-        
-        cargarYSeleccionarCategoria();
-        
-        const modal = document.getElementById('modalEditarRepuesto');
-        if (modal) modal.classList.add('active');
-        
-        setTimeout(function() {
-            const stockInput = document.getElementById('editStockRepuesto');
-            if (stockInput) {
-                stockInput.value = stock;
-                console.log('✅ Stock forzado después de abrir:', stockInput.value);
-            }
-        }, 100);
-    });
-
+    }, 100);
+});
     // Función auxiliar para seleccionar categoría
     function seleccionarCategoria(categoriaText) {
         const select = document.getElementById('editCategoriaRepuesto');
