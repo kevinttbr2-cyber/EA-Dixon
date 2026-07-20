@@ -557,6 +557,7 @@ def get_repuestos_lista():
                     proveedor,
                     costo_proveedor_pendiente,
                     categoria_nombre,
+                    subcategoria_id,
                     stock
                 FROM repuestos 
                 ORDER BY nombre
@@ -581,6 +582,39 @@ def get_repuestos_lista():
         return jsonify(repuestos)
     except Exception as e:
         logger.error(f"Error en get_repuestos_lista: {e}")
+        return jsonify([])
+# Backend/routes/catalogo_routes.py
+
+@pago_bp.route('/subcategorias_repuestos', methods=['GET'])
+def get_subcategorias_repuestos():
+    """Obtiene todas las subcategorías para el select"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT 
+                sc.id,
+                sc.nombre,
+                c.nombre as categoria_nombre
+            FROM subcategorias_repuestos sc
+            JOIN categorias_repuestos c ON c.id = sc.categoria_id
+            ORDER BY c.nombre, sc.nombre
+        """)
+        
+        subcategorias = []
+        for row in cur.fetchall():
+            subcategorias.append({
+                'id': row[0],
+                'nombre': row[1],
+                'categoria_nombre': row[2]
+            })
+        
+        cur.close()
+        conn.close()
+        return jsonify(subcategorias)
+    except Exception as e:
+        logger.error(f"Error en get_subcategorias_repuestos: {e}")
         return jsonify([])
 
 # ============================
