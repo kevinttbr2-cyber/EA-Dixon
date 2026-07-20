@@ -79,6 +79,11 @@
     font-size: 11px;
 }
 
+.form-group label .obligatorio {
+    color: #ff6b6b;
+    font-weight: 700;
+}
+
 .form-group .form-control {
     background: var(--bg-input) !important;
     color: var(--text-primary) !important;
@@ -105,6 +110,28 @@
 .form-group .form-control[readonly] {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+/* ============================================
+   CAMPO "OTROS" (manual)
+   ============================================ */
+.input-otro {
+    display: none;
+    margin-top: 6px;
+}
+
+.input-otro.active {
+    display: block;
+}
+
+.input-otro .form-control {
+    border-color: #f1c40f !important;
+    background: rgba(241, 196, 15, 0.04) !important;
+}
+
+.input-otro .form-control:focus {
+    border-color: #f1c40f !important;
+    box-shadow: 0 0 0 4px rgba(241, 196, 15, 0.08) !important;
 }
 
 /* ============================================
@@ -174,7 +201,7 @@
     background: var(--bg-secondary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
-    max-height: 220px;
+    max-height: 240px;
     overflow-y: auto;
     z-index: 9999;
     margin-top: 2px;
@@ -218,6 +245,24 @@
     font-size: 11px;
     padding: 2px 10px;
     border-radius: 12px;
+}
+
+/* ✅ ESTILO ESPECIAL PARA "OTROS" */
+.autocomplete-wrapper .sugerencias .item.item-otros {
+    border-top: 1px solid rgba(241, 196, 15, 0.20);
+    background: rgba(241, 196, 15, 0.04);
+    color: #f1c40f;
+    font-weight: 600;
+}
+
+.autocomplete-wrapper .sugerencias .item.item-otros:hover {
+    background: rgba(241, 196, 15, 0.10);
+    color: #f1c40f;
+}
+
+.autocomplete-wrapper .sugerencias .item.item-otros .badge-cantidad {
+    background: rgba(241, 196, 15, 0.10);
+    color: #f1c40f;
 }
 
 .autocomplete-wrapper .sugerencias .no-resultados {
@@ -441,7 +486,7 @@
             <!-- Nombre + Teléfono -->
             <div class="grid-2">
                 <div class="form-group">
-                    <label>Nombre del cliente *</label>
+                    <label>Nombre del cliente <span class="obligatorio">*</span></label>
                     <input type="text" name="nombre" class="form-control" required placeholder="Ej: Juan Pérez" autocomplete="off">
                 </div>
                 <div class="form-group">
@@ -480,7 +525,7 @@
             <!-- Patente + Flota -->
             <div class="grid-2">
                 <div class="form-group">
-                    <label>🔢 Patente *</label>
+                    <label>🔢 Patente <span class="obligatorio">*</span></label>
                     <input type="text" name="patente" class="form-control" required placeholder="Ej: ABCD12" style="text-transform:uppercase;" maxlength="10">
                 </div>
                 <div class="form-group">
@@ -518,33 +563,43 @@
         </div>
 
         <!-- ============================================
-             SECCIÓN 3: MARCA Y MODELO (CON CATÁLOGO)
+             SECCIÓN 3: MARCA Y MODELO (CON CATÁLOGO + OTROS)
              ============================================ -->
         <div class="section-card">
             <div class="section-title">
                 <span class="icon">🏷️</span> Marca y Modelo
             </div>
 
-            <!-- Marca (con catálogo desplegable) -->
+            <!-- Marca (con catálogo desplegable + OTROS) -->
             <div class="form-group">
-                <label>🏷️ Marca *</label>
+                <label>🏷️ Marca <span class="obligatorio">*</span></label>
                 <div class="autocomplete-wrapper">
                     <input type="text" id="marcaInput" class="form-control" placeholder="Escribe o selecciona la marca..." autocomplete="off">
                     <input type="hidden" id="marcaHidden" name="marca" value="">
                     <div class="sugerencias" id="sugerenciasMarca"></div>
                 </div>
-                <small style="color: var(--text-muted); font-size: 11px;">💡 Haz clic para ver el catálogo o escribe para filtrar</small>
+                <!-- Campo "Otros" para marca manual -->
+                <div class="input-otro" id="marcaOtroContainer">
+                    <input type="text" id="marcaOtroInput" class="form-control" placeholder="Escribe la marca manualmente..." style="border-color: #f1c40f !important;">
+                    <small style="color: #f1c40f; font-size: 11px;">✏️ Escribe la marca personalizada</small>
+                </div>
+                <small style="color: var(--text-muted); font-size: 11px;">💡 Haz clic para ver el catálogo, escribe para filtrar o selecciona <strong style="color:#f1c40f;">"📝 Otros"</strong> para escribir manualmente</small>
             </div>
 
-            <!-- Modelo (con catálogo desplegable) -->
+            <!-- Modelo (con catálogo desplegable + OTROS) -->
             <div class="form-group">
-                <label>📐 Modelo *</label>
+                <label>📐 Modelo <span class="obligatorio">*</span></label>
                 <div class="autocomplete-wrapper">
                     <input type="text" id="modeloInput" class="form-control" placeholder="Escribe o selecciona el modelo..." autocomplete="off" disabled>
                     <input type="hidden" id="modeloHidden" name="modelo" value="">
                     <div class="sugerencias" id="sugerenciasModelo"></div>
                 </div>
-                <small style="color: var(--text-muted); font-size: 11px;">💡 Haz clic para ver el catálogo o escribe para filtrar</small>
+                <!-- Campo "Otros" para modelo manual -->
+                <div class="input-otro" id="modeloOtroContainer">
+                    <input type="text" id="modeloOtroInput" class="form-control" placeholder="Escribe el modelo manualmente..." style="border-color: #f1c40f !important;">
+                    <small style="color: #f1c40f; font-size: 11px;">✏️ Escribe el modelo personalizado</small>
+                </div>
+                <small style="color: var(--text-muted); font-size: 11px;">💡 Haz clic para ver el catálogo, escribe para filtrar o selecciona <strong style="color:#f1c40f;">"📝 Otros"</strong> para escribir manualmente</small>
             </div>
 
             <!-- Kilometraje -->
@@ -594,16 +649,20 @@
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
 // ============================================
-// 1. AUTOCOMPLETADO DE MARCAS (CON CATÁLOGO)
+// 1. AUTOCOMPLETADO DE MARCAS (CON CATÁLOGO + OTROS)
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const marcaInput = document.getElementById('marcaInput');
     const marcaHidden = document.getElementById('marcaHidden');
     const sugerenciasMarca = document.getElementById('sugerenciasMarca');
+    const marcaOtroContainer = document.getElementById('marcaOtroContainer');
+    const marcaOtroInput = document.getElementById('marcaOtroInput');
     
     const modeloInput = document.getElementById('modeloInput');
     const modeloHidden = document.getElementById('modeloHidden');
     const sugerenciasModelo = document.getElementById('sugerenciasModelo');
+    const modeloOtroContainer = document.getElementById('modeloOtroContainer');
+    const modeloOtroInput = document.getElementById('modeloOtroInput');
     
     let marcas = [];
     let modelos = [];
@@ -630,7 +689,6 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(e => {
                 console.error('❌ Error cargando marcas:', e);
-                // Fallback directo al backend
                 fetch(`${API_URL}/api/marcas`)
                     .then(r => r.json())
                     .then(data => {
@@ -645,41 +703,103 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function mostrarSugerenciasMarca(lista) {
-        if (!lista || lista.length === 0) {
-            sugerenciasMarca.innerHTML = `<div class="no-resultados">No hay marcas disponibles</div>`;
-            sugerenciasMarca.classList.add('show');
-            return;
-        }
-        
         const texto = marcaInput.value.toLowerCase().trim();
-        const filtradas = texto ? lista.filter(m => m.toLowerCase().includes(texto)) : lista;
+        let filtradas = texto ? lista.filter(m => m.toLowerCase().includes(texto)) : lista;
         
-        if (filtradas.length === 0) {
-            sugerenciasMarca.innerHTML = `
-                <div class="no-resultados">
-                    No hay resultados para "<strong>${texto}</strong>". 
-                    <span class="crear-link" onclick="crearMarcaManual()">Crear "${texto}"</span>
+        // ✅ SIEMPRE agregar la opción "Otros" al final
+        const opcionOtros = {
+            esOtros: true,
+            label: '📝 Otros (escribir manualmente)'
+        };
+        
+        let html = '';
+        
+        if (filtradas.length === 0 && !texto) {
+            // Si no hay texto y no hay marcas, mostrar mensaje
+            html = `<div class="no-resultados">No hay marcas disponibles. <span class="crear-link" onclick="seleccionarOtrosMarca()">📝 Usar "Otros"</span></div>`;
+        } else {
+            // Mostrar marcas filtradas
+            filtradas.forEach((m, index) => {
+                html += `
+                    <div class="item ${index === itemActivoMarca ? 'active' : ''}" 
+                         data-index="${index}"
+                         onclick="seleccionarMarca('${m.replace(/'/g, "\\'")}')">
+                        <span>${m}</span>
+                        <span class="badge-cantidad">${m.length} caracteres</span>
+                    </div>
+                `;
+            });
+            
+            // ✅ Agregar opción "Otros" al final
+            const otrosIndex = filtradas.length;
+            html += `
+                <div class="item item-otros ${otrosIndex === itemActivoMarca ? 'active' : ''}" 
+                     data-index="${otrosIndex}"
+                     onclick="seleccionarOtrosMarca()">
+                    <span>📝 Otros (escribir manualmente)</span>
+                    <span class="badge-cantidad">✏️ Personalizado</span>
                 </div>
             `;
-            sugerenciasMarca.classList.add('show');
-            return;
         }
         
-        sugerenciasMarca.innerHTML = filtradas.map((m, index) => `
-            <div class="item ${index === itemActivoMarca ? 'active' : ''}" 
-                 data-index="${index}"
-                 onclick="seleccionarMarca('${m.replace(/'/g, "\\'")}')">
-                <span>${m}</span>
-                <span class="badge-cantidad">${m.length} caracteres</span>
-            </div>
-        `).join('');
+        sugerenciasMarca.innerHTML = html;
         sugerenciasMarca.classList.add('show');
     }
     
     // ============================================
+    // SELECCIONAR MARCA (normal)
+    // ============================================
+    window.seleccionarMarca = function(marca) {
+        marcaInput.value = marca;
+        marcaHidden.value = marca;
+        marcaSeleccionada = marca;
+        sugerenciasMarca.classList.remove('show');
+        itemActivoMarca = -1;
+        
+        // Ocultar campo "Otros"
+        marcaOtroContainer.classList.remove('active');
+        marcaOtroInput.value = '';
+        
+        // Habilitar modelo y cargar modelos
+        modeloInput.disabled = false;
+        modeloInput.value = '';
+        modeloHidden.value = '';
+        modeloInput.placeholder = 'Cargando modelos...';
+        modeloOtroContainer.classList.remove('active');
+        modeloOtroInput.value = '';
+        
+        cargarModelos(marca);
+    };
+    
+    // ============================================
+    // ✅ SELECCIONAR "OTROS" PARA MARCA
+    // ============================================
+    window.seleccionarOtrosMarca = function() {
+        // Mostrar campo de texto manual
+        marcaOtroContainer.classList.add('active');
+        marcaOtroInput.value = '';
+        marcaOtroInput.focus();
+        
+        // Limpiar el input de marca
+        marcaInput.value = '📝 Otros (escribir manualmente)';
+        marcaHidden.value = '';
+        marcaSeleccionada = '';
+        
+        sugerenciasMarca.classList.remove('show');
+        itemActivoMarca = -1;
+        
+        // Deshabilitar modelo hasta que se escriba la marca
+        modeloInput.disabled = true;
+        modeloInput.value = '';
+        modeloHidden.value = '';
+        modeloInput.placeholder = 'Primero escribe una marca';
+        modeloOtroContainer.classList.remove('active');
+        modeloOtroInput.value = '';
+    };
+    
+    // ============================================
     // EVENTOS DE MARCA
     // ============================================
-    // Al hacer clic en el input, mostrar catálogo
     marcaInput.addEventListener('click', function() {
         if (marcas.length === 0) {
             cargarMarcas();
@@ -688,7 +808,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Al escribir, filtrar
     marcaInput.addEventListener('input', function() {
         itemActivoMarca = -1;
         if (marcas.length === 0) {
@@ -698,7 +817,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Al perder foco, cerrar sugerencias (con delay para permitir clicks)
     marcaInput.addEventListener('blur', function() {
         setTimeout(() => {
             sugerenciasMarca.classList.remove('show');
@@ -706,23 +824,31 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ============================================
-    // SELECCIONAR MARCA
+    // EVENTOS DE MARCA "OTROS"
     // ============================================
-    window.seleccionarMarca = function(marca) {
-        marcaInput.value = marca;
-        marcaHidden.value = marca;
-        marcaSeleccionada = marca;
-        sugerenciasMarca.classList.remove('show');
-        itemActivoMarca = -1;
-        
-        // Habilitar modelo y cargar modelos
-        modeloInput.disabled = false;
-        modeloInput.value = '';
-        modeloHidden.value = '';
-        modeloInput.placeholder = 'Cargando modelos...';
-        
-        cargarModelos(marca);
-    };
+    marcaOtroInput.addEventListener('input', function() {
+        const valor = this.value.trim();
+        if (valor) {
+            marcaHidden.value = valor;
+            marcaSeleccionada = valor;
+            // Habilitar modelo
+            modeloInput.disabled = false;
+            modeloInput.placeholder = 'Escribe o selecciona el modelo...';
+        } else {
+            marcaHidden.value = '';
+            modeloInput.disabled = true;
+            modeloInput.placeholder = 'Primero escribe una marca';
+        }
+    });
+    
+    marcaOtroInput.addEventListener('blur', function() {
+        if (!this.value.trim()) {
+            marcaOtroContainer.classList.remove('active');
+            marcaInput.value = '';
+            marcaHidden.value = '';
+            modeloInput.disabled = true;
+        }
+    });
     
     // ============================================
     // CARGAR MODELOS
@@ -759,36 +885,67 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function mostrarSugerenciasModelo(lista) {
-        if (!lista || lista.length === 0) {
-            sugerenciasModelo.innerHTML = `<div class="no-resultados">No hay modelos disponibles para "${marcaSeleccionada}"</div>`;
-            sugerenciasModelo.classList.add('show');
-            return;
-        }
-        
         const texto = modeloInput.value.toLowerCase().trim();
-        const filtradas = texto ? lista.filter(m => m.toLowerCase().includes(texto)) : lista;
+        let filtradas = texto ? lista.filter(m => m.toLowerCase().includes(texto)) : lista;
         
-        if (filtradas.length === 0) {
-            sugerenciasModelo.innerHTML = `
-                <div class="no-resultados">
-                    No hay resultados para "<strong>${texto}</strong>". 
-                    <span class="crear-link" onclick="crearModeloManual()">Crear "${texto}"</span>
+        let html = '';
+        
+        if (filtradas.length === 0 && !texto) {
+            html = `<div class="no-resultados">No hay modelos disponibles. <span class="crear-link" onclick="seleccionarOtrosModelo()">📝 Usar "Otros"</span></div>`;
+        } else {
+            filtradas.forEach((m, index) => {
+                html += `
+                    <div class="item ${index === itemActivoModelo ? 'active' : ''}" 
+                         data-index="${index}"
+                         onclick="seleccionarModelo('${m.replace(/'/g, "\\'")}')">
+                        <span>${m}</span>
+                        <span class="badge-cantidad">${m.length} caracteres</span>
+                    </div>
+                `;
+            });
+            
+            // ✅ Agregar opción "Otros" al final
+            const otrosIndex = filtradas.length;
+            html += `
+                <div class="item item-otros ${otrosIndex === itemActivoModelo ? 'active' : ''}" 
+                     data-index="${otrosIndex}"
+                     onclick="seleccionarOtrosModelo()">
+                    <span>📝 Otros (escribir manualmente)</span>
+                    <span class="badge-cantidad">✏️ Personalizado</span>
                 </div>
             `;
-            sugerenciasModelo.classList.add('show');
-            return;
         }
         
-        sugerenciasModelo.innerHTML = filtradas.map((m, index) => `
-            <div class="item ${index === itemActivoModelo ? 'active' : ''}" 
-                 data-index="${index}"
-                 onclick="seleccionarModelo('${m.replace(/'/g, "\\'")}')">
-                <span>${m}</span>
-                <span class="badge-cantidad">${m.length} caracteres</span>
-            </div>
-        `).join('');
+        sugerenciasModelo.innerHTML = html;
         sugerenciasModelo.classList.add('show');
     }
+    
+    // ============================================
+    // SELECCIONAR MODELO (normal)
+    // ============================================
+    window.seleccionarModelo = function(modelo) {
+        modeloInput.value = modelo;
+        modeloHidden.value = modelo;
+        sugerenciasModelo.classList.remove('show');
+        itemActivoModelo = -1;
+        modeloOtroContainer.classList.remove('active');
+        modeloOtroInput.value = '';
+    };
+    
+    // ============================================
+    // ✅ SELECCIONAR "OTROS" PARA MODELO
+    // ============================================
+    window.seleccionarOtrosModelo = function() {
+        modeloOtroContainer.classList.add('active');
+        modeloOtroInput.value = '';
+        modeloOtroInput.focus();
+        
+        modeloInput.value = '📝 Otros (escribir manualmente)';
+        modeloHidden.value = '';
+        
+        sugerenciasModelo.classList.remove('show');
+        itemActivoModelo = -1;
+    };
     
     // ============================================
     // EVENTOS DE MODELO
@@ -815,42 +972,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ============================================
-    // SELECCIONAR MODELO
+    // EVENTOS DE MODELO "OTROS"
     // ============================================
-    window.seleccionarModelo = function(modelo) {
-        modeloInput.value = modelo;
-        modeloHidden.value = modelo;
-        sugerenciasModelo.classList.remove('show');
-        itemActivoModelo = -1;
-    };
+    modeloOtroInput.addEventListener('input', function() {
+        const valor = this.value.trim();
+        modeloHidden.value = valor;
+    });
     
-    // ============================================
-    // CREAR MARCA MANUAL
-    // ============================================
-    window.crearMarcaManual = function() {
-        const texto = marcaInput.value.trim();
-        if (!texto) return;
-        
-        if (confirm(`¿Crear la marca "${texto}"?`)) {
-            marcas.push(texto);
-            marcas.sort();
-            seleccionarMarca(texto);
+    modeloOtroInput.addEventListener('blur', function() {
+        if (!this.value.trim()) {
+            modeloOtroContainer.classList.remove('active');
+            modeloInput.value = '';
+            modeloHidden.value = '';
         }
-    };
-    
-    // ============================================
-    // CREAR MODELO MANUAL
-    // ============================================
-    window.crearModeloManual = function() {
-        const texto = modeloInput.value.trim();
-        if (!texto) return;
-        
-        if (confirm(`¿Crear el modelo "${texto}" para la marca "${marcaSeleccionada}"?`)) {
-            modelos.push(texto);
-            modelos.sort();
-            seleccionarModelo(texto);
-        }
-    };
+    });
     
     // ============================================
     // NAVEGACIÓN CON TECLADO (FLECHAS + ENTER)
@@ -969,19 +1104,34 @@ document.addEventListener('DOMContentLoaded', function() {
     
     form.addEventListener('submit', function(e) {
         // Validar marca
-        const marca = marcaHidden.value.trim();
+        let marca = marcaHidden.value.trim();
+        const marcaOtroValor = marcaOtroInput.value.trim();
+        
+        // Si el campo "Otros" tiene valor, usarlo
+        if (marcaOtroValor) {
+            marca = marcaOtroValor;
+            marcaHidden.value = marca;
+        }
+        
         if (!marca) {
             e.preventDefault();
-            alert('⚠️ Selecciona o escribe una marca válida');
+            alert('⚠️ Selecciona o escribe una marca válida (usa "Otros" para escribir manualmente)');
             marcaInput.focus();
             return;
         }
         
         // Validar modelo
-        const modelo = modeloHidden.value.trim();
+        let modelo = modeloHidden.value.trim();
+        const modeloOtroValor = modeloOtroInput.value.trim();
+        
+        if (modeloOtroValor) {
+            modelo = modeloOtroValor;
+            modeloHidden.value = modelo;
+        }
+        
         if (!modelo) {
             e.preventDefault();
-            alert('⚠️ Selecciona o escribe un modelo válido');
+            alert('⚠️ Selecciona o escribe un modelo válido (usa "Otros" para escribir manualmente)');
             modeloInput.focus();
             return;
         }
