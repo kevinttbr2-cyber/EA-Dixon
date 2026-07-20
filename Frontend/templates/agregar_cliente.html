@@ -116,12 +116,6 @@
     gap: 10px;
 }
 
-.grid-3 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-}
-
 .full-width {
     grid-column: 1 / -1;
 }
@@ -210,6 +204,16 @@
     color: var(--text-muted);
     font-size: 13px;
     text-align: center;
+}
+
+.autocomplete-wrapper .sugerencias .no-resultados .crear-link {
+    color: #00ff66;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.autocomplete-wrapper .sugerencias .no-resultados .crear-link:hover {
+    text-decoration: underline;
 }
 
 .autocomplete-wrapper .sugerencias::-webkit-scrollbar {
@@ -352,10 +356,6 @@
         grid-template-columns: 1fr;
         gap: 0;
     }
-    .grid-3 {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
     .agregar-container {
         padding: 10px 12px;
     }
@@ -466,6 +466,7 @@
                 <div class="form-group">
                     <label>📅 Fecha</label>
                     <input type="date" name="fecha" class="form-control" value="{{ hoy }}" readonly style="background:rgba(255,255,255,0.03); color: var(--text-muted);">
+                    <small style="color: var(--text-muted); font-size: 10px;">📌 Fecha de Chile ({{ hoy }})</small>
                 </div>
                 <div class="form-group">
                     <label>📆 Año <span class="opcional">(opcional)</span></label>
@@ -565,14 +566,30 @@ document.addEventListener('DOMContentLoaded', function() {
     let marcas = [];
     let modelos = [];
     
-    // Cargar marcas desde el backend
+    // ✅ Cargar marcas desde el backend (usando la ruta proxy del frontend)
     fetch('/api/marcas')
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        })
         .then(data => {
             marcas = data;
             console.log('✅ Marcas cargadas:', marcas.length);
+            if (marcas.length === 0) {
+                console.warn('⚠️ No se cargaron marcas. Verifica el backend.');
+            }
         })
-        .catch(e => console.error('Error cargando marcas:', e));
+        .catch(e => {
+            console.error('❌ Error cargando marcas:', e);
+            // Intentar con URL directa del backend como fallback
+            fetch(`${API_URL}/api/marcas`)
+                .then(r => r.json())
+                .then(data => {
+                    marcas = data;
+                    console.log('✅ Marcas cargadas (fallback):', marcas.length);
+                })
+                .catch(err => console.error('❌ Error fallback:', err));
+        });
     
     // Evento de búsqueda en marca
     marcaInput.addEventListener('input', function() {
@@ -588,15 +605,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (filtradas.length === 0) {
             sugerenciasMarca.innerHTML = `
                 <div class="no-resultados">
-                    No hay resultados. <span style="color:#00ff66;cursor:pointer;" onclick="crearMarcaManual()">Crear "${texto}"</span>
+                    No hay resultados. 
+                    <span class="crear-link" onclick="crearMarcaManual()">Crear "${texto}"</span>
                 </div>
             `;
             sugerenciasMarca.style.display = 'block';
             return;
         }
         
-        sugerenciasMarca.innerHTML = filtradas.slice(0, 10).map(m => `
-            <div class="item" onclick="seleccionarMarca('${m}')">${m}</div>
+        sugerenciasMarca.innerHTML = filtradas.slice(0, 15).map(m => `
+            <div class="item" onclick="seleccionarMarca('${m.replace(/'/g, "\\'")}')">${m}</div>
         `).join('');
         sugerenciasMarca.style.display = 'block';
     });
@@ -623,8 +641,12 @@ document.addEventListener('DOMContentLoaded', function() {
         modeloInput.value = '';
         modeloHidden.value = '';
         
+        // ✅ Usar la ruta proxy del frontend
         fetch(`/api/modelos/${encodeURIComponent(marca)}`)
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
             .then(data => {
                 modelos = data;
                 modeloInput.placeholder = 'Escribe el modelo...';
@@ -633,13 +655,23 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(e => {
                 console.error('Error cargando modelos:', e);
-                modeloInput.placeholder = 'Error al cargar modelos';
-                modeloInput.disabled = false;
+                // Fallback directo al backend
+                fetch(`${API_URL}/api/modelos/${encodeURIComponent(marca)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        modelos = data;
+                        modeloInput.placeholder = 'Escribe el modelo...';
+                        modeloInput.disabled = false;
+                    })
+                    .catch(err => {
+                        modeloInput.placeholder = 'Error al cargar modelos';
+                        modeloInput.disabled = false;
+                    });
             });
     };
     
     // ============================================
-    // 3. CREAR MARCA MANUAL (si no está en la lista)
+    // 3. CREAR MARCA MANUAL
     // ============================================
     window.crearMarcaManual = function() {
         const texto = marcaInput.value.trim();
@@ -666,15 +698,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (filtrados.length === 0) {
             sugerenciasModelo.innerHTML = `
                 <div class="no-resultados">
-                    No hay resultados. <span style="color:#00ff66;cursor:pointer;" onclick="crearModeloManual()">Crear "${texto}"</span>
+                    No hay resultados. 
+                    <span class="crear-link" onclick="crearModeloManual()">Crear "${texto}"</span>
                 </div>
             `;
             sugerenciasModelo.style.display = 'block';
             return;
         }
         
-        sugerenciasModelo.innerHTML = filtrados.slice(0, 10).map(m => `
-            <div class="item" onclick="seleccionarModelo('${m}')">${m}</div>
+        sugerenciasModelo.innerHTML = filtrados.slice(0, 15).map(m => `
+            <div class="item" onclick="seleccionarModelo('${m.replace(/'/g, "\\'")}')">${m}</div>
         `).join('');
         sugerenciasModelo.style.display = 'block';
     });
@@ -702,7 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // ============================================
-    // 7. FLOTA: Mostrar input para nueva flota
+    // 7. FLOTA
     // ============================================
     const flotaSelect = document.getElementById('flotaSelect');
     const flotaNuevaInput = document.getElementById('flotaNuevaInput');
@@ -746,7 +779,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ============================================
-    // 8. ENVÍO DEL FORMULARIO (con anti-doble clic)
+    // 8. ENVÍO DEL FORMULARIO
     // ============================================
     const form = document.getElementById('formAgregar');
     const submitBtn = document.getElementById('btnGuardarCliente');
@@ -767,6 +800,22 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             alert('⚠️ Selecciona o escribe un modelo válido');
             modeloInput.focus();
+            return;
+        }
+        
+        // Validar patente
+        const patente = document.querySelector('input[name="patente"]').value.trim();
+        if (!patente) {
+            e.preventDefault();
+            alert('⚠️ Ingresa la patente del vehículo');
+            return;
+        }
+        
+        // Validar nombre
+        const nombre = document.querySelector('input[name="nombre"]').value.trim();
+        if (!nombre) {
+            e.preventDefault();
+            alert('⚠️ Ingresa el nombre del cliente');
             return;
         }
         
@@ -792,9 +841,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.style.opacity = '0.7';
     });
     
-    // ============================================
-    // 9. REHABILITAR BOTÓN DESPUÉS DE 10s (por si falla)
-    // ============================================
+    // Rehabilitar botón después de 10s (por si falla)
     setTimeout(function() {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-save"></i> Registrar Cliente';
@@ -803,7 +850,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 10. BUSCAR ESTADO DEL CLIENTE AL ESCRIBIR NOMBRE
+// 9. BUSCAR ESTADO DEL CLIENTE
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const inputNombre = document.querySelector('input[name="nombre"]');
@@ -941,13 +988,12 @@ function verHistorialCliente() {
 }
 
 // ============================================
-// 11. KEYBOARD: Enter para seleccionar primera sugerencia
+// 10. KEYBOARD: Enter para seleccionar primera sugerencia
 // ============================================
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         const active = document.activeElement;
         
-        // Si está en el input de marca y hay sugerencias
         if (active.id === 'marcaInput') {
             const sugerencias = document.querySelectorAll('#sugerenciasMarca .item');
             if (sugerencias.length > 0) {
@@ -956,7 +1002,6 @@ document.addEventListener('keydown', function(e) {
             }
         }
         
-        // Si está en el input de modelo y hay sugerencias
         if (active.id === 'modeloInput') {
             const sugerencias = document.querySelectorAll('#sugerenciasModelo .item');
             if (sugerencias.length > 0) {
