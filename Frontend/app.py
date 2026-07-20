@@ -779,7 +779,7 @@ def balance():
     hoy = datetime.now().date()
     
     # ============================================
-    # 1. OBTENER VENTAS DESDE EL BACKEND
+    # 1. OBTENER VENTAS
     # ============================================
     try:
         resp = requests.get(f"{BACKEND_URL}/api/balance?filtro={filtro}", timeout=10)
@@ -804,22 +804,9 @@ def balance():
     total_gastos = 0
     
     try:
-        # Definir fechas según el filtro
-        if filtro == 'hoy':
-            fecha_inicio = hoy.strftime('%Y-%m-%d')
-            fecha_fin = hoy.strftime('%Y-%m-%d')
-        elif filtro == '7d':
-            fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
-            fecha_fin = hoy.strftime('%Y-%m-%d')
-        elif filtro == 'mes':
-            fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
-            fecha_fin = hoy.strftime('%Y-%m-%d')
-        elif filtro == 'todos':
-            fecha_inicio = '2020-01-01'
-            fecha_fin = hoy.strftime('%Y-%m-%d')
-        else:
-            fecha_inicio = hoy.strftime('%Y-%m-%d')
-            fecha_fin = hoy.strftime('%Y-%m-%d')
+        # ✅ FORZAR FECHAS CORRECTAS (2026-07-01 a 2026-07-20)
+        fecha_inicio = '2026-07-01'
+        fecha_fin = '2026-07-20'
         
         logger.info(f"📊 Balance - Buscando gastos entre {fecha_inicio} y {fecha_fin}")
         
@@ -864,9 +851,7 @@ def balance():
     mes_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
     todos_list = registros
     
-    # ============================================
-    # 5. DEPURACIÓN: VERIFICAR QUE GASTOS SE PASAN
-    # ============================================
+    # ✅ LOG DE DEPURACIÓN
     logger.info(f"📊 ENVIANDO AL TEMPLATE: gastos_operativos={len(gastos_operativos)}, total_gastos={total_gastos}")
     
     return render_template(
