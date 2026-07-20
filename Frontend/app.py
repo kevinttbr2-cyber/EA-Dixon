@@ -798,7 +798,7 @@ def balance():
         registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     
     # ============================================
-    # 2. OBTENER GASTOS OPERATIVOS (CORREGIDO)
+    # 2. OBTENER GASTOS POR SEPARADO (ALTERNATIVA)
     # ============================================
     gastos_operativos = []
     total_gastos = 0
@@ -823,7 +823,7 @@ def balance():
         
         logger.info(f"📊 Balance - Buscando gastos entre {fecha_inicio} y {fecha_fin}")
         
-        # Llamar al backend
+        # Llamar a gastos_balance
         resp_gastos = requests.get(
             f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}",
             timeout=10
@@ -834,7 +834,7 @@ def balance():
             total_gastos = sum(float(g.get('monto', 0)) for g in gastos_operativos)
             logger.info(f"✅ Gastos encontrados: {len(gastos_operativos)} - Total: ${total_gastos}")
         else:
-            logger.error(f"❌ Error al obtener gastos: {resp_gastos.status_code} - {resp_gastos.text}")
+            logger.error(f"❌ Error al obtener gastos: {resp_gastos.status_code}")
             
     except Exception as e:
         logger.error(f"❌ Error al obtener gastos para balance: {e}")
@@ -863,7 +863,7 @@ def balance():
         total_pagado=total_pagado,
         total_repuestos=total_repuestos,
         total_mano_obra=total_mano_obra,
-        total_diagnostico=total_diagnostico,  # Se mantiene por compatibilidad pero no se usa
+        total_diagnostico=total_diagnostico,
         ganancia_neta=ganancia_neta,
         ganancia_real=ganancia_real,
         total_gastos=total_gastos,
