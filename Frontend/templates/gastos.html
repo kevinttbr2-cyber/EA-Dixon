@@ -195,20 +195,235 @@
     box-shadow: 0 0 30px rgba(0, 255, 102, 0.15);
 }
 
+/* ============================================
+   ESTILOS PARA ESCÁNER DE FACTURAS
+   ============================================ */
+.btn-escanear-factura {
+    background: #ffcc00 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    padding: 10px 20px !important;
+    font-size: 16px !important;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-escanear-factura:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 30px rgba(255, 204, 0, 0.3);
+}
+
+.btn-escanear-factura.activo {
+    background: #ff6b6b !important;
+}
+
+#videoContainerFactura {
+    position: relative;
+    width: 100%;
+    max-height: 300px;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    margin-bottom: 12px;
+    display: none;
+}
+
+#videoContainerFactura.active {
+    display: block;
+}
+
+#videoContainerFactura video {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+}
+
+#videoContainerFactura .scan-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 60%;
+    border: 2px dashed rgba(255, 204, 0, 0.6);
+    border-radius: 12px;
+    pointer-events: none;
+    animation: pulse-border 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% { border-color: rgba(255, 204, 0, 0.4); }
+    50% { border-color: rgba(255, 204, 0, 0.9); }
+}
+
+#videoContainerFactura .scan-text {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-muted);
+    font-size: 12px;
+    background: rgba(0,0,0,0.7);
+    padding: 4px 16px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* Modal de factura escaneada */
+.modal-factura {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    overflow-y: auto;
+    padding: 20px 0;
+}
+
+.modal-factura.active {
+    display: flex;
+}
+
+.modal-factura .modal-content {
+    background: var(--bg-secondary);
+    border: 2px solid #ffcc00;
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    max-width: 750px;
+    width: 95%;
+    max-height: 95vh;
+    overflow-y: auto;
+    margin: auto;
+    box-shadow: var(--shadow-hover);
+}
+
+.modal-factura .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 12px;
+}
+
+.modal-factura .modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffcc00;
+}
+
+.modal-factura .modal-header .close-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent-red);
+    font-size: 24px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.modal-factura .modal-header .close-btn:hover {
+    transform: scale(1.1);
+}
+
+.producto-factura-item {
+    display: grid;
+    grid-template-columns: 2fr 0.7fr 1fr 0.7fr 30px;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    align-items: center;
+}
+
+.producto-factura-item .nombre {
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.producto-factura-item .cantidad,
+.producto-factura-item .precio {
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-align: center;
+}
+
+.producto-factura-item .subtotal {
+    color: #00ff66;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: right;
+}
+
+.producto-factura-item .btn-eliminar-item {
+    background: transparent;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.3;
+    transition: var(--transition);
+}
+
+.producto-factura-item .btn-eliminar-item:hover {
+    opacity: 1;
+}
+
+.resumen-factura {
+    background: rgba(255, 204, 0, 0.04);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin-top: 12px;
+    border: 1px solid rgba(255, 204, 0, 0.12);
+}
+
+.resumen-factura .row-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+}
+
+.resumen-factura .row-item .label {
+    color: var(--text-secondary);
+}
+
+.resumen-factura .row-item .value {
+    font-weight: 600;
+}
+
+.resumen-factura .total-label {
+    color: #ffcc00;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.resumen-factura .total-value {
+    color: #ffcc00;
+    font-weight: 700;
+    font-size: 22px;
+}
+
 @media (max-width: 600px) {
-    .form-gasto .grid-2,
-    .form-gasto .grid-3 {
-        grid-template-columns: 1fr;
+    .producto-factura-item {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 4px;
+        font-size: 12px;
     }
-    .gasto-card {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-    .gastos-container .header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
+    .producto-factura-item .nombre {
+        grid-column: 1 / -1;
     }
 }
 </style>
@@ -219,7 +434,7 @@
     <div class="header">
         <h2>
             <span class="material-symbols-rounded" style="color: #ff6b6b;">payments</span>
-            Gastos del Día
+            Gastos y Facturas
         </h2>
         <div class="total-gastos">
             <span class="label">💰 Total Gastos</span>
@@ -228,27 +443,40 @@
     </div>
 
     <!-- RESUMEN RÁPIDO -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px;">
-        <div style="background:rgba(0,255,102,0.06);border-radius:10px;padding:10px 14px;border:1px solid rgba(0,255,102,0.12);text-align:center;">
-            <div style="color:#888;font-size:11px;">💵 Efectivo</div>
-            <div style="color:#00ff66;font-size:18px;font-weight:700;" id="gastosEfectivoDisplay">$0</div>
-            <div style="color:#666;font-size:10px;" id="gastosEfectivoCount">0 gastos</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px;">
+        <div style="background:rgba(0,255,102,0.06);border-radius:10px;padding:8px 12px;border:1px solid rgba(0,255,102,0.12);text-align:center;">
+            <div style="color:#888;font-size:10px;">💵 Efectivo</div>
+            <div style="color:#00ff66;font-size:16px;font-weight:700;" id="gastosEfectivoDisplay">$0</div>
+            <div style="color:#666;font-size:9px;" id="gastosEfectivoCount">0</div>
         </div>
-        <div style="background:rgba(79,195,247,0.06);border-radius:10px;padding:10px 14px;border:1px solid rgba(79,195,247,0.12);text-align:center;">
-            <div style="color:#888;font-size:11px;">🏦 Transferencia</div>
-            <div style="color:#4fc3f7;font-size:18px;font-weight:700;" id="gastosTransferenciaDisplay">$0</div>
-            <div style="color:#666;font-size:10px;" id="gastosTransferenciaCount">0 gastos</div>
+        <div style="background:rgba(79,195,247,0.06);border-radius:10px;padding:8px 12px;border:1px solid rgba(79,195,247,0.12);text-align:center;">
+            <div style="color:#888;font-size:10px;">🏦 Transferencia</div>
+            <div style="color:#4fc3f7;font-size:16px;font-weight:700;" id="gastosTransferenciaDisplay">$0</div>
+            <div style="color:#666;font-size:9px;" id="gastosTransferenciaCount">0</div>
         </div>
-        <div style="background:rgba(255,200,0,0.06);border-radius:10px;padding:10px 14px;border:1px solid rgba(255,200,0,0.12);text-align:center;">
-            <div style="color:#888;font-size:11px;">👨‍🔧 Sueldos</div>
-            <div style="color:#ffcc00;font-size:18px;font-weight:700;" id="gastosSueldosDisplay">$0</div>
-            <div style="color:#666;font-size:10px;" id="gastosSueldosCount">0 gastos</div>
+        <div style="background:rgba(255,200,0,0.06);border-radius:10px;padding:8px 12px;border:1px solid rgba(255,200,0,0.12);text-align:center;">
+            <div style="color:#888;font-size:10px;">👨‍🔧 Sueldos</div>
+            <div style="color:#ffcc00;font-size:16px;font-weight:700;" id="gastosSueldosDisplay">$0</div>
+            <div style="color:#666;font-size:9px;" id="gastosSueldosCount">0</div>
         </div>
     </div>
 
-    <!-- FORMULARIO PARA REGISTRAR GASTO -->
+    <!-- BOTÓN ESCANEAR FACTURA -->
+    <button id="btnEscanearFactura" class="btn-escanear-factura">
+        <span class="material-symbols-rounded" style="font-size: 22px;">scan</span>
+        📄 Escanear Factura (QR / Código de Barras)
+    </button>
+
+    <!-- CONTENEDOR DEL ESCÁNER -->
+    <div id="videoContainerFactura">
+        <video id="videoElementFactura" autoplay playsinline></video>
+        <div class="scan-overlay"></div>
+        <div class="scan-text">🔍 Escaneando factura...</div>
+    </div>
+
+    <!-- FORMULARIO PARA REGISTRAR GASTO MANUAL -->
     <div class="form-gasto">
-        <h4 style="color: var(--text-secondary); margin-bottom: 12px; font-size: 16px;">➕ Registrar Gasto</h4>
+        <h4 style="color: var(--text-secondary); margin-bottom: 12px; font-size: 16px;">➕ Registrar Gasto Manual</h4>
         <form id="formGasto">
             <div class="grid-3">
                 <div>
@@ -261,6 +489,7 @@
                         <option value="Alimentación">🍽️ Alimentación</option>
                         <option value="Herramientas">🔧 Herramientas</option>
                         <option value="Impuestos">📄 Impuestos</option>
+                        <option value="Repuestos">🔩 Repuestos</option>
                         <option value="Otros">📦 Otros</option>
                     </select>
                 </div>
@@ -312,12 +541,549 @@
     </div>
 </div>
 
+<!-- ============================================
+MODAL: FACTURA ESCANEADA
+============================================ -->
+<div id="modalFactura" class="modal-factura">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>
+                <span class="material-symbols-rounded" style="font-size: 24px; vertical-align: middle;">receipt</span>
+                Factura Escaneada
+            </h3>
+            <button class="close-btn" onclick="cerrarModalFactura()">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+
+        <!-- Datos de la factura -->
+        <div style="background:rgba(255,204,0,0.04);border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid rgba(255,204,0,0.10);">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:13px;">
+                <div><span style="color:#888;">🏢 Proveedor:</span> <span id="facturaProveedor" style="color:#fff;">-</span></div>
+                <div><span style="color:#888;">📄 Folio:</span> <span id="facturaFolio" style="color:#fff;">-</span></div>
+                <div><span style="color:#888;">📅 Fecha:</span> <span id="facturaFecha" style="color:#fff;">-</span></div>
+                <div><span style="color:#888;">💰 Total:</span> <span id="facturaTotal" style="color:#ffcc00;font-weight:700;">$0</span></div>
+            </div>
+        </div>
+
+        <!-- Lista de productos -->
+        <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="color:var(--text-secondary);font-size:13px;font-weight:500;">📦 Productos de la factura</span>
+                <span id="productosCount" style="color:#888;font-size:12px;">0 productos</span>
+            </div>
+            <div style="background:rgba(0,0,0,0.20);border-radius:8px;padding:8px;border:1px solid rgba(255,204,0,0.08);max-height:250px;overflow-y:auto;">
+                <div id="listaProductosFactura">
+                    <div style="text-align:center;color:#666;padding:20px 0;">No hay productos cargados</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="resumen-factura">
+            <div class="row-item">
+                <span class="label">💰 Total de la factura:</span>
+                <span class="value" style="color:#ffcc00;font-weight:700;" id="resumenTotalFactura">$0</span>
+            </div>
+            <div class="row-item">
+                <span class="label">📦 Productos a actualizar en stock:</span>
+                <span id="resumenProductosStock" style="color:#00ff66;font-weight:600;">0</span>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div style="display:flex;gap:10px;margin-top:12px;">
+            <button onclick="procesarFacturaEscaneada()" id="btnProcesarFactura" class="btn-registrar" style="flex:1;background:#ffcc00 !important;color:#000 !important;">
+                <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">save</span>
+                Procesar Factura y Actualizar Stock
+            </button>
+            <button onclick="cerrarModalFactura()" style="
+                background:rgba(255,255,255,0.05);
+                color:#888;
+                border:1px solid rgba(255,255,255,0.08);
+                border-radius:var(--radius-md);
+                padding:10px 20px;
+                cursor:pointer;
+            ">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
 // ============================================
+// VARIABLES GLOBALES
+// ============================================
+let scannerFactura = null;
+let facturaActiva = false;
+let productosFactura = [];
+let datosFactura = {};
+
+// ============================================
+// FUNCIONES DE ESCÁNER (html5-qrcode)
+// ============================================
+
+function cargarHtml5QrCode() {
+    return new Promise((resolve, reject) => {
+        if (typeof Html5Qrcode !== 'undefined') {
+            console.log('✅ html5-qrcode ya cargado');
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+        script.onload = () => {
+            console.log('✅ html5-qrcode cargado correctamente');
+            resolve();
+        };
+        script.onerror = () => reject(new Error('Error cargando html5-qrcode'));
+        document.head.appendChild(script);
+    });
+}
+
+async function solicitarPermisoCamara() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+        });
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+    } catch (error) {
+        console.error('Error de cámara:', error);
+        return false;
+    }
+}
+
+// ============================================
+// ESCANEAR FACTURA
+// ============================================
+
+document.getElementById('btnEscanearFactura').addEventListener('click', async function() {
+    if (facturaActiva) {
+        await detenerScannerFactura();
+        return;
+    }
+    
+    const tienePermiso = await solicitarPermisoCamara();
+    if (!tienePermiso) {
+        alert('⚠️ Para escanear facturas, necesitas permitir el acceso a la cámara.');
+        return;
+    }
+    
+    try {
+        await cargarHtml5QrCode();
+        
+        const videoContainer = document.getElementById('videoContainerFactura');
+        videoContainer.classList.add('active');
+        
+        const config = {
+            fps: 10,
+            qrbox: { width: 300, height: 200 },
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.DATA_MATRIX,
+                Html5QrcodeSupportedFormats.PDF_417
+            ]
+        };
+        
+        scannerFactura = new Html5Qrcode('videoContainerFactura');
+        facturaActiva = true;
+        
+        this.textContent = '⏹️ Detener Escáner';
+        this.classList.add('activo');
+        
+        await scannerFactura.start(
+            { facingMode: "environment" },
+            config,
+            onScanFacturaSuccess,
+            onScanFacturaError
+        );
+        
+        console.log('✅ Escáner de factura iniciado');
+        
+    } catch (error) {
+        console.error('❌ Error al iniciar el escáner:', error);
+        alert('❌ Error al iniciar el escáner: ' + error.message);
+        await detenerScannerFactura();
+    }
+});
+
+async function detenerScannerFactura() {
+    facturaActiva = false;
+    const videoContainer = document.getElementById('videoContainerFactura');
+    videoContainer.classList.remove('active');
+    
+    if (scannerFactura) {
+        try {
+            await scannerFactura.stop();
+            await scannerFactura.clear();
+        } catch (e) {
+            console.warn('Error al detener escáner:', e);
+        }
+        scannerFactura = null;
+    }
+    
+    const btn = document.getElementById('btnEscanearFactura');
+    btn.textContent = '📄 Escanear Factura (QR / Código de Barras)';
+    btn.classList.remove('activo');
+}
+
+function onScanFacturaSuccess(decodedText, decodedResult) {
+    console.log('📄 Factura escaneada:', decodedText);
+    procesarTextoFactura(decodedText);
+    detenerScannerFactura();
+}
+
+function onScanFacturaError(error) {
+    // No mostrar errores para no saturar
+}
+
+// ============================================
+// PROCESAR TEXTO DE FACTURA
+// ============================================
+
+function procesarTextoFactura(texto) {
+    console.log('📄 Procesando texto de factura:', texto);
+    
+    // Intentar parsear como JSON
+    try {
+        const data = JSON.parse(texto);
+        if (data.productos || data.items || data.productos_list) {
+            procesarFacturaEstructurada(data);
+            return;
+        }
+    } catch (e) {
+        // No es JSON
+    }
+    
+    // Intentar parsear como texto plano con estructura
+    const lineas = texto.split('\n').filter(l => l.trim());
+    
+    // Buscar proveedor
+    let proveedor = '';
+    let folio = '';
+    let fecha = '';
+    let total = 0;
+    let productos = [];
+    
+    for (const linea of lineas) {
+        const l = linea.trim();
+        
+        // Proveedor
+        if (l.match(/proveedor|proveedor:|empresa|razón social/i)) {
+            const match = l.match(/proveedor:?\s*(.+)/i) || l.match(/empresa:?\s*(.+)/i);
+            if (match) proveedor = match[1].trim();
+        }
+        
+        // Folio
+        if (l.match(/folio|factura|documento|n°|número/i)) {
+            const match = l.match(/folio:?\s*([^\s]+)/i) || l.match(/factura:?\s*([^\s]+)/i) || l.match(/n°:?\s*([^\s]+)/i);
+            if (match) folio = match[1].trim();
+        }
+        
+        // Fecha
+        if (l.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/)) {
+            const match = l.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
+            if (match) fecha = match[1].trim();
+        }
+        
+        // Total
+        if (l.match(/total|neto|monto final/i)) {
+            const match = l.match(/total:?\s*\$?\s*([\d.,]+)/i);
+            if (match) total = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.'));
+        }
+        
+        // Productos (formato: nombre, cantidad, precio)
+        const productMatch = l.match(/^([^,;]+)[,;]\s*(\d+)[,;]\s*\$?\s*([\d.,]+)/);
+        if (productMatch) {
+            productos.push({
+                nombre: productMatch[1].trim(),
+                cantidad: parseInt(productMatch[2]) || 1,
+                precio_unitario: parseFloat(productMatch[3].replace(/[.,]/g, m => m === '.' ? '' : '.')) || 0
+            });
+        }
+    }
+    
+    // Si no se encontró total, calcularlo
+    if (total === 0 && productos.length > 0) {
+        total = productos.reduce((sum, p) => sum + (p.cantidad * p.precio_unitario), 0);
+    }
+    
+    // Si no se encontró fecha, usar hoy
+    if (!fecha) {
+        fecha = new Date().toISOString().split('T')[0];
+    }
+    
+    if (productos.length === 0) {
+        alert('⚠️ No se pudieron extraer productos de la factura. Verifica que el código contenga:\n\n- Nombre del producto\n- Cantidad\n- Precio unitario\n\nEjemplo: "Filtro de aceite, 5, 15000"');
+        return;
+    }
+    
+    datosFactura = {
+        proveedor: proveedor || 'Proveedor',
+        folio: folio || 'N/A',
+        fecha: fecha,
+        total: total,
+        productos: productos,
+        texto_original: texto
+    };
+    
+    mostrarModalFactura(datosFactura);
+}
+
+// ============================================
+// PROCESAR FACTURA ESTRUCTURADA (JSON)
+// ============================================
+
+function procesarFacturaEstructurada(data) {
+    const productos = data.productos || data.items || data.productos_list || [];
+    
+    const factura = {
+        proveedor: data.proveedor || data.empresa || 'Proveedor',
+        folio: data.folio || data.factura || 'N/A',
+        fecha: data.fecha || new Date().toISOString().split('T')[0],
+        total: data.total || data.monto_total || 0,
+        productos: productos.map(p => ({
+            nombre: p.nombre || p.producto || p.name || 'Producto',
+            cantidad: p.cantidad || p.qty || p.quantity || 1,
+            precio_unitario: p.precio_unitario || p.precio || p.price || p.costo || 0
+        }))
+    };
+    
+    if (factura.productos.length === 0) {
+        alert('⚠️ No se encontraron productos en la factura.');
+        return;
+    }
+    
+    if (factura.total === 0) {
+        factura.total = factura.productos.reduce((sum, p) => sum + (p.cantidad * p.precio_unitario), 0);
+    }
+    
+    datosFactura = factura;
+    mostrarModalFactura(factura);
+}
+
+// ============================================
+// MOSTRAR MODAL DE FACTURA
+// ============================================
+
+function mostrarModalFactura(factura) {
+    document.getElementById('modalFactura').classList.add('active');
+    productosFactura = factura.productos.map(p => ({ ...p }));
+    
+    document.getElementById('facturaProveedor').textContent = factura.proveedor;
+    document.getElementById('facturaFolio').textContent = factura.folio;
+    document.getElementById('facturaFecha').textContent = factura.fecha;
+    document.getElementById('facturaTotal').textContent = '$' + factura.total.toLocaleString('es-CL');
+    
+    renderizarProductosFactura();
+    actualizarResumenFactura();
+}
+
+function renderizarProductosFactura() {
+    const container = document.getElementById('listaProductosFactura');
+    
+    if (!productosFactura || productosFactura.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:#666;padding:20px 0;">No hay productos cargados</div>';
+        document.getElementById('productosCount').textContent = '0 productos';
+        return;
+    }
+    
+    let html = '';
+    productosFactura.forEach((p, index) => {
+        const subtotal = p.cantidad * p.precio_unitario;
+        html += `
+            <div class="producto-factura-item">
+                <span class="nombre">${p.nombre}</span>
+                <span class="cantidad">x${p.cantidad}</span>
+                <span class="precio">$${p.precio_unitario.toLocaleString('es-CL')}</span>
+                <span class="subtotal">$${subtotal.toLocaleString('es-CL')}</span>
+                <button class="btn-eliminar-item" onclick="eliminarProductoFactura(${index})">
+                    <span class="material-symbols-rounded" style="font-size: 16px;">delete</span>
+                </button>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    document.getElementById('productosCount').textContent = productosFactura.length + ' productos';
+    actualizarResumenFactura();
+}
+
+function eliminarProductoFactura(index) {
+    productosFactura.splice(index, 1);
+    renderizarProductosFactura();
+}
+
+function actualizarResumenFactura() {
+    let total = 0;
+    productosFactura.forEach(p => {
+        total += p.cantidad * p.precio_unitario;
+    });
+    
+    document.getElementById('resumenTotalFactura').textContent = '$' + total.toLocaleString('es-CL');
+    document.getElementById('resumenProductosStock').textContent = productosFactura.length;
+}
+
+function cerrarModalFactura() {
+    document.getElementById('modalFactura').classList.remove('active');
+    productosFactura = [];
+    datosFactura = {};
+}
+
+// ============================================
+// PROCESAR FACTURA ESCANEADA
+// ============================================
+
+async function procesarFacturaEscaneada() {
+    if (productosFactura.length === 0) {
+        alert('⚠️ No hay productos para procesar');
+        return;
+    }
+    
+    const total = productosFactura.reduce((sum, p) => sum + (p.cantidad * p.precio_unitario), 0);
+    
+    if (!confirm(
+        `📊 ¿Procesar factura?\n\n` +
+        `🏢 Proveedor: ${datosFactura.proveedor}\n` +
+        `📄 Folio: ${datosFactura.folio}\n` +
+        `📦 Productos: ${productosFactura.length}\n` +
+        `💰 Total: $${total.toLocaleString('es-CL')}\n\n` +
+        `✅ Los productos se actualizarán en el stock\n` +
+        `✅ Se registrará el gasto en la lista\n\n` +
+        `¿Confirmar?`
+    )) {
+        return;
+    }
+    
+    const btn = document.getElementById('btnProcesarFactura');
+    btn.disabled = true;
+    btn.textContent = '⏳ Procesando...';
+    
+    try {
+        // 1. Registrar el gasto
+        const gastoData = {
+            categoria: 'Repuestos',
+            monto: total,
+            metodo_pago: 'transferencia',
+            descripcion: `Factura ${datosFactura.folio} - ${datosFactura.proveedor}`,
+            proveedor: datosFactura.proveedor,
+            folio: datosFactura.folio,
+            fecha: datosFactura.fecha || new Date().toISOString().split('T')[0],
+            hora: new Date().toTimeString().split(' ')[0],
+            registrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}'
+        };
+        
+        const gastoResp = await fetch(`${API_URL}/api/gastos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(gastoData)
+        });
+        
+        const gastoResult = await gastoResp.json();
+        if (!gastoResult.success) {
+            throw new Error('Error al registrar el gasto: ' + (gastoResult.error || 'Desconocido'));
+        }
+        
+        // 2. Procesar cada producto y actualizar stock
+        let actualizados = 0;
+        let nuevos = 0;
+        let errores = [];
+        
+        for (const producto of productosFactura) {
+            try {
+                // Buscar si el producto existe
+                const searchResp = await fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(producto.nombre)}`);
+                const repuestos = await searchResp.json();
+                const existente = repuestos.find(r => r.nombre.toLowerCase() === producto.nombre.toLowerCase());
+                
+                if (existente) {
+                    // Actualizar stock
+                    const nuevoStock = (existente.stock || 0) + producto.cantidad;
+                    const updateResp = await fetch(`${API_URL}/api/repuestos/${existente.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombre: existente.nombre,
+                            costo_proveedor: existente.costo_proveedor || 0,
+                            margen_ganancia: existente.margen_ganancia || 30,
+                            proveedor: existente.proveedor || datosFactura.proveedor,
+                            costo_venta_final: existente.costo_venta_final || 0,
+                            stock: nuevoStock
+                        })
+                    });
+                    
+                    if (updateResp.ok) {
+                        actualizados++;
+                        console.log(`✅ Stock de "${producto.nombre}" actualizado: +${producto.cantidad} → ${nuevoStock}`);
+                    } else {
+                        errores.push(`${producto.nombre} (no se pudo actualizar stock)`);
+                    }
+                } else {
+                    // Crear nuevo repuesto
+                    const precioVenta = Math.round(producto.precio_unitario * 1.3 * 1.19);
+                    const createResp = await fetch(`${API_URL}/api/repuestos`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombre: producto.nombre,
+                            costo_proveedor: producto.precio_unitario,
+                            margen_ganancia: 30,
+                            proveedor: datosFactura.proveedor,
+                            costo_venta_final: precioVenta,
+                            stock: producto.cantidad
+                        })
+                    });
+                    
+                    if (createResp.ok) {
+                        nuevos++;
+                        console.log(`✅ Nuevo repuesto "${producto.nombre}" creado con stock: ${producto.cantidad}`);
+                    } else {
+                        errores.push(`${producto.nombre} (no se pudo crear)`);
+                    }
+                }
+            } catch (e) {
+                errores.push(`${producto.nombre} (${e.message})`);
+            }
+        }
+        
+        // 3. Mostrar resumen
+        let mensaje = `✅ Factura procesada correctamente!\n\n`;
+        mensaje += `💰 Total: $${total.toLocaleString('es-CL')}\n`;
+        mensaje += `📦 ${actualizados} productos actualizados en stock\n`;
+        mensaje += `🆕 ${nuevos} productos nuevos agregados\n`;
+        
+        if (errores.length > 0) {
+            mensaje += `\n⚠️ Errores:\n- ${errores.join('\n- ')}`;
+        }
+        
+        alert(mensaje);
+        
+        // Recargar página para ver los cambios
+        cerrarModalFactura();
+        cargarGastos();
+        setTimeout(() => location.reload(), 1500);
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        alert('❌ Error al procesar la factura: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Procesar Factura y Actualizar Stock';
+    }
+}
+
+// ============================================
 // CARGAR GASTOS CON JAVASCRIPT
 // ============================================
+
 function cargarGastos() {
     const hoy = new Date().toISOString().split('T')[0];
     
@@ -422,8 +1188,9 @@ function mostrarGastos(gastos) {
 }
 
 // ============================================
-// FORMULARIO PARA REGISTRAR GASTO
+// FORMULARIO PARA REGISTRAR GASTO MANUAL
 // ============================================
+
 document.getElementById('formGasto').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -458,7 +1225,7 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
         if (result.success) {
             alert('✅ Gasto registrado correctamente');
             document.getElementById('formGasto').reset();
-            cargarGastos(); // Recargar la lista
+            cargarGastos();
         } else {
             alert('❌ Error: ' + (result.error || 'Desconocido'));
         }
@@ -475,6 +1242,7 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
 // ============================================
 // INICIALIZAR
 // ============================================
+
 document.addEventListener('DOMContentLoaded', function() {
     cargarGastos();
 });
