@@ -58,7 +58,7 @@ def test_login():
     try:
         response = requests.post(
             f"{BASE_URL}/api/login",
-            json={"username": "admin", "password": "admin123"},
+            json={"username": "admin", "password": "ad12345"},
             timeout=5
         )
         status = response.status_code == 200
