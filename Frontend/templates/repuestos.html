@@ -915,6 +915,7 @@ let escanerProductoActivo = false;
 let datosProductos = [];
 let productoEscanerData = null;
 let categoriasCargadas = false;
+let stockOriginal = 0; // ✅ VARIABLE PARA GUARDAR EL STOCK ORIGINAL
 
 // ============================================
 // FUNCIONES DE ESCÁNER (html5-qrcode)
@@ -1843,7 +1844,7 @@ if (formEditar) {
 }
 
 // ============================================
-// EDITAR BOTONES - CORREGIDO (STOCK Y CATEGORÍAS)
+// EDITAR BOTONES - CORREGIDO (CON STOCK ORIGINAL)
 // ============================================
 document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
     btn.addEventListener('click', async function() {
@@ -1867,6 +1868,9 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
         console.log('📊 DATOS DE LA FILA:');
         console.log('  Stock (este es el valor real):', stock);
         console.log('  Categoría (texto a buscar):', categoriaText);
+        
+        // ✅ GUARDAR EL STOCK ORIGINAL
+        stockOriginal = stock;
         
         // ✅ ASIGNAR VALORES A LOS CAMPOS DEL MODAL
         document.getElementById('editRepuestoId').value = id;
@@ -1922,7 +1926,6 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
                     const textoOpt = opt.textContent.trim().toLowerCase();
                     const busca = categoriaTextClean.toLowerCase();
                     
-                    // Solo coincidir si el texto es igual o contiene exactamente la palabra
                     if (textoOpt === busca || (textoOpt.includes(busca) && textoOpt.length <= busca.length + 3)) {
                         opt.selected = true;
                         categoriaEncontrada = true;
@@ -1937,6 +1940,34 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
                 console.log('ℹ️ Categoría no encontrada:', categoriaTextClean, '→ seleccionando "Sin categoría"');
                 select.value = '';
             }
+            
+            // ✅ 4. AGREGAR EVENTO PARA RESTAURAR EL STOCK AL SELECCIONAR CATEGORÍA
+            // Eliminar eventos anteriores para evitar duplicados
+            const newSelect = select.cloneNode(true);
+            select.parentNode.replaceChild(newSelect, select);
+            
+            newSelect.addEventListener('change', function() {
+                const stockInput = document.getElementById('editStockRepuesto');
+                if (stockInput) {
+                    stockInput.value = stockOriginal;
+                    console.log('✅ Stock restaurado a:', stockOriginal);
+                }
+            });
+            
+            // Actualizar la referencia al select
+            document.getElementById('editCategoriaRepuesto');
+        }
+        
+        // ✅ EVENTO PARA ACTUALIZAR STOCK ORIGINAL CUANDO EL USUARIO CAMBIA EL STOCK
+        const stockInput = document.getElementById('editStockRepuesto');
+        if (stockInput) {
+            // Eliminar eventos anteriores
+            const newStockInput = stockInput.cloneNode(true);
+            stockInput.parentNode.replaceChild(newStockInput, stockInput);
+            
+            newStockInput.addEventListener('input', function() {
+                stockOriginal = parseInt(this.value) || 0;
+            });
         }
         
         const modal = document.getElementById('modalEditarRepuesto');
