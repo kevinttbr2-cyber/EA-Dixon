@@ -412,7 +412,12 @@ function eliminarGasto(id) {
     fetch(`${API_URL}/api/gastos/${id}`, {
         method: 'DELETE'
     })
-    .then(r => r.json())
+    .then(r => {
+        if (!r.ok) {
+            throw new Error(`Error ${r.status}`);
+        }
+        return r.json();
+    })
     .then(result => {
         if (result.success) {
             alert('✅ Gasto eliminado');
@@ -421,7 +426,10 @@ function eliminarGasto(id) {
             alert('❌ Error: ' + (result.error || 'Desconocido'));
         }
     })
-    .catch(() => alert('❌ Error de conexión'));
+    .catch(err => {
+        console.error('Error:', err);
+        alert('❌ Error al eliminar el gasto');
+    });
 }
 </script>
 
