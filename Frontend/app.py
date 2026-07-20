@@ -798,7 +798,7 @@ def balance():
         registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     
     # ============================================
-    # 2. OBTENER GASTOS POR SEPARADO (DESDE gastos_balance)
+    # 2. OBTENER GASTOS POR SEPARADO
     # ============================================
     gastos_operativos = []
     total_gastos = 0
@@ -845,9 +845,8 @@ def balance():
         total_gastos = 0
     
     # ============================================
-    # 3. CALCULAR GANANCIA REAL (SIN DIAGNÓSTICO)
+    # 3. CALCULAR GANANCIA REAL
     # ============================================
-    # ✅ FÓRMULA CORRECTA: Ingresos - Repuestos - Mano de Obra - Gastos Operativos
     ganancia_real = total_pagado - total_repuestos - total_mano_obra - total_gastos
     
     logger.info(f"📊 Balance final:")
@@ -864,6 +863,11 @@ def balance():
     semana_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')]
     mes_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
     todos_list = registros
+    
+    # ============================================
+    # 5. DEPURACIÓN: VERIFICAR QUE GASTOS SE PASAN
+    # ============================================
+    logger.info(f"📊 ENVIANDO AL TEMPLATE: gastos_operativos={len(gastos_operativos)}, total_gastos={total_gastos}")
     
     return render_template(
         "balance.html",
