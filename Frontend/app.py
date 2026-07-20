@@ -779,7 +779,7 @@ def balance():
     hoy = datetime.now().date()
     
     # ============================================
-    # 1. OBTENER VENTAS
+    # 1. OBTENER VENTAS DESDE EL BACKEND
     # ============================================
     try:
         resp = requests.get(f"{BACKEND_URL}/api/balance?filtro={filtro}", timeout=10)
@@ -791,9 +791,6 @@ def balance():
             total_mano_obra = data.get('total_mano_obra', 0)
             total_diagnostico = data.get('total_diagnostico', 0)
             ganancia_neta = data.get('ganancia_neta', 0)
-            
-            # ✅ LOG
-            logger.info(f"📊 VENTAS: {len(registros)} registros, Total: ${total_pagado}")
         else:
             registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     except Exception as e:
@@ -801,12 +798,13 @@ def balance():
         registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     
     # ============================================
-    # 2. OBTENER GASTOS POR SEPARADO
+    # 2. OBTENER GASTOS POR SEPARADO (DESDE gastos_balance)
     # ============================================
     gastos_operativos = []
     total_gastos = 0
     
     try:
+        # Definir fechas según el filtro
         if filtro == 'hoy':
             fecha_inicio = hoy.strftime('%Y-%m-%d')
             fecha_fin = hoy.strftime('%Y-%m-%d')
@@ -823,25 +821,23 @@ def balance():
             fecha_inicio = hoy.strftime('%Y-%m-%d')
             fecha_fin = hoy.strftime('%Y-%m-%d')
         
-        logger.info(f"📊 Buscando gastos entre {fecha_inicio} y {fecha_fin}")
+        logger.info(f"📊 Balance - Buscando gastos entre {fecha_inicio} y {fecha_fin}")
         
+        # ✅ LLAMAR A gastos_balance
         resp_gastos = requests.get(
             f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}",
             timeout=10
         )
         
-        # ✅ LOG DE RESPUESTA
-        logger.info(f"📊 GASTOS - Status: {resp_gastos.status_code}")
-        
         if resp_gastos.status_code == 200:
             gastos_operativos = resp_gastos.json()
-            total_gastos = sum(float(g.get('monto', 0)) for g in gastos_operativos)
-            logger.info(f"✅ GASTOS ENCONTRADOS: {len(gastos_operativos)} - Total: ${total_gastos}")
-            # ✅ LOG DE PRIMER GASTO
-            if gastos_operativos:
-                logger.info(f"📊 PRIMER GASTO: {gastos_operativos[0]}")
+            # ✅ CONVERTIR monto a float
+            for g in gastos_operativos:
+                g['monto'] = float(g['monto']) if g.get('monto') else 0
+            total_gastos = sum(g.get('monto', 0) for g in gastos_operativos)
+            logger.info(f"✅ Gastos encontrados: {len(gastos_operativos)} - Total: ${total_gastos}")
         else:
-            logger.error(f"❌ Error al obtener gastos: {resp_gastos.status_code} - {resp_gastos.text}")
+            logger.error(f"❌ Error al obtener gastos: {resp_gastos.status_code}")
             
     except Exception as e:
         logger.error(f"❌ Error al obtener gastos para balance: {e}")
@@ -849,18 +845,11 @@ def balance():
         total_gastos = 0
     
     # ============================================
-    # 3. CALCULAR GANANCIA REAL
+    # 3. CALCULAR GANANCIA REAL (SIN DIAGNÓSTICO)
     # ============================================
     ganancia_real = total_pagado - total_repuestos - total_mano_obra - total_gastos
     
-    # ✅ LOG FINAL
-    logger.info(f"📊 BALANCE FINAL:")
-    logger.info(f"   Ingresos: ${total_pagado}")
-    logger.info(f"   Repuestos: ${total_repuestos}")
-    logger.info(f"   Mano de Obra: ${total_mano_obra}")
-    logger.info(f"   Gastos: ${total_gastos}")
-    logger.info(f"   Ganancia Real: ${ganancia_real}")
-    logger.info(f"   Gastos Operativos: {len(gastos_operativos)} elementos")
+    logger.info(f"📊 Balance final: Ingresos=${total_pagado}, Repuestos=${total_repuestos}, MO=${total_mano_obra}, Gastos=${total_gastos}, Ganancia=${ganancia_real}")
     
     # ============================================
     # 4. FILTROS PARA LA VISTA
