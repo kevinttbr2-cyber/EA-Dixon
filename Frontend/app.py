@@ -382,9 +382,14 @@ def estado():
 @login_required
 def agregar_cliente():
     try:
-        # ✅ OBTENER FECHA DE CHILE
         tz = pytz.timezone('America/Santiago')
-        hoy = datetime.now(tz).strftime('%Y-%m-%d')
+        hoy = datetime.now(tz)
+        
+        # ✅ Fecha en formato YYYY-MM-DD (para el backend)
+        hoy_iso = hoy.strftime('%Y-%m-%d')
+        
+        # ✅ Fecha en formato DD/MM/YYYY (para mostrar)
+        hoy_formateada = hoy.strftime('%d/%m/%Y')
         
         resp_flotas = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=5)
         flotas = resp_flotas.json() if resp_flotas.status_code == 200 else []
@@ -392,20 +397,20 @@ def agregar_cliente():
         resp_marcas = requests.get(f"{BACKEND_URL}/api/marcas", timeout=5)
         marcas = resp_marcas.json() if resp_marcas.status_code == 200 else []
         
-        modelos = []
-        
     except Exception as e:
-        logger.error(f"⚠️ Error al cargar datos para agregar_cliente: {e}")
+        logger.error(f"⚠️ Error al cargar datos: {e}")
         flotas = []
         marcas = []
-        modelos = []
-        hoy = datetime.now(pytz.timezone('America/Santiago')).strftime('%Y-%m-%d')
+        hoy_iso = datetime.now(pytz.timezone('America/Santiago')).strftime('%Y-%m-%d')
+        hoy_formateada = datetime.now(pytz.timezone('America/Santiago')).strftime('%d/%m/%Y')
     
     return render_template("agregar_cliente.html", 
                           flotas=flotas, 
                           marcas=marcas, 
-                          modelos=modelos,
-                          hoy=hoy)  # ✅ PASAR FECHA DE CHILE
+                          modelos=[],
+                          hoy=hoy_iso,           # Para el backend
+                          hoy_formateada=hoy_formateada)  # Para mostrar
+    
 @app.route('/agregar', methods=['POST'])
 @login_required
 def agregar():
