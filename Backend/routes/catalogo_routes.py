@@ -1,8 +1,9 @@
+# Backend/routes/catalogo_routes.py
 from flask import Blueprint, request, jsonify
-from repositories.pago_repo import PagoRepository
-import psycopg2
 from database import get_connection
+import logging
 
+logger = logging.getLogger(__name__)
 catalogo_bp = Blueprint('catalogo', __name__, url_prefix='/api')
 
 @catalogo_bp.route('/marcas', methods=['GET'])
@@ -16,6 +17,7 @@ def get_marcas():
         conn.close()
         return jsonify(marcas)
     except Exception as e:
+        logger.error(f"Error en get_marcas: {e}")
         return jsonify({"error": str(e)}), 500
 
 @catalogo_bp.route('/modelos/<marca>', methods=['GET'])
@@ -29,4 +31,5 @@ def get_modelos(marca):
         conn.close()
         return jsonify(modelos)
     except Exception as e:
+        logger.error(f"Error en get_modelos: {e}")
         return jsonify({"error": str(e)}), 500
