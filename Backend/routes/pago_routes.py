@@ -672,30 +672,35 @@ def balance_ventas():
                 total += cantidad * precio
             r['total_repuestos'] = total
         
- # ✅ CLASIFICACIÓN NUEVA
-trabajo = []
-directa = []
-
-for r in registros:
-    # ✅ CALCULAR VENTA DE REPUESTOS
-    total_repuestos = 0
-    detalles = r.get('detalles_repuestos', [])
-    if detalles and len(detalles) > 0:
-        for item in detalles:
-            cantidad = int(item.get('cantidad', 1) or 1)
-            precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
-            total_repuestos += cantidad * precio
-    else:
-        total_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
-    
-    # ✅ CLASIFICAR POR TIPO DE VENTA
-    es_directa = r.get('tipo_venta') == 'directa'
-    
-    if es_directa:
-        directa.append(r)
-    else:
-        trabajo.append(r)
+        # ============================================
+        # ✅ CLASIFICACIÓN NUEVA (CORREGIDA)
+        # ============================================
+        trabajo = []
+        directa = []
         
+        for r in registros:
+            # ✅ CALCULAR VENTA DE REPUESTOS
+            total_repuestos = 0
+            detalles = r.get('detalles_repuestos', [])
+            if detalles and len(detalles) > 0:
+                for item in detalles:
+                    cantidad = int(item.get('cantidad', 1) or 1)
+                    precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+                    total_repuestos += cantidad * precio
+            else:
+                total_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
+            
+            # ✅ CLASIFICAR POR TIPO DE VENTA
+            es_directa = r.get('tipo_venta') == 'directa'
+            
+            if es_directa:
+                directa.append(r)
+            else:
+                trabajo.append(r)
+        
+        # ============================================
+        # ✅ FUNCIONES DE CÁLCULO (FUERA DEL BUCLE)
+        # ============================================
         def calcular_venta_repuestos(registros):
             total = 0
             for r in registros:
@@ -751,6 +756,9 @@ for r in registros:
                 return sum(margenes) / len(margenes)
             return 0
         
+        # ============================================
+        # ✅ CALCULAR TOTALES
+        # ============================================
         total_ventas = calcular_venta_repuestos(registros)
         total_trabajo = calcular_venta_repuestos(trabajo)
         total_directa = calcular_venta_repuestos(directa)
@@ -783,8 +791,9 @@ for r in registros:
         })
     except Exception as e:
         logger.error(f"Error en balance_ventas: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 # ============================
 # 13. VERIFICAR DUPLICADO
 # ============================
