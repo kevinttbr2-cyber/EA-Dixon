@@ -11,6 +11,7 @@ from routes import (
     venta_bp, export_bp, categoria_bp, reporte_bp, scanner_bp
 )
 from services.auth_service import AuthService
+from routes.update_routes import update_bp
 
 # Establecer zona horaria a Chile
 os.environ['TZ'] = 'America/Santiago'
@@ -62,6 +63,7 @@ app.register_blueprint(export_bp)
 app.register_blueprint(categoria_bp)
 app.register_blueprint(reporte_bp)
 app.register_blueprint(scanner_bp)
+app.register_blueprint(update_bp)
 
 # ============================
 # HEALTH CHECK
