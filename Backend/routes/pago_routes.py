@@ -1255,3 +1255,253 @@ def test_notificacion():
             "success": False,
             "error": str(e)
         }), 500
+# ============================
+# CREAR REPUESTO
+# ============================
+@pago_bp.route('/repuestos', methods=['POST'])
+def crear_repuesto():
+    """Crea un nuevo repuesto en el inventario"""
+    try:
+        data = request.json
+        nombre = sanitizar_input(data.get('nombre', '').strip())
+        costo_proveedor = sanitizar_numero(data.get('costo_proveedor', 0), min_val=0)
+        margen_ganancia = sanitizar_numero(data.get('margen_ganancia', 30), min_val=0)
+        proveedor = sanitizar_input(data.get('proveedor', '').strip())
+        costo_venta_final = sanitizar_numero(data.get('costo_venta_final', 0), min_val=0)
+        stock = int(sanitizar_numero(data.get('stock', 0), min_val=0))
+        categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
+        
+        # Si no hay precio de venta, calcularlo
+        if costo_venta_final == 0 and costo_proveedor > 0:
+            iva = 1.19
+            costo_con_iva = costo_proveedor * iva
+            costo_venta_final = costo_con_iva * (1 + (margen_ganancia / 100))
+            costo_venta_final = int(costo_venta_final)
+        
+        costo_proveedor_pendiente = costo_proveedor == 0
+        
+        if not nombre:
+            return jsonify({"error": "El nombre es obligatorio"}), 400
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO repuestos 
+            (nombre, costo_proveedor, margen_ganancia, proveedor, costo_venta_final, 
+             stock, categoria_nombre, costo_proveedor_pendiente, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 
+                    NOW() AT TIME ZONE 'America/Santiago', 
+                    NOW() AT TIME ZONE 'America/Santiago')
+            RETURNING id
+        """, (
+            nombre, costo_proveedor, margen_ganancia, proveedor, 
+            costo_venta_final, stock, categoria_nombre, costo_proveedor_pendiente
+        ))
+        
+        id_repuesto = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        logger.info(f"✅ Repuesto creado: {nombre} (ID: {id_repuesto})")
+        return jsonify({"success": True, "id": id_repuesto, "costo_venta_final": costo_venta_final})
+        
+    except Exception as e:
+        logger.error(f"Error en crear_repuesto: {e}")
+        return jsonify({"error": str(e)}), 500
+# ============================
+# ACTUALIZAR REPUESTO
+# ============================
+@pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
+def actualizar_repuesto(id_repuesto):
+    """Actualiza un repuesto existente"""
+    try:
+        data = request.json
+        nombre = sanitizar_input(data.get('nombre', '').strip())
+        costo_proveedor = sanitizar_numero(data.get('costo_proveedor', 0), min_val=0)
+        margen_ganancia = sanitizar_numero(data.get('margen_ganancia', 30), min_val=0)
+        proveedor = sanitizar_input(data.get('proveedor', '').strip())
+        costo_venta_final = sanitizar_numero(data.get('costo_venta_final', 0), min_val=0)
+        stock = int(sanitizar_numero(data.get('stock', 0), min_val=0))
+        categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
+        
+        if not nombre:
+            return jsonify({"error": "El nombre es obligatorio"}), 400
+        
+        # Si no hay precio de venta, calcularlo
+        if costo_venta_final == 0 and costo_proveedor > 0:
+            iva = 1.19
+            costo_con_iva = costo_proveedor * iva
+            costo_venta_final = costo_con_iva * (1 + (margen_ganancia / 100))
+            costo_venta_final = int(costo_venta_final)
+        
+        costo_proveedor_pendiente = costo_proveedor == 0
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            UPDATE repuestos 
+            SET nombre = %s, 
+                costo_proveedor = %s, 
+                margen_ganancia = %s, 
+                proveedor = %s,
+                costo_venta_final = %s,
+                stock = %s,
+                categoria_nombre = %s,
+                costo_proveedor_pendiente = %s,
+                updated_at = NOW() AT TIME ZONE 'America/Santiago'
+            WHERE id = %s
+            RETURNING id
+        """, (
+            nombre, costo_proveedor, margen_ganancia, proveedor, 
+            costo_venta_final, stock, categoria_nombre, costo_proveedor_pendiente, id_repuesto
+        ))
+        
+        if cur.fetchone() is None:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Repuesto no encontrado"}), 404
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        logger.info(f"✅ Repuesto actualizado: {nombre} (ID: {id_repuesto})")
+        return jsonify({"success": True})
+        
+    except Exception as e:
+        logger.error(f"Error en actualizar_repuesto: {e}")
+        return jsonify({"error": str(e)}), 500
+# ============================
+# ELIMINAR REPUESTO
+# ============================
+@pago_bp.route('/repuestos/<int:id_repuesto>', methods=['DELETE'])
+def eliminar_repuesto(id_repuesto):
+    """Elimina un repuesto por ID"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Verificar si el repuesto existe
+        cur.execute("SELECT id FROM repuestos WHERE id = %s", (id_repuesto,))
+        if cur.fetchone() is None:
+            cur.close()
+            conn.close()
+            return jsonify({"error": "Repuesto no encontrado"}), 404
+        
+        cur.execute("DELETE FROM repuestos WHERE id = %s RETURNING id", (id_repuesto,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        logger.info(f"✅ Repuesto eliminado: ID {id_repuesto}")
+        return jsonify({"success": True})
+        
+    except Exception as e:
+        logger.error(f"Error en eliminar_repuesto: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# ============================
+# GUARDAR SUSCRIPCIÓN PUSH
+# ============================
+@pago_bp.route('/guardar_suscripcion', methods=['POST'])
+def guardar_suscripcion():
+    """Guarda una suscripción push para notificaciones"""
+    try:
+        data = request.json
+        endpoint = data.get('endpoint', '')
+        keys = data.get('keys', {})
+        auth_key = keys.get('auth', '')
+        p256dh_key = keys.get('p256dh', '')
+        
+        if not endpoint:
+            return jsonify({"error": "Endpoint es obligatorio"}), 400
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Eliminar suscripción existente (si la hay)
+        cur.execute("DELETE FROM push_subscriptions WHERE endpoint = %s", (endpoint,))
+        
+        # Insertar nueva suscripción
+        cur.execute("""
+            INSERT INTO push_subscriptions (endpoint, auth_key, p256dh_key)
+            VALUES (%s, %s, %s)
+        """, (endpoint, auth_key, p256dh_key))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        logger.info(f"✅ Suscripción push guardada")
+        return jsonify({"success": True})
+        
+    except Exception as e:
+        logger.error(f"Error en guardar_suscripcion: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# ============================
+# ENVIAR NOTIFICACIÓN
+# ============================
+@pago_bp.route('/enviar_notificacion', methods=['POST'])
+def enviar_notificacion_desde_frontend():
+    """Endpoint para que el frontend envíe notificaciones push"""
+    try:
+        from services.notification_service import enviar_notificacion_push
+        
+        data = request.json
+        titulo = data.get('titulo', 'Notificación')
+        mensaje = data.get('mensaje', '')
+        url = data.get('url', '/estado')
+        id_reg = data.get('id', None)
+        
+        logger.info(f"📨 Enviando notificación desde frontend: {titulo}")
+        
+        enviados = enviar_notificacion_push(titulo, mensaje, url, id_reg)
+        
+        return jsonify({
+            "success": enviados > 0,
+            "enviados": enviados,
+            "mensaje": f"Notificación enviada a {enviados} dispositivos"
+        })
+        
+    except Exception as e:
+        logger.error(f"Error en enviar_notificacion: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# ============================
+# TEST NOTIFICACIÓN PUSH
+# ============================
+@pago_bp.route('/test_notificacion', methods=['GET'])
+def test_notificacion():
+    """Prueba de notificaciones push"""
+    try:
+        from services.notification_service import enviar_notificacion_push
+        
+        logger.info("📨 TEST_NOTIFICACION - Iniciando prueba...")
+        
+        enviados = enviar_notificacion_push(
+            titulo="🔔 Notificación de Prueba",
+            mensaje="¡Las notificaciones push funcionan correctamente!",
+            url="/estado"
+        )
+        
+        if enviados > 0:
+            return jsonify({
+                "success": True,
+                "mensaje": f"Notificación enviada a {enviados} dispositivos"
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "mensaje": "No hay dispositivos suscritos. Acepta las notificaciones en tu navegador."
+            })
+            
+    except Exception as e:
+        logger.error(f"Error en test_notificacion: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
