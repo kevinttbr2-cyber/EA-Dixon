@@ -771,9 +771,6 @@ def registros():
         filtro=filtro
     )
 
-# ============================
-# BALANCE DE GANANCIA (CON GASTOS)
-# ============================
 @app.route('/balance')
 @login_required
 @role_required(['admin'])
@@ -781,6 +778,9 @@ def balance():
     filtro = request.args.get('filtro', 'hoy')
     hoy = datetime.now().date()
     
+    # ============================================
+    # 1. OBTENER VENTAS
+    # ============================================
     try:
         resp = requests.get(f"{BACKEND_URL}/api/balance?filtro={filtro}", timeout=10)
         if resp.status_code == 200:
@@ -794,39 +794,64 @@ def balance():
         else:
             registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     except Exception as e:
-        logger.error(f"Error en /balance: {e}")
+        logger.error(f"Error en /balance (ventas): {e}")
         registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     
     # ============================================
-    # OBTENER GASTOS OPERATIVOS
+    # 2. OBTENER GASTOS OPERATIVOS (CORREGIDO)
     # ============================================
     gastos_operativos = []
     total_gastos = 0
     
     try:
-        # Obtener gastos según el filtro
-        fecha_inicio = None
+        # Definir fechas según el filtro
         if filtro == 'hoy':
             fecha_inicio = hoy.strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
         elif filtro == '7d':
             fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
         elif filtro == 'mes':
             fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
         elif filtro == 'todos':
-            fecha_inicio = '2020-01-01'  # Una fecha muy antigua para traer todos
+            fecha_inicio = '2020-01-01'
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        else:
+            fecha_inicio = hoy.strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
         
-        if fecha_inicio:
-            resp_gastos = requests.get(f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={hoy.strftime('%Y-%m-%d')}", timeout=10)
-            if resp_gastos.status_code == 200:
-                gastos_operativos = resp_gastos.json()
-                total_gastos = sum(g.get('monto', 0) for g in gastos_operativos)
+        logger.info(f"📊 Balance - Buscando gastos entre {fecha_inicio} y {fecha_fin}")
+        
+        # Llamar al backend
+        resp_gastos = requests.get(
+            f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}",
+            timeout=10
+        )
+        
+        if resp_gastos.status_code == 200:
+            gastos_operativos = resp_gastos.json()
+            total_gastos = sum(float(g.get('monto', 0)) for g in gastos_operativos)
+            logger.info(f"✅ Gastos encontrados: {len(gastos_operativos)} - Total: ${total_gastos}")
+        else:
+            logger.error(f"❌ Error al obtener gastos: {resp_gastos.status_code} - {resp_gastos.text}")
+            
     except Exception as e:
-        logger.error(f"Error al obtener gastos para balance: {e}")
+        logger.error(f"❌ Error al obtener gastos para balance: {e}")
+        gastos_operativos = []
+        total_gastos = 0
     
-    # Calcular ganancia real (restando los gastos operativos)
-    ganancia_real = ganancia_neta - total_gastos
+    # ============================================
+    # 3. CALCULAR GANANCIA REAL (SIN DIAGNÓSTICO)
+    # ============================================
+    # Ganancia Real = Ingresos - Repuestos - Mano de Obra - Gastos Operativos
+    ganancia_real = total_pagado - total_repuestos - total_mano_obra - total_gastos
     
-    # Filtros para las vistas
+    logger.info(f"📊 Balance final: Ingresos=${total_pagado}, Repuestos=${total_repuestos}, MO=${total_mano_obra}, Gastos=${total_gastos}, Ganancia=${ganancia_real}")
+    
+    # ============================================
+    # 4. FILTROS PARA LA VISTA
+    # ============================================
     hoy_list = [r for r in registros if r.get('fecha') == hoy.strftime('%Y-%m-%d')]
     semana_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')]
     mes_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
@@ -838,7 +863,7 @@ def balance():
         total_pagado=total_pagado,
         total_repuestos=total_repuestos,
         total_mano_obra=total_mano_obra,
-        total_diagnostico=total_diagnostico,
+        total_diagnostico=total_diagnostico,  # Se mantiene por compatibilidad pero no se usa
         ganancia_neta=ganancia_neta,
         ganancia_real=ganancia_real,
         total_gastos=total_gastos,
