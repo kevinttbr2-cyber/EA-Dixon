@@ -1351,12 +1351,6 @@ def ver_logs():
     except Exception as e:
         logger.error(f"Error al leer logs: {str(e)}")
         return render_template("ver_logs.html", logs=f"Error al leer logs: {str(e)}")
-# ============================
-# GASTOS
-# ============================
-# ============================
-# GASTOS
-# ============================
 @app.route('/gastos')
 @login_required
 @role_required(['admin', 'operador'])
@@ -1367,8 +1361,15 @@ def gastos():
     
     try:
         resp = requests.get(f"{BACKEND_URL}/api/gastos?fecha={hoy}", timeout=10)
-        gastos = resp.json() if resp.status_code == 200 else []
-    except:
+        if resp.status_code == 200:
+            gastos = resp.json()
+            # ✅ CONVERTIR monto a float
+            for g in gastos:
+                g['monto'] = float(g['monto']) if g.get('monto') else 0
+        else:
+            gastos = []
+    except Exception as e:
+        logger.error(f"Error en /gastos: {e}")
         gastos = []
     
     total_gastos = sum(g.get('monto', 0) for g in gastos)
