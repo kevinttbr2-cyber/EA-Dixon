@@ -723,13 +723,17 @@
             </div>
             
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-             <!-- ✅ CORRECTO -->
-<div><label style="color:#90e0a0;font-size:11px;">📦 Stock</label><input type="number" id="scan_stock" class="form-control" value="1" min="1" style="font-size:13px;"></div>  
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">🏢 Proveedor</label>
-                    <input type="text" name="proveedor" id="editProveedorRepuesto" class="form-control" placeholder="Opcional">
-                </div>
-            </div>
+    <div class="mb-3">
+        <label style="color:#90e0a0;font-size:13px;">📦 Stock</label>
+        <!-- ✅ CORRECTO: editStockRepuesto -->
+        <input type="number" name="stock" id="editStockRepuesto" class="form-control" min="0" step="1">
+        <small style="color:#666;font-size:10px;">⚠️ Solo números enteros, no puede ser negativo</small>
+    </div>
+    <div class="mb-3">
+        <label style="color:#90e0a0;font-size:13px;">🏢 Proveedor</label>
+        <input type="text" name="proveedor" id="editProveedorRepuesto" class="form-control" placeholder="Opcional">
+    </div>
+</div>
             
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div class="mb-3">
