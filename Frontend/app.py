@@ -856,16 +856,32 @@ def balance():
         mes=mes_list,
         todos=todos_list
     )
-# ============================
-# MODELOS
-# ============================
-@app.route('/modelos/<marca>')
+# Frontend/app.py - Agregar estas rutas después de los imports
+
+@app.route('/api/marcas', methods=['GET'])
 @login_required
-def modelos(marca):
+def api_marcas():
+    """Proxy para obtener marcas desde el backend"""
+    try:
+        resp = requests.get(f"{BACKEND_URL}/api/marcas", timeout=10)
+        if resp.status_code == 200:
+            return jsonify(resp.json())
+        return jsonify([])
+    except Exception as e:
+        logger.error(f"Error en /api/marcas: {e}")
+        return jsonify([])
+
+@app.route('/api/modelos/<marca>', methods=['GET'])
+@login_required
+def api_modelos(marca):
+    """Proxy para obtener modelos desde el backend"""
     try:
         resp = requests.get(f"{BACKEND_URL}/api/modelos/{marca}", timeout=10)
-        return jsonify(resp.json() if resp.status_code == 200 else [])
-    except:
+        if resp.status_code == 200:
+            return jsonify(resp.json())
+        return jsonify([])
+    except Exception as e:
+        logger.error(f"Error en /api/modelos: {e}")
         return jsonify([])
 
 # ============================
