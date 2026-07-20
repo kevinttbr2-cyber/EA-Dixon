@@ -642,7 +642,7 @@
 </div>
 
 <!-- ============================================
-     MODAL: EDITAR REPUESTO
+     MODAL: EDITAR REPUESTO (CON CÁLCULO AUTOMÁTICO)
      ============================================ -->
 <div id="modalEditarRepuesto" class="modal-dixon">
     <div class="modal-content" style="border: 2px solid #4fc3f7;">
@@ -654,27 +654,18 @@
         </div>
         <form id="formEditarRepuesto">
             <input type="hidden" name="id" id="editRepuestoId">
+            
+            <!-- Nombre -->
             <div class="mb-3">
                 <label style="color:#90e0a0;font-size:13px;">Nombre del repuesto *</label>
                 <input type="text" name="nombre" id="editNombreRepuesto" class="form-control" required>
             </div>
             
+            <!-- Stock + Proveedor -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div class="mb-3">
                     <label style="color:#90e0a0;font-size:13px;">📦 Stock</label>
                     <input type="number" name="stock" id="editStockRepuesto" class="form-control" min="0">
-                </div>
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">💰 Costo Proveedor ($)</label>
-                    <input type="number" name="costo_proveedor" id="editCostoProveedor" class="form-control" step="0.01">
-                </div>
-            </div>
-            
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">📈 Margen de Ganancia (%)</label>
-                    <input type="number" name="margen_ganancia" id="editMargenGanancia" class="form-control" step="0.1" readonly style="background:rgba(255,255,255,0.03);">
-                    <small style="color:#666;font-size:10px;">Se recalcula automáticamente</small>
                 </div>
                 <div class="mb-3">
                     <label style="color:#90e0a0;font-size:13px;">🏢 Proveedor</label>
@@ -682,32 +673,77 @@
                 </div>
             </div>
             
-            <div class="mb-3">
-                <label style="color:#90e0a0;font-size:13px;">📂 Categoría</label>
-                <select id="editCategoriaRepuesto" class="form-control" style="
-                    background: rgba(0,0,0,0.40);
-                    color: #fff;
-                    border: 1px solid rgba(0,255,102,0.20);
-                    border-radius: 8px;
-                    padding: 8px 12px;
-                    font-size: 13px;
-                    width: 100%;
-                ">
-                    <option value="">Sin categoría</option>
-                </select>
-            </div>
-            
-            <div style="background:rgba(0,255,102,0.06);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(0,255,102,0.10);">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="color:#888;font-size:12px;">💰 Precio Venta Final:</span>
-                    <span id="editPreviewCostoVenta" style="color:#00ff66;font-weight:700;font-size:20px;">$0</span>
+            <!-- Costo Proveedor + Categoría -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">💰 Costo Proveedor ($)</label>
+                    <input type="number" name="costo_proveedor" id="editCostoProveedor" class="form-control" step="0.01">
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
-                    <span style="color:#888;font-size:11px;">📈 Margen calculado:</span>
-                    <span id="editPreviewMargen" style="color:#4fc3f7;font-weight:600;font-size:14px;">0%</span>
+                <div class="mb-3">
+                    <label style="color:#90e0a0;font-size:13px;">📂 Categoría</label>
+                    <select id="editCategoriaRepuesto" class="form-control" style="
+                        background: rgba(0,0,0,0.40);
+                        color: #fff;
+                        border: 1px solid rgba(0,255,102,0.20);
+                        border-radius: 8px;
+                        padding: 8px 12px;
+                        font-size: 13px;
+                        width: 100%;
+                    ">
+                        <option value="">Sin categoría</option>
+                    </select>
                 </div>
             </div>
             
+            <!-- ============================================
+                 PRECIO VENTA + MARGEN (CÁLCULO AUTOMÁTICO)
+                 ============================================ -->
+            <div style="background:rgba(79,195,247,0.04);border-radius:8px;padding:12px;margin:10px 0;border:1px solid rgba(79,195,247,0.10);">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <!-- Precio Venta Final -->
+                    <div class="mb-3" style="margin-bottom:0;">
+                        <label style="color:#00ff66;font-size:13px;font-weight:600;">💰 Precio Venta Final ($)</label>
+                        <input type="number" name="costo_venta_final" id="editPrecioVenta" class="form-control" 
+                               step="0.01" style="border-color:rgba(0,255,102,0.30) !important; font-size:16px; font-weight:700;">
+                        <small style="color:#666;font-size:10px;">✏️ Edita el precio final</small>
+                    </div>
+                    
+                    <!-- Margen de Ganancia -->
+                    <div class="mb-3" style="margin-bottom:0;">
+                        <label style="color:#4fc3f7;font-size:13px;font-weight:600;">📈 Margen de Ganancia (%)</label>
+                        <input type="number" name="margen_ganancia" id="editMargenGanancia" class="form-control" 
+                               step="0.1" style="border-color:rgba(79,195,247,0.30) !important; font-size:16px; font-weight:700;">
+                        <small style="color:#666;font-size:10px;">✏️ Edita el margen</small>
+                    </div>
+                </div>
+                
+                <!-- Resumen del cálculo -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);">
+                    <span style="color:#888;font-size:12px;">
+                        <span id="editGananciaLabel">💰 Ganancia: $0</span>
+                    </span>
+                    <span style="color:#888;font-size:12px;">
+                        <span id="editMargenCalculadoLabel">📊 Margen calculado: 0%</span>
+                    </span>
+                </div>
+                
+                <!-- Botón para calcular automáticamente desde costo -->
+                <div style="margin-top:8px;">
+                    <button type="button" onclick="calcularPrecioDesdeCosto()" style="
+                        background:rgba(0,255,102,0.08);
+                        color:#00ff66;
+                        border:1px solid rgba(0,255,102,0.15);
+                        border-radius:6px;
+                        padding:4px 12px;
+                        font-size:11px;
+                        cursor:pointer;
+                        width:100%;
+                    ">
+                        🔄 Calcular precio desde costo (30% de margen)
+                    </button>
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary w-100" style="background:#4fc3f7 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;">
                 💾 Guardar cambios
             </button>
@@ -1967,6 +2003,275 @@ document.addEventListener('DOMContentLoaded', function() {
     if (inputCosto) inputCosto.addEventListener('input', calcularCostoVenta);
     if (inputMargen) inputMargen.addEventListener('input', calcularCostoVenta);
 
+    // ============================================
+// CÁLCULO AUTOMÁTICO EN EDICIÓN (PRECIO Y MARGEN)
+// ============================================
+
+// Calcular margen desde precio de venta
+function calcularMargenDesdePrecio() {
+    const costo = parseFloat(document.getElementById('editCostoProveedor')?.value) || 0;
+    const precio = parseFloat(document.getElementById('editPrecioVenta')?.value) || 0;
+    const margenInput = document.getElementById('editMargenGanancia');
+    const gananciaLabel = document.getElementById('editGananciaLabel');
+    const margenLabel = document.getElementById('editMargenCalculadoLabel');
+    
+    if (costo > 0 && precio > 0) {
+        const ganancia = precio - costo;
+        const margen = ((ganancia / precio) * 100);
+        const margenRedondeado = Math.round(margen * 10) / 10;
+        
+        margenInput.value = margenRedondeado;
+        
+        if (gananciaLabel) {
+            gananciaLabel.textContent = `💰 Ganancia: $${ganancia.toLocaleString('es-CL')}`;
+        }
+        if (margenLabel) {
+            margenLabel.textContent = `📊 Margen calculado: ${margenRedondeado}%`;
+        }
+    } else {
+        margenInput.value = 0;
+        if (gananciaLabel) {
+            gananciaLabel.textContent = '💰 Ganancia: $0';
+        }
+        if (margenLabel) {
+            margenLabel.textContent = '📊 Margen calculado: 0%';
+        }
+    }
+}
+
+// Calcular precio desde margen
+function calcularPrecioDesdeMargen() {
+    const costo = parseFloat(document.getElementById('editCostoProveedor')?.value) || 0;
+    const margen = parseFloat(document.getElementById('editMargenGanancia')?.value) || 0;
+    const precioInput = document.getElementById('editPrecioVenta');
+    const gananciaLabel = document.getElementById('editGananciaLabel');
+    const margenLabel = document.getElementById('editMargenCalculadoLabel');
+    
+    if (costo > 0 && margen > 0) {
+        const iva = 1.19;
+        const costoConIva = costo * iva;
+        const precio = costoConIva * (1 + (margen / 100));
+        const precioFinal = Math.round(precio * 100) / 100;
+        
+        precioInput.value = precioFinal;
+        
+        const ganancia = precioFinal - costo;
+        if (gananciaLabel) {
+            gananciaLabel.textContent = `💰 Ganancia: $${ganancia.toLocaleString('es-CL')}`;
+        }
+        if (margenLabel) {
+            margenLabel.textContent = `📊 Margen: ${margen}%`;
+        }
+    } else {
+        precioInput.value = 0;
+        if (gananciaLabel) {
+            gananciaLabel.textContent = '💰 Ganancia: $0';
+        }
+        if (margenLabel) {
+            margenLabel.textContent = '📊 Margen calculado: 0%';
+        }
+    }
+}
+
+// Calcular precio automático desde costo (30% de margen por defecto)
+function calcularPrecioDesdeCosto() {
+    const costo = parseFloat(document.getElementById('editCostoProveedor')?.value) || 0;
+    const precioInput = document.getElementById('editPrecioVenta');
+    const margenInput = document.getElementById('editMargenGanancia');
+    const gananciaLabel = document.getElementById('editGananciaLabel');
+    const margenLabel = document.getElementById('editMargenCalculadoLabel');
+    
+    if (costo > 0) {
+        const margen = 30;
+        const iva = 1.19;
+        const costoConIva = costo * iva;
+        const precio = costoConIva * (1 + (margen / 100));
+        const precioFinal = Math.round(precio * 100) / 100;
+        
+        precioInput.value = precioFinal;
+        margenInput.value = margen;
+        
+        const ganancia = precioFinal - costo;
+        if (gananciaLabel) {
+            gananciaLabel.textContent = `💰 Ganancia: $${ganancia.toLocaleString('es-CL')}`;
+        }
+        if (margenLabel) {
+            margenLabel.textContent = `📊 Margen: ${margen}% (calculado)`;
+        }
+    } else {
+        alert('⚠️ Ingresa primero el costo proveedor');
+    }
+}
+
+// ============================================
+// EVENTOS PARA CÁLCULO AUTOMÁTICO
+// ============================================
+
+// Cuando se edita el precio, recalcular margen
+document.addEventListener('DOMContentLoaded', function() {
+    const precioInput = document.getElementById('editPrecioVenta');
+    const margenInput = document.getElementById('editMargenGanancia');
+    const costoInput = document.getElementById('editCostoProveedor');
+    
+    if (precioInput) {
+        precioInput.addEventListener('input', function() {
+            calcularMargenDesdePrecio();
+        });
+    }
+    
+    if (margenInput) {
+        margenInput.addEventListener('input', function() {
+            calcularPrecioDesdeMargen();
+        });
+    }
+    
+    if (costoInput) {
+        costoInput.addEventListener('input', function() {
+            // Si hay precio y costo, recalcular
+            const precio = parseFloat(document.getElementById('editPrecioVenta')?.value) || 0;
+            if (precio > 0) {
+                calcularMargenDesdePrecio();
+            }
+        });
+    }
+});
+// Editar botones - ACTUALIZADO CON CÁLCULO AUTOMÁTICO
+document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const id = this.dataset.id;
+        const fila = this.closest('.fila-repuesto-lista');
+        if (!fila) return;
+        
+        const nombre = fila.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+        const stockText = fila.querySelector('td:nth-child(3)')?.textContent.trim() || '0';
+        const stock = parseInt(stockText) || 0;
+        const costoText = fila.querySelector('td:nth-child(4)')?.textContent.replace(/[$,⚠️]/g, '').trim() || '0';
+        const costo = parseFloat(costoText) || 0;
+        const margenText = fila.querySelector('td:nth-child(5)')?.textContent.replace('%', '').trim() || '0';
+        const margen = parseFloat(margenText) || 0;
+        const proveedor = fila.querySelector('td:nth-child(7)')?.textContent.trim() || '';
+        const categoriaText = fila.querySelector('td:nth-child(8)')?.textContent.trim() || '';
+        const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
+        const precioVenta = parseFloat(precioText) || 0;
+        
+        const editId = document.getElementById('editRepuestoId');
+        const editNombre = document.getElementById('editNombreRepuesto');
+        const editCosto = document.getElementById('editCostoProveedor');
+        const editMargen = document.getElementById('editMargenGanancia');
+        const editProveedor = document.getElementById('editProveedorRepuesto');
+        const editStock = document.getElementById('editStockRepuesto');
+        const editPrecio = document.getElementById('editPrecioVenta');
+        const editGananciaLabel = document.getElementById('editGananciaLabel');
+        const editMargenLabel = document.getElementById('editMargenCalculadoLabel');
+        
+        if (editId) editId.value = id;
+        if (editNombre) editNombre.value = nombre;
+        if (editCosto) editCosto.value = costo;
+        if (editMargen) editMargen.value = margen;
+        if (editProveedor) editProveedor.value = proveedor === '-' ? '' : proveedor;
+        if (editStock) editStock.value = stock;
+        if (editPrecio) editPrecio.value = precioVenta;
+        
+        // Calcular ganancia
+        const ganancia = precioVenta - costo;
+        if (editGananciaLabel) {
+            editGananciaLabel.textContent = `💰 Ganancia: $${ganancia.toLocaleString('es-CL')}`;
+        }
+        if (editMargenLabel) {
+            editMargenLabel.textContent = `📊 Margen calculado: ${margen}%`;
+        }
+        
+        if (!categoriasCargadas) {
+            await cargarCategoriasEnEditar();
+        }
+        
+        const select = document.getElementById('editCategoriaRepuesto');
+        if (select) {
+            let categoriaEncontrada = false;
+            for (let opt of select.options) {
+                if (opt.text === categoriaText) {
+                    opt.selected = true;
+                    categoriaEncontrada = true;
+                    break;
+                }
+            }
+            if (!categoriaEncontrada && categoriaText && categoriaText !== 'Sin categoría') {
+                for (let opt of select.options) {
+                    if (opt.label === categoriaText || opt.parentElement?.label === categoriaText) {
+                        opt.selected = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        const modal = document.getElementById('modalEditarRepuesto');
+        if (modal) modal.classList.add('active');
+    });
+});
+// Formulario editar - ACTUALIZADO
+const formEditar = document.getElementById('formEditarRepuesto');
+if (formEditar) {
+    formEditar.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('editRepuestoId')?.value;
+        const nombre = document.getElementById('editNombreRepuesto')?.value.trim() || '';
+        const costoProveedor = parseFloat(document.getElementById('editCostoProveedor')?.value || 0);
+        const proveedor = document.getElementById('editProveedorRepuesto')?.value.trim() || '';
+        const stock = parseInt(document.getElementById('editStockRepuesto')?.value || 0);
+        const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
+        const precioVenta = parseFloat(document.getElementById('editPrecioVenta')?.value || 0);
+        
+        if (!nombre) {
+            alert('⚠️ El nombre del repuesto es obligatorio');
+            return;
+        }
+        
+        if (precioVenta <= 0) {
+            alert('⚠️ El precio de venta debe ser mayor a 0');
+            return;
+        }
+        
+        const data = {
+            nombre: nombre,
+            costo_proveedor: costoProveedor,
+            margen_ganancia: margen,
+            proveedor: proveedor || 'Importado',
+            stock: stock,
+            costo_venta_final: precioVenta
+        };
+        
+        const categoriaId = document.getElementById('editCategoriaRepuesto')?.value;
+        if (categoriaId) {
+            data.subcategoria_id = parseInt(categoriaId);
+        }
+        
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = '⏳ Guardando...';
+        
+        fetch(`${API_URL}/api/repuestos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                alert('✅ Repuesto actualizado correctamente');
+                cerrarModalEditar();
+                location.reload();
+            } else {
+                alert('❌ Error: ' + (resp.error || 'Desconocido'));
+            }
+        })
+        .catch(() => alert('❌ Error de conexión'))
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = '💾 Guardar cambios';
+        });
+    });
+}
     // Calcular en editar
     function calcularCostoVentaEdit() {
         const inputCosto = document.getElementById('editCostoProveedor');
