@@ -785,80 +785,7 @@ def registros():
         total_general=total_general,
         filtro=filtro
     )
-
 @app.route('/balance')
-@login_required
-@role_required(['admin'])
-def balance():
-    filtro = request.args.get('filtro', 'hoy')
-    hoy = datetime.now().date()
-    
-    # ============================================
-    # 1. OBTENER VENTAS
-    # ============================================
-    try:
-        resp = requests.get(f"{BACKEND_URL}/api/balance?filtro={filtro}", timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            registros = data.get('registros', [])
-            total_pagado = data.get('total_pagado', 0)
-            total_repuestos = data.get('total_repuestos', 0)
-            total_mano_obra = data.get('total_mano_obra', 0)
-            total_diagnostico = data.get('total_diagnostico', 0)
-            ganancia_neta = data.get('ganancia_neta', 0)
-        else:
-            registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
-    except Exception as e:
-        logger.error(f"Error en /balance (ventas): {e}")
-        registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
-    
-    # ============================================
-    # 2. OBTENER GASTOS POR SEPARADO
-    # ============================================
-    gastos_operativos = []
-    total_gastos = 0
-    
-    try:
-        # ✅ CORREGIDO: Definir fechas correctamente según el filtro
-        if filtro == 'hoy':
-            # 🔧 CORRECCIÓN: Usar el día de HOY
-            fecha_inicio = hoy.strftime('%Y-%m-%d')
-            fecha_fin = hoy.strftime('%Y-%m-%d')
-        elif filtro == '7d':
-            fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
-            fecha_fin = hoy.strftime('%Y-%m-%d')
-        elif filtro == 'mes':
-            fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
-            fecha_fin = hoy.strftime('%Y-%m-%d')
-        elif filtro == 'todos':
-            fecha_inicio = '2020-01-01'
-            fecha_fin = hoy.strftime('%Y-%m-%d')
-        else:
-            fecha_inicio = hoy.strftime('%Y-%m-%d')
-            fecha_fin = hoy.strftime('%Y-%m-%d')
-        
-        logger.info(f"📊 Balance - Buscando gastos entre {fecha_inicio} y {fecha_fin}")
-        
-        resp_gastos = requests.get(
-            f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}",
-            timeout=10
-        )
-        
-        if resp_gastos.status_code == 200:
-            gastos_operativos = resp_gastos.json()
-            for g in gastos_operativos:
-                g['monto'] = float(g['monto']) if g.get('monto') else 0
-            total_gastos = sum(g.get('monto', 0) for g in gastos_operativos)
-            logger.info(f"✅ Gastos encontrados: {len(gastos_operativos)} - Total: ${total_gastos}")
-        else:
-            logger.error(f"❌ Error al obtener gastos: {resp_gastos.status_code}")
-            
-    except Exception as e:
-        logger.error(f"❌ Error al obtener gastos para balance: {e}")
-        gastos_operativos = []
-        total_gastos = 0
-    
-    # ======================================@app.route('/balance')
 @login_required
 @role_required(['admin'])
 def balance():
@@ -955,6 +882,7 @@ def balance():
         mes=mes_list,
         todos=todos_list
     )
+
 # ============================
 # MODELOS
 # ============================
