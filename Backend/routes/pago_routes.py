@@ -1186,3 +1186,35 @@ def get_dashboard():
     except Exception as e:
         logger.error(f"Error en get_dashboard: {e}")
         return jsonify({"error": str(e)}), 500
+# AGREGAR AL FINAL DEL ARCHIVO
+
+# ============================
+# BUSCAR REPUESTOS (AUTOCOMPLETADO)
+# ============================
+@pago_bp.route('/repuestos/buscar', methods=['GET'])
+def buscar_repuestos():
+    """Busca repuestos por nombre (autocompletado) con costo_venta_final"""
+    try:
+        query = request.args.get('q', '').strip()
+        if len(query) < 2:
+            return jsonify([])
+        
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT 
+                id, 
+                nombre, 
+                costo_venta_final as costo,
+                proveedor
+            FROM repuestos 
+            WHERE nombre ILIKE %s 
+            ORDER BY nombre 
+            LIMIT 10
+        """, (f'%{query}%',))
+        repuestos = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify(repuestos)
+    except Exception as e:
+        logger.error(f"Error en buscar_repuestos: {e}")
+        return jsonify([])
