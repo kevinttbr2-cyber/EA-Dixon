@@ -10,9 +10,13 @@ from .cierre_routes import cierre_bp
 from .deudor_routes import deudor_bp
 from .venta_routes import venta_bp
 from .export_routes import export_bp
+from .categoria_routes import categoria_bp
+from .reporte_routes import reporte_bp
+from .scanner_routes import scanner_bp
 
 __all__ = [
     'auth_bp', 'pago_bp', 'catalogo_bp', 'flota_bp', 
     'pdf_bp', 'auditoria_bp', 'gasto_bp', 'cierre_bp',
-    'deudor_bp', 'venta_bp', 'export_bp'
+    'deudor_bp', 'venta_bp', 'export_bp', 'categoria_bp',
+    'reporte_bp', 'scanner_bp'
 ]
