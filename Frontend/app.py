@@ -15,6 +15,7 @@ import sys
 import re
 import json
 import pytz
+
 # ============================
 # CONFIGURACIÓN DE LA APP
 # ============================
@@ -95,6 +96,9 @@ time.tzset()
 app.jinja_env.filters['strftime'] = lambda date, fmt: date.strftime(fmt) if date else ''
 BACKEND_URL = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
 
+# ============================================
+# FUNCIONES DE FECHA CHILE
+# ============================================
 def get_fecha_chile():
     """Retorna fecha actual en zona horaria Chile"""
     tz = pytz.timezone('America/Santiago')
@@ -104,6 +108,7 @@ def get_fecha_chile_str():
     """Retorna fecha actual en zona horaria Chile como string YYYY-MM-DD"""
     tz = pytz.timezone('America/Santiago')
     return datetime.now(tz).strftime('%Y-%m-%d')
+
 def get_mes_anio_chile():
     """Retorna mes y año actual en zona horaria Chile"""
     tz = pytz.timezone('America/Santiago')
@@ -111,7 +116,7 @@ def get_mes_anio_chile():
     return ahora.month, ahora.year
 
 # ============================
-# FUNCIÓN CENTRALIZADA PARA ENVIAR NOTIFICACIONES (NUEVO)
+# FUNCIÓN CENTRALIZADA PARA ENVIAR NOTIFICACIONES
 # ============================
 def enviar_notificacion_push(titulo, mensaje, url="/estado", id_reg=None):
     """
@@ -201,6 +206,7 @@ def generar_firma_pdf(id_reg):
         str(id_reg).encode(),
         hashlib.sha256
     ).hexdigest()[:16]
+
 # ============================
 # CONTEXT PROCESSOR
 # ============================
@@ -230,9 +236,7 @@ def inject_globals():
         meses_cortos = {1: 'Ene', 2: 'Feb', 3: 'Mar', 4: 'Abr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dic'}
         return f"{dias_cortos.get(fecha.weekday(), '')} {fecha.day} {meses_cortos.get(fecha.month, '')}"
     
-    # ============================================
     # CONTADOR DE FLOTAS PENDIENTES
-    # ============================================
     flotas_pendientes_count = 0
     try:
         resp = requests.get(f"{BACKEND_URL}/api/flotas_pendientes_count", timeout=3)
@@ -242,9 +246,7 @@ def inject_globals():
         print(f"⚠️ Error al obtener flotas pendientes: {e}")
         flotas_pendientes_count = 0
     
-    # ============================================
-    # ✅ CONTADOR DE DEUDORES (DEFINIDO ANTES DE USARLO)
-    # ============================================
+    # CONTADOR DE DEUDORES
     deudores_count = 0
     try:
         resp_deudores = requests.get(f"{BACKEND_URL}/api/deudores/todos", timeout=3)
@@ -262,10 +264,9 @@ def inject_globals():
         fecha_espanol=fecha_espanol,
         fecha_corta_espanol=fecha_corta_espanol,
         flotas_pendientes_count=flotas_pendientes_count,
-        deudores_count=deudores_count,  # ✅ AHORA SÍ ESTÁ DEFINIDO
+        deudores_count=deudores_count,
         vapid_public_key=vapid_public_key
     )
-
 
 # ============================
 # RUTAS PRINCIPALES
@@ -325,11 +326,10 @@ def verificar_sesion():
     })
 
 # ============================
-# PROXY PARA GUARDAR SUSCRIPCIÓN (SOLO REENVÍA AL BACKEND)
+# PROXY PARA GUARDAR SUSCRIPCIÓN
 # ============================
 @app.route('/api/guardar_suscripcion', methods=['POST'])
 def guardar_suscripcion_route():
-    """Reenvía la suscripción al backend (NO guarda directamente)"""
     try:
         data = request.json
         backend_url = os.environ.get("BACKEND_URL", "https://ea-dixon-production.up.railway.app")
@@ -376,21 +376,18 @@ def estado():
                           estado="todos")
 
 # ============================
-# AGREGAR CLIENTE (PÁGINA CON CATÁLOGO COMPLETO)
+# AGREGAR CLIENTE
 # ============================
 @app.route('/agregar_cliente')
 @login_required
 def agregar_cliente():
     try:
-        # Obtener flotas disponibles
         resp_flotas = requests.get(f"{BACKEND_URL}/api/flotas_disponibles", timeout=5)
         flotas = resp_flotas.json() if resp_flotas.status_code == 200 else []
         
-        # Obtener marcas desde el backend
         resp_marcas = requests.get(f"{BACKEND_URL}/api/marcas", timeout=5)
         marcas = resp_marcas.json() if resp_marcas.status_code == 200 else []
         
-        # Obtener modelos (se cargarán dinámicamente con JS)
         modelos = []
         
     except Exception as e:
@@ -403,9 +400,7 @@ def agregar_cliente():
                           flotas=flotas, 
                           marcas=marcas, 
                           modelos=modelos)
-# ============================
-# AGREGAR CLIENTE (PROCESAR)
-# ============================
+
 @app.route('/agregar', methods=['POST'])
 @login_required
 def agregar():
@@ -454,7 +449,6 @@ def agregar():
         
         logger.info(f"✅ Cliente agregado exitosamente por '{usuario}': '{nombre}', patente: '{patente}'")
         
-        # ✅ ENVIAR NOTIFICACIÓN - AHORA USA LA FUNCIÓN CENTRALIZADA
         enviar_notificacion_push(
             titulo="📋 Nuevo Cliente",
             mensaje=f"{nombre}\nPatente: {patente}\nRegistrado por: {usuario}",
@@ -543,7 +537,6 @@ def pago_exitoso(id_reg):
         registro['firma'] = firma
         url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}"
         
-        # ✅ ENVIAR NOTIFICACIÓN - AHORA USA LA FUNCIÓN CENTRALIZADA
         nombre_cliente = registro.get('nombre', 'Cliente')
         monto = registro.get('monto', 0)
         forma_pago = registro.get('forma_pago', 'efectivo')
@@ -752,7 +745,6 @@ def registros():
     filtro = request.args.get('filtro', 'todos')
     
     try:
-        # Enviar el filtro al backend
         resp = requests.get(f"{BACKEND_URL}/api/registros?filtro={filtro}", timeout=10)
         registros = resp.json() if resp.status_code == 200 else []
     except Exception as e:
@@ -764,7 +756,6 @@ def registros():
     fecha_7d = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
     fecha_mes = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
     
-    # Estos son para mostrar en los filtros (siempre el total sin filtrar)
     try:
         resp_all = requests.get(f"{BACKEND_URL}/api/registros?filtro=todos", timeout=10)
         registros_all = resp_all.json() if resp_all.status_code == 200 else []
@@ -778,13 +769,17 @@ def registros():
     
     return render_template(
         "registros.html",
-        registros=registros,           # Ya filtrados por el backend
-        registros_hoy=registros_hoy,   # Para mostrar el contador
-        registros_7d=registros_7d,     # Para mostrar el contador
-        registros_mes=registros_mes,   # Para mostrar el contador
+        registros=registros,
+        registros_hoy=registros_hoy,
+        registros_7d=registros_7d,
+        registros_mes=registros_mes,
         total_general=total_general,
         filtro=filtro
     )
+
+# ============================
+# BALANCE (CORREGIDO - SOLO UNA VEZ)
+# ============================
 @app.route('/balance')
 @login_required
 @role_required(['admin'])
@@ -792,9 +787,7 @@ def balance():
     filtro = request.args.get('filtro', 'hoy')
     hoy = datetime.now().date()
     
-    # ============================================
     # 1. OBTENER VENTAS
-    # ============================================
     try:
         resp = requests.get(f"{BACKEND_URL}/api/balance?filtro={filtro}", timeout=10)
         if resp.status_code == 200:
@@ -811,9 +804,7 @@ def balance():
         logger.error(f"Error en /balance (ventas): {e}")
         registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     
-    # ============================================
-    # 2. OBTENER GASTOS POR SEPARADO
-    # ============================================
+    # 2. OBTENER GASTOS DEL MES ACTUAL
     gastos_operativos = []
     total_gastos = 0
     
@@ -830,7 +821,6 @@ def balance():
         
         if resp_gastos.status_code == 200:
             gastos_operativos = resp_gastos.json()
-            # ✅ CONVERTIR monto a float
             for g in gastos_operativos:
                 g['monto'] = float(g['monto']) if g.get('monto') else 0
             total_gastos = sum(g.get('monto', 0) for g in gastos_operativos)
@@ -843,9 +833,7 @@ def balance():
         gastos_operativos = []
         total_gastos = 0
     
-    # ============================================
     # 3. CALCULAR GANANCIA REAL
-    # ============================================
     ganancia_real = total_pagado - total_repuestos - total_mano_obra - total_gastos
     
     logger.info(f"📊 Balance final:")
@@ -855,9 +843,7 @@ def balance():
     logger.info(f"   Gastos: ${total_gastos}")
     logger.info(f"   Ganancia Real: ${ganancia_real}")
     
-    # ============================================
     # 4. FILTROS PARA LA VISTA
-    # ============================================
     hoy_list = [r for r in registros if r.get('fecha') == hoy.strftime('%Y-%m-%d')]
     semana_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')]
     mes_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
@@ -1098,7 +1084,6 @@ def exportar_flota_pdf(flota):
         resp = requests.post(url, json={"fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta}, timeout=60)
         
         if resp.status_code == 200:
-            # ✅ ENVIAR NOTIFICACIÓN - AHORA USA LA FUNCIÓN CENTRALIZADA
             enviar_notificacion_push(
                 titulo="📄 Reporte Generado",
                 mensaje=f"Flota: {flota}\nFechas: {fecha_desde} - {fecha_hasta}\nGenerado por: {session.get('usuario')}",
@@ -1166,16 +1151,12 @@ def repuestos():
         logger.error(f"Error en /repuestos: {e}")
         repuestos = []
     return render_template("repuestos.html", repuestos=repuestos)
-# ============================================
-# API: OBTENER REPUESTOS (CON CATEGORÍA)
-# ============================================
+
 @app.route('/api/repuestos', methods=['GET'])
 @login_required
 @role_required(['admin', 'operador'])
 def api_repuestos():
-    """Obtiene todos los repuestos con sus categorías para la tabla"""
     try:
-        # Reenviar la solicitud al backend
         resp = requests.get(f"{BACKEND_URL}/api/repuestos", timeout=10)
         if resp.status_code == 200:
             return jsonify(resp.json())
@@ -1185,6 +1166,7 @@ def api_repuestos():
     except Exception as e:
         logger.error(f"❌ Error en api_repuestos: {e}")
         return jsonify([])
+
 # ============================
 # DEUDORES
 # ============================
@@ -1192,12 +1174,10 @@ def api_repuestos():
 @login_required
 @role_required(['admin', 'operador'])
 def deudores():
-    """Lista todos los clientes con deudas pendientes"""
     try:
         resp = requests.get(f"{BACKEND_URL}/api/deudores/todos", timeout=10)
         if resp.status_code == 200:
             deudores = resp.json()
-            # ✅ CONVERTIR monto_deuda A NÚMERO
             for d in deudores:
                 if 'monto_deuda' in d:
                     d['monto_deuda'] = float(d['monto_deuda']) if d['monto_deuda'] else 0
@@ -1207,7 +1187,6 @@ def deudores():
         logger.error(f"Error en /deudores: {e}")
         deudores = []
     
-    # ✅ CALCULAR TOTAL (ahora con números)
     total_deudas = sum(d.get('monto_deuda', 0) for d in deudores)
     deudores_count = len([d for d in deudores if d.get('monto_deuda', 0) > 0])
     
@@ -1215,6 +1194,7 @@ def deudores():
                           deudores=deudores, 
                           total_deudas=total_deudas,
                           deudores_count=deudores_count)
+
 # ============================
 # VENTA RÁPIDA
 # ============================
@@ -1352,7 +1332,10 @@ def ver_logs():
     except Exception as e:
         logger.error(f"Error al leer logs: {str(e)}")
         return render_template("ver_logs.html", logs=f"Error al leer logs: {str(e)}")
-        
+
+# ============================
+# GASTOS (CON FECHA DE CHILE)
+# ============================
 @app.route('/gastos')
 @login_required
 @role_required(['admin', 'operador'])
@@ -1366,7 +1349,6 @@ def gastos():
         resp = requests.get(f"{BACKEND_URL}/api/gastos?fecha={hoy}", timeout=10)
         if resp.status_code == 200:
             gastos = resp.json()
-            # ✅ CONVERTIR monto a float
             for g in gastos:
                 g['monto'] = float(g['monto']) if g.get('monto') else 0
         else:
@@ -1403,14 +1385,13 @@ def gastos():
 @role_required(['admin'])
 def cierre_caja():
     hoy = datetime.now().strftime('%Y-%m-%d')
-    efectivo_inicial = 50000  # Fondo de caja por defecto
+    efectivo_inicial = 50000
     ventas_efectivo = 0
     gastos_efectivo = 0
     efectivo_esperado = 50000
     historial_cierres = []
     
     try:
-        # Obtener cierre de hoy
         resp = requests.get(f"{BACKEND_URL}/api/cierre_caja/{hoy}", timeout=10)
         if resp.status_code == 200:
             data = resp.json()
@@ -1419,13 +1400,11 @@ def cierre_caja():
             gastos_efectivo = data.get('gastos_efectivo', 0)
             efectivo_esperado = data.get('efectivo_esperado', 50000)
         else:
-            # Crear cierre automáticamente
             requests.post(f"{BACKEND_URL}/api/cierre_caja", 
                          json={"fecha": hoy, "efectivo_inicial": 50000})
     except:
         pass
     
-    # Historial
     try:
         resp = requests.get(f"{BACKEND_URL}/api/historial_cierres", timeout=10)
         historial_cierres = resp.json() if resp.status_code == 200 else []
@@ -1439,6 +1418,7 @@ def cierre_caja():
                           gastos_efectivo=gastos_efectivo,
                           efectivo_esperado=efectivo_esperado,
                           historial_cierres=historial_cierres)
+
 # ============================
 # PAGAR DEUDA
 # ============================
@@ -1446,12 +1426,10 @@ def cierre_caja():
 @login_required
 @role_required(['admin', 'operador'])
 def pagar_deuda(id_deuda):
-    """Página para pagar una deuda específica"""
     try:
         resp = requests.get(f"{BACKEND_URL}/api/deuda/{id_deuda}", timeout=10)
         if resp.status_code == 200:
             deuda = resp.json()
-            # ✅ Convertir a float por si acaso
             deuda['monto_deuda'] = float(deuda['monto_deuda']) if deuda.get('monto_deuda') else 0
             deuda['monto_original'] = float(deuda['monto_original']) if deuda.get('monto_original') else 0
         else:
@@ -1463,6 +1441,7 @@ def pagar_deuda(id_deuda):
         return redirect("/deudores")
     
     return render_template("pagar_deuda.html", deuda=deuda)
+
 # ============================
 # RUTAS ESTÁTICAS
 # ============================
