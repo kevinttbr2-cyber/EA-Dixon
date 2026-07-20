@@ -1022,34 +1022,96 @@ def obtener_dashboard_data(fecha_desde):
         logger.error(f"Error obtener dashboard data: {e}")
         return None
 # 1. Balance de ganancia (get_balance)
+# Backend/routes/pago_routes.py
+
 @pago_bp.route('/balance', methods=['GET'])
 def get_balance():
-    """Obtiene el balance de ganancia con filtros"""
+    filtro = request.args.get('filtro', 'hoy')
+    hoy = get_fecha_chile()
+    
     try:
-        filtro = request.args.get('filtro', 'hoy')
+        conn, cur = get_cursor()
         
-        if not validar_filtro(filtro):
-            return jsonify({"error": "Filtro inválido"}), 400
+        # ============================================
+        # 1. OBTENER VENTAS
+        # ============================================
+        query = """
+            SELECT * FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+        """
+        params = []
         
-        hoy = get_fecha_chile()
-        registros = PagoService.obtener_balance_completo(filtro, hoy)
+        if filtro == 'hoy':
+            query += " AND fecha = %s"
+            params.append(hoy.strftime('%Y-%m-%d'))
+        elif filtro == '7d':
+            query += " AND fecha >= %s"
+            params.append((hoy - timedelta(days=7)).strftime('%Y-%m-%d'))
+        elif filtro == 'mes':
+            query += " AND fecha >= %s"
+            params.append((hoy - timedelta(days=30)).strftime('%Y-%m-%d'))
         
-        if not registros:
-            return jsonify({
-                "registros": [],
-                "total_pagado": 0,
-                "total_repuestos": 0,
-                "total_mano_obra": 0,
-                "total_diagnostico": 0,
-                "ganancia_neta": 0
-            })
+        query += " ORDER BY fecha DESC, hora DESC"
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        registros = [dict(row) for row in rows]
         
-        # Calcular totales desde los registros
-        total_pagado = sum(r.get('monto', 0) or 0 for r in registros)
-        total_repuestos = sum(r.get('costo_repuestos_real', 0) or 0 for r in registros)
-        total_mano_obra = sum(r.get('costo_mano_obra_real', 0) or 0 for r in registros)
-        total_diagnostico = sum(r.get('costo_diagnostico_real', 0) or 0 for r in registros)
+        total_pagado = float(sum(r.get('monto', 0) or 0 for r in registros))
+        total_repuestos = float(sum(r.get('costo_repuestos_real', 0) or 0 for r in registros))
+        total_mano_obra = float(sum(r.get('costo_mano_obra_real', 0) or 0 for r in registros))
+        total_diagnostico = float(sum(r.get('costo_diagnostico_real', 0) or 0 for r in registros))
         ganancia_neta = total_pagado - (total_repuestos + total_mano_obra + total_diagnostico)
+        
+        # ============================================
+        # 2. OBTENER GASTOS OPERATIVOS (NUEVO)
+        # ============================================
+        # Definir fechas según el filtro
+        if filtro == 'hoy':
+            fecha_inicio = hoy.strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        elif filtro == '7d':
+            fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        elif filtro == 'mes':
+            fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        else:
+            fecha_inicio = '2020-01-01'
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        
+        # Consultar gastos
+        cur.execute("""
+            SELECT * FROM gastos 
+            WHERE fecha BETWEEN %s AND %s
+            ORDER BY fecha DESC, hora DESC
+        """, (fecha_inicio, fecha_fin))
+        
+        gastos_rows = cur.fetchall()
+        gastos_operativos = []
+        total_gastos = 0
+        
+        for row in gastos_rows:
+            g = dict(row)
+            # Convertir time a string
+            if g.get('hora') and hasattr(g['hora'], 'strftime'):
+                g['hora'] = g['hora'].strftime('%H:%M:%S')
+            if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
+                g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
+            if g.get('created_at') and hasattr(g['created_at'], 'strftime'):
+                g['created_at'] = g['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            if g.get('updated_at') and hasattr(g['updated_at'], 'strftime'):
+                g['updated_at'] = g['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+            gastos_operativos.append(g)
+            total_gastos += float(g.get('monto', 0) or 0)
+        
+        # ============================================
+        # 3. CALCULAR GANANCIA REAL (SIN DIAGNÓSTICO)
+        # ============================================
+        ganancia_real = total_pagado - total_repuestos - total_mano_obra - total_gastos
+        
+        cur.close()
+        conn.close()
         
         return jsonify({
             "registros": registros,
@@ -1057,10 +1119,15 @@ def get_balance():
             "total_repuestos": total_repuestos,
             "total_mano_obra": total_mano_obra,
             "total_diagnostico": total_diagnostico,
-            "ganancia_neta": ganancia_neta
+            "ganancia_neta": ganancia_neta,
+            "total_gastos": total_gastos,           # ✅ NUEVO
+            "gastos_operativos": gastos_operativos,  # ✅ NUEVO
+            "ganancia_real": ganancia_real           # ✅ NUEVO
         })
     except Exception as e:
-        logger.error(f"Error en get_balance: {e}")
+        print(f"Error en get_balance: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 # 2. Editar repuestos de venta
