@@ -205,3 +205,11 @@ def balance_ventas():
             "total_trabajo": total_trabajo,
             "total_directa": total_directa,
             "ganancia_trabajo": round(ganancia_trabajo, 2),
+            "ganancia_directa": round(ganancia_directa, 2),
+            "ganancia_neta": round(ganancia_neta, 2),
+            "total_repuestos_trabajo": round(costo_trabajo, 2),
+            "total_repuestos_directa": round(costo_directa, 2)
+        })
+    except Exception as e:
+        logger.error(f"Error en balance_ventas: {e}")
+        return jsonify({"error": str(e)}), 500
