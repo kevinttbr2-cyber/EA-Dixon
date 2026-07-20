@@ -715,10 +715,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let html = '';
         
         if (filtradas.length === 0 && !texto) {
-            // Si no hay texto y no hay marcas, mostrar mensaje
             html = `<div class="no-resultados">No hay marcas disponibles. <span class="crear-link" onclick="seleccionarOtrosMarca()">📝 Usar "Otros"</span></div>`;
         } else {
-            // Mostrar marcas filtradas
             filtradas.forEach((m, index) => {
                 html += `
                     <div class="item ${index === itemActivoMarca ? 'active' : ''}" 
@@ -760,7 +758,7 @@ document.addEventListener('DOMContentLoaded', function() {
         marcaOtroContainer.classList.remove('active');
         marcaOtroInput.value = '';
         
-        // Habilitar modelo y cargar modelos
+        // ✅ HABILITAR modelo
         modeloInput.disabled = false;
         modeloInput.value = '';
         modeloHidden.value = '';
@@ -772,7 +770,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // ============================================
-    // ✅ SELECCIONAR "OTROS" PARA MARCA
+    // ✅ SELECCIONAR "OTROS" PARA MARCA (CORREGIDO)
     // ============================================
     window.seleccionarOtrosMarca = function() {
         // Mostrar campo de texto manual
@@ -788,13 +786,17 @@ document.addEventListener('DOMContentLoaded', function() {
         sugerenciasMarca.classList.remove('show');
         itemActivoMarca = -1;
         
-        // Deshabilitar modelo hasta que se escriba la marca
-        modeloInput.disabled = true;
+        // ✅ AHORA NO DESHABILITAMOS EL MODELO
+        // ✅ Lo dejamos habilitado pero con placeholder indicativo
+        modeloInput.disabled = false;
         modeloInput.value = '';
         modeloHidden.value = '';
-        modeloInput.placeholder = 'Primero escribe una marca';
+        modeloInput.placeholder = 'Escribe el modelo...';
         modeloOtroContainer.classList.remove('active');
         modeloOtroInput.value = '';
+        
+        // ✅ También permitimos "Otros" en modelo directamente
+        console.log('✅ Modo "Otros" activado para marca - Modelo habilitado');
     };
     
     // ============================================
@@ -824,29 +826,30 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ============================================
-    // EVENTOS DE MARCA "OTROS"
+    // ✅ EVENTOS DE MARCA "OTROS" (CORREGIDO)
     // ============================================
     marcaOtroInput.addEventListener('input', function() {
         const valor = this.value.trim();
         if (valor) {
             marcaHidden.value = valor;
             marcaSeleccionada = valor;
-            // Habilitar modelo
+            // ✅ Cuando el usuario escribe en "Otros", el modelo se habilita automáticamente
             modeloInput.disabled = false;
             modeloInput.placeholder = 'Escribe o selecciona el modelo...';
         } else {
             marcaHidden.value = '';
-            modeloInput.disabled = true;
-            modeloInput.placeholder = 'Primero escribe una marca';
+            // ❌ NO deshabilitamos el modelo, solo cambiamos el placeholder
+            modeloInput.placeholder = 'Primero escribe una marca en "Otros"';
         }
     });
     
     marcaOtroInput.addEventListener('blur', function() {
         if (!this.value.trim()) {
+            // Si no hay valor, ocultamos el campo "Otros" y reseteamos
             marcaOtroContainer.classList.remove('active');
             marcaInput.value = '';
             marcaHidden.value = '';
-            modeloInput.disabled = true;
+            modeloInput.placeholder = 'Escribe o selecciona el modelo...';
         }
     });
     
@@ -933,7 +936,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // ============================================
-    // ✅ SELECCIONAR "OTROS" PARA MODELO
+    // ✅ SELECCIONAR "OTROS" PARA MODELO (CORREGIDO)
     // ============================================
     window.seleccionarOtrosModelo = function() {
         modeloOtroContainer.classList.add('active');
@@ -951,10 +954,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // EVENTOS DE MODELO
     // ============================================
     modeloInput.addEventListener('click', function() {
+        // ✅ Si no hay marca seleccionada y no está en modo "Otros", mostrar mensaje
+        if (!marcaSeleccionada && !marcaOtroInput.value.trim()) {
+            sugerenciasModelo.innerHTML = `<div class="no-resultados">⚠️ Primero selecciona o escribe una marca</div>`;
+            sugerenciasModelo.classList.add('show');
+            return;
+        }
+        
         if (modelos.length > 0) {
             mostrarSugerenciasModelo(modelos);
         } else if (marcaSeleccionada) {
             cargarModelos(marcaSeleccionada);
+        } else if (marcaOtroInput.value.trim()) {
+            // Si está en modo "Otros" y tiene valor, mostrar mensaje
+            sugerenciasModelo.innerHTML = `<div class="no-resultados">📝 Marca personalizada: "${marcaOtroInput.value.trim()}"<br>Escribe el modelo manualmente o usa "Otros"</div>`;
+            sugerenciasModelo.classList.add('show');
         }
     });
     
@@ -972,7 +986,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ============================================
-    // EVENTOS DE MODELO "OTROS"
+    // ✅ EVENTOS DE MODELO "OTROS"
     // ============================================
     modeloOtroInput.addEventListener('input', function() {
         const valor = this.value.trim();
