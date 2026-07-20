@@ -1621,12 +1621,15 @@ def crear_repuesto():
 # ============================
 # ACTUALIZAR REPUESTO (CON SUBCATEGORÍA)
 # ============================
+# ============================
+# ACTUALIZAR REPUESTO (CON LOGS)
+# ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
-    """Actualiza un repuesto existente"""
     try:
         data = request.json
-        logger.info(f"📥 Actualizando repuesto ID {id_repuesto} - Datos recibidos: {data}")
+        logger.info(f"📥 ACTUALIZAR REPUESTO ID {id_repuesto}")
+        logger.info(f"📥 Datos recibidos: {data}")
         
         nombre = sanitizar_input(data.get('nombre', '').strip())
         costo_proveedor = sanitizar_numero(data.get('costo_proveedor', 0), min_val=0)
@@ -1640,10 +1643,10 @@ def actualizar_repuesto(id_repuesto):
         subcategoria_id = data.get('subcategoria_id')
         if subcategoria_id:
             subcategoria_id = int(subcategoria_id)
+            logger.info(f"📂 subcategoria_id recibido: {subcategoria_id}")
         else:
             subcategoria_id = None
-        
-        logger.info(f"📂 subcategoria_id recibido: {subcategoria_id}")
+            logger.info(f"📂 Sin subcategoria_id")
         
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
