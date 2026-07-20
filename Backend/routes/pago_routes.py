@@ -1281,30 +1281,43 @@ def get_dashboard():
         promedio = cur.fetchone()
         promedio_diario = float(promedio[0]) if promedio and promedio[0] else 0
         
-        # ============================================
-        # 3. OBTENER REGISTROS PARA TOTAL DIRECTA/TRABAJO
-        # ============================================
-        cur.execute("""
-            SELECT id, monto, marca, modelo, tipo_venta 
-            FROM pagos 
-            WHERE estado = 'pagado' 
-            AND estado_pago = 'pagado'
-            AND fecha >= %s
-        """, (fecha_desde_str,))
-        registros = cur.fetchall()
-        
-        total_directa = 0
-        total_trabajo = 0
-        
-        for row in registros:
-            r = dict(row)
-            tiene_vehiculo = r.get('marca') and r.get('marca').strip() != '' and r.get('modelo') and r.get('modelo').strip() != ''
-            es_directa = r.get('tipo_venta') == 'directa' or not tiene_vehiculo
-            monto = float(r.get('monto', 0) or 0)
-            if es_directa:
-                total_directa += monto
-            else:
-                total_trabajo += monto
+       # ============================================
+# 3. OBTENER REGISTROS PARA TOTAL DIRECTA/TRABAJO
+# ============================================
+cur.execute("""
+    SELECT id, monto, marca, modelo, tipo_venta, detalles_repuestos
+    FROM pagos 
+    WHERE estado = 'pagado' 
+    AND estado_pago = 'pagado'
+    AND fecha >= %s
+""", (fecha_desde_str,))
+registros = cur.fetchall()
+
+total_directa = 0
+total_trabajo = 0
+
+for row in registros:
+    r = dict(row)
+    monto = float(r.get('monto', 0) or 0)
+    
+    # ✅ CALCULAR VENTA DE REPUESTOS PARA CADA REGISTRO
+    total_repuestos = 0
+    detalles = r.get('detalles_repuestos', [])
+    if detalles and len(detalles) > 0:
+        for item in detalles:
+            cantidad = int(item.get('cantidad', 1) or 1)
+            precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+            total_repuestos += cantidad * precio
+    else:
+        total_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
+    
+    # ✅ CLASIFICAR POR TIPO DE VENTA
+    es_directa = r.get('tipo_venta') == 'directa'
+    
+    if es_directa:
+        total_directa += total_repuestos  # ✅ VENTA DIRECTA = REPUESTOS VENDIDOS DIRECTAMENTE
+    else:
+        total_trabajo += total_repuestos  # ✅ VENTA DE TRABAJO = REPUESTOS VENDIDOS EN SERVICIOS
         
         # ============================================
         # 4. OBTENER GASTOS DEL PERÍODO
