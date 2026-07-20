@@ -588,7 +588,8 @@ def get_repuestos_lista():
                     'proveedor': row[5] or '',
                     'costo_proveedor_pendiente': row[6] or False,
                     'categoria_nombre': row[7] if len(row) > 7 else None,
-                    'stock': int(row[8]) if len(row) > 8 and row[8] is not None else 0
+                    'subcategoria_id': row[8] if len(row) > 8 else None,  # 🔥 POSICIÓN 8 = subcategoria_id
+                    'stock': int(row[9]) if len(row) > 9 and row[9] is not None else 0  # 🔥 POSICIÓN 9 = stock
                 })
         
         cur.close()
