@@ -1223,27 +1223,33 @@ def dashboard():
     else:
         ganancia_real = data.get('ganancia_real', 0)
     
-   # ============================================
+# ============================================
 # 4. CALCULAR TOTAL DIRECTA Y TRABAJO (CORREGIDO)
 # ============================================
 total_directa = 0
 total_trabajo = 0
 registros = data.get('registros', [])
+
 if registros:
     for r in registros:
-        # Verificar si tiene vehículo (marca Y modelo NO vacíos)
-        tiene_marca = r.get('marca') and r.get('marca').strip() != ''
-        tiene_modelo = r.get('modelo') and r.get('modelo').strip() != ''
-        tiene_vehiculo = tiene_marca and tiene_modelo
-        
-        # Es venta directa si NO tiene vehículo O si tipo_venta es 'directa'
-        es_directa = r.get('tipo_venta') == 'directa' or not tiene_vehiculo
-        
-        monto = float(r.get('monto', 0) or 0)
-        if es_directa:
-            total_directa += monto
+        # ✅ CALCULAR VENTA DE REPUESTOS PARA CADA REGISTRO
+        total_repuestos = 0
+        detalles = r.get('detalles_repuestos', [])
+        if detalles and len(detalles) > 0:
+            for item in detalles:
+                cantidad = int(item.get('cantidad', 1) or 1)
+                precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+                total_repuestos += cantidad * precio
         else:
-            total_trabajo += monto
+            total_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
+        
+        # ✅ CLASIFICAR POR TIPO DE VENTA
+        es_directa = r.get('tipo_venta') == 'directa'
+        
+        if es_directa:
+            total_directa += total_repuestos  # ✅ VENTA DIRECTA
+        else:
+            total_trabajo += total_repuestos  # ✅ VENTA DE TRABAJO
     
     # ============================================
     # 5. VALORES POR DEFECTO
