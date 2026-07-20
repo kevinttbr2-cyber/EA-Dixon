@@ -2,202 +2,725 @@
 
 {% block content %}
 
-<div class="base-container" style="max-width: 700px; margin: 0 auto;">
-    <h2 style="color: #00ff66; font-weight: 700; text-align: center; margin-bottom: 5px;">
-        🚗 Agregar Cliente
-    </h2>
-    <p style="color: #888; text-align: center; margin-bottom: 20px; font-size: 14px;">
-        Completa los datos del vehículo y cliente
-    </p>
+<style>
+/* ============================================
+   ESTILOS ANDROID MODERNOS
+   ============================================ */
+.agregar-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 10px 15px;
+}
+
+.agregar-container .header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.agregar-container .header h2 {
+    color: #00ff66;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 0;
+}
+
+.agregar-container .header p {
+    color: #888;
+    font-size: 13px;
+    margin: 4px 0 0;
+}
+
+/* ============================================
+   TARJETA DE SECCIÓN
+   ============================================ */
+.section-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    transition: var(--transition);
+}
+
+.section-card .section-title {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-card .section-title .icon {
+    font-size: 16px;
+}
+
+/* ============================================
+   CAMPOS DE FORMULARIO
+   ============================================ */
+.form-group {
+    margin-bottom: 10px;
+}
+
+.form-group label {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.form-group label .opcional {
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 11px;
+}
+
+.form-group .form-control {
+    background: var(--bg-input) !important;
+    color: var(--text-primary) !important;
+    border: 2px solid transparent !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 10px 14px !important;
+    font-size: 15px !important;
+    transition: var(--transition) !important;
+    width: 100% !important;
+    height: auto !important;
+}
+
+.form-group .form-control:focus {
+    border-color: var(--accent-green) !important;
+    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.08) !important;
+    outline: none !important;
+}
+
+.form-group .form-control::placeholder {
+    color: var(--text-muted) !important;
+}
+
+.form-group .form-control:disabled,
+.form-group .form-control[readonly] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   GRID RESPONSIVE
+   ============================================ */
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+/* ============================================
+   FLOTA
+   ============================================ */
+.flota-wrapper {
+    display: flex;
+    gap: 6px;
+}
+
+.flota-wrapper select {
+    flex: 1;
+}
+
+.flota-wrapper .btn-nueva-flota {
+    background: rgba(0, 255, 102, 0.10);
+    color: #00ff66;
+    border: 2px solid rgba(0, 255, 102, 0.15);
+    border-radius: var(--radius-sm);
+    padding: 0 14px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flota-wrapper .btn-nueva-flota:hover {
+    background: rgba(0, 255, 102, 0.20);
+    border-color: rgba(0, 255, 102, 0.30);
+}
+
+.flota-wrapper .btn-nueva-flota.activo {
+    background: rgba(0, 255, 102, 0.20);
+    border-color: #00ff66;
+    color: #00ff66;
+}
+
+/* ============================================
+   AUTOCOMPLETADO (marca y modelo)
+   ============================================ */
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.autocomplete-wrapper .sugerencias {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 9999;
+    margin-top: 2px;
+    box-shadow: var(--shadow-hover);
+}
+
+.autocomplete-wrapper .sugerencias .item {
+    padding: 8px 14px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: var(--transition);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.autocomplete-wrapper .sugerencias .item:hover {
+    background: var(--bg-hover);
+    color: var(--accent-green);
+}
+
+.autocomplete-wrapper .sugerencias .item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-wrapper .sugerencias .no-resultados {
+    padding: 12px 14px;
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+}
+
+.autocomplete-wrapper .sugerencias::-webkit-scrollbar {
+    width: 4px;
+}
+
+.autocomplete-wrapper .sugerencias::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.autocomplete-wrapper .sugerencias::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 4px;
+}
+
+/* ============================================
+   ESTADO DEL CLIENTE (DEUDOR)
+   ============================================ */
+.estado-cliente {
+    display: none;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    border: 2px solid;
+}
+
+.estado-cliente.show {
+    display: block;
+}
+
+.estado-cliente .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.estado-cliente .info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.estado-cliente .circulo {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.estado-cliente .texto {
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.estado-cliente .deuda {
+    font-weight: 700;
+    font-size: 16px;
+    color: #ff6b6b;
+}
+
+.estado-cliente .fecha {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.estado-cliente .btn-historial {
+    background: transparent;
+    color: #4fc3f7;
+    border: 1px solid rgba(79,195,247,0.3);
+    border-radius: 6px;
+    padding: 2px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.estado-cliente .btn-historial:hover {
+    background: rgba(79,195,247,0.10);
+}
+
+/* ============================================
+   BOTONES
+   ============================================ */
+.btn-registrar {
+    background: #00ff66 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    padding: 14px !important;
+    font-size: 18px !important;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-registrar:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 30px rgba(0, 255, 102, 0.15);
+}
+
+.btn-registrar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-volver {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    width: 100%;
+}
+
+.btn-volver:hover {
+    background: rgba(255,255,255,0.10);
+    color: var(--text-primary);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 600px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .grid-3 {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .agregar-container {
+        padding: 10px 12px;
+    }
+    .section-card {
+        padding: 12px 14px;
+    }
+    .form-group .form-control {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+    }
+    .btn-registrar {
+        font-size: 16px !important;
+        padding: 12px !important;
+    }
+    .estado-cliente .row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+}
+</style>
+
+<div class="agregar-container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h2>🚗 Agregar Cliente</h2>
+        <p>Completa los datos del vehículo y cliente</p>
+    </div>
 
     <form method="POST" action="/agregar" id="formAgregar">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-        <!-- ============================
-             FILA 1: Nombre + Flota
-             ============================ -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="mb-3">
-                <label style="color: #90e0a0; font-weight: 500;">👤 Nombre del cliente</label>
-                <input type="text" name="nombre" class="form-control" required placeholder="Ej: Juan Pérez">
+        <!-- ============================================
+             SECCIÓN 1: DATOS DEL CLIENTE
+             ============================================ -->
+        <div class="section-card">
+            <div class="section-title">
+                <span class="icon">👤</span> Datos del Cliente
             </div>
-            <!-- ============================
-     ESTADO DEL CLIENTE (DEUDOR)
-     ============================ -->
-<div id="estadoClienteContainer" style="display: none; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; border: 2px solid;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span id="circuloClienteEstado" style="display: inline-block; width: 14px; height: 14px; border-radius: 50%;"></span>
-            <span id="textoClienteEstado" style="font-weight: 700; font-size: 15px;"></span>
-        </div>
-        <div>
-            <span style="color: #888;">💰 Deuda:</span>
-            <span id="montoClienteDeuda" style="font-weight: 700; font-size: 16px; color: #ff6b6b;">$0</span>
-        </div>
-    </div>
-    <div style="margin-top: 4px; font-size: 12px; color: #888;">
-        <span id="fechaClienteDeuda"></span>
-        <button onclick="verHistorialCliente()" style="
-            background: transparent;
-            color: #4fc3f7;
-            border: 1px solid rgba(79,195,247,0.3);
-            border-radius: 6px;
-            padding: 2px 12px;
-            font-size: 12px;
-            cursor: pointer;
-            margin-left: 10px;
-        ">
-            📜 Historial
-        </button>
-    </div>
-</div>
-            <div class="mb-3">
-                <label style="color: #90e0a0; font-weight: 500;">🚛 Flota</label>
-                <div style="display: flex; gap: 6px;">
-                    <select name="flota" id="flotaSelect" class="form-control" style="flex:1;">
-                        <option value="">Sin flota</option>
-                        {% for f in flotas %}
-                        <option value="{{ f }}">{{ f }}</option>
-                        {% endfor %}
-                        <option value="__nueva__">➕ Crear nueva flota</option>
-                    </select>
-                    <button type="button" id="btnNuevaFlota" class="btn btn-sm" style="
-                        background: rgba(0,255,102,0.12);
-                        color: #00ff66;
-                        border: 1px solid rgba(0,255,102,0.20);
-                        border-radius: 8px;
-                        padding: 0 14px;
-                        white-space: nowrap;
-                    ">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
+
+            <!-- Nombre + Teléfono -->
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Nombre del cliente *</label>
+                    <input type="text" name="nombre" class="form-control" required placeholder="Ej: Juan Pérez" autocomplete="off">
                 </div>
-                <input type="text" id="flotaNuevaInput" name="flota_nueva" style="display:none; margin-top: 6px;" class="form-control" placeholder="Nombre de la nueva flota">
-                <small style="color: #666; font-size: 11px;">Selecciona una flota existente o crea una nueva</small>
+                <div class="form-group">
+                    <label>📞 Teléfono</label>
+                    <input type="tel" name="telefono" class="form-control" placeholder="Ej: +56912345678">
+                </div>
+            </div>
+
+            <!-- ESTADO DEL CLIENTE (DEUDOR) -->
+            <div class="estado-cliente" id="estadoClienteContainer">
+                <div class="row">
+                    <div class="info">
+                        <span class="circulo" id="circuloClienteEstado"></span>
+                        <span class="texto" id="textoClienteEstado"></span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted);">💰 Deuda:</span>
+                        <span class="deuda" id="montoClienteDeuda">$0</span>
+                    </div>
+                </div>
+                <div style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span class="fecha" id="fechaClienteDeuda"></span>
+                    <button type="button" class="btn-historial" onclick="verHistorialCliente()">📜 Historial</button>
+                </div>
             </div>
         </div>
 
-        <!-- ============================
-             FILA 2: Fecha + Patente
-             ============================ -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="mb-3">
-                <label style="color: #90e0a0; font-weight: 500;">📅 Fecha</label>
-                <input type="date" name="fecha" class="form-control" value="{{ hoy }}" readonly style="background: rgba(255,255,255,0.04); color: #888;">
+        <!-- ============================================
+             SECCIÓN 2: VEHÍCULO
+             ============================================ -->
+        <div class="section-card">
+            <div class="section-title">
+                <span class="icon">🚗</span> Datos del Vehículo
             </div>
-            <div class="mb-3">
-                <label style="color: #90e0a0; font-weight: 500;">🔢 Patente del vehículo</label>
-                <input type="text" name="patente" class="form-control" required placeholder="Ej: ABCD12" style="text-transform: uppercase;">
+
+            <!-- Patente + Flota -->
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>🔢 Patente *</label>
+                    <input type="text" name="patente" class="form-control" required placeholder="Ej: ABCD12" style="text-transform:uppercase;" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label>🚛 Flota</label>
+                    <div class="flota-wrapper">
+                        <select name="flota" id="flotaSelect" class="form-control">
+                            <option value="">Sin flota</option>
+                            {% for f in flotas %}
+                            <option value="{{ f }}">{{ f }}</option>
+                            {% endfor %}
+                            <option value="__nueva__">➕ Crear nueva</option>
+                        </select>
+                        <button type="button" id="btnNuevaFlota" class="btn-nueva-flota">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <input type="text" id="flotaNuevaInput" name="flota_nueva" class="form-control" style="display:none; margin-top:6px;" placeholder="Nombre de la nueva flota">
+                    <small style="color: var(--text-muted); font-size: 11px;">Selecciona una flota existente o crea una nueva</small>
+                </div>
+            </div>
+
+            <!-- Fecha + Año -->
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>📅 Fecha</label>
+                    <input type="date" name="fecha" class="form-control" value="{{ hoy }}" readonly style="background:rgba(255,255,255,0.03); color: var(--text-muted);">
+                </div>
+                <div class="form-group">
+                    <label>📆 Año <span class="opcional">(opcional)</span></label>
+                    <input type="number" name="anio" class="form-control" placeholder="Ej: 2020" min="1900" max="2099">
+                </div>
             </div>
         </div>
 
-        <!-- ============================
-             FILA 3: Marca + Modelo
-             ============================ -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="mb-3">
-                <label style="color: #90e0a0; font-weight: 500;">🏷️ Marca</label>
-                <select id="marca" name="marca" class="form-control" required>
-                    <option value="">Seleccione marca</option>
-                    {% for m in marcas %}
-                    <option value="{{ m }}">{{ m }}</option>
-                    {% endfor %}
-                    <option value="__manual__">OTRA</option>
-                </select>
-                <input type="text" id="marca_manual" name="marca_manual" class="form-control mt-2" style="display:none;" placeholder="Escriba la marca">
+        <!-- ============================================
+             SECCIÓN 3: MARCA Y MODELO (CON BÚSQUEDA)
+             ============================================ -->
+        <div class="section-card">
+            <div class="section-title">
+                <span class="icon">🏷️</span> Marca y Modelo
             </div>
-            <div class="mb-3">
-                <label style="color: #90e0a0; font-weight: 500;">📐 Modelo</label>
-                <select id="modelo" name="modelo" class="form-control" required>
-                    <option value="">Seleccione modelo</option>
-                </select>
-                <input type="text" id="modelo_manual" name="modelo_manual" class="form-control mt-2" style="display:none;" placeholder="Escriba el modelo">
-            </div>
-        </div>
 
-        <!-- ============================
-             FILA 4: Año (opcional) + Kilometraje
-             ============================ -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="mb-3">
-                <label style="color: #90e0a0; font-weight: 500;">📆 Año <span style="color: #666; font-weight: 400;">(opcional)</span></label>
-                <input type="number" name="anio" class="form-control" placeholder="Ej: 2020" min="1900" max="2099">
+            <!-- Marca (con autocompletado) -->
+            <div class="form-group">
+                <label>🏷️ Marca *</label>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="marcaInput" class="form-control" placeholder="Escribe la marca..." autocomplete="off">
+                    <input type="hidden" id="marcaHidden" name="marca" value="">
+                    <div class="sugerencias" id="sugerenciasMarca"></div>
+                </div>
+                <small style="color: var(--text-muted); font-size: 11px;">Escribe las primeras letras y selecciona de la lista</small>
             </div>
-            <div class="mb-3">
-                <label style="color: #90e0a0; font-weight: 500;">📊 Kilometraje</label>
+
+            <!-- Modelo (con autocompletado) -->
+            <div class="form-group">
+                <label>📐 Modelo *</label>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="modeloInput" class="form-control" placeholder="Escribe el modelo..." autocomplete="off" disabled>
+                    <input type="hidden" id="modeloHidden" name="modelo" value="">
+                    <div class="sugerencias" id="sugerenciasModelo"></div>
+                </div>
+                <small style="color: var(--text-muted); font-size: 11px;">Primero selecciona una marca</small>
+            </div>
+
+            <!-- Kilometraje -->
+            <div class="form-group" style="margin-top:4px;">
+                <label>📊 Kilometraje</label>
                 <input type="number" name="kilometraje" class="form-control" placeholder="Ej: 45000" min="0" value="0">
             </div>
         </div>
 
-        <!-- ============================
+        <!-- ============================================
+             SECCIÓN 4: OBSERVACIONES
+             ============================================ -->
+        <div class="section-card">
+            <div class="section-title">
+                <span class="icon">📝</span> Observaciones
+            </div>
+            <div class="form-group">
+                <label>Observaciones del ingreso</label>
+                <textarea name="observaciones" class="form-control" rows="3" placeholder="Detalles del ingreso, fallas, etc."></textarea>
+            </div>
+        </div>
+
+        <!-- ============================================
              USUARIO QUE REGISTRA (automático)
-             ============================ -->
-        <div class="mb-3">
-            <label style="color: #90e0a0; font-weight: 500;">👤 Usuario que registra</label>
-            <input type="text" name="usuario_registra" class="form-control" value="{{ session.get('nombre_completo', session.get('usuario')) }}" readonly style="background: rgba(255,255,255,0.04); color: #888;">
+             ============================================ -->
+        <div class="section-card" style="background: rgba(255,255,255,0.02);">
+            <div class="form-group" style="margin-bottom:0;">
+                <label>👤 Usuario que registra</label>
+                <input type="text" name="usuario_registra" class="form-control" value="{{ session.get('nombre_completo', session.get('usuario')) }}" readonly style="background:rgba(255,255,255,0.03); color: var(--text-muted);">
+            </div>
         </div>
 
-        <!-- ============================
-             TELÉFONO
-             ============================ -->
-        <div class="mb-3">
-            <label style="color: #90e0a0; font-weight: 500;">📞 Teléfono del cliente</label>
-            <input type="tel" name="telefono" class="form-control" placeholder="Ej: +56912345678">
-        </div>
-
-        <!-- ============================
-             OBSERVACIONES
-             ============================ -->
-        <div class="mb-3">
-            <label style="color: #90e0a0; font-weight: 500;">📝 Observaciones del ingreso</label>
-            <textarea name="observaciones" class="form-control" rows="3" placeholder="Detalles del ingreso, fallas, etc."></textarea>
-        </div>
-
-        <!-- ============================
+        <!-- ============================================
              BOTONES
-             ============================ -->
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button type="submit" id="btnGuardarCliente" class="btn btn-primary" style="flex:1; background: #00ff66 !important; color: #000 !important; font-weight: 700; border-radius: 10px; padding: 14px; font-size: 18px; border: none; cursor: pointer;">
+             ============================================ -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+            <button type="submit" id="btnGuardarCliente" class="btn-registrar">
                 <i class="fas fa-save"></i> Registrar Cliente
             </button>
-            <a href="/estado" class="btn" style="
-                background: rgba(255,255,255,0.06);
-                color: #888;
-                border: 1px solid rgba(255,255,255,0.08);
-                border-radius: 10px;
-                padding: 14px 24px;
-                text-decoration: none;
-                text-align: center;
-            ">
-                ← Volver
-            </a>
+            <a href="/estado" class="btn-volver">← Volver al Estado</a>
         </div>
+
     </form>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+const API_URL = 'https://ea-dixon-production.up.railway.app';
 
-    // ============================
-    // 1. FLOTA: Mostrar input para nueva flota
-    // ============================
+// ============================================
+// 1. AUTOCOMPLETADO DE MARCAS
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const marcaInput = document.getElementById('marcaInput');
+    const marcaHidden = document.getElementById('marcaHidden');
+    const sugerenciasMarca = document.getElementById('sugerenciasMarca');
+    
+    const modeloInput = document.getElementById('modeloInput');
+    const modeloHidden = document.getElementById('modeloHidden');
+    const sugerenciasModelo = document.getElementById('sugerenciasModelo');
+    
+    let marcas = [];
+    let modelos = [];
+    
+    // Cargar marcas desde el backend
+    fetch('/api/marcas')
+        .then(r => r.json())
+        .then(data => {
+            marcas = data;
+            console.log('✅ Marcas cargadas:', marcas.length);
+        })
+        .catch(e => console.error('Error cargando marcas:', e));
+    
+    // Evento de búsqueda en marca
+    marcaInput.addEventListener('input', function() {
+        const texto = this.value.toLowerCase().trim();
+        
+        if (texto.length < 2) {
+            sugerenciasMarca.style.display = 'none';
+            return;
+        }
+        
+        const filtradas = marcas.filter(m => m.toLowerCase().includes(texto));
+        
+        if (filtradas.length === 0) {
+            sugerenciasMarca.innerHTML = `
+                <div class="no-resultados">
+                    No hay resultados. <span style="color:#00ff66;cursor:pointer;" onclick="crearMarcaManual()">Crear "${texto}"</span>
+                </div>
+            `;
+            sugerenciasMarca.style.display = 'block';
+            return;
+        }
+        
+        sugerenciasMarca.innerHTML = filtradas.slice(0, 10).map(m => `
+            <div class="item" onclick="seleccionarMarca('${m}')">${m}</div>
+        `).join('');
+        sugerenciasMarca.style.display = 'block';
+    });
+    
+    // Cerrar sugerencias al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.autocomplete-wrapper')) {
+            sugerenciasMarca.style.display = 'none';
+            sugerenciasModelo.style.display = 'none';
+        }
+    });
+    
+    // ============================================
+    // 2. SELECCIONAR MARCA
+    // ============================================
+    window.seleccionarMarca = function(marca) {
+        marcaInput.value = marca;
+        marcaHidden.value = marca;
+        sugerenciasMarca.style.display = 'none';
+        
+        // Habilitar modelo y cargar modelos
+        modeloInput.disabled = false;
+        modeloInput.placeholder = 'Cargando modelos...';
+        modeloInput.value = '';
+        modeloHidden.value = '';
+        
+        fetch(`/api/modelos/${encodeURIComponent(marca)}`)
+            .then(r => r.json())
+            .then(data => {
+                modelos = data;
+                modeloInput.placeholder = 'Escribe el modelo...';
+                modeloInput.disabled = false;
+                console.log(`✅ Modelos de "${marca}":`, modelos.length);
+            })
+            .catch(e => {
+                console.error('Error cargando modelos:', e);
+                modeloInput.placeholder = 'Error al cargar modelos';
+                modeloInput.disabled = false;
+            });
+    };
+    
+    // ============================================
+    // 3. CREAR MARCA MANUAL (si no está en la lista)
+    // ============================================
+    window.crearMarcaManual = function() {
+        const texto = marcaInput.value.trim();
+        if (!texto) return;
+        
+        if (confirm(`¿Crear la marca "${texto}"?`)) {
+            seleccionarMarca(texto);
+        }
+    };
+    
+    // ============================================
+    // 4. AUTOCOMPLETADO DE MODELOS
+    // ============================================
+    modeloInput.addEventListener('input', function() {
+        const texto = this.value.toLowerCase().trim();
+        
+        if (texto.length < 2 || !marcaHidden.value) {
+            sugerenciasModelo.style.display = 'none';
+            return;
+        }
+        
+        const filtrados = modelos.filter(m => m.toLowerCase().includes(texto));
+        
+        if (filtrados.length === 0) {
+            sugerenciasModelo.innerHTML = `
+                <div class="no-resultados">
+                    No hay resultados. <span style="color:#00ff66;cursor:pointer;" onclick="crearModeloManual()">Crear "${texto}"</span>
+                </div>
+            `;
+            sugerenciasModelo.style.display = 'block';
+            return;
+        }
+        
+        sugerenciasModelo.innerHTML = filtrados.slice(0, 10).map(m => `
+            <div class="item" onclick="seleccionarModelo('${m}')">${m}</div>
+        `).join('');
+        sugerenciasModelo.style.display = 'block';
+    });
+    
+    // ============================================
+    // 5. SELECCIONAR MODELO
+    // ============================================
+    window.seleccionarModelo = function(modelo) {
+        modeloInput.value = modelo;
+        modeloHidden.value = modelo;
+        sugerenciasModelo.style.display = 'none';
+    };
+    
+    // ============================================
+    // 6. CREAR MODELO MANUAL
+    // ============================================
+    window.crearModeloManual = function() {
+        const texto = modeloInput.value.trim();
+        if (!texto) return;
+        
+        if (confirm(`¿Crear el modelo "${texto}" para la marca "${marcaHidden.value}"?`)) {
+            seleccionarModelo(texto);
+            modelos.push(texto);
+        }
+    };
+    
+    // ============================================
+    // 7. FLOTA: Mostrar input para nueva flota
+    // ============================================
     const flotaSelect = document.getElementById('flotaSelect');
     const flotaNuevaInput = document.getElementById('flotaNuevaInput');
     const btnNuevaFlota = document.getElementById('btnNuevaFlota');
-
+    
     flotaSelect.addEventListener('change', function() {
         if (this.value === '__nueva__') {
             flotaNuevaInput.style.display = 'block';
             flotaNuevaInput.focus();
-            btnNuevaFlota.textContent = '✅ Guardar';
-            btnNuevaFlota.style.background = 'rgba(0,255,102,0.20)';
+            btnNuevaFlota.textContent = '✅';
+            btnNuevaFlota.classList.add('activo');
         } else {
             flotaNuevaInput.style.display = 'none';
             btnNuevaFlota.innerHTML = '<i class="fa-solid fa-plus"></i>';
-            btnNuevaFlota.style.background = 'rgba(0,255,102,0.12)';
+            btnNuevaFlota.classList.remove('activo');
         }
     });
-
+    
     btnNuevaFlota.addEventListener('click', function() {
         if (flotaSelect.value === '__nueva__') {
             const nombre = flotaNuevaInput.value.trim();
@@ -209,7 +732,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 flotaSelect.value = nombre;
                 flotaNuevaInput.style.display = 'none';
                 btnNuevaFlota.innerHTML = '<i class="fa-solid fa-plus"></i>';
-                btnNuevaFlota.style.background = 'rgba(0,255,102,0.12)';
+                btnNuevaFlota.classList.remove('activo');
             } else {
                 alert('⚠️ Escribe un nombre para la flota');
             }
@@ -217,97 +740,36 @@ document.addEventListener('DOMContentLoaded', function() {
             flotaSelect.value = '__nueva__';
             flotaNuevaInput.style.display = 'block';
             flotaNuevaInput.focus();
-            btnNuevaFlota.textContent = '✅ Guardar';
-            btnNuevaFlota.style.background = 'rgba(0,255,102,0.20)';
+            btnNuevaFlota.textContent = '✅';
+            btnNuevaFlota.classList.add('activo');
         }
     });
-
-    // ============================
-    // 2. MARCA + MODELO (con "OTRA")
-    // ============================
-    const marcaSelect = document.getElementById('marca');
-    const modeloSelect = document.getElementById('modelo');
-    const marcaManual = document.getElementById('marca_manual');
-    const modeloManual = document.getElementById('modelo_manual');
-
-    marcaSelect.addEventListener('change', function() {
-        const marca = this.value;
-        if (marca === '__manual__') {
-            marcaManual.style.display = 'block';
-            modeloSelect.innerHTML = '<option value="">Seleccione modelo</option>';
-            modeloSelect.disabled = true;
-            modeloManual.style.display = 'block';
-            return;
-        }
-        marcaManual.style.display = 'none';
-        modeloSelect.disabled = false;
-        modeloManual.style.display = 'none';
-
-        fetch('/modelos/' + encodeURIComponent(marca))
-            .then(r => r.json())
-            .then(data => {
-                modeloSelect.innerHTML = '<option value="">Seleccione modelo</option>';
-                data.forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m;
-                    opt.textContent = m;
-                    modeloSelect.appendChild(opt);
-                });
-                const optManual = document.createElement('option');
-                optManual.value = '__manual__';
-                optManual.textContent = 'OTRO';
-                modeloSelect.appendChild(optManual);
-            })
-            .catch(() => {});
-    });
-
-    modeloSelect.addEventListener('change', function() {
-        if (this.value === '__manual__') {
-            modeloManual.style.display = 'block';
-        } else {
-            modeloManual.style.display = 'none';
-        }
-    });
-
-    // ============================
-    // 3. ENVÍO DEL FORMULARIO (con anti-doble clic)
-    // ============================
+    
+    // ============================================
+    // 8. ENVÍO DEL FORMULARIO (con anti-doble clic)
+    // ============================================
     const form = document.getElementById('formAgregar');
     const submitBtn = document.getElementById('btnGuardarCliente');
-
+    
     form.addEventListener('submit', function(e) {
-        // Si se seleccionó "OTRA" en marca, usar el valor manual
-        if (marcaSelect.value === '__manual__') {
-            const manualVal = marcaManual.value.trim();
-            if (manualVal) {
-                const opt = document.createElement('option');
-                opt.value = manualVal;
-                opt.textContent = manualVal;
-                opt.selected = true;
-                marcaSelect.appendChild(opt);
-            } else {
-                e.preventDefault();
-                alert('⚠️ Escribe el nombre de la marca');
-                return;
-            }
+        // Validar marca
+        const marca = marcaHidden.value.trim();
+        if (!marca) {
+            e.preventDefault();
+            alert('⚠️ Selecciona o escribe una marca válida');
+            marcaInput.focus();
+            return;
         }
-
-        // Si se seleccionó "OTRO" en modelo, usar el valor manual
-        if (modeloSelect.value === '__manual__') {
-            const manualVal = modeloManual.value.trim();
-            if (manualVal) {
-                const opt = document.createElement('option');
-                opt.value = manualVal;
-                opt.textContent = manualVal;
-                opt.selected = true;
-                modeloSelect.appendChild(opt);
-            } else {
-                e.preventDefault();
-                alert('⚠️ Escribe el nombre del modelo');
-                return;
-            }
+        
+        // Validar modelo
+        const modelo = modeloHidden.value.trim();
+        if (!modelo) {
+            e.preventDefault();
+            alert('⚠️ Selecciona o escribe un modelo válido');
+            modeloInput.focus();
+            return;
         }
-
+        
         // Si flota es "__nueva__", usar el valor del input
         if (flotaSelect.value === '__nueva__') {
             const flotaVal = flotaNuevaInput.value.trim();
@@ -323,23 +785,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
         }
-
-        // ✅ ANTI-DOBLE CLIC: Deshabilitar botón
+        
+        // Anti-doble clic
         submitBtn.disabled = true;
         submitBtn.innerHTML = '⏳ Guardando...';
         submitBtn.style.opacity = '0.7';
     });
-
-    // ✅ Si el formulario falla, habilitar botón después de 10 segundos
-    // (por si la página no se recarga por error de red)
+    
+    // ============================================
+    // 9. REHABILITAR BOTÓN DESPUÉS DE 10s (por si falla)
+    // ============================================
     setTimeout(function() {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '💾 Guardar Cliente';
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Registrar Cliente';
         submitBtn.style.opacity = '1';
     }, 10000);
 });
+
 // ============================================
-// BUSCAR ESTADO DEL CLIENTE AL ESCRIBIR NOMBRE
+// 10. BUSCAR ESTADO DEL CLIENTE AL ESCRIBIR NOMBRE
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const inputNombre = document.querySelector('input[name="nombre"]');
@@ -352,7 +816,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const nombre = this.value.trim();
         
         if (nombre.length < 3) {
-            document.getElementById('estadoClienteContainer').style.display = 'none';
+            document.getElementById('estadoClienteContainer').classList.remove('show');
             return;
         }
         
@@ -366,7 +830,7 @@ function buscarEstadoCliente(nombre) {
     fetch(`${API_URL}/api/deudores/${encodeURIComponent(nombre)}`)
         .then(r => {
             if (r.status === 404) {
-                document.getElementById('estadoClienteContainer').style.display = 'none';
+                document.getElementById('estadoClienteContainer').classList.remove('show');
                 return null;
             }
             return r.json();
@@ -375,26 +839,26 @@ function buscarEstadoCliente(nombre) {
             if (data && data.monto_deuda > 0) {
                 mostrarEstadoCliente(data);
             } else {
-                document.getElementById('estadoClienteContainer').style.display = 'none';
+                document.getElementById('estadoClienteContainer').classList.remove('show');
             }
         })
         .catch(() => {
-            document.getElementById('estadoClienteContainer').style.display = 'none';
+            document.getElementById('estadoClienteContainer').classList.remove('show');
         });
 }
 
 function mostrarEstadoCliente(data) {
     const container = document.getElementById('estadoClienteContainer');
-    container.style.display = 'block';
+    container.classList.add('show');
     
     const estado = data.estado || 'verde';
     const monto = data.monto_deuda || 0;
     
     const colores = {
-        'verde': { bg: 'rgba(0,255,102,0.08)', border: '#00ff66', color: '#00ff66', text: '✅ Cliente sin deuda' },
-        'amarillo': { bg: 'rgba(241,196,15,0.08)', border: '#f1c40f', color: '#f1c40f', text: '🟡 Cliente con deuda (baja)' },
-        'rojo': { bg: 'rgba(255,107,107,0.08)', border: '#ff6b6b', color: '#ff6b6b', text: '🔴 Cliente con deuda crítica' },
-        'negro': { bg: 'rgba(0,0,0,0.20)', border: '#888', color: '#888', text: '⚫ Cliente en lista negra' }
+        'verde': { bg: 'rgba(0,255,102,0.08)', border: '#00ff66', color: '#00ff66', text: '✅ Sin deuda' },
+        'amarillo': { bg: 'rgba(241,196,15,0.08)', border: '#f1c40f', color: '#f1c40f', text: '🟡 Deudor' },
+        'rojo': { bg: 'rgba(255,107,107,0.08)', border: '#ff6b6b', color: '#ff6b6b', text: '🔴 Deudor crítico' },
+        'negro': { bg: 'rgba(0,0,0,0.20)', border: '#888', color: '#888', text: '⚫ Lista negra' }
     };
     
     const config = colores[estado] || colores['verde'];
@@ -417,19 +881,18 @@ function verHistorialCliente() {
     const cliente = container.dataset.cliente;
     if (!cliente) return;
     
-    // Crear modal temporal
     const modal = document.createElement('div');
     modal.className = 'modal-dixon active';
     modal.style.display = 'flex';
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width:600px;">
             <div class="modal-header">
-                <h3 style="color: #4fc3f7;">📜 Historial de Deudas - ${cliente}</h3>
+                <h3 style="color:#4fc3f7;">📜 Historial de Deudas - ${cliente}</h3>
                 <button class="close-btn" onclick="this.closest('.modal-dixon').remove()">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <div id="contenidoHistorialCliente" style="max-height: 400px; overflow-y: auto;">
+            <div id="contenidoHistorialCliente" style="max-height:400px;overflow-y:auto;">
                 <div style="text-align:center;padding:20px;color:#888;">Cargando...</div>
             </div>
         </div>
@@ -440,19 +903,19 @@ function verHistorialCliente() {
         .then(r => r.json())
         .then(data => {
             const contenido = document.getElementById('contenidoHistorialCliente');
-            if (data.length === 0) {
+            if (!data || data.length === 0) {
                 contenido.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No hay historial de deudas</div>';
                 return;
             }
             
-            let html = `<div style="font-size:13px;">`;
+            let html = '<div style="font-size:13px;">';
             data.forEach(item => {
                 const fecha = new Date(item.fecha);
                 const fechaStr = fecha.toLocaleDateString('es-CL') + ' ' + fecha.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
                 const tipoEmoji = item.tipo === 'deuda' ? '⚠️' : '💰';
                 const tipoColor = item.tipo === 'deuda' ? '#ff6b6b' : '#00ff66';
                 html += `
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
                         <div>
                             <span style="color:${tipoColor};">${tipoEmoji}</span>
                             <span style="color:#fff;">${item.tipo === 'deuda' ? 'Deuda' : 'Abono'}</span>
@@ -468,7 +931,7 @@ function verHistorialCliente() {
                     </div>
                 `;
             });
-            html += `</div>`;
+            html += '</div>';
             contenido.innerHTML = html;
         })
         .catch(() => {
@@ -476,6 +939,33 @@ function verHistorialCliente() {
                 '<div style="color:#ff6b6b;text-align:center;padding:20px;">❌ Error al cargar historial</div>';
         });
 }
+
+// ============================================
+// 11. KEYBOARD: Enter para seleccionar primera sugerencia
+// ============================================
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const active = document.activeElement;
+        
+        // Si está en el input de marca y hay sugerencias
+        if (active.id === 'marcaInput') {
+            const sugerencias = document.querySelectorAll('#sugerenciasMarca .item');
+            if (sugerencias.length > 0) {
+                e.preventDefault();
+                sugerencias[0].click();
+            }
+        }
+        
+        // Si está en el input de modelo y hay sugerencias
+        if (active.id === 'modeloInput') {
+            const sugerencias = document.querySelectorAll('#sugerenciasModelo .item');
+            if (sugerencias.length > 0) {
+                e.preventDefault();
+                sugerencias[0].click();
+            }
+        }
+    }
+});
 </script>
 
 {% endblock %}
