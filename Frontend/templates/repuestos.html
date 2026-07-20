@@ -1758,8 +1758,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-
-// Formulario editar - CORREGIDO (guarda categoría padre)
+// ============================================
+// FORMULARIO EDITAR - CORREGIDO (GUARDA STOCK Y CATEGORÍAS)
+// ============================================
 const formEditar = document.getElementById('formEditarRepuesto');
 if (formEditar) {
     formEditar.addEventListener('submit', function(e) {
@@ -1783,6 +1784,7 @@ if (formEditar) {
         }
         
         console.log('📤 EDITANDO REPUESTO:');
+        console.log('  Stock a enviar:', stock);
         console.log('  Categoría ID:', categoriaId);
         console.log('  Categoría Padre:', categoriaPadre);
         
@@ -1796,22 +1798,22 @@ if (formEditar) {
             return;
         }
         
-        // ✅ CONSTRUIR DATOS
+        // ✅ CONSTRUIR DATOS CON STOCK Y CATEGORÍA
         const data = {
             nombre: nombre,
             costo_proveedor: costoProveedor,
             margen_ganancia: margen,
             proveedor: proveedor || 'Importado',
-            stock: stock,
+            stock: stock,  // ✅ STOCK CORRECTO
             costo_venta_final: precioVenta,
-            categoria_nombre: categoriaPadre || ''  // ✅ GUARDAR CATEGORÍA PADRE
+            categoria_nombre: categoriaPadre || ''
         };
         
         if (categoriaId && categoriaId !== '') {
             data.subcategoria_id = parseInt(categoriaId);
         }
         
-        console.log('📤 Enviando:', data);
+        console.log('📤 Enviando datos completos:', data);
         
         const btn = this.querySelector('button[type="submit"]');
         btn.disabled = true;
@@ -1840,13 +1842,16 @@ if (formEditar) {
     });
 }
 
-    // Editar botones - SELECCIÓN DE CATEGORÍA CORREGIDA
+// ============================================
+// EDITAR BOTONES - CORREGIDO (STOCK Y CATEGORÍAS)
+// ============================================
 document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
     btn.addEventListener('click', async function() {
         const id = this.dataset.id;
         const fila = this.closest('.fila-repuesto-lista');
         if (!fila) return;
         
+        // ✅ OBTENER TODOS LOS VALORES DE LA FILA
         const nombre = fila.querySelector('td:nth-child(2)')?.textContent.trim() || '';
         const stockText = fila.querySelector('td:nth-child(3)')?.textContent.trim() || '0';
         const stock = parseInt(stockText) || 0;
@@ -1855,38 +1860,28 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
         const margenText = fila.querySelector('td:nth-child(5)')?.textContent.replace('%', '').trim() || '0';
         const margen = parseFloat(margenText) || 0;
         const proveedor = fila.querySelector('td:nth-child(7)')?.textContent.trim() || '';
+        const categoriaText = fila.querySelector('td:nth-child(8)')?.textContent.trim() || '';
         const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
         const precioVenta = parseFloat(precioText) || 0;
         
-        // ✅ OBTENER CATEGORÍA - Limpiar caracteres especiales
-        let categoriaText = fila.querySelector('td:nth-child(8)')?.textContent.trim() || '';
-        // Eliminar emojis y espacios extra
-        categoriaText = categoriaText.replace(/[📂]\s*/g, '').trim();
+        console.log('📊 DATOS DE LA FILA:');
+        console.log('  Stock:', stock);
+        console.log('  Categoría:', categoriaText);
         
-        console.log('📂 Categoría del repuesto:', categoriaText);
+        // ✅ ASIGNAR VALORES A LOS CAMPOS DEL MODAL
+        document.getElementById('editRepuestoId').value = id;
+        document.getElementById('editNombreRepuesto').value = nombre;
+        document.getElementById('editCostoProveedor').value = costo;
+        document.getElementById('editMargenGanancia').value = margen;
+        document.getElementById('editProveedorRepuesto').value = proveedor === '-' ? '' : proveedor;
+        document.getElementById('editStockRepuesto').value = stock;  // ✅ STOCK CORRECTO
+        document.getElementById('editPrecioVenta').value = precioVenta;
         
-        // ... llenar campos del formulario ...
-        
-        const editId = document.getElementById('editRepuestoId');
-        const editNombre = document.getElementById('editNombreRepuesto');
-        const editCosto = document.getElementById('editCostoProveedor');
-        const editMargen = document.getElementById('editMargenGanancia');
-        const editProveedor = document.getElementById('editProveedorRepuesto');
-        const editStock = document.getElementById('editStockRepuesto');
-        const editPrecio = document.getElementById('editPrecioVenta');
+        // ✅ ACTUALIZAR GANANCIA Y MARGEN
+        const ganancia = precioVenta - costo;
         const editGananciaLabel = document.getElementById('editGananciaLabel');
         const editMargenLabel = document.getElementById('editMargenCalculadoLabel');
         
-        if (editId) editId.value = id;
-        if (editNombre) editNombre.value = nombre;
-        if (editCosto) editCosto.value = costo;
-        if (editMargen) editMargen.value = margen;
-        if (editProveedor) editProveedor.value = proveedor === '-' ? '' : proveedor;
-        if (editStock) editStock.value = stock;
-        if (editPrecio) editPrecio.value = precioVenta;
-        
-        // Calcular ganancia
-        const ganancia = precioVenta - costo;
         if (editGananciaLabel) {
             editGananciaLabel.textContent = `💰 Ganancia: $${ganancia.toLocaleString('es-CL')}`;
         }
@@ -1906,36 +1901,22 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
             
             console.log('🔍 Buscando categoría:', categoriaText);
             
-            // 1. Intentar seleccionar por valor (si el texto es un número, es un ID)
-            if (categoriaText && !isNaN(categoriaText)) {
-                select.value = categoriaText;
-                if (select.value === categoriaText) {
+            // 1. Intentar seleccionar por texto exacto
+            const categoriaClean = categoriaText.replace(/[📂]\s*/g, '').trim().toLowerCase();
+            for (let opt of select.options) {
+                const textoOpt = opt.textContent.trim().toLowerCase();
+                if (textoOpt === categoriaClean) {
+                    opt.selected = true;
                     categoriaEncontrada = true;
-                    console.log('✅ Categoría seleccionada por ID:', select.value);
+                    console.log('✅ Categoría seleccionada por texto exacto:', opt.text, 'Value:', opt.value);
+                    break;
                 }
             }
             
-            // 2. Si no se encontró, buscar por texto exacto (sin caracteres especiales)
-            if (!categoriaEncontrada) {
+            // 2. Si no se encontró, buscar por texto parcial
+            if (!categoriaEncontrada && categoriaClean) {
                 for (let opt of select.options) {
                     const textoOpt = opt.textContent.trim().toLowerCase();
-                    const categoriaClean = categoriaText.toLowerCase().trim();
-                    
-                    if (textoOpt === categoriaClean) {
-                        opt.selected = true;
-                        categoriaEncontrada = true;
-                        console.log('✅ Categoría seleccionada por texto exacto:', opt.text, 'Value:', opt.value);
-                        break;
-                    }
-                }
-            }
-            
-            // 3. Si no se encontró, buscar por texto parcial
-            if (!categoriaEncontrada && categoriaText) {
-                for (let opt of select.options) {
-                    const textoOpt = opt.textContent.trim().toLowerCase();
-                    const categoriaClean = categoriaText.toLowerCase().trim();
-                    
                     if (textoOpt.includes(categoriaClean) || categoriaClean.includes(textoOpt)) {
                         opt.selected = true;
                         categoriaEncontrada = true;
@@ -1945,11 +1926,11 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
                 }
             }
             
-            // 4. Si no se encontró, buscar por optgroup
-            if (!categoriaEncontrada && categoriaText) {
+            // 3. Si no se encontró, buscar por optgroup
+            if (!categoriaEncontrada && categoriaClean) {
                 for (let opt of select.options) {
                     const label = opt.parentElement?.label || '';
-                    if (label.toLowerCase().includes(categoriaText.toLowerCase())) {
+                    if (label.toLowerCase().includes(categoriaClean)) {
                         opt.selected = true;
                         categoriaEncontrada = true;
                         console.log('✅ Categoría seleccionada por optgroup:', opt.text, 'Value:', opt.value);
