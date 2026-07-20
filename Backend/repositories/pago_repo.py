@@ -259,3 +259,215 @@ class PagoRepository:
         except Exception as e:
             logger.error(f"Error obtener balance ventas: {e}")
             return []
+# 1. obtener_todos_pagados() - ✅ YA ESTÁ (la tienes)
+
+# 2. obtener_flotas() - ✅ YA ESTÁ (la tienes)
+
+# 3. ❌ FALTA: obtener_balance_ventas() - Para el balance de ventas
+@staticmethod
+def obtener_balance_ventas(filtro, fecha):
+    """Obtiene datos para el balance de ventas"""
+    try:
+        if not validar_filtro(filtro):
+            filtro = 'todos'
+        
+        conn, cur = get_cursor()
+        query = "SELECT * FROM pagos WHERE estado = 'pagado' AND estado_pago = 'pagado'"
+        params = []
+        
+        if filtro == 'hoy':
+            query += " AND fecha = %s"
+            params.append(fecha.strftime('%Y-%m-%d'))
+        elif filtro == '7d':
+            query += " AND fecha >= %s"
+            params.append((fecha - timedelta(days=7)).strftime('%Y-%m-%d'))
+        elif filtro == 'mes':
+            query += " AND fecha >= %s"
+            params.append((fecha - timedelta(days=30)).strftime('%Y-%m-%d'))
+        
+        query += " ORDER BY fecha DESC, hora DESC"
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"Error obtener balance ventas: {e}")
+        return []
+
+# 4. ❌ FALTA: obtener_flotas_pendientes_count() - Para el contador del navbar
+@staticmethod
+def obtener_flotas_pendientes_count():
+    """Obtiene el número de flotas pendientes de pago"""
+    try:
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT COUNT(*) FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pendiente'
+            AND flota IS NOT NULL 
+            AND flota != ''
+        """)
+        count = cur.fetchone()[0] or 0
+        cur.close()
+        conn.close()
+        return count
+    except Exception as e:
+        logger.error(f"Error obtener flotas pendientes count: {e}")
+        return 0
+
+# 5. ❌ FALTA: obtener_gastos_balance() - Para el balance con gastos
+@staticmethod
+def obtener_gastos_balance(fecha_inicio, fecha_fin):
+    """Obtiene gastos para el balance"""
+    try:
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT * FROM gastos 
+            WHERE fecha BETWEEN %s AND %s
+            ORDER BY fecha DESC, hora DESC
+        """, (fecha_inicio, fecha_fin))
+        gastos = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return gastos
+    except Exception as e:
+        logger.error(f"Error obtener gastos balance: {e}")
+        return []
+
+# 6. ❌ FALTA: obtener_cierre_caja() - Para el cierre de caja
+@staticmethod
+def obtener_cierre_caja(fecha):
+    """Obtiene el cierre de caja para una fecha"""
+    try:
+        conn, cur = get_cursor()
+        cur.execute("SELECT * FROM cierres_caja WHERE fecha = %s", (fecha,))
+        cierre = cur.fetchone()
+        cur.close()
+        conn.close()
+        return dict(cierre) if cierre else None
+    except Exception as e:
+        logger.error(f"Error obtener cierre caja: {e}")
+        return None
+
+# 7. ❌ FALTA: crear_cierre_caja() - Para iniciar cierre
+@staticmethod
+def crear_cierre_caja(fecha, efectivo_inicial):
+    """Crea un nuevo cierre de caja"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO cierres_caja (fecha, efectivo_inicial, estado)
+            VALUES (%s, %s, 'abierto')
+            RETURNING id
+        """, (fecha, efectivo_inicial))
+        id_cierre = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        return id_cierre
+    except Exception as e:
+        logger.error(f"Error crear cierre caja: {e}")
+        return None
+
+# 8. ❌ FALTA: cerrar_cierre_caja() - Para cerrar caja
+@staticmethod
+def cerrar_cierre_caja(fecha, data):
+    """Cierra un cierre de caja"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE cierres_caja 
+            SET ventas_efectivo = %s,
+                gastos_efectivo = %s,
+                efectivo_esperado = %s,
+                efectivo_real = %s,
+                diferencia = %s,
+                estado = 'cerrado',
+                cerrado_por = %s,
+                cerrado_en = NOW() AT TIME ZONE 'America/Santiago',
+                observaciones = %s
+            WHERE fecha = %s AND estado = 'abierto'
+        """, (
+            data.get('ventas_efectivo', 0),
+            data.get('gastos_efectivo', 0),
+            data.get('efectivo_esperado', 0),
+            data.get('efectivo_real', 0),
+            data.get('diferencia', 0),
+            data.get('cerrado_por', 'Sistema'),
+            data.get('observaciones', ''),
+            fecha
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.error(f"Error cerrar cierre caja: {e}")
+        return False
+
+# 9. ❌ FALTA: obtener_historial_cierres() - Para el historial
+@staticmethod
+def obtener_historial_cierres(limit=30):
+    """Obtiene el historial de cierres de caja"""
+    try:
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT * FROM cierres_caja 
+            WHERE estado = 'cerrado'
+            ORDER BY fecha DESC
+            LIMIT %s
+        """, (limit,))
+        historial = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return historial
+    except Exception as e:
+        logger.error(f"Error obtener historial cierres: {e}")
+        return []
+
+# 10. ❌ FALTA: obtener_repuestos_con_stock() - Para reporte de stock bajo
+@staticmethod
+def obtener_repuestos_con_stock(stock_minimo=5, proveedor=None):
+    """Obtiene repuestos con stock bajo o igual al mínimo"""
+    try:
+        conn, cur = get_cursor()
+        query = """
+            SELECT id, nombre, stock, costo_proveedor, costo_venta_final, 
+                   margen_ganancia, proveedor, costo_proveedor_pendiente, categoria_nombre
+            FROM repuestos 
+            WHERE stock IS NOT NULL AND stock <= %s AND stock > 0
+        """
+        params = [stock_minimo]
+        
+        if proveedor and proveedor != 'todos':
+            query += " AND proveedor = %s"
+            params.append(proveedor)
+        
+        query += " ORDER BY stock ASC, nombre ASC"
+        
+        cur.execute(query, params)
+        productos = [dict(row) for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return productos
+    except Exception as e:
+        logger.error(f"Error obtener repuestos con stock: {e}")
+        return []
+
+# 11. ❌ FALTA: obtener_proveedores_repuestos() - Para filtros
+@staticmethod
+def obtener_proveedores_repuestos():
+    """Obtiene la lista de proveedores de repuestos"""
+    try:
+        conn, cur = get_cursor()
+        cur.execute("SELECT DISTINCT proveedor FROM repuestos WHERE proveedor IS NOT NULL AND proveedor != '' ORDER BY proveedor")
+        proveedores = [row[0] for row in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return proveedores
+    except Exception as e:
+        logger.error(f"Error obtener proveedores repuestos: {e}")
+        return []
