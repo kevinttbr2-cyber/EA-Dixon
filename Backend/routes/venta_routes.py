@@ -4,6 +4,7 @@ from database import get_connection, get_cursor
 from utils.seguridad import sanitizar_input, sanitizar_numero, validar_filtro
 from utils.fecha_utils import get_fecha_hora_chile, get_fecha_chile
 from services.notification_service import enviar_notificacion_push
+from services.pago_service import PagoService
 import json
 import logging
 from datetime import timedelta
@@ -107,26 +108,22 @@ def balance_ventas():
             return jsonify({"error": "Filtro inválido"}), 400
         
         hoy = get_fecha_chile()
-        conn, cur = get_cursor()
+        registros = PagoService.obtener_balance_ventas(filtro, hoy)
         
-        query = "SELECT * FROM pagos WHERE estado = 'pagado' AND estado_pago = 'pagado'"
-        params = []
+        if not registros:
+            return jsonify({
+                "registros": [],
+                "total_ventas": 0,
+                "total_trabajo": 0,
+                "total_directa": 0,
+                "ganancia_trabajo": 0,
+                "ganancia_directa": 0,
+                "ganancia_neta": 0,
+                "total_repuestos_trabajo": 0,
+                "total_repuestos_directa": 0
+            })
         
-        if filtro == 'hoy':
-            query += " AND fecha = %s"
-            params.append(hoy.strftime('%Y-%m-%d'))
-        elif filtro == '7d':
-            query += " AND fecha >= %s"
-            params.append((hoy - timedelta(days=7)).strftime('%Y-%m-%d'))
-        elif filtro == 'mes':
-            query += " AND fecha >= %s"
-            params.append((hoy - timedelta(days=30)).strftime('%Y-%m-%d'))
-        
-        query += " ORDER BY fecha DESC, hora DESC"
-        cur.execute(query, params)
-        rows = cur.fetchall()
-        registros = [dict(row) for row in rows]
-        
+        # Procesar registros
         for r in registros:
             total = 0
             detalles = r.get('detalles_repuestos', [])
@@ -147,6 +144,8 @@ def balance_ventas():
                 directa.append(r)
             else:
                 trabajo.append(r)
+        
+        conn, cur = get_cursor()
         
         def calcular_venta_repuestos(registros):
             total = 0
@@ -206,11 +205,3 @@ def balance_ventas():
             "total_trabajo": total_trabajo,
             "total_directa": total_directa,
             "ganancia_trabajo": round(ganancia_trabajo, 2),
-            "ganancia_directa": round(ganancia_directa, 2),
-            "ganancia_neta": round(ganancia_neta, 2),
-            "total_repuestos_trabajo": round(costo_trabajo, 2),
-            "total_repuestos_directa": round(costo_directa, 2)
-        })
-    except Exception as e:
-        logger.error(f"Error en balance_ventas: {e}")
-        return jsonify({"error": str(e)}), 500
