@@ -703,7 +703,7 @@
 </div>
 
 <!-- ============================================
-     MODAL: EDITAR REPUESTO (CON CÁLCULO AUTOMÁTICO)
+     MODAL: EDITAR REPUESTO (CON CÁLCULO AUTOMÁTICO Y CATEGORÍAS)
      ============================================ -->
 <div id="modalEditarRepuesto" class="modal-dixon">
     <div class="modal-content" style="border: 2px solid #4fc3f7;">
@@ -1282,11 +1282,15 @@ if (btnEscanear) {
 }
 
 // ============================================
-// CATEGORÍAS - CARGAR PARA EDITAR
+// CATEGORÍAS - CARGAR PARA EDITAR (CORREGIDO)
 // ============================================
 async function cargarCategoriasEnEditar() {
     try {
         const resp = await fetch(`${API_URL}/api/subcategorias_repuestos`);
+        if (!resp.ok) {
+            console.warn('⚠️ No se pudieron cargar categorías');
+            return;
+        }
         const subcategorias = await resp.json();
         const select = document.getElementById('editCategoriaRepuesto');
         if (!select) return;
@@ -1311,6 +1315,7 @@ async function cargarCategoriasEnEditar() {
             select.appendChild(optgroup);
         }
         categoriasCargadas = true;
+        console.log('✅ Categorías cargadas correctamente');
     } catch(e) {
         console.error('Error cargando categorías:', e);
     }
@@ -1699,11 +1704,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (inputCosto) inputCosto.addEventListener('input', calcularCostoVenta);
     if (inputMargen) inputMargen.addEventListener('input', calcularCostoVenta);
 
-    // Calcular en editar (legado, se mantiene por compatibilidad)
-    function calcularCostoVentaEdit() {
-        // Esta función ya no se usa, ahora usamos calcularMargenDesdePrecio y calcularPrecioDesdeMargen
-    }
-
     // Formulario agregar
     const formAgregar = document.getElementById('formAgregarRepuesto');
     if (formAgregar) {
@@ -1758,7 +1758,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Formulario editar - ACTUALIZADO
+    // ============================================
+    // FORMULARIO EDITAR - CORREGIDO (GUARDA CATEGORÍAS)
+    // ============================================
     const formEditar = document.getElementById('formEditarRepuesto');
     if (formEditar) {
         formEditar.addEventListener('submit', function(e) {
@@ -1771,6 +1773,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
             const precioVenta = parseFloat(document.getElementById('editPrecioVenta')?.value || 0);
             
+            // ✅ OBTENER EL ID DE LA CATEGORÍA SELECCIONADA
+            const categoriaSelect = document.getElementById('editCategoriaRepuesto');
+            const categoriaId = categoriaSelect?.value || '';
+            
             if (!nombre) {
                 alert('⚠️ El nombre del repuesto es obligatorio');
                 return;
@@ -1781,6 +1787,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            // ✅ CONSTRUIR DATOS CON LA CATEGORÍA
             const data = {
                 nombre: nombre,
                 costo_proveedor: costoProveedor,
@@ -1790,10 +1797,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 costo_venta_final: precioVenta
             };
             
-            const categoriaId = document.getElementById('editCategoriaRepuesto')?.value;
-            if (categoriaId) {
+            // ✅ SI HAY UNA CATEGORÍA SELECCIONADA, ENVIAR SU ID
+            if (categoriaId && categoriaId !== '') {
                 data.subcategoria_id = parseInt(categoriaId);
+                console.log('📂 Categoría seleccionada ID:', data.subcategoria_id);
+            } else {
+                console.log('📂 Sin categoría seleccionada');
             }
+            
+            console.log('📤 Enviando datos de edición:', data);
             
             const btn = this.querySelector('button[type="submit"]');
             btn.disabled = true;
@@ -1822,7 +1834,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Editar botones - ACTUALIZADO CON CÁLCULO AUTOMÁTICO
+    // ============================================
+    // EDITAR BOTONES - ACTUALIZADO (CON VERIFICACIÓN DE CATEGORÍA)
+    // ============================================
     document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
         btn.addEventListener('click', async function() {
             const id = this.dataset.id;
@@ -1868,27 +1882,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 editMargenLabel.textContent = `📊 Margen calculado: ${margen}%`;
             }
             
+            // ✅ CARGAR CATEGORÍAS SI NO ESTÁN CARGADAS
             if (!categoriasCargadas) {
                 await cargarCategoriasEnEditar();
             }
             
+            // ✅ SELECCIONAR LA CATEGORÍA CORRECTA
             const select = document.getElementById('editCategoriaRepuesto');
             if (select) {
                 let categoriaEncontrada = false;
+                
+                // Intentar seleccionar por texto exacto
                 for (let opt of select.options) {
-                    if (opt.text === categoriaText) {
+                    if (opt.text === categoriaText || opt.text === categoriaText.trim()) {
                         opt.selected = true;
                         categoriaEncontrada = true;
+                        console.log('✅ Categoría seleccionada por texto:', opt.text, 'Value:', opt.value);
                         break;
                     }
                 }
+                
+                // Si no se encontró, buscar por optgroup
                 if (!categoriaEncontrada && categoriaText && categoriaText !== 'Sin categoría') {
                     for (let opt of select.options) {
-                        if (opt.label === categoriaText || opt.parentElement?.label === categoriaText) {
+                        if (opt.parentElement?.label === categoriaText) {
                             opt.selected = true;
+                            categoriaEncontrada = true;
+                            console.log('✅ Categoría seleccionada por optgroup:', opt.text, 'Value:', opt.value);
                             break;
                         }
                     }
+                }
+                
+                if (!categoriaEncontrada) {
+                    console.log('ℹ️ Categoría no encontrada en el select, se guardará como "Sin categoría"');
                 }
             }
             
@@ -1929,6 +1956,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar categorías al inicio para editar
     cargarCategoriasEnEditar();
 });
+
 // ============================================
 // FUNCIONES DE IMPORTACIÓN
 // ============================================
