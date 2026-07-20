@@ -1998,7 +1998,59 @@ function seleccionarCategoria(categoriaText) {
     // Cargar categorías al inicio para editar
     cargarCategoriasEnEditar();
 });
+// ============================================
+// FUNCIONES DE MODALES - CIERRE
+// ============================================
 
+function cerrarModalEditar() {
+    const modal = document.getElementById('modalEditarRepuesto');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+    // Opcional: resetear el formulario
+    const form = document.getElementById('formEditarRepuesto');
+    if (form) {
+        form.reset();
+    }
+}
+
+function cerrarModalAgregar() {
+    const modal = document.getElementById('modalAgregarRepuesto');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+    const form = document.getElementById('formAgregarRepuesto');
+    if (form) {
+        form.reset();
+    }
+    const previewCosto = document.getElementById('previewCostoVenta');
+    if (previewCosto) previewCosto.textContent = '$0';
+    const previewMargen = document.getElementById('previewMargen');
+    if (previewMargen) previewMargen.textContent = '0%';
+}
+
+function cerrarModalEscaner() {
+    detenerEscannerRepuestos();
+    const modal = document.getElementById('modalEscanerProducto');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function cerrarModalReporte() {
+    const modal = document.getElementById('modalReporteStock');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function cerrarModalImportarProductos() {
+    console.log('📂 Cerrando modal importar');
+    const modal = document.getElementById('modalImportarProductos');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
 // ============================================
 // FUNCIONES DE IMPORTACIÓN
 // ============================================
