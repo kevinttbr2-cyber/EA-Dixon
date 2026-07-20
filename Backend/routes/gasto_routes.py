@@ -103,7 +103,7 @@ def obtener_gastos_balance():
         cur.close()
         conn.close()
         
-        # ✅ CONVERTIR time a string
+        # Convertir a diccionarios
         gastos = []
         for row in rows:
             g = dict(row)
