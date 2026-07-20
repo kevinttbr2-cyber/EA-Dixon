@@ -1940,72 +1940,39 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
                 console.log('ℹ️ Categoría no encontrada:', categoriaTextClean, '→ seleccionando "Sin categoría"');
                 select.value = '';
             }
-            
-            // ✅ 4. AGREGAR EVENTO PARA RESTAURAR EL STOCK AL SELECCIONAR CATEGORÍA
-            // Eliminar eventos anteriores para evitar duplicados
-            const newSelect = select.cloneNode(true);
-            select.parentNode.replaceChild(newSelect, select);
-            
-            newSelect.addEventListener('change', function() {
-                const stockInput = document.getElementById('editStockRepuesto');
-                if (stockInput) {
-                    stockInput.value = stockOriginal;
-                    console.log('✅ Stock restaurado a:', stockOriginal);
-                }
-            });
-            
-            // Actualizar la referencia al select
-            document.getElementById('editCategoriaRepuesto');
-        }
-        
-        // ✅ EVENTO PARA ACTUALIZAR STOCK ORIGINAL CUANDO EL USUARIO CAMBIA EL STOCK
-        const stockInput = document.getElementById('editStockRepuesto');
-        if (stockInput) {
-            // Eliminar eventos anteriores
-            const newStockInput = stockInput.cloneNode(true);
-            stockInput.parentNode.replaceChild(newStockInput, stockInput);
-            
-            newStockInput.addEventListener('input', function() {
-                stockOriginal = parseInt(this.value) || 0;
-            });
         }
         
         const modal = document.getElementById('modalEditarRepuesto');
         if (modal) modal.classList.add('active');
+        
+        // ✅ ESPERAR A QUE EL MODAL SE ABRA Y RESTAURAR EL STOCK
+        setTimeout(function() {
+            const stockInput = document.getElementById('editStockRepuesto');
+            if (stockInput) {
+                stockInput.value = stockOriginal;
+                console.log('✅ Stock restaurado a:', stockOriginal);
+            }
+        }, 100);
     });
 });
 
-    // Eliminar repuesto
-    document.querySelectorAll('.btn-eliminar-repuesto-lista').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = this.dataset.id;
-            if (!confirm(`¿Eliminar el repuesto #${id} permanentemente?`)) return;
-            fetch(`${API_URL}/api/repuestos/${id}`, {
-                method: 'DELETE'
-            })
-            .then(resp => {
-                if (resp.ok) {
-                    alert('✅ Repuesto eliminado');
-                    location.reload();
-                } else {
-                    alert('❌ Error al eliminar');
-                }
-            })
-            .catch(() => alert('❌ Error de conexión'));
-        });
-    });
+// ✅ CUANDO SE SELECCIONA UNA CATEGORÍA, RESTAURAR EL STOCK ORIGINAL
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'editCategoriaRepuesto') {
+        const stockInput = document.getElementById('editStockRepuesto');
+        if (stockInput) {
+            stockInput.value = stockOriginal;
+            console.log('✅ Stock restaurado a:', stockOriginal);
+        }
+    }
+});
 
-    // Cerrar modales al hacer clic fuera
-    document.querySelectorAll('.modal-dixon').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.remove('active');
-            }
-        });
-    });
-    
-    // Cargar categorías al inicio para editar
-    cargarCategoriasEnEditar();
+// ✅ CUANDO EL USUARIO CAMBIA EL STOCK MANUALMENTE, ACTUALIZAR stockOriginal
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.id === 'editStockRepuesto') {
+        stockOriginal = parseInt(e.target.value) || 0;
+        console.log('✅ stockOriginal actualizado a:', stockOriginal);
+    }
 });
 
 // ============================================
