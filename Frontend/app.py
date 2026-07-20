@@ -798,7 +798,7 @@ def balance():
         registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     
     # ============================================
-    # 2. OBTENER GASTOS POR SEPARADO (ALTERNATIVA)
+    # 2. OBTENER GASTOS POR SEPARADO
     # ============================================
     gastos_operativos = []
     total_gastos = 0
@@ -823,7 +823,6 @@ def balance():
         
         logger.info(f"📊 Balance - Buscando gastos entre {fecha_inicio} y {fecha_fin}")
         
-        # Llamar a gastos_balance
         resp_gastos = requests.get(
             f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}",
             timeout=10
@@ -842,12 +841,9 @@ def balance():
         total_gastos = 0
     
     # ============================================
-    # 3. CALCULAR GANANCIA REAL (SIN DIAGNÓSTICO)
+    # 3. CALCULAR GANANCIA REAL
     # ============================================
-    # Ganancia Real = Ingresos - Repuestos - Mano de Obra - Gastos Operativos
     ganancia_real = total_pagado - total_repuestos - total_mano_obra - total_gastos
-    
-    logger.info(f"📊 Balance final: Ingresos=${total_pagado}, Repuestos=${total_repuestos}, MO=${total_mano_obra}, Gastos=${total_gastos}, Ganancia=${ganancia_real}")
     
     # ============================================
     # 4. FILTROS PARA LA VISTA
