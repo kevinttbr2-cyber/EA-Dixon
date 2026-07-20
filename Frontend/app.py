@@ -1104,11 +1104,6 @@ def exportar_flota_pdf(flota):
         logger.error(f"Error en /exportar_flota_pdf: {e}")
         return f"❌ Error: {str(e)}", 500
 
-# ============================
-# DASHBOARD
-# ============================
-# Frontend/app.py - dashboard()
-
 @app.route('/dashboard')
 @login_required
 @role_required(['admin'])
@@ -1125,77 +1120,176 @@ def dashboard():
         if resp.status_code == 200:
             data = resp.json()
         else:
+            logger.error(f"❌ Error en dashboard: {resp.status_code}")
             data = {}
     except Exception as e:
-        logger.error(f"Error en /dashboard: {e}")
+        logger.error(f"❌ Error en /dashboard: {e}")
         data = {}
     
+    # ============================================
+    # 1. OBTENER GASTOS POR SEPARADO (SI NO VIENEN DEL BACKEND)
+    # ============================================
+    gastos_operativos = []
+    total_gastos = 0
+    ganancia_real = 0
+    gastos_por_categoria = []
+    gastos_diarios = []
+    gastos_labels = []
+    
+    try:
+        # Si el backend no envió gastos, obtenerlos
+        if 'gastos_operativos' not in data or not data.get('gastos_operativos'):
+            # Definir fechas según el filtro
+            hoy = datetime.now().date()
+            if filtro == '7d':
+                fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+                fecha_fin = hoy.strftime('%Y-%m-%d')
+            elif filtro == '30d':
+                fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+                fecha_fin = hoy.strftime('%Y-%m-%d')
+            elif filtro == '90d':
+                fecha_inicio = (hoy - timedelta(days=90)).strftime('%Y-%m-%d')
+                fecha_fin = hoy.strftime('%Y-%m-%d')
+            elif filtro == 'mes' and mes and anio:
+                fecha_inicio = f"{anio}-{mes}-01"
+                fecha_fin = hoy.strftime('%Y-%m-%d')
+            else:
+                fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+                fecha_fin = hoy.strftime('%Y-%m-%d')
+            
+            # Obtener gastos del backend
+            resp_gastos = requests.get(
+                f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}",
+                timeout=10
+            )
+            if resp_gastos.status_code == 200:
+                gastos_operativos = resp_gastos.json()
+                for g in gastos_operativos:
+                    g['monto'] = float(g['monto']) if g.get('monto') else 0
+                total_gastos = sum(g.get('monto', 0) for g in gastos_operativos)
+            else:
+                gastos_operativos = []
+                total_gastos = 0
+        else:
+            gastos_operativos = data.get('gastos_operativos', [])
+            total_gastos = data.get('total_gastos', 0)
+            
+    except Exception as e:
+        logger.error(f"❌ Error al obtener gastos para dashboard: {e}")
+        gastos_operativos = []
+        total_gastos = 0
+    
+    # ============================================
+    # 2. CALCULAR GASTOS POR CATEGORÍA
+    # ============================================
+    if gastos_operativos:
+        from collections import defaultdict
+        gastos_dict = defaultdict(float)
+        for g in gastos_operativos:
+            categoria = g.get('categoria', 'Otros')
+            gastos_dict[categoria] += float(g.get('monto', 0) or 0)
+        
+        total_gastos_cat = sum(gastos_dict.values())
+        gastos_por_categoria = []
+        for cat, monto in gastos_dict.items():
+            porcentaje = round((monto / total_gastos_cat) * 100, 1) if total_gastos_cat > 0 else 0
+            gastos_por_categoria.append({
+                'categoria': cat,
+                'total': monto,
+                'porcentaje': porcentaje
+            })
+        gastos_por_categoria.sort(key=lambda x: x['total'], reverse=True)
+        
+        # Gastos diarios para gráfico
+        gastos_dia = defaultdict(float)
+        for g in gastos_operativos:
+            fecha = g.get('fecha', '')
+            if fecha:
+                gastos_dia[fecha] += float(g.get('monto', 0) or 0)
+        
+        gastos_labels = sorted(gastos_dia.keys())
+        gastos_diarios = [gastos_dia[f] for f in gastos_labels]
+    
+    # ============================================
+    # 3. CALCULAR GANANCIA REAL
+    # ============================================
+    total_facturado = data.get('total_facturado', 0)
+    total_repuestos = data.get('total_repuestos', 0)
+    total_mano_obra = data.get('total_mano_obra', 0)
+    
+    # Si el backend no envió ganancia_real, calcularla
+    if 'ganancia_real' not in data or data.get('ganancia_real') == 0:
+        ganancia_real = total_facturado - total_repuestos - total_mano_obra - total_gastos
+    else:
+        ganancia_real = data.get('ganancia_real', 0)
+    
+    # ============================================
+    # 4. CALCULAR TOTAL DIRECTA Y TRABAJO
+    # ============================================
+    total_directa = 0
+    total_trabajo = 0
+    registros = data.get('registros', [])
+    if registros:
+        for r in registros:
+            tiene_vehiculo = r.get('marca') and r.get('marca').strip() != '' and r.get('modelo') and r.get('modelo').strip() != ''
+            es_directa = r.get('tipo_venta') == 'directa' or not tiene_vehiculo
+            if es_directa:
+                total_directa += float(r.get('monto', 0) or 0)
+            else:
+                total_trabajo += float(r.get('monto', 0) or 0)
+    
+    # ============================================
+    # 5. VALORES POR DEFECTO
+    # ============================================
     default_data = {
-        "total_facturado": 0, "total_repuestos": 0, "total_mano_obra": 0,
-        "total_diagnostico": 0, "total_servicios": 0, "ganancia_total": 0,
-        "promedio_diario": 0, "labels": [], "ventas": [],
-        "ganancia_acumulada": [], "proyeccion_labels": [], "proyeccion": [],
-        "clientes_labels": [], "clientes_data": [], "meses_disponibles": [],
-        "filtro_actual": filtro, "mes_actual": mes, "anio_actual": anio,
-        # ✅ NUEVOS CAMPOS
-        "total_gastos": 0, "gastos_operativos": [], "ganancia_real": 0,
-        "total_directa": 0, "total_trabajo": 0,
-        "gastos_por_categoria": [], "gastos_diarios": [], "gastos_labels": []
+        "total_facturado": 0, 
+        "total_repuestos": 0, 
+        "total_mano_obra": 0,
+        "total_diagnostico": 0, 
+        "total_servicios": 0, 
+        "ganancia_total": 0,
+        "promedio_diario": 0, 
+        "labels": [], 
+        "ventas": [],
+        "ganancia_acumulada": [], 
+        "proyeccion_labels": [], 
+        "proyeccion": [],
+        "clientes_labels": [], 
+        "clientes_data": [], 
+        "meses_disponibles": [],
+        "filtro_actual": filtro, 
+        "mes_actual": mes, 
+        "anio_actual": anio,
+        "registros": [],
+        "gastos_operativos": gastos_operativos,
+        "total_gastos": total_gastos,
+        "ganancia_real": ganancia_real,
+        "total_directa": total_directa,
+        "total_trabajo": total_trabajo,
+        "gastos_por_categoria": gastos_por_categoria,
+        "gastos_diarios": gastos_diarios,
+        "gastos_labels": gastos_labels
     }
     
-    # ✅ Si el backend no envía algunos campos, calcularlos en el frontend
-    gastos_operativos = data.get('gastos_operativos', [])
-    if gastos_operativos:
-        # Calcular total_gastos
-        if 'total_gastos' not in data or data['total_gastos'] == 0:
-            data['total_gastos'] = sum(float(g.get('monto', 0) or 0) for g in gastos_operativos)
-        
-        # Calcular gastos por categoría
-        if 'gastos_por_categoria' not in data or not data['gastos_por_categoria']:
-            from collections import defaultdict
-            gastos_dict = defaultdict(float)
-            for g in gastos_operativos:
-                cat = g.get('categoria', 'Otros')
-                gastos_dict[cat] += float(g.get('monto', 0) or 0)
-            
-            gastos_por_categoria = []
-            total_gastos_cat = sum(gastos_dict.values())
-            for cat, monto in gastos_dict.items():
-                porcentaje = round((monto / total_gastos_cat) * 100, 1) if total_gastos_cat > 0 else 0
-                gastos_por_categoria.append({
-                    'categoria': cat,
-                    'total': monto,
-                    'porcentaje': porcentaje
-                })
-            gastos_por_categoria.sort(key=lambda x: x['total'], reverse=True)
-            data['gastos_por_categoria'] = gastos_por_categoria
-        
-        # Calcular gastos diarios
-        if 'gastos_diarios' not in data or not data['gastos_diarios']:
-            from collections import defaultdict
-            gastos_dia = defaultdict(float)
-            for g in gastos_operativos:
-                fecha = g.get('fecha', '')
-                if fecha:
-                    gastos_dia[fecha] += float(g.get('monto', 0) or 0)
-            
-            data['gastos_labels'] = sorted(gastos_dia.keys())
-            data['gastos_diarios'] = [gastos_dia[f] for f in data['gastos_labels']]
-        
-        # Calcular ganancia_real
-        if 'ganancia_real' not in data or data['ganancia_real'] == 0:
-            total_facturado = data.get('total_facturado', 0)
-            total_repuestos = data.get('total_repuestos', 0)
-            total_mano_obra = data.get('total_mano_obra', 0)
-            total_gastos = data.get('total_gastos', 0)
-            data['ganancia_real'] = total_facturado - total_repuestos - total_mano_obra - total_gastos
-    
-    # ✅ Calcular total_directa y total_trabajo desde los registros
-    # (Si el backend no los envía, el frontend puede calcularlos)
-    
+    # Actualizar con los datos del backend
     for key, value in default_data.items():
-        if key not in data:
+        if key not in data or data[key] is None:
             data[key] = value
+    
+    # Asegurar que los gastos estén en data
+    data['gastos_operativos'] = gastos_operativos
+    data['total_gastos'] = total_gastos
+    data['ganancia_real'] = ganancia_real
+    data['total_directa'] = total_directa
+    data['total_trabajo'] = total_trabajo
+    data['gastos_por_categoria'] = gastos_por_categoria
+    data['gastos_diarios'] = gastos_diarios
+    data['gastos_labels'] = gastos_labels
+    
+    # Log para depuración
+    logger.info(f"📊 Dashboard - Gastos: {len(gastos_operativos)}, Total: ${total_gastos}")
+    logger.info(f"📊 Dashboard - Ganancia Real: ${ganancia_real}")
+    logger.info(f"📊 Dashboard - Directa: ${total_directa}, Trabajo: ${total_trabajo}")
     
     return render_template("dashboard_v2.html", **data)
 
