@@ -585,38 +585,6 @@ def get_repuestos_lista():
         return jsonify([])
 # Backend/routes/catalogo_routes.py
 
-@pago_bp.route('/subcategorias_repuestos', methods=['GET'])
-def get_subcategorias_repuestos():
-    """Obtiene todas las subcategorías para el select"""
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        
-        cur.execute("""
-            SELECT 
-                sc.id,
-                sc.nombre,
-                c.nombre as categoria_nombre
-            FROM subcategorias_repuestos sc
-            JOIN categorias_repuestos c ON c.id = sc.categoria_id
-            ORDER BY c.nombre, sc.nombre
-        """)
-        
-        subcategorias = []
-        for row in cur.fetchall():
-            subcategorias.append({
-                'id': row[0],
-                'nombre': row[1],
-                'categoria_nombre': row[2]
-            })
-        
-        cur.close()
-        conn.close()
-        return jsonify(subcategorias)
-    except Exception as e:
-        logger.error(f"Error en get_subcategorias_repuestos: {e}")
-        return jsonify([])
-
 # ============================
 # 11. FLOTAS PENDIENTES AGRUPADAS
 # ============================
@@ -983,7 +951,40 @@ def actualizar_repuestos_venta(id_reg, data):
     except Exception as e:
         logger.error(f"Error actualizar repuestos venta: {e}")
         return False
-
+# ============================
+# OBTENER SUBCATEGORÍAS PARA SELECT
+# ============================
+@pago_bp.route('/subcategorias_repuestos', methods=['GET'])
+def get_subcategorias_repuestos():
+    """Obtiene todas las subcategorías para el select de edición"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT 
+                sc.id,
+                sc.nombre,
+                c.nombre as categoria_nombre
+            FROM subcategorias_repuestos sc
+            JOIN categorias_repuestos c ON c.id = sc.categoria_id
+            ORDER BY c.nombre, sc.nombre
+        """)
+        
+        subcategorias = []
+        for row in cur.fetchall():
+            subcategorias.append({
+                'id': row[0],
+                'nombre': row[1],
+                'categoria_nombre': row[2]
+            })
+        
+        cur.close()
+        conn.close()
+        return jsonify(subcategorias)
+    except Exception as e:
+        logger.error(f"Error en get_subcategorias_repuestos: {e}")
+        return jsonify([])
 # 5. obtener_dashboard_data() - Para el dashboard
 @staticmethod
 def obtener_dashboard_data(fecha_desde):
@@ -1617,7 +1618,7 @@ def crear_repuesto():
         logger.error(f"Error en crear_repuesto: {e}")
         return jsonify({"error": str(e)}), 500
 # ============================
-# ACTUALIZAR REPUESTO
+# ACTUALIZAR REPUESTO (CORREGIDO CON SUBCATEGORÍA)
 # ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
@@ -1631,6 +1632,13 @@ def actualizar_repuesto(id_repuesto):
         costo_venta_final = sanitizar_numero(data.get('costo_venta_final', 0), min_val=0)
         stock = int(sanitizar_numero(data.get('stock', 0), min_val=0))
         categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
+        
+        # ✅ OBTENER SUBCATEGORÍA_ID
+        subcategoria_id = data.get('subcategoria_id')
+        if subcategoria_id:
+            subcategoria_id = int(subcategoria_id)
+        else:
+            subcategoria_id = None
         
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
@@ -1647,6 +1655,7 @@ def actualizar_repuesto(id_repuesto):
         conn = get_connection()
         cur = conn.cursor()
         
+        # ✅ INCLUIR subcategoria_id EN EL UPDATE
         cur.execute("""
             UPDATE repuestos 
             SET nombre = %s, 
@@ -1656,13 +1665,15 @@ def actualizar_repuesto(id_repuesto):
                 costo_venta_final = %s,
                 stock = %s,
                 categoria_nombre = %s,
+                subcategoria_id = %s,
                 costo_proveedor_pendiente = %s,
                 updated_at = NOW() AT TIME ZONE 'America/Santiago'
             WHERE id = %s
             RETURNING id
         """, (
             nombre, costo_proveedor, margen_ganancia, proveedor, 
-            costo_venta_final, stock, categoria_nombre, costo_proveedor_pendiente, id_repuesto
+            costo_venta_final, stock, categoria_nombre, subcategoria_id,
+            costo_proveedor_pendiente, id_repuesto
         ))
         
         if cur.fetchone() is None:
