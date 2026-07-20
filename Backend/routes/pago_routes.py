@@ -1620,6 +1620,9 @@ def crear_repuesto():
 # ============================
 # ACTUALIZAR REPUESTO (CORREGIDO CON SUBCATEGORÍA)
 # ============================
+# ============================
+# ACTUALIZAR REPUESTO (CORREGIDO CON SUBCATEGORÍA)
+# ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
     """Actualiza un repuesto existente"""
@@ -1633,7 +1636,7 @@ def actualizar_repuesto(id_repuesto):
         stock = int(sanitizar_numero(data.get('stock', 0), min_val=0))
         categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
         
-        # ✅ OBTENER SUBCATEGORÍA_ID
+        # ✅ OBTENER SUBCATEGORÍA_ID (ENVIADO DESDE EL FRONTEND)
         subcategoria_id = data.get('subcategoria_id')
         if subcategoria_id:
             subcategoria_id = int(subcategoria_id)
