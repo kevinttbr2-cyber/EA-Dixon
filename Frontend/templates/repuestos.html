@@ -176,6 +176,67 @@
         background: var(--accent-green-subtle);
         color: var(--accent-green);
     }
+
+    /* ============================================
+       ESTILOS PARA PRECIO Y MARGEN EN EDICIÓN
+       ============================================ */
+    .campo-precio-margen {
+        background: rgba(79,195,247,0.04);
+        border-radius: 8px;
+        padding: 12px;
+        margin: 10px 0;
+        border: 1px solid rgba(79,195,247,0.10);
+    }
+    .campo-precio-margen .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .campo-precio-margen .label-precio {
+        color: #00ff66;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .campo-precio-margen .label-margen {
+        color: #4fc3f7;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .campo-precio-margen .input-precio {
+        border-color: rgba(0,255,102,0.30) !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+    }
+    .campo-precio-margen .input-margen {
+        border-color: rgba(79,195,247,0.30) !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+    }
+    .campo-precio-margen .resumen-calculo {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        font-size: 12px;
+        color: #888;
+    }
+    .campo-precio-margen .btn-calcular-auto {
+        background: rgba(0,255,102,0.08);
+        color: #00ff66;
+        border: 1px solid rgba(0,255,102,0.15);
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-size: 11px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 6px;
+        transition: var(--transition);
+    }
+    .campo-precio-margen .btn-calcular-auto:hover {
+        background: rgba(0,255,102,0.15);
+    }
 </style>
 
 <div class="base-container">
@@ -655,13 +716,11 @@
         <form id="formEditarRepuesto">
             <input type="hidden" name="id" id="editRepuestoId">
             
-            <!-- Nombre -->
             <div class="mb-3">
                 <label style="color:#90e0a0;font-size:13px;">Nombre del repuesto *</label>
                 <input type="text" name="nombre" id="editNombreRepuesto" class="form-control" required>
             </div>
             
-            <!-- Stock + Proveedor -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div class="mb-3">
                     <label style="color:#90e0a0;font-size:13px;">📦 Stock</label>
@@ -673,7 +732,6 @@
                 </div>
             </div>
             
-            <!-- Costo Proveedor + Categoría -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div class="mb-3">
                     <label style="color:#90e0a0;font-size:13px;">💰 Costo Proveedor ($)</label>
@@ -698,50 +756,29 @@
             <!-- ============================================
                  PRECIO VENTA + MARGEN (CÁLCULO AUTOMÁTICO)
                  ============================================ -->
-            <div style="background:rgba(79,195,247,0.04);border-radius:8px;padding:12px;margin:10px 0;border:1px solid rgba(79,195,247,0.10);">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <!-- Precio Venta Final -->
+            <div class="campo-precio-margen">
+                <div class="grid-2">
                     <div class="mb-3" style="margin-bottom:0;">
-                        <label style="color:#00ff66;font-size:13px;font-weight:600;">💰 Precio Venta Final ($)</label>
-                        <input type="number" name="costo_venta_final" id="editPrecioVenta" class="form-control" 
-                               step="0.01" style="border-color:rgba(0,255,102,0.30) !important; font-size:16px; font-weight:700;">
+                        <label class="label-precio">💰 Precio Venta Final ($)</label>
+                        <input type="number" name="costo_venta_final" id="editPrecioVenta" class="form-control input-precio" step="0.01">
                         <small style="color:#666;font-size:10px;">✏️ Edita el precio final</small>
                     </div>
                     
-                    <!-- Margen de Ganancia -->
                     <div class="mb-3" style="margin-bottom:0;">
-                        <label style="color:#4fc3f7;font-size:13px;font-weight:600;">📈 Margen de Ganancia (%)</label>
-                        <input type="number" name="margen_ganancia" id="editMargenGanancia" class="form-control" 
-                               step="0.1" style="border-color:rgba(79,195,247,0.30) !important; font-size:16px; font-weight:700;">
+                        <label class="label-margen">📈 Margen de Ganancia (%)</label>
+                        <input type="number" name="margen_ganancia" id="editMargenGanancia" class="form-control input-margen" step="0.1">
                         <small style="color:#666;font-size:10px;">✏️ Edita el margen</small>
                     </div>
                 </div>
                 
-                <!-- Resumen del cálculo -->
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);">
-                    <span style="color:#888;font-size:12px;">
-                        <span id="editGananciaLabel">💰 Ganancia: $0</span>
-                    </span>
-                    <span style="color:#888;font-size:12px;">
-                        <span id="editMargenCalculadoLabel">📊 Margen calculado: 0%</span>
-                    </span>
+                <div class="resumen-calculo">
+                    <span id="editGananciaLabel">💰 Ganancia: $0</span>
+                    <span id="editMargenCalculadoLabel">📊 Margen calculado: 0%</span>
                 </div>
                 
-                <!-- Botón para calcular automáticamente desde costo -->
-                <div style="margin-top:8px;">
-                    <button type="button" onclick="calcularPrecioDesdeCosto()" style="
-                        background:rgba(0,255,102,0.08);
-                        color:#00ff66;
-                        border:1px solid rgba(0,255,102,0.15);
-                        border-radius:6px;
-                        padding:4px 12px;
-                        font-size:11px;
-                        cursor:pointer;
-                        width:100%;
-                    ">
-                        🔄 Calcular precio desde costo (30% de margen)
-                    </button>
-                </div>
+                <button type="button" onclick="calcularPrecioDesdeCosto()" class="btn-calcular-auto">
+                    🔄 Calcular precio desde costo (30% de margen)
+                </button>
             </div>
 
             <button type="submit" class="btn btn-primary w-100" style="background:#4fc3f7 !important;color:#000 !important;font-weight:700;border-radius:10px;padding:12px;border:none;">
@@ -1443,567 +1480,9 @@ function cerrarModalEditar() {
     
     const form = document.getElementById('formEditarRepuesto');
     if (form) form.reset();
-    
-    const previewCosto = document.getElementById('editPreviewCostoVenta');
-    if (previewCosto) previewCosto.textContent = '$0';
-    
-    const previewMargen = document.getElementById('editPreviewMargen');
-    if (previewMargen) previewMargen.textContent = '0%';
 }
 
 // ============================================
-// FUNCIONES DE IMPORTACIÓN - CORREGIDAS CON VERIFICACIONES
-// ============================================
-
-function abrirModalImportarProductos() {
-    console.log('📂 Abriendo modal importar');
-    
-    const modal = document.getElementById('modalImportarProductos');
-    if (!modal) {
-        console.error('❌ Modal no encontrado');
-        return;
-    }
-    modal.classList.add('active');
-    
-    const preview = document.getElementById('previewProductos');
-    if (preview) preview.style.display = 'none';
-    
-    const btnImportar = document.getElementById('btnImportarProductos');
-    if (btnImportar) btnImportar.style.display = 'none';
-    
-    const resultado = document.getElementById('resultadoImportacion');
-    if (resultado) resultado.style.display = 'none';
-    
-    const fileInput = document.getElementById('fileInputProductos');
-    if (fileInput) fileInput.value = '';
-    
-    datosProductos = [];
-}
-
-function cerrarModalImportarProductos() {
-    console.log('📂 Cerrando modal importar');
-    const modal = document.getElementById('modalImportarProductos');
-    if (modal) {
-        modal.classList.remove('active');
-    }
-}
-
-// ============================================
-// FUNCIONES DE IMPORTACIÓN
-// ============================================
-
-function handleDropProductos(e) {
-    e.preventDefault();
-    const dropZone = document.getElementById('dropZoneProductos');
-    if (dropZone) dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
-    
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        procesarArchivoProductos(files[0]);
-    }
-}
-
-function handleDragOverProductos(e) {
-    e.preventDefault();
-    const dropZone = document.getElementById('dropZoneProductos');
-    if (dropZone) dropZone.style.borderColor = '#4fc3f7';
-}
-
-function handleDragLeaveProductos(e) {
-    e.preventDefault();
-    const dropZone = document.getElementById('dropZoneProductos');
-    if (dropZone) dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
-}
-
-function handleFileSelectProductos(e) {
-    const file = e.target.files[0];
-    if (file) {
-        procesarArchivoProductos(file);
-    }
-}
-function procesarArchivoProductos(file) {
-    console.log('📂 1. Iniciando procesamiento del archivo:', file.name);
-    
-    const validTypes = [
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-excel',
-        'text/csv'
-    ];
-    
-    if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/)) {
-        alert('⚠️ Formato no válido. Por favor, sube un archivo .xlsx, .xls o .csv');
-        const fileInput = document.getElementById('fileInputProductos');
-        if (fileInput) fileInput.value = '';
-        return;
-    }
-    
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        try {
-            console.log('📂 2. Archivo leído correctamente');
-            
-            if (typeof XLSX === 'undefined') {
-                console.error('❌ XLSX no está definido');
-                alert('❌ Error: La librería XLSX no está cargada.');
-                return;
-            }
-            
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            
-            if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-                alert('⚠️ El archivo no contiene hojas');
-                return;
-            }
-            
-            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-            
-            console.log('📂 3. Filas encontradas:', jsonData.length);
-            
-            if (jsonData.length === 0) {
-                alert('⚠️ El archivo está vacío');
-                return;
-            }
-            
-            const columnas = Object.keys(jsonData[0]);
-            console.log('📂 4. Columnas encontradas:', columnas);
-            
-            // ================================================================
-            // ✅ BUSCAR COLUMNA DE CATEGORÍA CON MÁS FLEXIBILIDAD
-            // ================================================================
-            const colProducto = columnas.find(col => 
-                col.toLowerCase().trim() === 'producto' || 
-                col.toLowerCase().trim() === 'productos' ||
-                col.toLowerCase().trim() === 'nombre'
-            );
-            
-            const colCosto = columnas.find(col => 
-                col.toLowerCase().trim() === 'costo proveedor' || 
-                col.toLowerCase().trim() === 'costo_proveedor' ||
-                col.toLowerCase().trim() === 'costo'
-            );
-            
-            const colPrecio = columnas.find(col => 
-                col.toLowerCase().trim() === 'precio venta' || 
-                col.toLowerCase().trim() === 'precio_venta' ||
-                col.toLowerCase().trim() === 'precio'
-            );
-            
-            const colProveedor = columnas.find(col => 
-                col.toLowerCase().trim() === 'proveedor'
-            );
-            
-            // ✅ BUSCAR CATEGORÍA (más flexible)
-            const colCategoria = columnas.find(col => {
-                const lower = col.toLowerCase().trim();
-                return lower === 'categoría' || 
-                       lower === 'categoria' || 
-                       lower === 'categorias' ||
-                       lower === 'categoria_nombre' ||
-                       lower === 'categoria nombre' ||
-                       lower === 'cat' ||
-                       lower === 'categoria';
-            });
-            
-            // ✅ BUSCAR SUBCATEGORÍA (más flexible)
-            const colSubcategoria = columnas.find(col => {
-                const lower = col.toLowerCase().trim();
-                return lower === 'subcategoría' || 
-                       lower === 'subcategoria' || 
-                       lower === 'subcategorias' ||
-                       lower === 'subcategoria_nombre' ||
-                       lower === 'subcategoria nombre' ||
-                       lower === 'subcat' ||
-                       lower === 'subcategoria';
-            });
-            
-            const colStock = columnas.find(col => 
-                col.toLowerCase().trim() === 'stock'
-            );
-            
-            console.log('📂 5. Columnas mapeadas:');
-            console.log('   - Producto:', colProducto);
-            console.log('   - Costo:', colCosto);
-            console.log('   - Precio:', colPrecio);
-            console.log('   - Proveedor:', colProveedor);
-            console.log('   - ✅ Categoría ENCONTRADA:', colCategoria);
-            console.log('   - Subcategoría:', colSubcategoria);
-            console.log('   - Stock:', colStock);
-            
-            // ⚠️ ALERTA si no encuentra categoría
-            if (!colCategoria) {
-                console.warn('⚠️ No se encontró columna de categoría. Columnas disponibles:', columnas);
-                alert('⚠️ No se encontró la columna "Categoría".\n\nColumnas disponibles en tu Excel:\n' + columnas.join(', '));
-            }
-            
-            if (!colProducto) {
-                alert('⚠️ No se encontró la columna "Producto".\n\nColumnas: ' + columnas.join(', '));
-                return;
-            }
-            if (!colCosto) {
-                alert('⚠️ No se encontró la columna "Costo Proveedor".\n\nColumnas: ' + columnas.join(', '));
-                return;
-            }
-            if (!colPrecio) {
-                alert('⚠️ No se encontró la columna "Precio Venta".\n\nColumnas: ' + columnas.join(', '));
-                return;
-            }
-            
-            // ================================================================
-            // ✅ PROCESAR DATOS CON CATEGORÍA
-            // ================================================================
-            datosProductos = jsonData.map(row => {
-                const nombre = String(row[colProducto] || '').trim();
-                const costo = parseFloat(row[colCosto] || 0);
-                const precioVenta = parseFloat(row[colPrecio] || 0);
-                const proveedor = colProveedor ? String(row[colProveedor] || 'Importado').trim() : 'Importado';
-                
-                // ✅ LEER CATEGORÍA (con verificación)
-                let categoria = '';
-                if (colCategoria) {
-                    categoria = String(row[colCategoria] || '').trim();
-                }
-                
-                // ✅ LEER SUBCATEGORÍA
-                let subcategoria = '';
-                if (colSubcategoria) {
-                    subcategoria = String(row[colSubcategoria] || '').trim();
-                }
-                
-                const stock = colStock ? parseInt(row[colStock] || 1) : 1;
-                
-                let margenFinal = 0;
-                if (costo > 0 && precioVenta > 0) {
-                    const iva = 1.19;
-                    const costoConIva = costo * iva;
-                    margenFinal = ((precioVenta / costoConIva) - 1) * 100;
-                    margenFinal = Math.round(margenFinal * 10) / 10;
-                }
-                
-                // ✅ LOG PARA VERIFICAR QUE LA CATEGORÍA SE LEE
-                if (categoria) {
-                    console.log(`   ✅ "${nombre}" -> Categoría: "${categoria}"`);
-                } else {
-                    console.log(`   ⚠️ "${nombre}" -> SIN CATEGORÍA`);
-                }
-                
-                return { 
-                    nombre: nombre, 
-                    costo: costo,
-                    precio_venta: precioVenta,
-                    margen: margenFinal,
-                    proveedor: proveedor,
-                    categoria: categoria,      // ✅ Enviar categoría (puede estar vacía)
-                    subcategoria: subcategoria, // ✅ Enviar subcategoría
-                    stock: stock
-                };
-            }).filter(item => item.nombre && item.costo > 0 && item.precio_venta > 0);
-            
-            console.log('📂 6. Productos procesados:', datosProductos.length);
-            
-            // ✅ CONTAR PRODUCTOS CON CATEGORÍA
-            const conCategoria = datosProductos.filter(p => p.categoria && p.categoria.length > 0).length;
-            console.log(`📂 7. Productos con categoría: ${conCategoria} de ${datosProductos.length}`);
-            
-            if (conCategoria === 0) {
-                console.warn('⚠️ NINGÚN producto tiene categoría. Verifica que la columna "Categoría" exista en tu Excel.');
-                alert('⚠️ No se encontraron categorías en tu archivo.\n\nAsegúrate de que la columna se llame "Categoría" (con tilde o sin tilde).\n\nColumnas encontradas: ' + columnas.join(', '));
-            }
-            
-            if (datosProductos.length === 0) {
-                alert('⚠️ No hay datos válidos para importar.');
-                return;
-            }
-            
-            mostrarPreviewProductos(datosProductos);
-            
-        } catch (error) {
-            console.error('❌ Error:', error);
-            alert('❌ Error al leer el archivo: ' + error.message);
-            const fileInput = document.getElementById('fileInputProductos');
-            if (fileInput) fileInput.value = '';
-        }
-    };
-    
-    reader.onerror = function() {
-        alert('❌ Error al leer el archivo');
-        const fileInput = document.getElementById('fileInputProductos');
-        if (fileInput) fileInput.value = '';
-    };
-    
-    reader.readAsArrayBuffer(file);
-}
-
-
-function mostrarPreviewProductos(datos) {
-    console.log('📊 Mostrando preview, datos:', datos.length);
-    
-    const previewBody = document.getElementById('previewBodyProductos');
-    const previewContainer = document.getElementById('previewProductos');
-    const btnImportar = document.getElementById('btnImportarProductos');
-    const contador = document.getElementById('contadorProductos');
-    
-    if (!previewBody) {
-        console.error('❌ No se encontró previewBodyProductos');
-        return;
-    }
-    
-    previewBody.innerHTML = '';
-    const mostrar = datos.slice(0, 10);
-    
-    // Contar categorías
-    const categorias = {};
-    datos.forEach(item => {
-        if (item.categoria) {
-            categorias[item.categoria] = (categorias[item.categoria] || 0) + 1;
-        }
-    });
-    console.log('📊 Resumen de categorías:', categorias);
-    
-    mostrar.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
-        tr.innerHTML = `
-            <td style="padding:4px 6px;color:#666;">${index + 1}</td>
-            <td style="padding:4px 6px;color:#fff;">${item.nombre}</td>
-            <td style="padding:4px 6px;color:#ffcc00;">$${item.costo.toLocaleString('es-CL')}</td>
-            <td style="padding:4px 6px;color:#00ff66;">$${item.precio_venta.toLocaleString('es-CL')}</td>
-            <td style="padding:4px 6px;color:#4fc3f7;">${item.margen}%</td>
-            <td style="padding:4px 6px;color:#f1c40f;font-weight:bold;">${item.categoria || '⚠️ Sin categoría'}</td>
-            <td style="padding:4px 6px;color:#9b59b6;">${item.subcategoria || '-'}</td>
-            <td style="padding:4px 6px;color:#ff6b6b;font-weight:600;text-align:center;">${item.stock || 0}</td>
-        `;
-        previewBody.appendChild(tr);
-    });
-    
-    if (datos.length > 10) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="8" style="padding:6px;text-align:center;color:#666;">... y ${datos.length - 10} más</td>`;
-        previewBody.appendChild(tr);
-    }
-    
-    const resumenCategorias = Object.entries(categorias)
-        .map(([cat, count]) => `${cat} (${count})`)
-        .join(', ');
-    
-    if (contador) {
-        contador.textContent = `${datos.length} registros | 📂 ${Object.keys(categorias).length} categorías: ${resumenCategorias}`;
-    }
-    
-    if (previewContainer) previewContainer.style.display = 'block';
-    if (btnImportar) {
-        btnImportar.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datos.length} productos`;
-        btnImportar.style.display = 'block';
-    }
-    
-    console.log('📊 Preview mostrado correctamente ✅');
-}
-
-// ============================================
-// IMPORTAR PRODUCTOS - CORREGIDO CON CATEGORÍAS
-// ============================================
-async function importarProductos() {
-    console.log('🚀 Iniciando importación...');
-    console.log('📦 Datos a importar:', datosProductos.length);
-    
-    if (datosProductos.length === 0) {
-        alert('⚠️ No hay datos para importar');
-        return;
-    }
-    
-    // ✅ VERIFICAR QUE LOS PRODUCTOS TENGAN CATEGORÍA
-    const conCategoria = datosProductos.filter(p => p.categoria && p.categoria.length > 0).length;
-    console.log(`📊 Productos con categoría: ${conCategoria} de ${datosProductos.length}`);
-    
-    if (conCategoria === 0) {
-        alert('⚠️ Ningún producto tiene categoría.\n\nAsegúrate de que tu Excel tenga la columna "Categoría" con datos.');
-        return;
-    }
-    
-    // Mostrar ejemplo de los datos
-    console.log('📦 Primeros productos con categorías:');
-    datosProductos.slice(0, 5).forEach((p, i) => {
-        console.log(`   ${i+1}. ${p.nombre} -> Categoría: "${p.categoria}" | Subcategoría: "${p.subcategoria}"`);
-    });
-    
-    if (!confirm(`📊 ¿Importar ${datosProductos.length} productos?\n\n✅ ${conCategoria} con categoría\n⚠️ ${datosProductos.length - conCategoria} sin categoría`)) {
-        return;
-    }
-    
-    const btn = document.getElementById('btnImportarProductos');
-    if (!btn) {
-        console.error('❌ Botón importar no encontrado');
-        return;
-    }
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
-    
-    try {
-        const url = `${API_URL}/api/repuestos/importar`;
-        console.log('🌐 URL:', url);
-        
-        // ✅ CONSTRUIR PAYLOAD CON CATEGORÍAS
-        const payload = {
-            productos: datosProductos.map(p => ({
-                nombre: p.nombre,
-                costo: p.costo,
-                precio_venta: p.precio_venta,
-                proveedor: p.proveedor || 'Importado',
-                categoria: p.categoria || '',      // ✅ Enviar categoría
-                subcategoria: p.subcategoria || '', // ✅ Enviar subcategoría
-                stock: p.stock || 1
-            }))
-        };
-        
-        console.log('📦 Payload a enviar (primeros 3):', JSON.stringify(payload.productos.slice(0, 3), null, 2));
-        
-        const resp = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        
-        console.log('📡 Status:', resp.status);
-        
-        if (!resp.ok) {
-            const errorText = await resp.text();
-            console.error('❌ Error response:', errorText);
-            throw new Error(`Error ${resp.status}: ${errorText}`);
-        }
-        
-        const result = await resp.json();
-        console.log('📡 Respuesta:', result);
-        
-        if (result.success) {
-            let mensaje = `✅ Importación completada!\n\n`;
-            mensaje += `📊 ${result.importados || 0} importados correctamente`;
-            
-            if (result.actualizados && result.actualizados > 0) {
-                mensaje += `\n📝 ${result.actualizados} actualizados (stock sumado)`;
-            }
-            
-            if (result.errores && result.errores.length > 0) {
-                mensaje += `\n\n⚠️ ${result.errores.length} errores:`;
-                result.errores.slice(0, 5).forEach(err => {
-                    mensaje += `\n   - ${err.nombre}: ${err.error}`;
-                });
-                if (result.errores.length > 5) {
-                    mensaje += `\n   ... y ${result.errores.length - 5} más`;
-                }
-                console.log('Errores detallados:', result.errores);
-            }
-            
-            alert(mensaje);
-            cerrarModalImportarProductos();
-            
-            if (result.importados > 0 || result.actualizados > 0) {
-                setTimeout(() => location.reload(), 2000);
-            }
-        } else {
-            alert('❌ Error: ' + (result.error || 'Desconocido'));
-        }
-    } catch (error) {
-        console.error('❌ Error:', error);
-        alert('❌ Error de conexión: ' + error.message);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datosProductos.length} productos`;
-    }
-}
-
-// ============================================
-// DOMContentLoaded
-// ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ DOM cargado correctamente');
-    
-    // Buscador
-    const buscador = document.getElementById('buscadorRepuestos');
-    const btnBuscar = document.getElementById('btnBuscarRepuesto');
-    const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
-    const filas = document.querySelectorAll('.fila-repuesto-lista');
-
-    function filtrarTabla() {
-        const texto = buscador?.value.toLowerCase().trim() || '';
-        filas.forEach(fila => {
-            const nombre = fila.querySelector('td:nth-child(2)')?.textContent || '';
-            fila.style.display = nombre.toLowerCase().includes(texto) ? '' : 'none';
-        });
-    }
-
-    if (btnBuscar) btnBuscar.addEventListener('click', filtrarTabla);
-    if (buscador) {
-        buscador.addEventListener('keyup', function(e) {
-            if (e.key === 'Enter') filtrarTabla();
-            filtrarTabla();
-        });
-    }
-    if (btnLimpiar) {
-        btnLimpiar.addEventListener('click', function() {
-            if (buscador) buscador.value = '';
-            filtrarTabla();
-        });
-    }
-
-    // Ordenar tabla
-    window.ordenarTabla = function(columna) {
-        const tbody = document.querySelector('#tablaRepuestos tbody');
-        if (!tbody) return;
-        
-        const filasArray = Array.from(tbody.querySelectorAll('.fila-repuesto-lista'));
-        filasArray.sort((a, b) => {
-            let valA, valB;
-            const celdasA = a.querySelectorAll('td');
-            const celdasB = b.querySelectorAll('td');
-            valA = celdasA[columna]?.textContent.trim() || '';
-            valB = celdasB[columna]?.textContent.trim() || '';
-            if (columna === 2 || columna === 3 || columna === 5) {
-                valA = parseFloat(valA.replace(/[$,⚠️]/g, '')) || 0;
-                valB = parseFloat(valB.replace(/[$,⚠️]/g, '')) || 0;
-            }
-            if (columna === 4) {
-                valA = parseFloat(valA) || 0;
-                valB = parseFloat(valB) || 0;
-            }
-            if (columna === 0) {
-                valA = parseInt(valA) || 0;
-                valB = parseInt(valB) || 0;
-            }
-            if (valA < valB) return -1;
-            if (valA > valB) return 1;
-            return 0;
-        });
-        filasArray.forEach(fila => tbody.appendChild(fila));
-    };
-
-    // Calcular precio venta en agregar
-    function calcularCostoVenta() {
-        const inputCosto = document.getElementById('inputCostoProveedor');
-        const inputMargen = document.getElementById('inputMargenGanancia');
-        const previewCosto = document.getElementById('previewCostoVenta');
-        const previewMargen = document.getElementById('previewMargen');
-        
-        if (!inputCosto || !inputMargen) return;
-        
-        const costoProveedor = parseFloat(inputCosto.value) || 0;
-        const margen = parseFloat(inputMargen.value) || 0;
-        const iva = 1.19;
-        const costoConIva = costoProveedor * iva;
-        const costoFinal = costoConIva * (1 + (margen / 100));
-        
-        if (previewCosto) previewCosto.textContent = '$' + Math.floor(costoFinal).toLocaleString();
-        if (previewMargen) previewMargen.textContent = margen + '%';
-    }
-
-    const inputCosto = document.getElementById('inputCostoProveedor');
-    const inputMargen = document.getElementById('inputMargenGanancia');
-    if (inputCosto) inputCosto.addEventListener('input', calcularCostoVenta);
-    if (inputMargen) inputMargen.addEventListener('input', calcularCostoVenta);
-
-    // ============================================
 // CÁLCULO AUTOMÁTICO EN EDICIÓN (PRECIO Y MARGEN)
 // ============================================
 
@@ -2104,11 +1583,14 @@ function calcularPrecioDesdeCosto() {
 }
 
 // ============================================
-// EVENTOS PARA CÁLCULO AUTOMÁTICO
+// DOMContentLoaded
 // ============================================
-
-// Cuando se edita el precio, recalcular margen
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM cargado correctamente');
+    
+    // ============================================
+    // EVENTOS PARA CÁLCULO AUTOMÁTICO EN EDICIÓN
+    // ============================================
     const precioInput = document.getElementById('editPrecioVenta');
     const margenInput = document.getElementById('editMargenGanancia');
     const costoInput = document.getElementById('editCostoProveedor');
@@ -2127,161 +1609,83 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (costoInput) {
         costoInput.addEventListener('input', function() {
-            // Si hay precio y costo, recalcular
             const precio = parseFloat(document.getElementById('editPrecioVenta')?.value) || 0;
             if (precio > 0) {
                 calcularMargenDesdePrecio();
             }
         });
     }
-});
-// Editar botones - ACTUALIZADO CON CÁLCULO AUTOMÁTICO
-document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
-    btn.addEventListener('click', async function() {
-        const id = this.dataset.id;
-        const fila = this.closest('.fila-repuesto-lista');
-        if (!fila) return;
-        
-        const nombre = fila.querySelector('td:nth-child(2)')?.textContent.trim() || '';
-        const stockText = fila.querySelector('td:nth-child(3)')?.textContent.trim() || '0';
-        const stock = parseInt(stockText) || 0;
-        const costoText = fila.querySelector('td:nth-child(4)')?.textContent.replace(/[$,⚠️]/g, '').trim() || '0';
-        const costo = parseFloat(costoText) || 0;
-        const margenText = fila.querySelector('td:nth-child(5)')?.textContent.replace('%', '').trim() || '0';
-        const margen = parseFloat(margenText) || 0;
-        const proveedor = fila.querySelector('td:nth-child(7)')?.textContent.trim() || '';
-        const categoriaText = fila.querySelector('td:nth-child(8)')?.textContent.trim() || '';
-        const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
-        const precioVenta = parseFloat(precioText) || 0;
-        
-        const editId = document.getElementById('editRepuestoId');
-        const editNombre = document.getElementById('editNombreRepuesto');
-        const editCosto = document.getElementById('editCostoProveedor');
-        const editMargen = document.getElementById('editMargenGanancia');
-        const editProveedor = document.getElementById('editProveedorRepuesto');
-        const editStock = document.getElementById('editStockRepuesto');
-        const editPrecio = document.getElementById('editPrecioVenta');
-        const editGananciaLabel = document.getElementById('editGananciaLabel');
-        const editMargenLabel = document.getElementById('editMargenCalculadoLabel');
-        
-        if (editId) editId.value = id;
-        if (editNombre) editNombre.value = nombre;
-        if (editCosto) editCosto.value = costo;
-        if (editMargen) editMargen.value = margen;
-        if (editProveedor) editProveedor.value = proveedor === '-' ? '' : proveedor;
-        if (editStock) editStock.value = stock;
-        if (editPrecio) editPrecio.value = precioVenta;
-        
-        // Calcular ganancia
-        const ganancia = precioVenta - costo;
-        if (editGananciaLabel) {
-            editGananciaLabel.textContent = `💰 Ganancia: $${ganancia.toLocaleString('es-CL')}`;
-        }
-        if (editMargenLabel) {
-            editMargenLabel.textContent = `📊 Margen calculado: ${margen}%`;
-        }
-        
-        if (!categoriasCargadas) {
-            await cargarCategoriasEnEditar();
-        }
-        
-        const select = document.getElementById('editCategoriaRepuesto');
-        if (select) {
-            let categoriaEncontrada = false;
-            for (let opt of select.options) {
-                if (opt.text === categoriaText) {
-                    opt.selected = true;
-                    categoriaEncontrada = true;
-                    break;
-                }
-            }
-            if (!categoriaEncontrada && categoriaText && categoriaText !== 'Sin categoría') {
-                for (let opt of select.options) {
-                    if (opt.label === categoriaText || opt.parentElement?.label === categoriaText) {
-                        opt.selected = true;
-                        break;
-                    }
-                }
-            }
-        }
-        
-        const modal = document.getElementById('modalEditarRepuesto');
-        if (modal) modal.classList.add('active');
-    });
-});
-// Formulario editar - ACTUALIZADO
-const formEditar = document.getElementById('formEditarRepuesto');
-if (formEditar) {
-    formEditar.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const id = document.getElementById('editRepuestoId')?.value;
-        const nombre = document.getElementById('editNombreRepuesto')?.value.trim() || '';
-        const costoProveedor = parseFloat(document.getElementById('editCostoProveedor')?.value || 0);
-        const proveedor = document.getElementById('editProveedorRepuesto')?.value.trim() || '';
-        const stock = parseInt(document.getElementById('editStockRepuesto')?.value || 0);
-        const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
-        const precioVenta = parseFloat(document.getElementById('editPrecioVenta')?.value || 0);
-        
-        if (!nombre) {
-            alert('⚠️ El nombre del repuesto es obligatorio');
-            return;
-        }
-        
-        if (precioVenta <= 0) {
-            alert('⚠️ El precio de venta debe ser mayor a 0');
-            return;
-        }
-        
-        const data = {
-            nombre: nombre,
-            costo_proveedor: costoProveedor,
-            margen_ganancia: margen,
-            proveedor: proveedor || 'Importado',
-            stock: stock,
-            costo_venta_final: precioVenta
-        };
-        
-        const categoriaId = document.getElementById('editCategoriaRepuesto')?.value;
-        if (categoriaId) {
-            data.subcategoria_id = parseInt(categoriaId);
-        }
-        
-        const btn = this.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        btn.textContent = '⏳ Guardando...';
-        
-        fetch(`${API_URL}/api/repuestos/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(r => r.json())
-        .then(resp => {
-            if (resp.success) {
-                alert('✅ Repuesto actualizado correctamente');
-                cerrarModalEditar();
-                location.reload();
-            } else {
-                alert('❌ Error: ' + (resp.error || 'Desconocido'));
-            }
-        })
-        .catch(() => alert('❌ Error de conexión'))
-        .finally(() => {
-            btn.disabled = false;
-            btn.textContent = '💾 Guardar cambios';
+    
+    // Buscador
+    const buscador = document.getElementById('buscadorRepuestos');
+    const btnBuscar = document.getElementById('btnBuscarRepuesto');
+    const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+    const filas = document.querySelectorAll('.fila-repuesto-lista');
+
+    function filtrarTabla() {
+        const texto = buscador?.value.toLowerCase().trim() || '';
+        filas.forEach(fila => {
+            const nombre = fila.querySelector('td:nth-child(2)')?.textContent || '';
+            fila.style.display = nombre.toLowerCase().includes(texto) ? '' : 'none';
         });
-    });
-}
-    // Calcular en editar
-    function calcularCostoVentaEdit() {
-        const inputCosto = document.getElementById('editCostoProveedor');
-        const previewCosto = document.getElementById('editPreviewCostoVenta');
-        const previewMargen = document.getElementById('editPreviewMargen');
+    }
+
+    if (btnBuscar) btnBuscar.addEventListener('click', filtrarTabla);
+    if (buscador) {
+        buscador.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') filtrarTabla();
+            filtrarTabla();
+        });
+    }
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', function() {
+            if (buscador) buscador.value = '';
+            filtrarTabla();
+        });
+    }
+
+    // Ordenar tabla
+    window.ordenarTabla = function(columna) {
+        const tbody = document.querySelector('#tablaRepuestos tbody');
+        if (!tbody) return;
         
-        if (!inputCosto) return;
+        const filasArray = Array.from(tbody.querySelectorAll('.fila-repuesto-lista'));
+        filasArray.sort((a, b) => {
+            let valA, valB;
+            const celdasA = a.querySelectorAll('td');
+            const celdasB = b.querySelectorAll('td');
+            valA = celdasA[columna]?.textContent.trim() || '';
+            valB = celdasB[columna]?.textContent.trim() || '';
+            if (columna === 2 || columna === 3 || columna === 5) {
+                valA = parseFloat(valA.replace(/[$,⚠️]/g, '')) || 0;
+                valB = parseFloat(valB.replace(/[$,⚠️]/g, '')) || 0;
+            }
+            if (columna === 4) {
+                valA = parseFloat(valA) || 0;
+                valB = parseFloat(valB) || 0;
+            }
+            if (columna === 0) {
+                valA = parseInt(valA) || 0;
+                valB = parseInt(valB) || 0;
+            }
+            if (valA < valB) return -1;
+            if (valA > valB) return 1;
+            return 0;
+        });
+        filasArray.forEach(fila => tbody.appendChild(fila));
+    };
+
+    // Calcular precio venta en agregar
+    function calcularCostoVenta() {
+        const inputCosto = document.getElementById('inputCostoProveedor');
+        const inputMargen = document.getElementById('inputMargenGanancia');
+        const previewCosto = document.getElementById('previewCostoVenta');
+        const previewMargen = document.getElementById('previewMargen');
+        
+        if (!inputCosto || !inputMargen) return;
         
         const costoProveedor = parseFloat(inputCosto.value) || 0;
-        const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
+        const margen = parseFloat(inputMargen.value) || 0;
         const iva = 1.19;
         const costoConIva = costoProveedor * iva;
         const costoFinal = costoConIva * (1 + (margen / 100));
@@ -2290,8 +1694,15 @@ if (formEditar) {
         if (previewMargen) previewMargen.textContent = margen + '%';
     }
 
-    const editCosto = document.getElementById('editCostoProveedor');
-    if (editCosto) editCosto.addEventListener('input', calcularCostoVentaEdit);
+    const inputCosto = document.getElementById('inputCostoProveedor');
+    const inputMargen = document.getElementById('inputMargenGanancia');
+    if (inputCosto) inputCosto.addEventListener('input', calcularCostoVenta);
+    if (inputMargen) inputMargen.addEventListener('input', calcularCostoVenta);
+
+    // Calcular en editar (legado, se mantiene por compatibilidad)
+    function calcularCostoVentaEdit() {
+        // Esta función ya no se usa, ahora usamos calcularMargenDesdePrecio y calcularPrecioDesdeMargen
+    }
 
     // Formulario agregar
     const formAgregar = document.getElementById('formAgregarRepuesto');
@@ -2347,7 +1758,7 @@ if (formEditar) {
         });
     }
 
-    // Formulario editar
+    // Formulario editar - ACTUALIZADO
     const formEditar = document.getElementById('formEditarRepuesto');
     if (formEditar) {
         formEditar.addEventListener('submit', function(e) {
@@ -2358,17 +1769,16 @@ if (formEditar) {
             const proveedor = document.getElementById('editProveedorRepuesto')?.value.trim() || '';
             const stock = parseInt(document.getElementById('editStockRepuesto')?.value || 0);
             const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
+            const precioVenta = parseFloat(document.getElementById('editPrecioVenta')?.value || 0);
             
             if (!nombre) {
                 alert('⚠️ El nombre del repuesto es obligatorio');
                 return;
             }
             
-            let precioVentaActual = 0;
-            const fila = document.querySelector(`.fila-repuesto-lista[data-id="${id}"]`);
-            if (fila) {
-                const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
-                precioVentaActual = parseFloat(precioText) || 0;
+            if (precioVenta <= 0) {
+                alert('⚠️ El precio de venta debe ser mayor a 0');
+                return;
             }
             
             const data = {
@@ -2377,13 +1787,17 @@ if (formEditar) {
                 margen_ganancia: margen,
                 proveedor: proveedor || 'Importado',
                 stock: stock,
-                costo_venta_final: precioVentaActual
+                costo_venta_final: precioVenta
             };
             
             const categoriaId = document.getElementById('editCategoriaRepuesto')?.value;
             if (categoriaId) {
                 data.subcategoria_id = parseInt(categoriaId);
             }
+            
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = '⏳ Guardando...';
             
             fetch(`${API_URL}/api/repuestos/${id}`, {
                 method: 'PUT',
@@ -2400,11 +1814,15 @@ if (formEditar) {
                     alert('❌ Error: ' + (resp.error || 'Desconocido'));
                 }
             })
-            .catch(() => alert('❌ Error de conexión'));
+            .catch(() => alert('❌ Error de conexión'))
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = '💾 Guardar cambios';
+            });
         });
     }
 
-    // Editar botones
+    // Editar botones - ACTUALIZADO CON CÁLCULO AUTOMÁTICO
     document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
         btn.addEventListener('click', async function() {
             const id = this.dataset.id;
@@ -2420,6 +1838,8 @@ if (formEditar) {
             const margen = parseFloat(margenText) || 0;
             const proveedor = fila.querySelector('td:nth-child(7)')?.textContent.trim() || '';
             const categoriaText = fila.querySelector('td:nth-child(8)')?.textContent.trim() || '';
+            const precioText = fila.querySelector('td:nth-child(6)')?.textContent.replace(/[$,]/g, '').trim() || '0';
+            const precioVenta = parseFloat(precioText) || 0;
             
             const editId = document.getElementById('editRepuestoId');
             const editNombre = document.getElementById('editNombreRepuesto');
@@ -2427,6 +1847,9 @@ if (formEditar) {
             const editMargen = document.getElementById('editMargenGanancia');
             const editProveedor = document.getElementById('editProveedorRepuesto');
             const editStock = document.getElementById('editStockRepuesto');
+            const editPrecio = document.getElementById('editPrecioVenta');
+            const editGananciaLabel = document.getElementById('editGananciaLabel');
+            const editMargenLabel = document.getElementById('editMargenCalculadoLabel');
             
             if (editId) editId.value = id;
             if (editNombre) editNombre.value = nombre;
@@ -2434,6 +1857,16 @@ if (formEditar) {
             if (editMargen) editMargen.value = margen;
             if (editProveedor) editProveedor.value = proveedor === '-' ? '' : proveedor;
             if (editStock) editStock.value = stock;
+            if (editPrecio) editPrecio.value = precioVenta;
+            
+            // Calcular ganancia
+            const ganancia = precioVenta - costo;
+            if (editGananciaLabel) {
+                editGananciaLabel.textContent = `💰 Ganancia: $${ganancia.toLocaleString('es-CL')}`;
+            }
+            if (editMargenLabel) {
+                editMargenLabel.textContent = `📊 Margen calculado: ${margen}%`;
+            }
             
             if (!categoriasCargadas) {
                 await cargarCategoriasEnEditar();
@@ -2461,7 +1894,6 @@ if (formEditar) {
             
             const modal = document.getElementById('modalEditarRepuesto');
             if (modal) modal.classList.add('active');
-            calcularCostoVentaEdit();
         });
     });
 
@@ -2497,6 +1929,444 @@ if (formEditar) {
     // Cargar categorías al inicio para editar
     cargarCategoriasEnEditar();
 });
+// ============================================
+// FUNCIONES DE IMPORTACIÓN
+// ============================================
+
+function abrirModalImportarProductos() {
+    console.log('📂 Abriendo modal importar');
+    
+    const modal = document.getElementById('modalImportarProductos');
+    if (!modal) {
+        console.error('❌ Modal no encontrado');
+        return;
+    }
+    modal.classList.add('active');
+    
+    const preview = document.getElementById('previewProductos');
+    if (preview) preview.style.display = 'none';
+    
+    const btnImportar = document.getElementById('btnImportarProductos');
+    if (btnImportar) btnImportar.style.display = 'none';
+    
+    const resultado = document.getElementById('resultadoImportacion');
+    if (resultado) resultado.style.display = 'none';
+    
+    const fileInput = document.getElementById('fileInputProductos');
+    if (fileInput) fileInput.value = '';
+    
+    datosProductos = [];
+}
+
+function cerrarModalImportarProductos() {
+    console.log('📂 Cerrando modal importar');
+    const modal = document.getElementById('modalImportarProductos');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function handleDropProductos(e) {
+    e.preventDefault();
+    const dropZone = document.getElementById('dropZoneProductos');
+    if (dropZone) dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        procesarArchivoProductos(files[0]);
+    }
+}
+
+function handleDragOverProductos(e) {
+    e.preventDefault();
+    const dropZone = document.getElementById('dropZoneProductos');
+    if (dropZone) dropZone.style.borderColor = '#4fc3f7';
+}
+
+function handleDragLeaveProductos(e) {
+    e.preventDefault();
+    const dropZone = document.getElementById('dropZoneProductos');
+    if (dropZone) dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
+}
+
+function handleFileSelectProductos(e) {
+    const file = e.target.files[0];
+    if (file) {
+        procesarArchivoProductos(file);
+    }
+}
+
+function procesarArchivoProductos(file) {
+    console.log('📂 1. Iniciando procesamiento del archivo:', file.name);
+    
+    const validTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'
+    ];
+    
+    if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/)) {
+        alert('⚠️ Formato no válido. Por favor, sube un archivo .xlsx, .xls o .csv');
+        const fileInput = document.getElementById('fileInputProductos');
+        if (fileInput) fileInput.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            console.log('📂 2. Archivo leído correctamente');
+            
+            if (typeof XLSX === 'undefined') {
+                console.error('❌ XLSX no está definido');
+                alert('❌ Error: La librería XLSX no está cargada.');
+                return;
+            }
+            
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                alert('⚠️ El archivo no contiene hojas');
+                return;
+            }
+            
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+            
+            console.log('📂 3. Filas encontradas:', jsonData.length);
+            
+            if (jsonData.length === 0) {
+                alert('⚠️ El archivo está vacío');
+                return;
+            }
+            
+            const columnas = Object.keys(jsonData[0]);
+            console.log('📂 4. Columnas encontradas:', columnas);
+            
+            const colProducto = columnas.find(col => 
+                col.toLowerCase().trim() === 'producto' || 
+                col.toLowerCase().trim() === 'productos' ||
+                col.toLowerCase().trim() === 'nombre'
+            );
+            
+            const colCosto = columnas.find(col => 
+                col.toLowerCase().trim() === 'costo proveedor' || 
+                col.toLowerCase().trim() === 'costo_proveedor' ||
+                col.toLowerCase().trim() === 'costo'
+            );
+            
+            const colPrecio = columnas.find(col => 
+                col.toLowerCase().trim() === 'precio venta' || 
+                col.toLowerCase().trim() === 'precio_venta' ||
+                col.toLowerCase().trim() === 'precio'
+            );
+            
+            const colProveedor = columnas.find(col => 
+                col.toLowerCase().trim() === 'proveedor'
+            );
+            
+            const colCategoria = columnas.find(col => {
+                const lower = col.toLowerCase().trim();
+                return lower === 'categoría' || 
+                       lower === 'categoria' || 
+                       lower === 'categorias' ||
+                       lower === 'categoria_nombre' ||
+                       lower === 'categoria nombre' ||
+                       lower === 'cat' ||
+                       lower === 'categoria';
+            });
+            
+            const colSubcategoria = columnas.find(col => {
+                const lower = col.toLowerCase().trim();
+                return lower === 'subcategoría' || 
+                       lower === 'subcategoria' || 
+                       lower === 'subcategorias' ||
+                       lower === 'subcategoria_nombre' ||
+                       lower === 'subcategoria nombre' ||
+                       lower === 'subcat' ||
+                       lower === 'subcategoria';
+            });
+            
+            const colStock = columnas.find(col => 
+                col.toLowerCase().trim() === 'stock'
+            );
+            
+            console.log('📂 5. Columnas mapeadas:');
+            console.log('   - Producto:', colProducto);
+            console.log('   - Costo:', colCosto);
+            console.log('   - Precio:', colPrecio);
+            console.log('   - Proveedor:', colProveedor);
+            console.log('   - Categoría:', colCategoria);
+            console.log('   - Subcategoría:', colSubcategoria);
+            console.log('   - Stock:', colStock);
+            
+            if (!colCategoria) {
+                console.warn('⚠️ No se encontró columna de categoría. Columnas disponibles:', columnas);
+                alert('⚠️ No se encontró la columna "Categoría".\n\nColumnas disponibles en tu Excel:\n' + columnas.join(', '));
+            }
+            
+            if (!colProducto) {
+                alert('⚠️ No se encontró la columna "Producto".\n\nColumnas: ' + columnas.join(', '));
+                return;
+            }
+            if (!colCosto) {
+                alert('⚠️ No se encontró la columna "Costo Proveedor".\n\nColumnas: ' + columnas.join(', '));
+                return;
+            }
+            if (!colPrecio) {
+                alert('⚠️ No se encontró la columna "Precio Venta".\n\nColumnas: ' + columnas.join(', '));
+                return;
+            }
+            
+            datosProductos = jsonData.map(row => {
+                const nombre = String(row[colProducto] || '').trim();
+                const costo = parseFloat(row[colCosto] || 0);
+                const precioVenta = parseFloat(row[colPrecio] || 0);
+                const proveedor = colProveedor ? String(row[colProveedor] || 'Importado').trim() : 'Importado';
+                
+                let categoria = '';
+                if (colCategoria) {
+                    categoria = String(row[colCategoria] || '').trim();
+                }
+                
+                let subcategoria = '';
+                if (colSubcategoria) {
+                    subcategoria = String(row[colSubcategoria] || '').trim();
+                }
+                
+                const stock = colStock ? parseInt(row[colStock] || 1) : 1;
+                
+                let margenFinal = 0;
+                if (costo > 0 && precioVenta > 0) {
+                    const iva = 1.19;
+                    const costoConIva = costo * iva;
+                    margenFinal = ((precioVenta / costoConIva) - 1) * 100;
+                    margenFinal = Math.round(margenFinal * 10) / 10;
+                }
+                
+                if (categoria) {
+                    console.log(`   ✅ "${nombre}" -> Categoría: "${categoria}"`);
+                } else {
+                    console.log(`   ⚠️ "${nombre}" -> SIN CATEGORÍA`);
+                }
+                
+                return { 
+                    nombre: nombre, 
+                    costo: costo,
+                    precio_venta: precioVenta,
+                    margen: margenFinal,
+                    proveedor: proveedor,
+                    categoria: categoria,
+                    subcategoria: subcategoria,
+                    stock: stock
+                };
+            }).filter(item => item.nombre && item.costo > 0 && item.precio_venta > 0);
+            
+            console.log('📂 6. Productos procesados:', datosProductos.length);
+            
+            const conCategoria = datosProductos.filter(p => p.categoria && p.categoria.length > 0).length;
+            console.log(`📂 7. Productos con categoría: ${conCategoria} de ${datosProductos.length}`);
+            
+            if (conCategoria === 0) {
+                console.warn('⚠️ NINGÚN producto tiene categoría. Verifica que la columna "Categoría" exista en tu Excel.');
+                alert('⚠️ No se encontraron categorías en tu archivo.\n\nAsegúrate de que la columna se llame "Categoría" (con tilde o sin tilde).\n\nColumnas encontradas: ' + columnas.join(', '));
+            }
+            
+            if (datosProductos.length === 0) {
+                alert('⚠️ No hay datos válidos para importar.');
+                return;
+            }
+            
+            mostrarPreviewProductos(datosProductos);
+            
+        } catch (error) {
+            console.error('❌ Error:', error);
+            alert('❌ Error al leer el archivo: ' + error.message);
+            const fileInput = document.getElementById('fileInputProductos');
+            if (fileInput) fileInput.value = '';
+        }
+    };
+    
+    reader.onerror = function() {
+        alert('❌ Error al leer el archivo');
+        const fileInput = document.getElementById('fileInputProductos');
+        if (fileInput) fileInput.value = '';
+    };
+    
+    reader.readAsArrayBuffer(file);
+}
+
+function mostrarPreviewProductos(datos) {
+    console.log('📊 Mostrando preview, datos:', datos.length);
+    
+    const previewBody = document.getElementById('previewBodyProductos');
+    const previewContainer = document.getElementById('previewProductos');
+    const btnImportar = document.getElementById('btnImportarProductos');
+    const contador = document.getElementById('contadorProductos');
+    
+    if (!previewBody) {
+        console.error('❌ No se encontró previewBodyProductos');
+        return;
+    }
+    
+    previewBody.innerHTML = '';
+    const mostrar = datos.slice(0, 10);
+    
+    const categorias = {};
+    datos.forEach(item => {
+        if (item.categoria) {
+            categorias[item.categoria] = (categorias[item.categoria] || 0) + 1;
+        }
+    });
+    console.log('📊 Resumen de categorías:', categorias);
+    
+    mostrar.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+        tr.innerHTML = `
+            <td style="padding:4px 6px;color:#666;">${index + 1}</td>
+            <td style="padding:4px 6px;color:#fff;">${item.nombre}</td>
+            <td style="padding:4px 6px;color:#ffcc00;">$${item.costo.toLocaleString('es-CL')}</td>
+            <td style="padding:4px 6px;color:#00ff66;">$${item.precio_venta.toLocaleString('es-CL')}</td>
+            <td style="padding:4px 6px;color:#4fc3f7;">${item.margen}%</td>
+            <td style="padding:4px 6px;color:#f1c40f;font-weight:bold;">${item.categoria || '⚠️ Sin categoría'}</td>
+            <td style="padding:4px 6px;color:#9b59b6;">${item.subcategoria || '-'}</td>
+            <td style="padding:4px 6px;color:#ff6b6b;font-weight:600;text-align:center;">${item.stock || 0}</td>
+        `;
+        previewBody.appendChild(tr);
+    });
+    
+    if (datos.length > 10) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="8" style="padding:6px;text-align:center;color:#666;">... y ${datos.length - 10} más</td>`;
+        previewBody.appendChild(tr);
+    }
+    
+    const resumenCategorias = Object.entries(categorias)
+        .map(([cat, count]) => `${cat} (${count})`)
+        .join(', ');
+    
+    if (contador) {
+        contador.textContent = `${datos.length} registros | 📂 ${Object.keys(categorias).length} categorías: ${resumenCategorias}`;
+    }
+    
+    if (previewContainer) previewContainer.style.display = 'block';
+    if (btnImportar) {
+        btnImportar.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datos.length} productos`;
+        btnImportar.style.display = 'block';
+    }
+    
+    console.log('📊 Preview mostrado correctamente ✅');
+}
+
+async function importarProductos() {
+    console.log('🚀 Iniciando importación...');
+    console.log('📦 Datos a importar:', datosProductos.length);
+    
+    if (datosProductos.length === 0) {
+        alert('⚠️ No hay datos para importar');
+        return;
+    }
+    
+    const conCategoria = datosProductos.filter(p => p.categoria && p.categoria.length > 0).length;
+    console.log(`📊 Productos con categoría: ${conCategoria} de ${datosProductos.length}`);
+    
+    if (conCategoria === 0) {
+        alert('⚠️ Ningún producto tiene categoría.\n\nAsegúrate de que tu Excel tenga la columna "Categoría" con datos.');
+        return;
+    }
+    
+    console.log('📦 Primeros productos con categorías:');
+    datosProductos.slice(0, 5).forEach((p, i) => {
+        console.log(`   ${i+1}. ${p.nombre} -> Categoría: "${p.categoria}" | Subcategoría: "${p.subcategoria}"`);
+    });
+    
+    if (!confirm(`📊 ¿Importar ${datosProductos.length} productos?\n\n✅ ${conCategoria} con categoría\n⚠️ ${datosProductos.length - conCategoria} sin categoría`)) {
+        return;
+    }
+    
+    const btn = document.getElementById('btnImportarProductos');
+    if (!btn) {
+        console.error('❌ Botón importar no encontrado');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
+    
+    try {
+        const url = `${API_URL}/api/repuestos/importar`;
+        console.log('🌐 URL:', url);
+        
+        const payload = {
+            productos: datosProductos.map(p => ({
+                nombre: p.nombre,
+                costo: p.costo,
+                precio_venta: p.precio_venta,
+                proveedor: p.proveedor || 'Importado',
+                categoria: p.categoria || '',
+                subcategoria: p.subcategoria || '',
+                stock: p.stock || 1
+            }))
+        };
+        
+        console.log('📦 Payload a enviar (primeros 3):', JSON.stringify(payload.productos.slice(0, 3), null, 2));
+        
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        console.log('📡 Status:', resp.status);
+        
+        if (!resp.ok) {
+            const errorText = await resp.text();
+            console.error('❌ Error response:', errorText);
+            throw new Error(`Error ${resp.status}: ${errorText}`);
+        }
+        
+        const result = await resp.json();
+        console.log('📡 Respuesta:', result);
+        
+        if (result.success) {
+            let mensaje = `✅ Importación completada!\n\n`;
+            mensaje += `📊 ${result.importados || 0} importados correctamente`;
+            
+            if (result.actualizados && result.actualizados > 0) {
+                mensaje += `\n📝 ${result.actualizados} actualizados (stock sumado)`;
+            }
+            
+            if (result.errores && result.errores.length > 0) {
+                mensaje += `\n\n⚠️ ${result.errores.length} errores:`;
+                result.errores.slice(0, 5).forEach(err => {
+                    mensaje += `\n   - ${err.nombre}: ${err.error}`;
+                });
+                if (result.errores.length > 5) {
+                    mensaje += `\n   ... y ${result.errores.length - 5} más`;
+                }
+                console.log('Errores detallados:', result.errores);
+            }
+            
+            alert(mensaje);
+            cerrarModalImportarProductos();
+            
+            if (result.importados > 0 || result.actualizados > 0) {
+                setTimeout(() => location.reload(), 2000);
+            }
+        } else {
+            alert('❌ Error: ' + (result.error || 'Desconocido'));
+        }
+    } catch (error) {
+        console.error('❌ Error:', error);
+        alert('❌ Error de conexión: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datosProductos.length} productos`;
+    }
+}
 </script>
 
 {% endblock %}
