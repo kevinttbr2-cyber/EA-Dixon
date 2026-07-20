@@ -2421,6 +2421,444 @@ async function importarProductos() {
         btn.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datosProductos.length} productos`;
     }
 }
+// ============================================
+// FUNCIONES DE IMPORTACIÓN DE PRODUCTOS
+// ============================================
+
+function abrirModalImportarProductos() {
+    console.log('📂 Abriendo modal importar');
+    
+    const modal = document.getElementById('modalImportarProductos');
+    if (!modal) {
+        console.error('❌ Modal no encontrado');
+        return;
+    }
+    modal.classList.add('active');
+    
+    const preview = document.getElementById('previewProductos');
+    if (preview) preview.style.display = 'none';
+    
+    const btnImportar = document.getElementById('btnImportarProductos');
+    if (btnImportar) btnImportar.style.display = 'none';
+    
+    const resultado = document.getElementById('resultadoImportacion');
+    if (resultado) resultado.style.display = 'none';
+    
+    const fileInput = document.getElementById('fileInputProductos');
+    if (fileInput) fileInput.value = '';
+    
+    datosProductos = [];
+}
+
+function cerrarModalImportarProductos() {
+    console.log('📂 Cerrando modal importar');
+    const modal = document.getElementById('modalImportarProductos');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function handleDropProductos(e) {
+    e.preventDefault();
+    const dropZone = document.getElementById('dropZoneProductos');
+    if (dropZone) dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        procesarArchivoProductos(files[0]);
+    }
+}
+
+function handleDragOverProductos(e) {
+    e.preventDefault();
+    const dropZone = document.getElementById('dropZoneProductos');
+    if (dropZone) dropZone.style.borderColor = '#4fc3f7';
+}
+
+function handleDragLeaveProductos(e) {
+    e.preventDefault();
+    const dropZone = document.getElementById('dropZoneProductos');
+    if (dropZone) dropZone.style.borderColor = 'rgba(79,195,247,0.3)';
+}
+
+function handleFileSelectProductos(e) {
+    const file = e.target.files[0];
+    if (file) {
+        procesarArchivoProductos(file);
+    }
+}
+
+function procesarArchivoProductos(file) {
+    console.log('📂 1. Iniciando procesamiento del archivo:', file.name);
+    
+    const validTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'
+    ];
+    
+    if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/)) {
+        alert('⚠️ Formato no válido. Por favor, sube un archivo .xlsx, .xls o .csv');
+        const fileInput = document.getElementById('fileInputProductos');
+        if (fileInput) fileInput.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            console.log('📂 2. Archivo leído correctamente');
+            
+            if (typeof XLSX === 'undefined') {
+                console.error('❌ XLSX no está definido');
+                alert('❌ Error: La librería XLSX no está cargada.');
+                return;
+            }
+            
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                alert('⚠️ El archivo no contiene hojas');
+                return;
+            }
+            
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+            
+            console.log('📂 3. Filas encontradas:', jsonData.length);
+            
+            if (jsonData.length === 0) {
+                alert('⚠️ El archivo está vacío');
+                return;
+            }
+            
+            const columnas = Object.keys(jsonData[0]);
+            console.log('📂 4. Columnas encontradas:', columnas);
+            
+            const colProducto = columnas.find(col => 
+                col.toLowerCase().trim() === 'producto' || 
+                col.toLowerCase().trim() === 'productos' ||
+                col.toLowerCase().trim() === 'nombre'
+            );
+            
+            const colCosto = columnas.find(col => 
+                col.toLowerCase().trim() === 'costo proveedor' || 
+                col.toLowerCase().trim() === 'costo_proveedor' ||
+                col.toLowerCase().trim() === 'costo'
+            );
+            
+            const colPrecio = columnas.find(col => 
+                col.toLowerCase().trim() === 'precio venta' || 
+                col.toLowerCase().trim() === 'precio_venta' ||
+                col.toLowerCase().trim() === 'precio'
+            );
+            
+            const colProveedor = columnas.find(col => 
+                col.toLowerCase().trim() === 'proveedor'
+            );
+            
+            const colCategoria = columnas.find(col => {
+                const lower = col.toLowerCase().trim();
+                return lower === 'categoría' || 
+                       lower === 'categoria' || 
+                       lower === 'categorias' ||
+                       lower === 'categoria_nombre' ||
+                       lower === 'categoria nombre' ||
+                       lower === 'cat' ||
+                       lower === 'categoria';
+            });
+            
+            const colSubcategoria = columnas.find(col => {
+                const lower = col.toLowerCase().trim();
+                return lower === 'subcategoría' || 
+                       lower === 'subcategoria' || 
+                       lower === 'subcategorias' ||
+                       lower === 'subcategoria_nombre' ||
+                       lower === 'subcategoria nombre' ||
+                       lower === 'subcat' ||
+                       lower === 'subcategoria';
+            });
+            
+            const colStock = columnas.find(col => 
+                col.toLowerCase().trim() === 'stock'
+            );
+            
+            console.log('📂 5. Columnas mapeadas:');
+            console.log('   - Producto:', colProducto);
+            console.log('   - Costo:', colCosto);
+            console.log('   - Precio:', colPrecio);
+            console.log('   - Proveedor:', colProveedor);
+            console.log('   - Categoría:', colCategoria);
+            console.log('   - Subcategoría:', colSubcategoria);
+            console.log('   - Stock:', colStock);
+            
+            if (!colCategoria) {
+                console.warn('⚠️ No se encontró columna de categoría. Columnas disponibles:', columnas);
+                alert('⚠️ No se encontró la columna "Categoría".\n\nColumnas disponibles en tu Excel:\n' + columnas.join(', '));
+            }
+            
+            if (!colProducto) {
+                alert('⚠️ No se encontró la columna "Producto".\n\nColumnas: ' + columnas.join(', '));
+                return;
+            }
+            if (!colCosto) {
+                alert('⚠️ No se encontró la columna "Costo Proveedor".\n\nColumnas: ' + columnas.join(', '));
+                return;
+            }
+            if (!colPrecio) {
+                alert('⚠️ No se encontró la columna "Precio Venta".\n\nColumnas: ' + columnas.join(', '));
+                return;
+            }
+            
+            datosProductos = jsonData.map(row => {
+                const nombre = String(row[colProducto] || '').trim();
+                const costo = parseFloat(row[colCosto] || 0);
+                const precioVenta = parseFloat(row[colPrecio] || 0);
+                const proveedor = colProveedor ? String(row[colProveedor] || 'Importado').trim() : 'Importado';
+                
+                let categoria = '';
+                if (colCategoria) {
+                    categoria = String(row[colCategoria] || '').trim();
+                }
+                
+                let subcategoria = '';
+                if (colSubcategoria) {
+                    subcategoria = String(row[colSubcategoria] || '').trim();
+                }
+                
+                const stock = colStock ? parseInt(row[colStock] || 1) : 1;
+                
+                let margenFinal = 0;
+                if (costo > 0 && precioVenta > 0) {
+                    const iva = 1.19;
+                    const costoConIva = costo * iva;
+                    margenFinal = ((precioVenta / costoConIva) - 1) * 100;
+                    margenFinal = Math.round(margenFinal * 10) / 10;
+                }
+                
+                if (categoria) {
+                    console.log(`   ✅ "${nombre}" -> Categoría: "${categoria}"`);
+                } else {
+                    console.log(`   ⚠️ "${nombre}" -> SIN CATEGORÍA`);
+                }
+                
+                return { 
+                    nombre: nombre, 
+                    costo: costo,
+                    precio_venta: precioVenta,
+                    margen: margenFinal,
+                    proveedor: proveedor,
+                    categoria: categoria,
+                    subcategoria: subcategoria,
+                    stock: stock
+                };
+            }).filter(item => item.nombre && item.costo > 0 && item.precio_venta > 0);
+            
+            console.log('📂 6. Productos procesados:', datosProductos.length);
+            
+            const conCategoria = datosProductos.filter(p => p.categoria && p.categoria.length > 0).length;
+            console.log(`📂 7. Productos con categoría: ${conCategoria} de ${datosProductos.length}`);
+            
+            if (conCategoria === 0) {
+                console.warn('⚠️ NINGÚN producto tiene categoría. Verifica que la columna "Categoría" exista en tu Excel.');
+                alert('⚠️ No se encontraron categorías en tu archivo.\n\nAsegúrate de que la columna se llame "Categoría" (con tilde o sin tilde).\n\nColumnas encontradas: ' + columnas.join(', '));
+            }
+            
+            if (datosProductos.length === 0) {
+                alert('⚠️ No hay datos válidos para importar.');
+                return;
+            }
+            
+            mostrarPreviewProductos(datosProductos);
+            
+        } catch (error) {
+            console.error('❌ Error:', error);
+            alert('❌ Error al leer el archivo: ' + error.message);
+            const fileInput = document.getElementById('fileInputProductos');
+            if (fileInput) fileInput.value = '';
+        }
+    };
+    
+    reader.onerror = function() {
+        alert('❌ Error al leer el archivo');
+        const fileInput = document.getElementById('fileInputProductos');
+        if (fileInput) fileInput.value = '';
+    };
+    
+    reader.readAsArrayBuffer(file);
+}
+
+function mostrarPreviewProductos(datos) {
+    console.log('📊 Mostrando preview, datos:', datos.length);
+    
+    const previewBody = document.getElementById('previewBodyProductos');
+    const previewContainer = document.getElementById('previewProductos');
+    const btnImportar = document.getElementById('btnImportarProductos');
+    const contador = document.getElementById('contadorProductos');
+    
+    if (!previewBody) {
+        console.error('❌ No se encontró previewBodyProductos');
+        return;
+    }
+    
+    previewBody.innerHTML = '';
+    const mostrar = datos.slice(0, 10);
+    
+    const categorias = {};
+    datos.forEach(item => {
+        if (item.categoria) {
+            categorias[item.categoria] = (categorias[item.categoria] || 0) + 1;
+        }
+    });
+    console.log('📊 Resumen de categorías:', categorias);
+    
+    mostrar.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+        tr.innerHTML = `
+            <td style="padding:4px 6px;color:#666;">${index + 1}</td>
+            <td style="padding:4px 6px;color:#fff;">${item.nombre}</td>
+            <td style="padding:4px 6px;color:#ffcc00;">$${item.costo.toLocaleString('es-CL')}</td>
+            <td style="padding:4px 6px;color:#00ff66;">$${item.precio_venta.toLocaleString('es-CL')}</td>
+            <td style="padding:4px 6px;color:#4fc3f7;">${item.margen}%</td>
+            <td style="padding:4px 6px;color:#f1c40f;font-weight:bold;">${item.categoria || '⚠️ Sin categoría'}</td>
+            <td style="padding:4px 6px;color:#9b59b6;">${item.subcategoria || '-'}</td>
+            <td style="padding:4px 6px;color:#ff6b6b;font-weight:600;text-align:center;">${item.stock || 0}</td>
+        `;
+        previewBody.appendChild(tr);
+    });
+    
+    if (datos.length > 10) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="8" style="padding:6px;text-align:center;color:#666;">... y ${datos.length - 10} más</td>`;
+        previewBody.appendChild(tr);
+    }
+    
+    const resumenCategorias = Object.entries(categorias)
+        .map(([cat, count]) => `${cat} (${count})`)
+        .join(', ');
+    
+    if (contador) {
+        contador.textContent = `${datos.length} registros | 📂 ${Object.keys(categorias).length} categorías: ${resumenCategorias}`;
+    }
+    
+    if (previewContainer) previewContainer.style.display = 'block';
+    if (btnImportar) {
+        btnImportar.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datos.length} productos`;
+        btnImportar.style.display = 'block';
+    }
+    
+    console.log('📊 Preview mostrado correctamente ✅');
+}
+
+async function importarProductos() {
+    console.log('🚀 Iniciando importación...');
+    console.log('📦 Datos a importar:', datosProductos.length);
+    
+    if (datosProductos.length === 0) {
+        alert('⚠️ No hay datos para importar');
+        return;
+    }
+    
+    const conCategoria = datosProductos.filter(p => p.categoria && p.categoria.length > 0).length;
+    console.log(`📊 Productos con categoría: ${conCategoria} de ${datosProductos.length}`);
+    
+    if (conCategoria === 0) {
+        alert('⚠️ Ningún producto tiene categoría.\n\nAsegúrate de que tu Excel tenga la columna "Categoría" con datos.');
+        return;
+    }
+    
+    console.log('📦 Primeros productos con categorías:');
+    datosProductos.slice(0, 5).forEach((p, i) => {
+        console.log(`   ${i+1}. ${p.nombre} -> Categoría: "${p.categoria}" | Subcategoría: "${p.subcategoria}"`);
+    });
+    
+    if (!confirm(`📊 ¿Importar ${datosProductos.length} productos?\n\n✅ ${conCategoria} con categoría\n⚠️ ${datosProductos.length - conCategoria} sin categoría`)) {
+        return;
+    }
+    
+    const btn = document.getElementById('btnImportarProductos');
+    if (!btn) {
+        console.error('❌ Botón importar no encontrado');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
+    
+    try {
+        const url = `${API_URL}/api/repuestos/importar`;
+        console.log('🌐 URL:', url);
+        
+        const payload = {
+            productos: datosProductos.map(p => ({
+                nombre: p.nombre,
+                costo: p.costo,
+                precio_venta: p.precio_venta,
+                proveedor: p.proveedor || 'Importado',
+                categoria: p.categoria || '',
+                subcategoria: p.subcategoria || '',
+                stock: p.stock || 1
+            }))
+        };
+        
+        console.log('📦 Payload a enviar (primeros 3):', JSON.stringify(payload.productos.slice(0, 3), null, 2));
+        
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        console.log('📡 Status:', resp.status);
+        
+        if (!resp.ok) {
+            const errorText = await resp.text();
+            console.error('❌ Error response:', errorText);
+            throw new Error(`Error ${resp.status}: ${errorText}`);
+        }
+        
+        const result = await resp.json();
+        console.log('📡 Respuesta:', result);
+        
+        if (result.success) {
+            let mensaje = `✅ Importación completada!\n\n`;
+            mensaje += `📊 ${result.importados || 0} importados correctamente`;
+            
+            if (result.actualizados && result.actualizados > 0) {
+                mensaje += `\n📝 ${result.actualizados} actualizados (stock sumado)`;
+            }
+            
+            if (result.errores && result.errores.length > 0) {
+                mensaje += `\n\n⚠️ ${result.errores.length} errores:`;
+                result.errores.slice(0, 5).forEach(err => {
+                    mensaje += `\n   - ${err.nombre}: ${err.error}`;
+                });
+                if (result.errores.length > 5) {
+                    mensaje += `\n   ... y ${result.errores.length - 5} más`;
+                }
+                console.log('Errores detallados:', result.errores);
+            }
+            
+            alert(mensaje);
+            cerrarModalImportarProductos();
+            
+            if (result.importados > 0 || result.actualizados > 0) {
+                setTimeout(() => location.reload(), 2000);
+            }
+        } else {
+            alert('❌ Error: ' + (result.error || 'Desconocido'));
+        }
+    } catch (error) {
+        console.error('❌ Error:', error);
+        alert('❌ Error de conexión: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-upload"></i> Importar ${datosProductos.length} productos`;
+    }
+}
 </script>
 
 {% endblock %}
