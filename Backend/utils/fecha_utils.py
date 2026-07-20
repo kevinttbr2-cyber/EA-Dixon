@@ -50,3 +50,21 @@ def formatear_fecha_espanol(fecha: date) -> str:
     meses = {1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio',
              7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'}
     return f"{dias.get(fecha.weekday(), '')} {fecha.day} de {meses.get(fecha.month, '')} {fecha.year}"
+
+def calcular_dias_entre(fecha1, fecha2):
+    """Calcula los días entre dos fechas"""
+    if not fecha1 or not fecha2:
+        return 0
+    if isinstance(fecha1, str):
+        fecha1 = datetime.strptime(fecha1, '%Y-%m-%d').date()
+    if isinstance(fecha2, str):
+        fecha2 = datetime.strptime(fecha2, '%Y-%m-%d').date()
+    return (fecha2 - fecha1).days
+
+def sumar_dias(fecha, dias):
+    """Suma días a una fecha"""
+    if not fecha:
+        return None
+    if isinstance(fecha, str):
+        fecha = datetime.strptime(fecha, '%Y-%m-%d').date()
+    return fecha + timedelta(days=dias)
