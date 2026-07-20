@@ -1149,6 +1149,53 @@ def dashboard():
             data[key] = value
     
     return render_template("dashboard_v2.html", **data)
+# En Frontend/app.py - dashboard()
+
+# Gastos por categoría
+gastos_por_categoria = []
+if gastos_operativos:
+    from collections import defaultdict
+    gastos_dict = defaultdict(float)
+    for g in gastos_operativos:
+        gastos_dict[g.get('categoria', 'Otros')] += float(g.get('monto', 0))
+    
+    total_gastos_cat = sum(gastos_dict.values())
+    for cat, monto in gastos_dict.items():
+        porcentaje = round((monto / total_gastos_cat) * 100, 1) if total_gastos_cat > 0 else 0
+        gastos_por_categoria.append({
+            'categoria': cat,
+            'total': monto,
+            'porcentaje': porcentaje
+        })
+    gastos_por_categoria.sort(key=lambda x: x['total'], reverse=True)
+
+# Gastos diarios para el gráfico
+gastos_diarios = []
+gastos_labels = []
+if gastos_operativos:
+    gastos_dia = defaultdict(float)
+    for g in gastos_operativos:
+        fecha = g.get('fecha', '')
+        if fecha:
+            gastos_dia[fecha] += float(g.get('monto', 0))
+    
+    for fecha in sorted(gastos_dia.keys()):
+        gastos_labels.append(fecha)
+        gastos_diarios.append(gastos_dia[fecha])
+
+# Pasar al template
+return render_template("dashboard_v2.html",
+    ...,
+    total_gastos=total_gastos,
+    gastos_operativos=gastos_operativos,
+    ganancia_real=ganancia_real,
+    total_directa=total_directa,
+    total_trabajo=total_trabajo,
+    gastos_por_categoria=gastos_por_categoria,
+    gastos_diarios=gastos_diarios,
+    gastos_labels=gastos_labels,
+    ...
+)
 
 # ============================
 # REPUESTOS
