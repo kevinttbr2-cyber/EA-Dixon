@@ -1633,21 +1633,21 @@ def crear_repuesto():
         return jsonify({"error": str(e)}), 500
 
 # ============================
-# ACTUALIZAR REPUESTO - CORREGIDO (SIN AUTOCOMMIT)
+# ACTUALIZAR REPUESTO - VERSIÓN FINAL CORREGIDA
 # ============================
 @pago_bp.route('/repuestos/<int:id_repuesto>', methods=['PUT'])
 def actualizar_repuesto(id_repuesto):
     try:
         data = request.json
-        logger.info(f"📥 ACTUALIZAR REPUESTO ID {id_repuesto}")
-        logger.info(f"📥 Datos recibidos: {data}")
+        print(f"📥 ACTUALIZAR REPUESTO ID {id_repuesto}")
+        print(f"📥 Datos recibidos: {data}")
         
         # Obtener y sanitizar todos los campos
-        nombre = sanitizar_input(data.get('nombre', '').strip())
-        costo_proveedor = sanitizar_numero(data.get('costo_proveedor', 0), min_val=0)
-        margen_ganancia = sanitizar_numero(data.get('margen_ganancia', 30), min_val=0)
-        proveedor = sanitizar_input(data.get('proveedor', '').strip())
-        costo_venta_final = sanitizar_numero(data.get('costo_venta_final', 0), min_val=0)
+        nombre = data.get('nombre', '').strip()
+        costo_proveedor = float(data.get('costo_proveedor', 0))
+        margen_ganancia = float(data.get('margen_ganancia', 30))
+        proveedor = data.get('proveedor', '').strip()
+        costo_venta_final = float(data.get('costo_venta_final', 0))
         
         # 🔥 STOCK - Conversión segura a entero
         stock_raw = data.get('stock', 0)
@@ -1658,10 +1658,10 @@ def actualizar_repuesto(id_repuesto):
         if stock < 0:
             stock = 0
         
-        logger.info(f"📦 Stock a guardar: {stock}")
+        print(f"📦 Stock a guardar: {stock}")
         
         # 🔥 CATEGORÍA
-        categoria_nombre = sanitizar_input(data.get('categoria_nombre', '').strip())
+        categoria_nombre = data.get('categoria_nombre', '').strip()
         subcategoria_id = data.get('subcategoria_id')
         if subcategoria_id:
             try:
@@ -1669,12 +1669,13 @@ def actualizar_repuesto(id_repuesto):
             except (ValueError, TypeError):
                 subcategoria_id = None
         
-        logger.info(f"📂 Categoría: '{categoria_nombre}'")
-        logger.info(f"📂 Subcategoria ID: {subcategoria_id}")
+        print(f"📂 Categoría: '{categoria_nombre}'")
+        print(f"📂 Subcategoria ID: {subcategoria_id}")
         
         if not nombre:
             return jsonify({"error": "El nombre es obligatorio"}), 400
         
+        # Calcular precio de venta si es 0
         if costo_venta_final == 0 and costo_proveedor > 0:
             iva = 1.19
             costo_con_iva = costo_proveedor * iva
@@ -1683,21 +1684,22 @@ def actualizar_repuesto(id_repuesto):
         
         costo_proveedor_pendiente = costo_proveedor == 0
         
-        # 🔥 CONEXIÓN NORMAL (SIN AUTOCOMMIT)
+        # 🔥 CONEXIÓN
         conn = get_connection()
         cur = conn.cursor()
         
-        # 🔥 VERIFICAR REPUESTO EXISTENTE
+        # 🔥 ACTUALIZAR - PRIMERO VERIFICAR QUE EL REPUESTO EXISTE
         cur.execute("SELECT id, nombre, stock, subcategoria_id FROM repuestos WHERE id = %s", (id_repuesto,))
         existente = cur.fetchone()
+        
         if not existente:
             cur.close()
             conn.close()
             return jsonify({"error": "Repuesto no encontrado"}), 404
         
-        logger.info(f"📦 ANTES: {existente[1]} - Stock: {existente[2]} - Subcat: {existente[3]}")
+        print(f"📦 ANTES: {existente[1]} - Stock: {existente[2]} - Subcat: {existente[3]}")
         
-        # 🔥 ACTUALIZAR - SIN AT TIME ZONE (usamos NOW() sin conversión)
+        # 🔥 EJECUTAR UPDATE
         cur.execute("""
             UPDATE repuestos 
             SET nombre = %s, 
@@ -1713,28 +1715,30 @@ def actualizar_repuesto(id_repuesto):
             WHERE id = %s
             RETURNING id, stock, subcategoria_id
         """, (
-            nombre,                  # 1
-            costo_proveedor,         # 2
-            margen_ganancia,         # 3
-            proveedor,               # 4
-            costo_venta_final,       # 5
-            stock,                   # 6 ← STOCK
-            categoria_nombre,        # 7
-            subcategoria_id,         # 8 ← SUBCATEGORIA
-            costo_proveedor_pendiente, # 9
-            id_repuesto              # 10
+            nombre,
+            costo_proveedor,
+            margen_ganancia,
+            proveedor,
+            costo_venta_final,
+            stock,  # 🔥 STOCK
+            categoria_nombre,
+            subcategoria_id,  # 🔥 SUBCATEGORIA
+            costo_proveedor_pendiente,
+            id_repuesto
         ))
         
+        # 🔥 OBTENER RESULTADO
         result = cur.fetchone()
+        print(f"📊 Resultado del UPDATE: {result}")
         
-        # 🔥 CONFIRMAR LA TRANSACCIÓN
+        # 🔥 CONFIRMAR TRANSACCIÓN
         conn.commit()
-        logger.info("✅ Transacción confirmada (commit)")
+        print("✅ Transacción confirmada (commit)")
         
         # 🔥 VERIFICAR QUE EL CAMBIO SE GUARDÓ
         cur.execute("SELECT id, nombre, stock, subcategoria_id FROM repuestos WHERE id = %s", (id_repuesto,))
         verificado = cur.fetchone()
-        logger.info(f"📦 DESPUÉS: {verificado[1]} - Stock: {verificado[2]} - Subcat: {verificado[3]}")
+        print(f"📦 DESPUÉS: {verificado[1]} - Stock: {verificado[2]} - Subcat: {verificado[3]}")
         
         cur.close()
         conn.close()
@@ -1742,7 +1746,7 @@ def actualizar_repuesto(id_repuesto):
         if not result:
             return jsonify({"error": "Repuesto no encontrado"}), 404
         
-        logger.info(f"✅ Repuesto actualizado: {nombre} - Stock: {result[1]}")
+        print(f"✅ Repuesto actualizado: {nombre} - Stock: {result[1]}")
         return jsonify({
             "success": True, 
             "stock_guardado": result[1],
@@ -1750,7 +1754,7 @@ def actualizar_repuesto(id_repuesto):
         })
         
     except Exception as e:
-        logger.error(f"❌ Error en actualizar_repuesto: {e}")
+        print(f"❌ Error en actualizar_repuesto: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
