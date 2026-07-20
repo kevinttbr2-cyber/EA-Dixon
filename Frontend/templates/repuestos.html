@@ -664,9 +664,10 @@
             
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div class="mb-3">
-                    <label style="color:#90e0a0;font-size:13px;">📦 Stock inicial</label>
-                    <input type="number" name="stock" id="inputStockRepuesto" class="form-control" value="1" min="0">
-                </div>
+    <label style="color:#90e0a0;font-size:13px;">📦 Stock</label>
+    <input type="number" name="stock" id="editStockRepuesto" class="form-control" min="0" step="1">
+    <small style="color:#666;font-size:10px;">⚠️ Solo números enteros, no puede ser negativo</small>
+</div>
                 <div class="mb-3">
                     <label style="color:#90e0a0;font-size:13px;">💰 Costo Proveedor ($) *</label>
                     <input type="number" name="costo_proveedor" id="inputCostoProveedor" class="form-control" step="0.01" required>
@@ -1750,29 +1751,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
    // ============================================
-// FORMULARIO EDITAR - CORREGIDO COMPLETAMENTE
+// FORMULARIO EDITAR - CORREGIDO
 // ============================================
 const formEditar = document.getElementById('formEditarRepuesto');
 if (formEditar) {
     formEditar.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // 🔥 OBTENER TODOS LOS VALORES
+        // 🔥 OBTENER VALORES POR SEPARADO
         const id = document.getElementById('editRepuestoId')?.value;
         const nombre = document.getElementById('editNombreRepuesto')?.value.trim() || '';
+        
+        // 🔥 IMPORTANTE: Obtener stock del input CORRECTO
         const stockInput = document.getElementById('editStockRepuesto');
         const stock = parseInt(stockInput?.value) || 0;
+        
         const costoProveedor = parseFloat(document.getElementById('editCostoProveedor')?.value || 0);
         const proveedor = document.getElementById('editProveedorRepuesto')?.value.trim() || '';
         const margen = parseFloat(document.getElementById('editMargenGanancia')?.value || 0);
         const precioVenta = parseFloat(document.getElementById('editPrecioVenta')?.value || 0);
         
-        // 🔥 OBTENER CATEGORÍA CORRECTAMENTE
+        // 🔥 Obtener categoría - NO CONFUNDIR CON STOCK
         const categoriaSelect = document.getElementById('editCategoriaRepuesto');
         let categoriaId = categoriaSelect?.value || '';
         let categoriaNombre = '';
         
-        // Si hay un valor seleccionado, obtener el nombre de la categoría padre
         if (categoriaId && categoriaId !== '') {
             const selectedOption = categoriaSelect.options[categoriaSelect.selectedIndex];
             if (selectedOption && selectedOption.parentElement) {
@@ -1780,18 +1783,19 @@ if (formEditar) {
             }
         }
         
-        console.log('📤 EDITANDO REPUESTO:');
+        // 🔥 LOG PARA DEPURACIÓN
+        console.log('📤 DATOS A ENVIAR:');
         console.log('  ID:', id);
         console.log('  Nombre:', nombre);
-        console.log('  Stock:', stock);
+        console.log('  STOCK (desde input):', stock);
+        console.log('  STOCK (tipo):', typeof stock);
         console.log('  Costo:', costoProveedor);
         console.log('  Precio Venta:', precioVenta);
         console.log('  Margen:', margen);
-        console.log('  Proveedor:', proveedor);
         console.log('  Categoría ID:', categoriaId);
         console.log('  Categoría Nombre:', categoriaNombre);
         
-        // VALIDACIONES
+        // Validaciones
         if (!nombre) {
             alert('⚠️ El nombre del repuesto es obligatorio');
             return;
@@ -1807,23 +1811,23 @@ if (formEditar) {
             return;
         }
         
-        // 🔥 CONSTRUIR DATA CORRECTAMENTE
+        // 🔥 CONSTRUIR DATA - STOCK DEBE SER UN NÚMERO
         const data = {
             nombre: nombre,
             costo_proveedor: costoProveedor,
             margen_ganancia: margen,
             proveedor: proveedor || 'Importado',
-            stock: stock,  // 🔥 Asegurar que sea el valor del campo stock
+            stock: stock,  // 🔥 Asegurar que sea el valor del input
             costo_venta_final: precioVenta,
-            categoria_nombre: categoriaNombre || ''  // 🔥 Enviar el nombre de la categoría
+            categoria_nombre: categoriaNombre || ''
         };
         
-        // Si hay subcategoria_id, agregarlo
+        // Agregar subcategoria_id si existe
         if (categoriaId && categoriaId !== '') {
             data.subcategoria_id = parseInt(categoriaId);
         }
         
-        console.log('📤 Enviando datos al backend:', JSON.stringify(data, null, 2));
+        console.log('📤 ENVIANDO AL BACKEND:', JSON.stringify(data, null, 2));
         
         const btn = this.querySelector('button[type="submit"]');
         btn.disabled = true;
@@ -1834,15 +1838,9 @@ if (formEditar) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        .then(async r => {
-            const resp = await r.json();
-            console.log('📥 Respuesta del backend:', resp);
-            if (!r.ok) {
-                throw new Error(resp.error || 'Error en el servidor');
-            }
-            return resp;
-        })
+        .then(r => r.json())
         .then(resp => {
+            console.log('📥 RESPUESTA DEL BACKEND:', resp);
             if (resp.success) {
                 alert('✅ Repuesto actualizado correctamente');
                 cerrarModalEditar();
@@ -1853,7 +1851,7 @@ if (formEditar) {
         })
         .catch(err => {
             console.error('❌ Error:', err);
-            alert('❌ Error: ' + err.message);
+            alert('❌ Error de conexión: ' + err.message);
         })
         .finally(() => {
             btn.disabled = false;
@@ -1861,7 +1859,6 @@ if (formEditar) {
         });
     });
 }
-
 // ============================================
 // BOTONES EDITAR - CORREGIDO
 // ============================================
