@@ -1640,7 +1640,12 @@ def actualizar_repuesto(id_repuesto):
     try:
         data = request.json
         logger.info(f"📥 ACTUALIZAR REPUESTO ID {id_repuesto}")
-        logger.info(f"📥 Datos recibidos: {data}")
+        logger.info(f"📥 Datos recibidos: {json.dumps(data, indent=2)}")
+        
+        # 🔥 LOG ESPECÍFICO PARA STOCK Y CATEGORÍA
+        stock_raw = data.get('stock', 0)
+        logger.info(f"📦 Stock recibido: {stock_raw} (tipo: {type(stock_raw)})")
+        logger.info(f"📂 Categoría recibida: {data.get('categoria_nombre', 'NO ENVIADA')}")
         
         nombre = sanitizar_input(data.get('nombre', '').strip())
         costo_proveedor = sanitizar_numero(data.get('costo_proveedor', 0), min_val=0)
