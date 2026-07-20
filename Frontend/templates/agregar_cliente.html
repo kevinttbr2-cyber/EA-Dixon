@@ -464,10 +464,11 @@
             <!-- Fecha + Año -->
             <div class="grid-2">
                 <div class="form-group">
-                    <label>📅 Fecha</label>
-                    <input type="date" name="fecha" class="form-control" value="{{ hoy }}" readonly style="background:rgba(255,255,255,0.03); color: var(--text-muted);">
-                    <small style="color: var(--text-muted); font-size: 10px;">📌 Fecha de Chile ({{ hoy }})</small>
-                </div>
+    <label>📅 Fecha</label>
+    <input type="text" name="fecha" class="form-control" value="{{ hoy_formateada }}" readonly style="background:rgba(255,255,255,0.03); color: var(--text-muted);">
+    <input type="hidden" name="fecha_iso" value="{{ hoy }}">
+    <small style="color: var(--text-muted); font-size: 10px;">📌 Fecha de Chile ({{ hoy_formateada }})</small>
+</div>
                 <div class="form-group">
                     <label>📆 Año <span class="opcional">(opcional)</span></label>
                     <input type="number" name="anio" class="form-control" placeholder="Ej: 2020" min="1900" max="2099">
