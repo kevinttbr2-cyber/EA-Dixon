@@ -359,7 +359,6 @@ def get_pendientes_validacion():
     except Exception as e:
         logger.error(f"Error en get_pendientes_validacion: {e}")
         return jsonify({"error": str(e)}), 500
-
 # ============================
 # 9. VALIDAR PAGO (CON DESCUENTO DE STOCK Y VALIDACIÓN)
 # ============================
@@ -399,56 +398,56 @@ def validar_pago(id_reg):
         
         logger.info(f"🚛 ¿Es flota? {es_flota} → estado_pago: {estado_pago}")
         
-       # ✅ PROCESAR CADA REPUESTO CON VALIDACIÓN DE STOCK (SIEMPRE DESCUENTA)
-for item in detalles_repuestos:
-    nombre = sanitizar_input(item.get('nombre', '').strip())
-    cantidad = int(sanitizar_numero(item.get('cantidad', 1), min_val=1))
-    costo_unitario = sanitizar_numero(item.get('costo_unitario', 0), min_val=0)
-    
-    if nombre:
-        cur.execute(
-            "SELECT id, stock, costo_proveedor, costo_venta_final FROM repuestos WHERE nombre = %s",
-            (nombre,)
-        )
-        existente = cur.fetchone()
-        
-        if existente:
-            id_existente, stock_actual, costo_prov, costo_venta_existente = existente
+        # ============================================
+        # ✅ PROCESAR CADA REPUESTO CON VALIDACIÓN DE STOCK (SIEMPRE DESCUENTA)
+        # ============================================
+        for item in detalles_repuestos:
+            nombre = sanitizar_input(item.get('nombre', '').strip())
+            cantidad = int(sanitizar_numero(item.get('cantidad', 1), min_val=1))
+            costo_unitario = sanitizar_numero(item.get('costo_unitario', 0), min_val=0)
             
-            # ✅ VERIFICAR STOCK (SIEMPRE, incluso en flotas)
-            if stock_actual is not None and stock_actual < cantidad:
-                cur.close()
-                conn.close()
-                return jsonify({
-                    "error": f"Stock insuficiente para '{nombre}'. Disponible: {stock_actual}, Solicitado: {cantidad}"
-                }), 400
-            
-            # ✅ DESCONTAR STOCK (SIEMPRE, incluso en flotas)
-            # ELIMINA EL 'if not es_flota' - AHORA DESCUENTA SIEMPRE
-            nuevo_stock = (stock_actual or 0) - cantidad
-            cur.execute("""
-                UPDATE repuestos 
-                SET stock = %s,
-                    updated_at = NOW() AT TIME ZONE 'America/Santiago'
-                WHERE id = %s
-            """, (nuevo_stock, id_existente))
-            logger.info(f"📦 Stock de '{nombre}': {stock_actual} → {nuevo_stock}")
-            
-            # Actualizar costo_venta_final si es 0
-            if costo_venta_existente == 0 and costo_unitario > 0:
-                cur.execute("""
-                    UPDATE repuestos 
-                    SET costo_venta_final = %s, 
-                        updated_at = NOW() AT TIME ZONE 'America/Santiago'
-                    WHERE id = %s
-                """, (costo_unitario, id_existente))
+            if nombre:
+                cur.execute(
+                    "SELECT id, stock, costo_proveedor, costo_venta_final FROM repuestos WHERE nombre = %s",
+                    (nombre,)
+                )
+                existente = cur.fetchone()
+                
+                if existente:
+                    id_existente, stock_actual, costo_prov, costo_venta_existente = existente
+                    
+                    # ✅ VERIFICAR STOCK (SIEMPRE, incluso en flotas)
+                    if stock_actual is not None and stock_actual < cantidad:
+                        cur.close()
+                        conn.close()
+                        return jsonify({
+                            "error": f"Stock insuficiente para '{nombre}'. Disponible: {stock_actual}, Solicitado: {cantidad}"
+                        }), 400
+                    
+                    # ✅ DESCONTAR STOCK (SIEMPRE, incluso en flotas)
+                    nuevo_stock = (stock_actual or 0) - cantidad
+                    cur.execute("""
+                        UPDATE repuestos 
+                        SET stock = %s,
+                            updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                        WHERE id = %s
+                    """, (nuevo_stock, id_existente))
+                    logger.info(f"📦 Stock de '{nombre}': {stock_actual} → {nuevo_stock}")
+                    
+                    # Actualizar costo_venta_final si es 0
+                    if costo_venta_existente == 0 and costo_unitario > 0:
+                        cur.execute("""
+                            UPDATE repuestos 
+                            SET costo_venta_final = %s, 
+                                updated_at = NOW() AT TIME ZONE 'America/Santiago'
+                            WHERE id = %s
+                        """, (costo_unitario, id_existente))
                         logger.info(f"✅ Repuesto '{nombre}' actualizado con costo_venta_final: ${costo_unitario}")
                 else:
                     # Crear nuevo repuesto
                     iva = 1.19
                     costo_proveedor_estimado = int(costo_unitario / 1.19 / 1.3) if costo_unitario > 0 else 0
                     
-                    # ✅ CONSULTA PARAMETRIZADA
                     cur.execute("""
                         INSERT INTO repuestos 
                         (nombre, costo_proveedor, margen_ganancia, costo_venta_final, proveedor, 
@@ -469,7 +468,9 @@ for item in detalles_repuestos:
                     id_nuevo = cur.fetchone()[0]
                     logger.info(f"✅ Repuesto '{nombre}' creado con costo_venta_final: ${costo_unitario} (ID: {id_nuevo})")
         
-        # ✅ ACTUALIZAR PAGO (CONSULTA PARAMETRIZADA)
+        # ============================================
+        # ✅ ACTUALIZAR PAGO
+        # ============================================
         detalles_json = json.dumps(detalles_repuestos)
         cur.execute("""
             UPDATE pagos 
