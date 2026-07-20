@@ -1759,8 +1759,176 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM cargado correctamente');
+    
+    // ============================================
+    // EVENTOS PARA CÁLCULO AUTOMÁTICO EN EDICIÓN
+    // ============================================
+    const precioInput = document.getElementById('editPrecioVenta');
+    const margenInput = document.getElementById('editMargenGanancia');
+    const costoInput = document.getElementById('editCostoProveedor');
+    
+    if (precioInput) {
+        precioInput.addEventListener('input', function() {
+            calcularMargenDesdePrecio();
+        });
+    }
+    
+    if (margenInput) {
+        margenInput.addEventListener('input', function() {
+            calcularPrecioDesdeMargen();
+        });
+    }
+    
+    if (costoInput) {
+        costoInput.addEventListener('input', function() {
+            const precio = parseFloat(document.getElementById('editPrecioVenta')?.value) || 0;
+            if (precio > 0) {
+                calcularMargenDesdePrecio();
+            }
+        });
+    }
+    
+    // Buscador
+    const buscador = document.getElementById('buscadorRepuestos');
+    const btnBuscar = document.getElementById('btnBuscarRepuesto');
+    const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+    const filas = document.querySelectorAll('.fila-repuesto-lista');
+
+    function filtrarTabla() {
+        const texto = buscador?.value.toLowerCase().trim() || '';
+        filas.forEach(fila => {
+            const nombre = fila.querySelector('td:nth-child(2)')?.textContent || '';
+            fila.style.display = nombre.toLowerCase().includes(texto) ? '' : 'none';
+        });
+    }
+
+    if (btnBuscar) btnBuscar.addEventListener('click', filtrarTabla);
+    if (buscador) {
+        buscador.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') filtrarTabla();
+            filtrarTabla();
+        });
+    }
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', function() {
+            if (buscador) buscador.value = '';
+            filtrarTabla();
+        });
+    }
+
+    // Ordenar tabla
+    window.ordenarTabla = function(columna) {
+        const tbody = document.querySelector('#tablaRepuestos tbody');
+        if (!tbody) return;
+        
+        const filasArray = Array.from(tbody.querySelectorAll('.fila-repuesto-lista'));
+        filasArray.sort((a, b) => {
+            let valA, valB;
+            const celdasA = a.querySelectorAll('td');
+            const celdasB = b.querySelectorAll('td');
+            valA = celdasA[columna]?.textContent.trim() || '';
+            valB = celdasB[columna]?.textContent.trim() || '';
+            if (columna === 2 || columna === 3 || columna === 5) {
+                valA = parseFloat(valA.replace(/[$,⚠️]/g, '')) || 0;
+                valB = parseFloat(valB.replace(/[$,⚠️]/g, '')) || 0;
+            }
+            if (columna === 4) {
+                valA = parseFloat(valA) || 0;
+                valB = parseFloat(valB) || 0;
+            }
+            if (columna === 0) {
+                valA = parseInt(valA) || 0;
+                valB = parseInt(valB) || 0;
+            }
+            if (valA < valB) return -1;
+            if (valA > valB) return 1;
+            return 0;
+        });
+        filasArray.forEach(fila => tbody.appendChild(fila));
+    };
+
+    // Calcular precio venta en agregar
+    function calcularCostoVenta() {
+        const inputCosto = document.getElementById('inputCostoProveedor');
+        const inputMargen = document.getElementById('inputMargenGanancia');
+        const previewCosto = document.getElementById('previewCostoVenta');
+        const previewMargen = document.getElementById('previewMargen');
+        
+        if (!inputCosto || !inputMargen) return;
+        
+        const costoProveedor = parseFloat(inputCosto.value) || 0;
+        const margen = parseFloat(inputMargen.value) || 0;
+        const iva = 1.19;
+        const costoConIva = costoProveedor * iva;
+        const costoFinal = costoConIva * (1 + (margen / 100));
+        
+        if (previewCosto) previewCosto.textContent = '$' + Math.floor(costoFinal).toLocaleString();
+        if (previewMargen) previewMargen.textContent = margen + '%';
+    }
+
+    const inputCosto = document.getElementById('inputCostoProveedor');
+    const inputMargen = document.getElementById('inputMargenGanancia');
+    if (inputCosto) inputCosto.addEventListener('input', calcularCostoVenta);
+    if (inputMargen) inputMargen.addEventListener('input', calcularCostoVenta);
+
+    // Formulario agregar
+    const formAgregar = document.getElementById('formAgregarRepuesto');
+    if (formAgregar) {
+        formAgregar.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('inputNombreRepuesto')?.value.trim() || '';
+            const costoProveedor = parseFloat(document.getElementById('inputCostoProveedor')?.value || 0);
+            const margen = parseFloat(document.getElementById('inputMargenGanancia')?.value || 0);
+            const proveedor = document.getElementById('inputProveedorRepuesto')?.value.trim() || '';
+            const stock = parseInt(document.getElementById('inputStockRepuesto')?.value || 1);
+            
+            if (!nombre) {
+                alert('⚠️ El nombre del repuesto es obligatorio');
+                return;
+            }
+            
+            if (costoProveedor <= 0) {
+                alert('⚠️ El costo proveedor debe ser mayor a 0');
+                return;
+            }
+            
+            const iva = 1.19;
+            const costoConIva = costoProveedor * iva;
+            const costoFinal = Math.floor(costoConIva * (1 + (margen / 100)));
+            
+            const data = {
+                nombre: nombre,
+                costo_proveedor: costoProveedor,
+                margen_ganancia: margen,
+                proveedor: proveedor || 'Importado',
+                costo_venta_final: costoFinal,
+                stock: stock
+            };
+            
+            fetch(`${API_URL}/api/repuestos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(resp => {
+                if (resp.success) {
+                    alert('✅ Repuesto agregado correctamente');
+                    cerrarModalAgregar();
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + (resp.error || 'Desconocido'));
+                }
+            })
+            .catch(() => alert('❌ Error de conexión'));
+        });
+    }
+
 // ============================================
-// FORMULARIO EDITAR - CORREGIDO (GUARDA STOCK Y CATEGORÍAS)
+// FORMULARIO EDITAR - CORREGIDO
 // ============================================
 const formEditar = document.getElementById('formEditarRepuesto');
 if (formEditar) {
@@ -1777,7 +1945,6 @@ if (formEditar) {
         const categoriaSelect = document.getElementById('editCategoriaRepuesto');
         const categoriaId = categoriaSelect?.value || '';
         
-        // ✅ OBTENER LA CATEGORÍA PADRE (optgroup)
         let categoriaPadre = '';
         if (categoriaSelect) {
             const selectedOption = categoriaSelect.options[categoriaSelect.selectedIndex];
@@ -1799,13 +1966,12 @@ if (formEditar) {
             return;
         }
         
-        // ✅ CONSTRUIR DATOS CON STOCK Y CATEGORÍA
         const data = {
             nombre: nombre,
             costo_proveedor: costoProveedor,
             margen_ganancia: margen,
             proveedor: proveedor || 'Importado',
-            stock: stock,  // ✅ STOCK CORRECTO
+            stock: stock,
             costo_venta_final: precioVenta,
             categoria_nombre: categoriaPadre || ''
         };
@@ -1844,7 +2010,7 @@ if (formEditar) {
 }
 
 // ============================================
-// EDITAR BOTONES - CORREGIDO (CON STOCK ORIGINAL)
+// EDITAR BOTONES - CORREGIDO (SIN SOBRESCRIBIR STOCK)
 // ============================================
 document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
     btn.addEventListener('click', async function() {
@@ -1852,7 +2018,6 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
         const fila = this.closest('.fila-repuesto-lista');
         if (!fila) return;
         
-        // ✅ OBTENER TODOS LOS VALORES DE LA FILA
         const nombre = fila.querySelector('td:nth-child(2)')?.textContent.trim() || '';
         const stockText = fila.querySelector('td:nth-child(3)')?.textContent.trim() || '0';
         const stock = parseInt(stockText) || 0;
@@ -1866,22 +2031,18 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
         const precioVenta = parseFloat(precioText) || 0;
         
         console.log('📊 DATOS DE LA FILA:');
-        console.log('  Stock (este es el valor real):', stock);
-        console.log('  Categoría (texto a buscar):', categoriaText);
+        console.log('  Stock real:', stock);
+        console.log('  Categoría:', categoriaText);
         
-        // ✅ GUARDAR EL STOCK ORIGINAL
-        stockOriginal = stock;
-        
-        // ✅ ASIGNAR VALORES A LOS CAMPOS DEL MODAL
+        // ✅ ASIGNAR VALORES
         document.getElementById('editRepuestoId').value = id;
         document.getElementById('editNombreRepuesto').value = nombre;
         document.getElementById('editCostoProveedor').value = costo;
         document.getElementById('editMargenGanancia').value = margen;
         document.getElementById('editProveedorRepuesto').value = proveedor === '-' ? '' : proveedor;
-        document.getElementById('editStockRepuesto').value = stock;  // ✅ STOCK CORRECTO
+        document.getElementById('editStockRepuesto').value = stock;
         document.getElementById('editPrecioVenta').value = precioVenta;
         
-        // ✅ ACTUALIZAR GANANCIA Y MARGEN
         const ganancia = precioVenta - costo;
         const editGananciaLabel = document.getElementById('editGananciaLabel');
         const editMargenLabel = document.getElementById('editMargenCalculadoLabel');
@@ -1893,51 +2054,29 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
             editMargenLabel.textContent = `📊 Margen calculado: ${margen}%`;
         }
         
-        // ✅ CARGAR CATEGORÍAS SI NO ESTÁN CARGADAS
+        // ✅ CARGAR CATEGORÍAS
         if (!categoriasCargadas) {
             await cargarCategoriasEnEditar();
         }
         
-        // ✅ SELECCIONAR LA CATEGORÍA CORRECTA (CORREGIDO)
+        // ✅ SELECCIONAR CATEGORÍA POR TEXTO (NO POR ID)
         const select = document.getElementById('editCategoriaRepuesto');
         if (select) {
             let categoriaEncontrada = false;
+            const categoriaClean = categoriaText.replace(/[📂]\s*/g, '').trim().toLowerCase();
             
-            // ✅ LIMPIAR EL TEXTO DE LA CATEGORÍA
-            let categoriaTextClean = categoriaText.replace(/[📂]\s*/g, '').trim();
-            
-            console.log('🔍 Buscando categoría exacta:', categoriaTextClean);
-            console.log('🔍 Stock (NO se usa para categoría):', stock);
-            
-            // ✅ 1. BUSCAR POR TEXTO EXACTO (PRIMERO)
             for (let opt of select.options) {
-                const textoOpt = opt.textContent.trim();
-                if (textoOpt === categoriaTextClean) {
+                const textoOpt = opt.textContent.trim().toLowerCase();
+                if (textoOpt === categoriaClean) {
                     opt.selected = true;
                     categoriaEncontrada = true;
-                    console.log('✅ Categoría seleccionada por texto exacto:', opt.text, 'Value:', opt.value);
+                    console.log('✅ Categoría seleccionada:', opt.text);
                     break;
                 }
             }
             
-            // ✅ 2. Si no se encontró, buscar por texto parcial (pero sin confundir)
-            if (!categoriaEncontrada && categoriaTextClean) {
-                for (let opt of select.options) {
-                    const textoOpt = opt.textContent.trim().toLowerCase();
-                    const busca = categoriaTextClean.toLowerCase();
-                    
-                    if (textoOpt === busca || (textoOpt.includes(busca) && textoOpt.length <= busca.length + 3)) {
-                        opt.selected = true;
-                        categoriaEncontrada = true;
-                        console.log('✅ Categoría seleccionada por texto parcial:', opt.text, 'Value:', opt.value);
-                        break;
-                    }
-                }
-            }
-            
-            // ✅ 3. Si no se encontró, seleccionar "Sin categoría"
             if (!categoriaEncontrada) {
-                console.log('ℹ️ Categoría no encontrada:', categoriaTextClean, '→ seleccionando "Sin categoría"');
+                console.log('ℹ️ Categoría no encontrada, seleccionando "Sin categoría"');
                 select.value = '';
             }
         }
@@ -1945,34 +2084,48 @@ document.querySelectorAll('.btn-editar-repuesto').forEach(btn => {
         const modal = document.getElementById('modalEditarRepuesto');
         if (modal) modal.classList.add('active');
         
-        // ✅ ESPERAR A QUE EL MODAL SE ABRA Y RESTAURAR EL STOCK
+        // ✅ FORZAR EL STOCK DESPUÉS DE ABRIR EL MODAL
         setTimeout(function() {
             const stockInput = document.getElementById('editStockRepuesto');
             if (stockInput) {
-                stockInput.value = stockOriginal;
-                console.log('✅ Stock restaurado a:', stockOriginal);
+                stockInput.value = stock;
+                console.log('✅ Stock forzado a:', stock);
             }
-        }, 100);
+        }, 50);
     });
 });
 
-// ✅ CUANDO SE SELECCIONA UNA CATEGORÍA, RESTAURAR EL STOCK ORIGINAL
-document.addEventListener('change', function(e) {
-    if (e.target && e.target.id === 'editCategoriaRepuesto') {
-        const stockInput = document.getElementById('editStockRepuesto');
-        if (stockInput) {
-            stockInput.value = stockOriginal;
-            console.log('✅ Stock restaurado a:', stockOriginal);
-        }
-    }
-});
+    // Eliminar repuesto
+    document.querySelectorAll('.btn-eliminar-repuesto-lista').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            if (!confirm(`¿Eliminar el repuesto #${id} permanentemente?`)) return;
+            fetch(`${API_URL}/api/repuestos/${id}`, {
+                method: 'DELETE'
+            })
+            .then(resp => {
+                if (resp.ok) {
+                    alert('✅ Repuesto eliminado');
+                    location.reload();
+                } else {
+                    alert('❌ Error al eliminar');
+                }
+            })
+            .catch(() => alert('❌ Error de conexión'));
+        });
+    });
 
-// ✅ CUANDO EL USUARIO CAMBIA EL STOCK MANUALMENTE, ACTUALIZAR stockOriginal
-document.addEventListener('input', function(e) {
-    if (e.target && e.target.id === 'editStockRepuesto') {
-        stockOriginal = parseInt(e.target.value) || 0;
-        console.log('✅ stockOriginal actualizado a:', stockOriginal);
-    }
+    // Cerrar modales al hacer clic fuera
+    document.querySelectorAll('.modal-dixon').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+    });
+    
+    // Cargar categorías al inicio para editar
+    cargarCategoriasEnEditar();
 });
 
 // ============================================
