@@ -416,14 +416,14 @@
             <div class="valor">${{ "{:,.0f}".format(promedio_diario|float) }}</div>
         </div>
         
-        <!-- ✅ Gastos Operativos (NUEVO) -->
+        <!-- Gastos Operativos -->
         <div class="tarjeta gastos-operativos">
             <div class="label">📊 Gastos Operativos</div>
             <div class="valor">-${{ "{:,.0f}".format(total_gastos|float) }}</div>
             <div style="color:#666;font-size:9px;">{{ gastos_operativos|length }} gastos</div>
         </div>
         
-        <!-- ✅ Ganancia Real (NUEVO) -->
+        <!-- Ganancia Real -->
         <div class="tarjeta ganancia-real">
             <div class="label">📊 GANANCIA REAL</div>
             <div class="valor" style="color:{% if ganancia_real|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %};">
@@ -471,7 +471,7 @@
             </div>
         </div>
         
-        <!-- 5. Ventas Directas vs Trabajo (NUEVO) -->
+        <!-- 5. Ventas Directas vs Trabajo (CORREGIDO) -->
         <div class="grafico-card">
             <h4>🥧 Ventas Directas vs Trabajo</h4>
             <div class="canvas-wrapper">
@@ -489,7 +489,7 @@
             </div>
         </div>
         
-        <!-- 6. Evolución de Gastos (NUEVO) -->
+        <!-- 6. Evolución de Gastos -->
         <div class="grafico-card">
             <h4>📉 Evolución de Gastos</h4>
             <div class="canvas-wrapper">
@@ -499,7 +499,7 @@
     </div>
 
     <!-- ============================
-    GASTOS POR CATEGORÍA (NUEVO)
+    GASTOS POR CATEGORÍA
     ============================ -->
     <div class="tabla-gastos">
         <h4>📋 Gastos por Categoría</h4>
@@ -725,13 +725,14 @@
         }
 
         // ============================================
-        // 5. Ventas Directas vs Trabajo (NUEVO)
+        // 5. Ventas Directas vs Trabajo (CORREGIDO)
         // ============================================
         const ctx5 = document.getElementById('chartVentasTipo');
         if (ctx5) {
+            // ✅ AHORA COMPARA: Venta Directa (repuestos vendidos directamente) vs Trabajo (repuestos vendidos en servicios)
             const totalVentas = totalDirecta + totalTrabajo;
             if (totalVentas === 0) {
-                ctx5.parentElement.innerHTML = '<div style="text-align:center;color:#666;padding:20px 0;">📊 No hay ventas</div>';
+                ctx5.parentElement.innerHTML = '<div style="text-align:center;color:#666;padding:20px 0;">📊 No hay ventas de repuestos</div>';
             } else {
                 new Chart(ctx5, {
                     type: 'doughnut',
@@ -751,6 +752,17 @@
                             legend: {
                                 position: 'bottom',
                                 labels: { color: '#888' }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        let value = context.raw || 0;
+                                        let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return label + ': $' + value.toLocaleString() + ' (' + percentage + '%)';
+                                    }
+                                }
                             }
                         },
                         cutout: '60%'
@@ -760,7 +772,7 @@
         }
 
         // ============================================
-        // 6. Evolución de Gastos (NUEVO)
+        // 6. Evolución de Gastos
         // ============================================
         const ctx6 = document.getElementById('chartGastos');
         if (ctx6) {
