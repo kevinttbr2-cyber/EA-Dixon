@@ -197,3 +197,105 @@ def eliminar_gasto(id_gasto):
     except Exception as e:
         logger.error(f"Error en eliminar_gasto: {e}")
         return jsonify({"error": str(e)}), 500
+# ============================================
+# RUTA POST - REGISTRAR FACTURA SII
+# ============================================
+@gasto_bp.route('/facturas_sii', methods=['POST'])
+def registrar_factura_sii():
+    try:
+        data = request.json
+        
+        if not data.get('rut_emisor') or not data.get('folio'):
+            return jsonify({"error": "RUT emisor y folio son obligatorios"}), 400
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO facturas_sii 
+            (rut_emisor, rut_receptor, folio, tipo_documento, fecha, monto, 
+             codigo_autorizacion, razon_social_emisor, razon_social_receptor, 
+             texto_original, usuario, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                    NOW() AT TIME ZONE 'America/Santiago')
+            RETURNING id
+        """, (
+            sanitizar_input(data.get('rut_emisor')),
+            sanitizar_input(data.get('rut_receptor')),
+            sanitizar_input(data.get('folio')),
+            sanitizar_input(data.get('tipo_documento', 'Factura')),
+            data.get('fecha'),
+            sanitizar_numero(data.get('monto', 0), min_val=0),
+            sanitizar_input(data.get('codigo_autorizacion')),
+            sanitizar_input(data.get('razon_social_emisor')),
+            sanitizar_input(data.get('razon_social_receptor')),
+            data.get('texto_original', ''),
+            sanitizar_input(data.get('usuario', 'Sistema'))
+        ))
+        
+        id_factura = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        logger.info(f"✅ Factura SII registrada ID: {id_factura} - Folio: {data.get('folio')}")
+        return jsonify({"success": True, "id": id_factura})
+        
+    except Exception as e:
+        logger.error(f"Error en registrar_factura_sii: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================
+# RUTA GET - OBTENER FACTURAS SII
+# ============================================
+@gasto_bp.route('/facturas_sii', methods=['GET'])
+def obtener_facturas_sii():
+    try:
+        filtro = request.args.get('filtro', 'todos')
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        
+        conn, cur = get_cursor()
+        
+        query = """
+            SELECT id, rut_emisor, rut_receptor, folio, tipo_documento, fecha, monto,
+                   codigo_autorizacion, razon_social_emisor, razon_social_receptor,
+                   usuario, created_at, fecha_escaneo
+            FROM facturas_sii
+            WHERE 1=1
+        """
+        params = []
+        
+        if fecha_inicio and fecha_fin:
+            query += " AND fecha BETWEEN %s AND %s"
+            params.append(fecha_inicio)
+            params.append(fecha_fin)
+        elif filtro == 'hoy':
+            query += " AND fecha = CURRENT_DATE"
+        elif filtro == '7d':
+            query += " AND fecha >= CURRENT_DATE - INTERVAL '7 days'"
+        elif filtro == 'mes':
+            query += " AND fecha >= CURRENT_DATE - INTERVAL '30 days'"
+        
+        query += " ORDER BY fecha DESC, created_at DESC"
+        
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        facturas = []
+        for row in rows:
+            f = dict(row)
+            if f.get('fecha') and hasattr(f['fecha'], 'strftime'):
+                f['fecha'] = f['fecha'].strftime('%Y-%m-%d')
+            if f.get('created_at') and hasattr(f['created_at'], 'strftime'):
+                f['created_at'] = f['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            facturas.append(f)
+        
+        return jsonify(facturas)
+        
+    except Exception as e:
+        logger.error(f"Error en obtener_facturas_sii: {e}")
+        return jsonify([])
