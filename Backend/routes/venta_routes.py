@@ -117,7 +117,7 @@ def venta_rapida():
         return jsonify({"error": str(e)}), 500
 
 # ============================================
-# BALANCE DE VENTAS (SIN CAMBIOS - IGUAL)
+# BALANCE DE VENTAS CON DESCUENTO
 # ============================================
 @venta_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
@@ -140,9 +140,15 @@ def balance_ventas():
                 "ganancia_directa": 0,
                 "ganancia_neta": 0,
                 "total_repuestos_trabajo": 0,
-                "total_repuestos_directa": 0
+                "total_repuestos_directa": 0,
+                "total_descuentos": 0  # 🔥 NUEVO
             })
         
+        # 🔥 NUEVO: Calcular total de descuentos
+        total_descuentos = 0
+        for r in registros:
+            descuento = float(r.get('descuento_aplicado', 0) or 0)
+            total_descuentos += descuento
         # Procesar registros
         for r in registros:
             total = 0
@@ -228,7 +234,8 @@ def balance_ventas():
             "ganancia_directa": round(ganancia_directa, 2),
             "ganancia_neta": round(ganancia_neta, 2),
             "total_repuestos_trabajo": round(costo_trabajo, 2),
-            "total_repuestos_directa": round(costo_directa, 2)
+            "total_repuestos_directa": round(costo_directa, 2),
+            "total_descuentos": round(total_descuentos, 2)
         })
     except Exception as e:
         logger.error(f"Error en balance_ventas: {e}")
