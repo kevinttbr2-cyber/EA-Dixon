@@ -199,7 +199,7 @@ def eliminar_gasto(id_gasto):
         logger.error(f"Error en eliminar_gasto: {e}")
         return jsonify({"error": str(e)}), 500
 # ============================================
-# RUTA POST - REGISTRAR FACTURA SII
+# RUTA POST - REGISTRAR FACTURA SII (CORREGIDO)
 # ============================================
 @gasto_bp.route('/facturas_sii', methods=['POST'])
 def registrar_factura_sii():
@@ -212,13 +212,13 @@ def registrar_factura_sii():
         conn = get_connection()
         cur = conn.cursor()
         
+        # 🔥 CORREGIDO: No incluir created_at en el INSERT (usa DEFAULT)
         cur.execute("""
             INSERT INTO facturas_sii 
             (rut_emisor, rut_receptor, folio, tipo_documento, fecha, monto, 
              codigo_autorizacion, razon_social_emisor, razon_social_receptor, 
-             texto_original, usuario, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                    NOW() AT TIME ZONE 'America/Santiago')
+             texto_original, usuario)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """, (
             sanitizar_input(data.get('rut_emisor')),
@@ -245,7 +245,6 @@ def registrar_factura_sii():
     except Exception as e:
         logger.error(f"Error en registrar_factura_sii: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 # ============================================
 # RUTA GET - OBTENER FACTURAS SII
