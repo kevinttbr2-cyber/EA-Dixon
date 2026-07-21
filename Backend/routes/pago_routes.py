@@ -653,6 +653,9 @@ def get_flotas_pendientes_agrupadas():
 # ============================
 # 12. BALANCE DE VENTAS (CORREGIDO)
 # ============================
+# ============================
+# 12. BALANCE DE VENTAS (CORREGIDO - SOLO CON VENTAS)
+# ============================
 @pago_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
     try:
@@ -682,10 +685,15 @@ def balance_ventas():
         query += " ORDER BY fecha DESC, hora DESC"
         cur.execute(query, params)
         rows = cur.fetchall()
-        registros = [dict(row) for row in rows]
         
-        # ✅ PROCESAR REPUESTOS (CON CONSULTAS PARAMETRIZADAS)
-        for r in registros:
+        # ============================================
+        # 🔥 FILTRO: SOLO REGISTROS CON VENTA
+        # ============================================
+        registros_filtrados = []
+        for row in rows:
+            r = dict(row)
+            
+            # Calcular total de repuestos
             total = 0
             detalles = r.get('detalles_repuestos', [])
             for item in detalles:
@@ -693,35 +701,32 @@ def balance_ventas():
                 precio = item.get('costo_unitario', 0) or item.get('costo', 0)
                 total += cantidad * precio
             r['total_repuestos'] = total
+            
+            # 🔥 VERIFICAR SI TIENE VENTA REAL
+            monto = float(r.get('monto', 0) or 0)
+            total_repuestos = float(r.get('total_repuestos', 0) or 0)
+            
+            # Tiene venta si: monto > 0 O tiene repuestos con costo > 0 O tiene detalles_repuestos
+            tiene_venta = monto > 0 or total_repuestos > 0 or len(detalles) > 0
+            
+            if tiene_venta:
+                registros_filtrados.append(r)
         
         # ============================================
-        # ✅ CLASIFICACIÓN NUEVA (CORREGIDA)
+        # ✅ CLASIFICACIÓN
         # ============================================
         trabajo = []
         directa = []
         
-        for r in registros:
-            # ✅ CALCULAR VENTA DE REPUESTOS
-            total_repuestos = 0
-            detalles = r.get('detalles_repuestos', [])
-            if detalles and len(detalles) > 0:
-                for item in detalles:
-                    cantidad = int(item.get('cantidad', 1) or 1)
-                    precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
-                    total_repuestos += cantidad * precio
-            else:
-                total_repuestos = float(r.get('costo_repuestos_real', 0) or 0)
-            
-            # ✅ CLASIFICAR POR TIPO DE VENTA
+        for r in registros_filtrados:
             es_directa = r.get('tipo_venta') == 'directa'
-            
             if es_directa:
                 directa.append(r)
             else:
                 trabajo.append(r)
         
         # ============================================
-        # ✅ FUNCIONES DE CÁLCULO (FUERA DEL BUCLE)
+        # ✅ FUNCIONES DE CÁLCULO
         # ============================================
         def calcular_venta_repuestos(registros):
             total = 0
@@ -746,7 +751,6 @@ def balance_ventas():
                         cantidad = int(item.get('cantidad', 1) or 1)
                         
                         if nombre:
-                            # ✅ CONSULTA PARAMETRIZADA
                             cur.execute("SELECT costo_proveedor FROM repuestos WHERE nombre = %s", (nombre,))
                             resultado = cur.fetchone()
                             if resultado:
@@ -769,7 +773,6 @@ def balance_ventas():
                 for item in detalles:
                     nombre = item.get('nombre', '')
                     if nombre:
-                        # ✅ CONSULTA PARAMETRIZADA
                         cur.execute("SELECT margen_ganancia FROM repuestos WHERE nombre ILIKE %s", (nombre,))
                         resultado = cur.fetchone()
                         if resultado and resultado[0] is not None and resultado[0] > 0:
@@ -781,7 +784,7 @@ def balance_ventas():
         # ============================================
         # ✅ CALCULAR TOTALES
         # ============================================
-        total_ventas = calcular_venta_repuestos(registros)
+        total_ventas = calcular_venta_repuestos(registros_filtrados)
         total_trabajo = calcular_venta_repuestos(trabajo)
         total_directa = calcular_venta_repuestos(directa)
         
@@ -795,11 +798,73 @@ def balance_ventas():
         ganancia_directa = total_directa - costo_directa
         ganancia_neta = ganancia_trabajo + ganancia_directa
         
+        # ============================================
+        # 🔥 CALCULAR TOTAL DE DESCUENTOS
+        # ============================================
+        total_descuentos = sum(float(r.get('descuento_aplicado', 0) or 0) for r in registros_filtrados)
+        
+        # ============================================
+        # 🔥 OBTENER GASTOS DEL MISMO PERÍODO
+        # ============================================
+        if filtro == 'hoy':
+            fecha_inicio = hoy.strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        elif filtro == '7d':
+            fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        elif filtro == 'mes':
+            fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        else:
+            fecha_inicio = '2020-01-01'
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        
+        cur.execute("""
+            SELECT * FROM gastos 
+            WHERE fecha BETWEEN %s AND %s
+            ORDER BY fecha DESC, hora DESC
+        """, (fecha_inicio, fecha_fin))
+        
+        gastos_rows = cur.fetchall()
+        gastos_operativos = []
+        total_gastos = 0
+        
+        for row in gastos_rows:
+            g = dict(row)
+            if g.get('hora') and hasattr(g['hora'], 'strftime'):
+                g['hora'] = g['hora'].strftime('%H:%M:%S')
+            if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
+                g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
+            gastos_operativos.append(g)
+            total_gastos += float(g.get('monto', 0) or 0)
+        
+        # ============================================
+        # 🔥 GASTOS POR CATEGORÍA
+        # ============================================
+        from collections import defaultdict
+        gastos_dict = defaultdict(float)
+        for g in gastos_operativos:
+            categoria = g.get('categoria', 'Otros')
+            gastos_dict[categoria] += float(g.get('monto', 0) or 0)
+        
+        gastos_por_categoria = []
+        for cat, monto in gastos_dict.items():
+            gastos_por_categoria.append({
+                'categoria': cat,
+                'monto': monto
+            })
+        gastos_por_categoria.sort(key=lambda x: x['monto'], reverse=True)
+        
+        # ============================================
+        # ✅ GANANCIA REAL
+        # ============================================
+        ganancia_real = total_ventas - costo_trabajo - costo_directa - total_gastos
+        
         cur.close()
         conn.close()
         
         return jsonify({
-            "registros": registros,
+            "registros": registros_filtrados,
             "total_ventas": total_ventas,
             "total_trabajo": total_trabajo,
             "total_directa": total_directa,
@@ -809,7 +874,12 @@ def balance_ventas():
             "total_repuestos_trabajo": round(costo_trabajo, 2),
             "total_repuestos_directa": round(costo_directa, 2),
             "trabajo_margen": round(trabajo_margen, 1),
-            "directa_margen": round(directa_margen, 1)
+            "directa_margen": round(directa_margen, 1),
+            "total_gastos": total_gastos,
+            "gastos_operativos": gastos_operativos,
+            "gastos_por_categoria": gastos_por_categoria,
+            "ganancia_real": round(ganancia_real, 2),
+            "total_descuentos": round(total_descuentos, 2)
         })
     except Exception as e:
         logger.error(f"Error en balance_ventas: {e}")
