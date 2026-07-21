@@ -115,19 +115,19 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px;">
         <a href="?filtro=hoy" class="filtro-card {% if filtro == 'hoy' %}active-pagados{% endif %}">
             <div class="etiqueta">Hoy</div>
-            <div class="numero">{{ hoy|length }}</div>
+            <div class="numero">{{ hoy }}</div>
         </a>
         <a href="?filtro=7d" class="filtro-card {% if filtro == '7d' %}active-pagados{% endif %}">
             <div class="etiqueta">7 días</div>
-            <div class="numero">{{ semana|length }}</div>
+            <div class="numero">{{ semana }}</div>
         </a>
         <a href="?filtro=mes" class="filtro-card {% if filtro == 'mes' %}active-pagados{% endif %}">
             <div class="etiqueta">1 Mes</div>
-            <div class="numero">{{ mes|length }}</div>
+            <div class="numero">{{ mes }}</div>
         </a>
         <a href="?filtro=todos" class="filtro-card {% if filtro == 'todos' %}active-total{% endif %}">
             <div class="etiqueta">Todos</div>
-            <div class="numero">{{ todos|length }}</div>
+            <div class="numero">{{ todos }}</div>
         </a>
     </div>
 
