@@ -113,6 +113,64 @@
 }
 
 /* ============================================
+   ✅ TELÉFONO CON PREFIJO +569
+   ============================================ */
+.telefono-wrapper {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: var(--transition);
+    background: var(--bg-input);
+}
+
+.telefono-wrapper:focus-within {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.08);
+}
+
+.telefono-wrapper .prefijo {
+    background: rgba(0, 255, 102, 0.08);
+    color: #00ff66;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    white-space: nowrap;
+    min-width: 50px;
+    justify-content: center;
+    user-select: none;
+}
+
+.telefono-wrapper .prefijo .flag {
+    margin-right: 4px;
+}
+
+.telefono-wrapper .form-control-telefono {
+    background: transparent !important;
+    color: var(--text-primary) !important;
+    border: none !important;
+    padding: 10px 14px !important;
+    font-size: 15px !important;
+    width: 100% !important;
+    outline: none !important;
+    flex: 1;
+}
+
+.telefono-wrapper .form-control-telefono::placeholder {
+    color: var(--text-muted) !important;
+}
+
+.telefono-wrapper .form-control-telefono:focus {
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* ============================================
    CAMPO "OTROS" (manual)
    ============================================ */
 .input-otro {
@@ -186,7 +244,7 @@
 }
 
 /* ============================================
-   AUTOCOMPLETADO (marca y modelo) - MEJORADO
+   AUTOCOMPLETADO (marca y modelo)
    ============================================ */
 .autocomplete-wrapper {
     position: relative;
@@ -247,7 +305,6 @@
     border-radius: 12px;
 }
 
-/* ✅ ESTILO ESPECIAL PARA "OTROS" */
 .autocomplete-wrapper .sugerencias .item.item-otros {
     border-top: 1px solid rgba(241, 196, 15, 0.20);
     background: rgba(241, 196, 15, 0.04);
@@ -461,6 +518,15 @@
     .autocomplete-wrapper .sugerencias {
         max-height: 160px;
     }
+    .telefono-wrapper .prefijo {
+        font-size: 13px;
+        padding: 8px 10px;
+        min-width: 45px;
+    }
+    .telefono-wrapper .form-control-telefono {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+    }
 }
 </style>
 
@@ -491,7 +557,18 @@
                 </div>
                 <div class="form-group">
                     <label>📞 Teléfono</label>
-                    <input type="tel" name="telefono" class="form-control" placeholder="Ej: +56912345678">
+                    <!-- ✅ TELÉFONO CON PREFIJO +569 EDITABLE -->
+                    <div class="telefono-wrapper">
+                        <span class="prefijo">
+                            <span class="flag">🇨🇱</span> +569
+                        </span>
+                        <input type="tel" name="telefono" class="form-control-telefono" 
+                               placeholder="Ej: 12345678" 
+                               pattern="[0-9]*" 
+                               maxlength="8"
+                               autocomplete="tel">
+                    </div>
+                    <small style="color: var(--text-muted); font-size: 11px;">📌 El prefijo +569 se agrega automáticamente. Ingresa solo los 8 dígitos.</small>
                 </div>
             </div>
 
@@ -563,7 +640,7 @@
         </div>
 
         <!-- ============================================
-             SECCIÓN 3: MARCA Y MODELO (CON CATÁLOGO + OTROS)
+             SECCIÓN 3: MARCA Y MODELO
              ============================================ -->
         <div class="section-card">
             <div class="section-title">
@@ -578,7 +655,6 @@
                     <input type="hidden" id="marcaHidden" name="marca" value="">
                     <div class="sugerencias" id="sugerenciasMarca"></div>
                 </div>
-                <!-- Campo "Otros" para marca manual -->
                 <div class="input-otro" id="marcaOtroContainer">
                     <input type="text" id="marcaOtroInput" class="form-control" placeholder="Escribe la marca manualmente..." style="border-color: #f1c40f !important;">
                     <small style="color: #f1c40f; font-size: 11px;">✏️ Escribe la marca personalizada</small>
@@ -594,7 +670,6 @@
                     <input type="hidden" id="modeloHidden" name="modelo" value="">
                     <div class="sugerencias" id="sugerenciasModelo"></div>
                 </div>
-                <!-- Campo "Otros" para modelo manual -->
                 <div class="input-otro" id="modeloOtroContainer">
                     <input type="text" id="modeloOtroInput" class="form-control" placeholder="Escribe el modelo manualmente..." style="border-color: #f1c40f !important;">
                     <small style="color: #f1c40f; font-size: 11px;">✏️ Escribe el modelo personalizado</small>
@@ -706,7 +781,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const texto = marcaInput.value.toLowerCase().trim();
         let filtradas = texto ? lista.filter(m => m.toLowerCase().includes(texto)) : lista;
         
-        // ✅ SIEMPRE agregar la opción "Otros" al final
         const opcionOtros = {
             esOtros: true,
             label: '📝 Otros (escribir manualmente)'
@@ -728,7 +802,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             });
             
-            // ✅ Agregar opción "Otros" al final
             const otrosIndex = filtradas.length;
             html += `
                 <div class="item item-otros ${otrosIndex === itemActivoMarca ? 'active' : ''}" 
@@ -754,11 +827,9 @@ document.addEventListener('DOMContentLoaded', function() {
         sugerenciasMarca.classList.remove('show');
         itemActivoMarca = -1;
         
-        // Ocultar campo "Otros"
         marcaOtroContainer.classList.remove('active');
         marcaOtroInput.value = '';
         
-        // ✅ HABILITAR modelo
         modeloInput.disabled = false;
         modeloInput.value = '';
         modeloHidden.value = '';
@@ -770,15 +841,13 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // ============================================
-    // ✅ SELECCIONAR "OTROS" PARA MARCA (CORREGIDO)
+    // SELECCIONAR "OTROS" PARA MARCA
     // ============================================
     window.seleccionarOtrosMarca = function() {
-        // Mostrar campo de texto manual
         marcaOtroContainer.classList.add('active');
         marcaOtroInput.value = '';
         marcaOtroInput.focus();
         
-        // Limpiar el input de marca
         marcaInput.value = '📝 Otros (escribir manualmente)';
         marcaHidden.value = '';
         marcaSeleccionada = '';
@@ -786,17 +855,12 @@ document.addEventListener('DOMContentLoaded', function() {
         sugerenciasMarca.classList.remove('show');
         itemActivoMarca = -1;
         
-        // ✅ AHORA NO DESHABILITAMOS EL MODELO
-        // ✅ Lo dejamos habilitado pero con placeholder indicativo
         modeloInput.disabled = false;
         modeloInput.value = '';
         modeloHidden.value = '';
         modeloInput.placeholder = 'Escribe el modelo...';
         modeloOtroContainer.classList.remove('active');
         modeloOtroInput.value = '';
-        
-        // ✅ También permitimos "Otros" en modelo directamente
-        console.log('✅ Modo "Otros" activado para marca - Modelo habilitado');
     };
     
     // ============================================
@@ -825,27 +889,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 200);
     });
     
-    // ============================================
-    // ✅ EVENTOS DE MARCA "OTROS" (CORREGIDO)
-    // ============================================
     marcaOtroInput.addEventListener('input', function() {
         const valor = this.value.trim();
         if (valor) {
             marcaHidden.value = valor;
             marcaSeleccionada = valor;
-            // ✅ Cuando el usuario escribe en "Otros", el modelo se habilita automáticamente
             modeloInput.disabled = false;
             modeloInput.placeholder = 'Escribe o selecciona el modelo...';
         } else {
             marcaHidden.value = '';
-            // ❌ NO deshabilitamos el modelo, solo cambiamos el placeholder
             modeloInput.placeholder = 'Primero escribe una marca en "Otros"';
         }
     });
     
     marcaOtroInput.addEventListener('blur', function() {
         if (!this.value.trim()) {
-            // Si no hay valor, ocultamos el campo "Otros" y reseteamos
             marcaOtroContainer.classList.remove('active');
             marcaInput.value = '';
             marcaHidden.value = '';
@@ -907,7 +965,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             });
             
-            // ✅ Agregar opción "Otros" al final
             const otrosIndex = filtradas.length;
             html += `
                 <div class="item item-otros ${otrosIndex === itemActivoModelo ? 'active' : ''}" 
@@ -936,7 +993,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // ============================================
-    // ✅ SELECCIONAR "OTROS" PARA MODELO (CORREGIDO)
+    // SELECCIONAR "OTROS" PARA MODELO
     // ============================================
     window.seleccionarOtrosModelo = function() {
         modeloOtroContainer.classList.add('active');
@@ -954,7 +1011,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // EVENTOS DE MODELO
     // ============================================
     modeloInput.addEventListener('click', function() {
-        // ✅ Si no hay marca seleccionada y no está en modo "Otros", mostrar mensaje
         if (!marcaSeleccionada && !marcaOtroInput.value.trim()) {
             sugerenciasModelo.innerHTML = `<div class="no-resultados">⚠️ Primero selecciona o escribe una marca</div>`;
             sugerenciasModelo.classList.add('show');
@@ -966,7 +1022,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (marcaSeleccionada) {
             cargarModelos(marcaSeleccionada);
         } else if (marcaOtroInput.value.trim()) {
-            // Si está en modo "Otros" y tiene valor, mostrar mensaje
             sugerenciasModelo.innerHTML = `<div class="no-resultados">📝 Marca personalizada: "${marcaOtroInput.value.trim()}"<br>Escribe el modelo manualmente o usa "Otros"</div>`;
             sugerenciasModelo.classList.add('show');
         }
@@ -985,9 +1040,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 200);
     });
     
-    // ============================================
-    // ✅ EVENTOS DE MODELO "OTROS"
-    // ============================================
     modeloOtroInput.addEventListener('input', function() {
         const valor = this.value.trim();
         modeloHidden.value = valor;
@@ -1058,7 +1110,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Cerrar sugerencias al hacer clic fuera
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.autocomplete-wrapper')) {
             sugerenciasMarca.classList.remove('show');
@@ -1117,11 +1168,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('btnGuardarCliente');
     
     form.addEventListener('submit', function(e) {
-        // Validar marca
         let marca = marcaHidden.value.trim();
         const marcaOtroValor = marcaOtroInput.value.trim();
         
-        // Si el campo "Otros" tiene valor, usarlo
         if (marcaOtroValor) {
             marca = marcaOtroValor;
             marcaHidden.value = marca;
@@ -1134,7 +1183,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Validar modelo
         let modelo = modeloHidden.value.trim();
         const modeloOtroValor = modeloOtroInput.value.trim();
         
@@ -1150,7 +1198,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Validar patente
         const patente = document.querySelector('input[name="patente"]').value.trim();
         if (!patente) {
             e.preventDefault();
@@ -1158,7 +1205,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Validar nombre
         const nombre = document.querySelector('input[name="nombre"]').value.trim();
         if (!nombre) {
             e.preventDefault();
@@ -1166,7 +1212,20 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Si flota es "__nueva__", usar el valor del input
+        // ✅ Validar teléfono (solo números después del prefijo)
+        const telefonoInput = document.querySelector('input[name="telefono"]');
+        if (telefonoInput && telefonoInput.value) {
+            const telefono = telefonoInput.value.replace(/\D/g, '');
+            if (telefono.length > 0 && telefono.length !== 8) {
+                e.preventDefault();
+                alert('⚠️ El teléfono debe tener 8 dígitos (ej: 12345678)');
+                telefonoInput.focus();
+                return;
+            }
+            // Guardar el teléfono completo con prefijo
+            telefonoInput.value = '+569' + telefono;
+        }
+        
         if (flotaSelect.value === '__nueva__') {
             const flotaVal = flotaNuevaInput.value.trim();
             if (flotaVal) {
@@ -1182,13 +1241,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Anti-doble clic
         submitBtn.disabled = true;
         submitBtn.innerHTML = '⏳ Guardando...';
         submitBtn.style.opacity = '0.7';
     });
     
-    // Rehabilitar botón después de 10s (por si falla)
     setTimeout(function() {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-save"></i> Registrar Cliente';
