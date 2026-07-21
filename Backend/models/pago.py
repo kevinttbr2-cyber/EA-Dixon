@@ -9,7 +9,8 @@ class Pago:
                  costo_mano_obra_real=0, costo_diagnostico_real=0, ganancia_neta=0,
                  validado=False, validado_por=None, fecha_validacion=None,
                  detalles_repuestos=None, forma_pago=None, estado_pago='pendiente',
-                 fecha_pago_real=None, tipo_venta=None, producto_vendido=None):
+                 fecha_pago_real=None, tipo_venta=None, producto_vendido=None,
+                 descuento_aplicado=0):
         
         self.id = id
         self.nombre = nombre
@@ -47,6 +48,7 @@ class Pago:
         self.fecha_pago_real = fecha_pago_real
         self.tipo_venta = tipo_venta
         self.producto_vendido = producto_vendido
+        self.descuento_aplicado = descuento_aplicado  # 🔥 NUEVO
 
     def to_dict(self):
         return {
@@ -85,7 +87,8 @@ class Pago:
             "forma_pago": self.forma_pago,
             "fecha_pago_real": self.fecha_pago_real.strftime('%Y-%m-%d') if self.fecha_pago_real else None,
             "tipo_venta": self.tipo_venta,
-            "producto_vendido": self.producto_vendido
+            "producto_vendido": self.producto_vendido,
+            "descuento_aplicado": self.descuento_aplicado  # 🔥 NUEVO
         }
 
     @staticmethod
@@ -128,5 +131,6 @@ class Pago:
             forma_pago=row.get('forma_pago'),
             fecha_pago_real=row.get('fecha_pago_real'),
             tipo_venta=row.get('tipo_venta'),
-            producto_vendido=row.get('producto_vendido')
+            producto_vendido=row.get('producto_vendido'),
+            descuento_aplicado=row.get('descuento_aplicado', 0)  # 🔥 NUEVO
         )
