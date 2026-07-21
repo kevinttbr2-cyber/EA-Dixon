@@ -1877,12 +1877,16 @@ def balance_unificado():
         total_descuentos = sum(float(r.get('descuento_aplicado', 0) or 0) for r in registros_filtrados)
         
         # ============================================
+        #         # ============================================
         # 11. CONTADORES PARA FILTROS
         # ============================================
         hoy_str = hoy.strftime('%Y-%m-%d')
-        hoy_count = len([r for r in registros_filtrados if r.get('fecha', '') == hoy_str])
-        registros_7d = [r for r in registros_filtrados if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')]
-        registros_mes = [r for r in registros_filtrados if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
+        fecha_7d_str = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+        fecha_mes_str = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+        
+        hoy_count = len([r for r in registros_filtrados if r.get('fecha', '') and r.get('fecha', '').strftime('%Y-%m-%d') == hoy_str])
+        registros_7d = [r for r in registros_filtrados if r.get('fecha', '') and r.get('fecha', '').strftime('%Y-%m-%d') >= fecha_7d_str]
+        registros_mes = [r for r in registros_filtrados if r.get('fecha', '') and r.get('fecha', '').strftime('%Y-%m-%d') >= fecha_mes_str]
         
         cur.close()
         conn.close()
