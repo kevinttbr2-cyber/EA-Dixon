@@ -337,24 +337,24 @@ class PDFService:
         elements.append(Spacer(1, 14))
 
         # ============ FIRMAS ============
-        sign_data = [
-            ['', ''],
-            ['_________________________', '_________________________'],
-            [
-                Paragraph("<b>Firma Cliente</b>", ParagraphStyle('Firma', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER)),
-                Paragraph("<b>Firma Técnico</b>", ParagraphStyle('Firma2', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER))
-            ],
-        ]
+        #sign_data = [
+         #   ['', ''],
+          #  ['_________________________', '_________________________'],
+           # [
+            #    Paragraph("<b>Firma Cliente</b>", ParagraphStyle('Firma', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER)),
+             #   Paragraph("<b>Firma Técnico</b>", ParagraphStyle('Firma2', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER))
+           # ],
+       # ]
 
-        sign_table = Table(sign_data, colWidths=[doc.width*0.45, doc.width*0.45])
-        sign_table.setStyle(TableStyle([
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-            ('VALIGN', (0,0), (-1,-1), 'BOTTOM'),
-            ('TOPPADDING', (0,0), (0,0), 30),
-            ('TOPPADDING', (1,0), (1,0), 30),
-        ]))
-        elements.append(sign_table)
-        elements.append(Spacer(1, 12))
+        #sign_table = Table(sign_data, colWidths=[doc.width*0.45, doc.width*0.45])
+        #sign_table.setStyle(TableStyle([
+         #   ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+          #  ('VALIGN', (0,0), (-1,-1), 'BOTTOM'),
+           # ('TOPPADDING', (0,0), (0,0), 30),
+            #('TOPPADDING', (1,0), (1,0), 30),
+        #]))
+       # elements.append(sign_table)
+        #elements.append(Spacer(1, 12))
 
         # ============ PIE DE PÁGINA ============
         elements.append(HRFlowable(width="100%", thickness=1, color=GRIS_BORDE, spaceBefore=0, spaceAfter=6))
