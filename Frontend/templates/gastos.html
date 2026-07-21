@@ -268,7 +268,7 @@
 }
 
 /* ============================================
-   ESTILOS PARA ESCÁNER DE FACTURAS (MEJORADO)
+   ESTILOS PARA ESCÁNER DE FACTURAS
    ============================================ */
 .btn-escanear-factura {
     background: #ffcc00 !important;
@@ -488,6 +488,33 @@
     font-size: 22px;
 }
 
+/* Tabla de facturas SII */
+.tabla-facturas-sii {
+    margin-top: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 204, 0, 0.15);
+    overflow: hidden;
+}
+
+.tabla-facturas-sii thead {
+    background: rgba(255, 204, 0, 0.08);
+}
+
+.tabla-facturas-sii th {
+    color: #ffcc00;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 204, 0, 0.10);
+}
+
+.tabla-facturas-sii td {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
 @media (max-width: 600px) {
     .producto-factura-item {
         grid-template-columns: 1fr 1fr 1fr;
@@ -529,20 +556,16 @@
     <!-- FILTROS DE GASTOS -->
     <div class="filtros-gastos">
         <button class="filtro-btn active" data-filtro="hoy" onclick="cargarGastosPorFiltro('hoy', this)">
-            📅 Hoy
-            <span class="badge" id="badgeHoy">0</span>
+            📅 Hoy <span class="badge" id="badgeHoy">0</span>
         </button>
         <button class="filtro-btn" data-filtro="7d" onclick="cargarGastosPorFiltro('7d', this)">
-            📅 7 días
-            <span class="badge" id="badge7d">0</span>
+            📅 7 días <span class="badge" id="badge7d">0</span>
         </button>
         <button class="filtro-btn" data-filtro="mes" onclick="cargarGastosPorFiltro('mes', this)">
-            📅 1 Mes
-            <span class="badge" id="badgeMes">0</span>
+            📅 1 Mes <span class="badge" id="badgeMes">0</span>
         </button>
         <button class="filtro-btn" data-filtro="todos" onclick="cargarGastosPorFiltro('todos', this)">
-            📅 Todos
-            <span class="badge" id="badgeTodos">0</span>
+            📅 Todos <span class="badge" id="badgeTodos">0</span>
         </button>
     </div>
 
@@ -575,7 +598,7 @@
         </div>
     </div>
 
-    <!-- BOTÓN ESCANEAR FACTURA (MEJORADO) -->
+    <!-- BOTÓN ESCANEAR FACTURA -->
     <button id="btnEscanearFactura" class="btn-escanear-factura">
         <span class="material-symbols-rounded" style="font-size: 22px;">scan</span>
         📄 Escanear Factura (QR / Código de Barras)
@@ -661,24 +684,48 @@
     <div style="margin-top: 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
         📅 <span id="periodoActual">Cargando...</span>
     </div>
+    
+    <!-- TABLA DE FACTURAS SII -->
+    <div style="margin-top: 25px;">
+        <h4 style="color: #ffcc00; font-weight: 700; font-size: 16px; margin-bottom: 10px;">
+            📄 Historial de Documentos SII
+        </h4>
+        <div style="overflow-x: auto;" id="tablaFacturasSiiContainer">
+            <div style="text-align: center; color: #888; padding: 20px 0;">
+                <span class="material-symbols-rounded" style="font-size: 32px; color: #888; opacity: 0.3; display: block; margin-bottom: 8px;">receipt_long</span>
+                Cargando documentos SII...
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ============================================
-MODAL: FACTURA ESCANEADA (MEJORADO)
+MODAL: FACTURA ESCANEADA
 ============================================ -->
 <div id="modalFactura" class="modal-factura">
     <div class="modal-content">
         <div class="modal-header">
             <h3>
                 <span class="material-symbols-rounded" style="font-size: 24px; vertical-align: middle;">receipt</span>
-                Factura Escaneada
+                Documento Escaneado
             </h3>
             <button class="close-btn" onclick="cerrarModalFactura()">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
 
-        <!-- ✅ TIPO DE GASTO -->
+        <!-- TIPO DE DOCUMENTO DETECTADO -->
+        <div style="margin-bottom:12px;padding:10px;border-radius:8px;border:1px solid rgba(255,204,0,0.15);background:rgba(255,204,0,0.04);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:#888;font-size:12px;">📄 Tipo de documento:</span>
+                <span id="modalTipoDocumento" style="color:#ffcc00;font-weight:700;font-size:14px;">-</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                <span style="color:#888;font-size:12px;">🎯 Acción:</span>
+                <span id="modalAccionDocumento" style="color:#00ff66;font-weight:600;font-size:13px;">-</span>
+            </div>
+        </div>
+
         <div style="margin-bottom:12px;">
             <label style="color:var(--text-secondary);font-size:13px;font-weight:500;display:block;margin-bottom:4px;">🎯 Tipo de Gasto *</label>
             <select id="facturaTipoGasto" class="form-control" style="background: var(--bg-input) !important; color: var(--text-primary) !important; border: 2px solid transparent !important; border-radius: var(--radius-sm) !important; padding: 8px 12px !important; font-size: 14px !important; width: 100% !important;">
@@ -688,7 +735,6 @@ MODAL: FACTURA ESCANEADA (MEJORADO)
             </select>
         </div>
 
-        <!-- ✅ DATOS DE LA FACTURA MEJORADOS (INCLUYE RUT) -->
         <div style="background:rgba(255,204,0,0.04);border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid rgba(255,204,0,0.10);">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:13px;">
                 <div><span style="color:#888;">🏢 Emisor (RUT):</span> <span id="facturaEmisor" style="color:#fff;">-</span></div>
@@ -696,11 +742,10 @@ MODAL: FACTURA ESCANEADA (MEJORADO)
                 <div><span style="color:#888;">📄 Folio:</span> <span id="facturaFolio" style="color:#fff;">-</span></div>
                 <div><span style="color:#888;">📅 Fecha:</span> <span id="facturaFecha" style="color:#fff;">-</span></div>
                 <div style="grid-column: 1/3;"><span style="color:#888;">💰 Total:</span> <span id="facturaTotal" style="color:#ffcc00;font-weight:700;">$0</span></div>
-                <div style="grid-column: 1/3; color:#666;font-size:11px;border-top:1px solid rgba(255,255,255,0.05);padding-top:4px;" id="facturaTipoDocumento">📄 Tipo: Factura Electrónica</div>
+                <div style="grid-column: 1/3; color:#666;font-size:11px;border-top:1px solid rgba(255,255,255,0.05);padding-top:4px;" id="facturaTipoDocumento">📄 Tipo: -</div>
             </div>
         </div>
 
-        <!-- ✅ PRODUCTOS DE LA FACTURA -->
         <div style="margin-bottom:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                 <span style="color:var(--text-secondary);font-size:13px;font-weight:500;">📦 Productos de la factura</span>
@@ -713,10 +758,9 @@ MODAL: FACTURA ESCANEADA (MEJORADO)
             </div>
         </div>
 
-        <!-- RESUMEN -->
         <div class="resumen-factura">
             <div class="row-item">
-                <span class="label">💰 Total de la factura:</span>
+                <span class="label">💰 Total del documento:</span>
                 <span class="value" style="color:#ffcc00;font-weight:700;" id="resumenTotalFactura">$0</span>
             </div>
             <div class="row-item">
@@ -725,11 +769,10 @@ MODAL: FACTURA ESCANEADA (MEJORADO)
             </div>
         </div>
 
-        <!-- BOTONES -->
         <div style="display:flex;gap:10px;margin-top:12px;">
             <button onclick="procesarFacturaEscaneada()" id="btnProcesarFactura" class="btn-registrar" style="flex:1;background:#ffcc00 !important;color:#000 !important;">
                 <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">save</span>
-                Procesar Factura y Actualizar Stock
+                Procesar Documento
             </button>
             <button onclick="cerrarModalFactura()" style="
                 background:rgba(255,255,255,0.05);
@@ -756,9 +799,10 @@ let facturaActiva = false;
 let productosFactura = [];
 let datosFactura = {};
 let filtroActual = 'hoy';
+let tipoDocumentoDetectado = 'producto'; // 'producto' o 'sii'
 
 // ============================================
-// FUNCIONES DE ESCÁNER - VERSIÓN MEJORADA (UNIVERSAL)
+// FUNCIONES DE ESCÁNER
 // ============================================
 
 function cargarHtml5QrCode() {
@@ -793,37 +837,73 @@ async function solicitarPermisoCamara() {
 }
 
 // ============================================
-// ESCANEAR FACTURA - CONFIGURACIÓN UNIVERSAL
+// DISCRIMINAR TIPO DE DOCUMENTO
 // ============================================
 
-// 🔥 CONFIGURACIÓN UNIVERSAL PARA TODOS LOS TIPOS DE CÓDIGO DE BARRAS
+function discriminarDocumento(texto) {
+    console.log('🔍 Analizando documento:', texto);
+    
+    // 🔥 1. BUSCAR PATRONES DE FACTURA DE PRODUCTO
+    const tieneProductos = texto.match(/producto|item|nombre|cantidad|precio|detalle/gi);
+    const tieneCantidad = texto.match(/\d+\s*x\s*/gi);
+    const tieneMultiplesPrecios = (texto.match(/\$?\s*[\d.,]+\s*$/gm) || []).length > 2;
+    
+    // 🔥 2. BUSCAR PATRONES DE DOCUMENTO SII
+    const tieneRUT = texto.match(/\d{1,2}\.\d{3}\.\d{3}-[\dkK]/);
+    const tieneFolioSII = texto.match(/[Ff]olio[:]\s*(\d+)/);
+    const tieneCodigoAutorizacion = texto.match(/[Cc]ódigo(?: de)? [Aa]utorización[:]\s*([A-Za-z0-9]+)/);
+    const tieneTimbreSII = texto.match(/Timbre Electrónico S\.I\.I\./i);
+    const tieneResolucionSII = texto.match(/Resolución Ex\. SII/i);
+    const tieneFormatoSII = texto.split('|').length >= 5;
+    
+    // 🔥 3. CLASIFICAR
+    let puntajeProducto = 0;
+    let puntajeSII = 0;
+    
+    if (tieneProductos) puntajeProducto += 2;
+    if (tieneCantidad) puntajeProducto += 2;
+    if (tieneMultiplesPrecios) puntajeProducto += 1;
+    
+    if (tieneRUT) puntajeSII += 3;
+    if (tieneFolioSII) puntajeSII += 2;
+    if (tieneCodigoAutorizacion) puntajeSII += 3;
+    if (tieneTimbreSII) puntajeSII += 3;
+    if (tieneResolucionSII) puntajeSII += 3;
+    if (tieneFormatoSII) puntajeSII += 4;
+    
+    console.log('📊 Puntaje Producto:', puntajeProducto);
+    console.log('📊 Puntaje SII:', puntajeSII);
+    
+    if (puntajeSII > puntajeProducto && puntajeSII >= 2) {
+        return { tipo: 'sii', es_sii: true, es_producto: false };
+    } else if (puntajeProducto > puntajeSII && puntajeProducto >= 2) {
+        return { tipo: 'producto', es_sii: false, es_producto: true };
+    } else {
+        return { tipo: 'indeterminado', es_sii: false, es_producto: false };
+    }
+}
+
+// ============================================
+// ESCANEAR FACTURA
+// ============================================
+
 const configEscannerUniversal = {
-    fps: 15,  // Mayor FPS para mejor respuesta
+    fps: 15,
     qrbox: { width: 350, height: 200 },
     formatsToSupport: [
-        // 📦 Códigos de barras de productos (universales)
-        Html5QrcodeSupportedFormats.EAN_13,        // Código EAN-13
-        Html5QrcodeSupportedFormats.EAN_8,         // Código EAN-8
-        Html5QrcodeSupportedFormats.UPC_A,         // Código UPC-A
-        Html5QrcodeSupportedFormats.UPC_E,         // Código UPC-E
-        
-        // 📄 Códigos de barras de facturas chilenas (SII)
-        Html5QrcodeSupportedFormats.CODE_128,      // ✅ Código 128 (facturas chilenas)
-        Html5QrcodeSupportedFormats.CODE_39,       // ✅ Código 39 (facturas chilenas)
-        Html5QrcodeSupportedFormats.CODE_93,       // Código 93
-        Html5QrcodeSupportedFormats.CODABAR,       // Codabar
-        
-        // 📱 Códigos 2D
-        Html5QrcodeSupportedFormats.QR_CODE,       // QR Code
-        Html5QrcodeSupportedFormats.PDF_417,       // PDF-417
-        Html5QrcodeSupportedFormats.DATA_MATRIX,   // Data Matrix
-        Html5QrcodeSupportedFormats.AZTEC,         // Aztec
-        Html5QrcodeSupportedFormats.MAXICODE,      // MaxiCode
-        
-        // 🔢 Otros formatos
-        Html5QrcodeSupportedFormats.ITF,           // ITF (Interleaved 2 of 5)
-        Html5QrcodeSupportedFormats.RSS_14,        // RSS-14
-        Html5QrcodeSupportedFormats.RSS_EXPANDED   // RSS Expanded
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.CODE_93,
+        Html5QrcodeSupportedFormats.CODABAR,
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.PDF_417,
+        Html5QrcodeSupportedFormats.DATA_MATRIX,
+        Html5QrcodeSupportedFormats.AZTEC,
+        Html5QrcodeSupportedFormats.ITF
     ]
 };
 
@@ -851,7 +931,6 @@ document.getElementById('btnEscanearFactura').addEventListener('click', async fu
         this.textContent = '⏹️ Detener Escáner';
         this.classList.add('activo');
         
-        // 🔥 USAR CONFIGURACIÓN UNIVERSAL
         await scannerFactura.start(
             { facingMode: "environment" },
             configEscannerUniversal,
@@ -859,7 +938,7 @@ document.getElementById('btnEscanearFactura').addEventListener('click', async fu
             onScanFacturaError
         );
         
-        console.log('✅ Escáner universal iniciado (soporta todos los códigos de barras)');
+        console.log('✅ Escáner iniciado');
         
     } catch (error) {
         console.error('❌ Error al iniciar el escáner:', error);
@@ -892,15 +971,36 @@ function onScanFacturaSuccess(decodedText, decodedResult) {
     console.log('📄 Código escaneado:', decodedText);
     console.log('📄 Formato:', decodedResult?.result?.format?.formatName || 'Desconocido');
     
-    // 🔥 PRIMERO: Intentar decodificar como factura chilena (SII)
-    const facturaChilena = decodificarFacturaChilena(decodedText);
+    const resultado = discriminarDocumento(decodedText);
     
-    if (facturaChilena && (facturaChilena.monto > 0 || facturaChilena.folio)) {
-        console.log('✅ Factura chilena detectada:', facturaChilena);
-        mostrarFacturaChilena(facturaChilena);
-    } else {
-        // 🔥 SEGUNDO: Intentar procesar como factura normal
-        procesarTextoFactura(decodedText);
+    // Mostrar en el modal qué tipo de documento es
+    const tipoLabels = {
+        'producto': '📦 Factura de Producto (actualiza stock)',
+        'sii': '📄 Documento SII (solo registro)',
+        'indeterminado': '❓ No se pudo determinar'
+    };
+    
+    if (resultado.tipo === 'indeterminado') {
+        const opcion = confirm(
+            '📄 No se pudo determinar automáticamente el tipo de documento.\n\n' +
+            '¿Es una FACTURA DE PRODUCTO (compra de mercadería)?\n' +
+            '👉 "Aceptar" = Factura de Producto (actualiza stock)\n' +
+            '👉 "Cancelar" = Documento SII (solo registro)'
+        );
+        
+        if (opcion) {
+            tipoDocumentoDetectado = 'producto';
+            procesarFacturaProducto(decodedText);
+        } else {
+            tipoDocumentoDetectado = 'sii';
+            procesarDocumentoSII(decodedText);
+        }
+    } else if (resultado.tipo === 'producto') {
+        tipoDocumentoDetectado = 'producto';
+        procesarFacturaProducto(decodedText);
+    } else if (resultado.tipo === 'sii') {
+        tipoDocumentoDetectado = 'sii';
+        procesarDocumentoSII(decodedText);
     }
     
     detenerScannerFactura();
@@ -911,21 +1011,48 @@ function onScanFacturaError(error) {
 }
 
 // ============================================
-// 🔥 DECODIFICAR FACTURA CHILENA (SII)
+// PROCESAR FACTURA DE PRODUCTO
+// ============================================
+
+function procesarFacturaProducto(texto) {
+    console.log('📦 Procesando FACTURA DE PRODUCTO');
+    document.getElementById('modalTipoDocumento').textContent = '📦 Factura de Producto';
+    document.getElementById('modalAccionDocumento').textContent = '✅ Actualizar stock + Registrar gasto';
+    document.getElementById('modalTipoDocumento').style.color = '#00ff66';
+    procesarTextoFactura(texto);
+}
+
+// ============================================
+// PROCESAR DOCUMENTO SII
+// ============================================
+
+function procesarDocumentoSII(texto) {
+    console.log('📄 Procesando DOCUMENTO SII');
+    document.getElementById('modalTipoDocumento').textContent = '📄 Documento SII (DTE)';
+    document.getElementById('modalAccionDocumento').textContent = '📋 Solo registrar en historial SII';
+    document.getElementById('modalTipoDocumento').style.color = '#ffcc00';
+    
+    const facturaData = decodificarFacturaChilena(texto);
+    
+    if (!facturaData) {
+        mostrarModalSIIManual(texto);
+        return;
+    }
+    
+    datosFactura = facturaData;
+    mostrarFacturaChilena(facturaData);
+}
+
+// ============================================
+// DECODIFICAR FACTURA CHILENA (SII)
 // ============================================
 
 function decodificarFacturaChilena(texto) {
     console.log('📄 Decodificando factura chilena:', texto);
     
-    // El código de barras chileno tiene formato SII:
-    // Ejemplo: "76.123.456-7|44.654.321-9|12345|2026-07-20|15000|1"
-    // O también: "66.666.666-6|44.444.444-4|12345|2025-01-20|10000|1"
-    
-    // Intentar parsear formato SII (separado por |)
     const partes = texto.split('|');
     
     if (partes.length >= 5) {
-        // Extraer RUTs (formato chileno con puntos y guión)
         const rutEmisor = partes[0].trim() || '';
         const rutReceptor = partes[1].trim() || '';
         const folio = partes[2].trim() || '';
@@ -945,26 +1072,21 @@ function decodificarFacturaChilena(texto) {
         };
     }
     
-    // Si no tiene formato SII, buscar patrones chilenos en el texto
     const rutMatch = texto.match(/(\d{1,2}\.\d{3}\.\d{3}-[\dkK])/);
     const folioMatch = texto.match(/[Ff]olio[:]\s*(\d+)/);
     const montoMatch = texto.match(/[Tt]otal[:]\s*[\$]?\s*([\d.,]+)/);
     const fechaMatch = texto.match(/(\d{4}-\d{2}-\d{2})/);
-    const tipoDocMatch = texto.match(/[Tt]ipo[:]\s*([A-Za-z\s]+)/);
     
     let rut_emisor = rutMatch ? rutMatch[1] : '';
     let folio = folioMatch ? folioMatch[1] : '';
     let monto = montoMatch ? parseFloat(montoMatch[1].replace(/[.,]/g, m => m === '.' ? '' : '.')) : 0;
     let fecha = fechaMatch ? fechaMatch[1] : new Date().toISOString().split('T')[0];
-    let tipo_documento = tipoDocMatch ? tipoDocMatch[1].trim() : 'Factura';
     
-    // Si hay RUT pero no está en formato SII, intentar extraerlo
     if (!rut_emisor) {
         const rutSimple = texto.match(/(\d{7,8}-[\dkK])/);
         if (rutSimple) rut_emisor = rutSimple[1];
     }
     
-    // Si encontramos al menos RUT o Folio, es probablemente factura chilena
     if (rut_emisor || folio || monto > 0) {
         return {
             rut_emisor: rut_emisor || 'No disponible',
@@ -972,7 +1094,7 @@ function decodificarFacturaChilena(texto) {
             folio: folio || 'N/A',
             fecha: fecha,
             monto: monto,
-            tipo_documento: tipo_documento,
+            tipo_documento: 'Factura Electrónica',
             es_chilena: true,
             texto_original: texto
         };
@@ -982,11 +1104,10 @@ function decodificarFacturaChilena(texto) {
 }
 
 // ============================================
-// 🔥 MOSTRAR FACTURA CHILENA
+// MOSTRAR FACTURA CHILENA
 // ============================================
 
 function mostrarFacturaChilena(data) {
-    // Llenar datos de la factura chilena
     document.getElementById('facturaEmisor').textContent = data.rut_emisor || 'No disponible';
     document.getElementById('facturaReceptor').textContent = data.rut_receptor || 'No disponible';
     document.getElementById('facturaFolio').textContent = data.folio || 'N/A';
@@ -994,7 +1115,6 @@ function mostrarFacturaChilena(data) {
     document.getElementById('facturaTotal').textContent = '$' + (data.monto || 0).toLocaleString('es-CL');
     document.getElementById('facturaTipoDocumento').textContent = '📄 Tipo: ' + (data.tipo_documento || 'Factura Electrónica');
     
-    // Si no hay productos y hay monto, agregar uno automáticamente
     if (productosFactura.length === 0 && data.monto > 0) {
         productosFactura.push({
             nombre: data.tipo_documento || 'Factura',
@@ -1005,10 +1125,155 @@ function mostrarFacturaChilena(data) {
         actualizarResumenFactura();
     }
     
-    // Guardar datos de la factura
     datosFactura = data;
-    
     document.getElementById('modalFactura').classList.add('active');
+}
+
+// ============================================
+// MOSTRAR MODAL SII MANUAL
+// ============================================
+
+function mostrarModalSIIManual(texto) {
+    const rutEmisor = prompt('Ingresa el RUT del emisor (ej: 76.123.456-7):');
+    if (rutEmisor === null) return;
+    
+    const folio = prompt('Ingresa el número de folio:');
+    if (folio === null) return;
+    
+    const monto = prompt('Ingresa el monto total:');
+    if (monto === null) return;
+    
+    const fecha = prompt('Ingresa la fecha (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+    if (fecha === null) return;
+    
+    const data = {
+        rut_emisor: rutEmisor,
+        rut_receptor: '',
+        folio: folio,
+        tipo_documento: 'Factura',
+        fecha: fecha || new Date().toISOString().split('T')[0],
+        monto: parseFloat(monto) || 0,
+        codigo_autorizacion: '',
+        razon_social_emisor: '',
+        razon_social_receptor: '',
+        texto_original: texto || '',
+        usuario: '{{ session.get("nombre_completo", session.get("usuario")) }}'
+    };
+    
+    if (confirm(
+        `📄 ¿Registrar documento SII?\n\n` +
+        `🏢 Emisor: ${data.rut_emisor}\n` +
+        `📄 Folio: ${data.folio}\n` +
+        `💰 Monto: $${data.monto.toLocaleString('es-CL')}\n` +
+        `📅 Fecha: ${data.fecha}`
+    )) {
+        registrarFacturaSII(data);
+    }
+}
+
+// ============================================
+// REGISTRAR FACTURA SII EN BACKEND
+// ============================================
+
+async function registrarFacturaSII(data) {
+    try {
+        const resp = await fetch(`${API_URL}/api/facturas_sii`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                rut_emisor: data.rut_emisor || '',
+                rut_receptor: data.rut_receptor || '',
+                folio: data.folio || '',
+                tipo_documento: data.tipo_documento || 'Factura',
+                fecha: data.fecha || new Date().toISOString().split('T')[0],
+                monto: data.monto || 0,
+                codigo_autorizacion: data.codigo_autorizacion || '',
+                razon_social_emisor: data.razon_social_emisor || '',
+                razon_social_receptor: data.razon_social_receptor || '',
+                texto_original: data.texto_original || '',
+                usuario: data.usuario || 'Sistema'
+            })
+        });
+        
+        const result = await resp.json();
+        if (result.success) {
+            alert('✅ Documento SII registrado correctamente');
+            cargarFacturasSII();
+            cargarGastosPorFiltro(filtroActual);
+        } else {
+            alert('❌ Error: ' + (result.error || 'Desconocido'));
+        }
+    } catch (error) {
+        console.error('❌ Error:', error);
+        alert('❌ Error de conexión');
+    }
+}
+
+// ============================================
+// CARGAR FACTURAS SII
+// ============================================
+
+function cargarFacturasSII() {
+    const container = document.getElementById('tablaFacturasSiiContainer');
+    
+    fetch(`${API_URL}/api/facturas_sii?filtro=mes`)
+        .then(r => r.json())
+        .then(facturas => {
+            if (!facturas || facturas.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 20px 0;">
+                        <span class="material-symbols-rounded" style="font-size: 32px; color: #666; opacity: 0.3; display: block; margin-bottom: 8px;">receipt_long</span>
+                        No hay documentos SII registrados
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <table class="table table-dark table-sm" style="font-size: 12px; width: 100%; border-collapse: collapse;">
+                    <thead style="background: rgba(255, 204, 0, 0.08);">
+                        <tr>
+                            <th style="padding: 6px 10px; color: #ffcc00; text-align: left;">RUT Emisor</th>
+                            <th style="padding: 6px 10px; color: #ffcc00; text-align: left;">Folio</th>
+                            <th style="padding: 6px 10px; color: #ffcc00; text-align: left;">Fecha</th>
+                            <th style="padding: 6px 10px; color: #ffcc00; text-align: right;">Monto</th>
+                            <th style="padding: 6px 10px; color: #ffcc00; text-align: center;">Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            facturas.forEach(f => {
+                html += `
+                    <tr>
+                        <td style="padding: 4px 10px; color: #fff;">${f.rut_emisor || '-'}</td>
+                        <td style="padding: 4px 10px; color: #fff;">${f.folio || '-'}</td>
+                        <td style="padding: 4px 10px; color: #888;">${f.fecha || '-'}</td>
+                        <td style="padding: 4px 10px; text-align: right; color: #ffcc00; font-weight: 600;">$${f.monto ? f.monto.toLocaleString('es-CL') : '0'}</td>
+                        <td style="padding: 4px 10px; text-align: center;">
+                            <span style="font-size: 10px; background: rgba(255,204,0,0.12); color: #ffcc00; padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(255,204,0,0.15);">
+                                ${f.tipo_documento || 'Factura'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Error cargando facturas SII:', err);
+            container.innerHTML = `
+                <div style="text-align: center; color: #ff6b6b; padding: 20px 0;">
+                    Error al cargar documentos SII
+                </div>
+            `;
+        });
 }
 
 // ============================================
@@ -1039,22 +1304,26 @@ function procesarTextoFactura(texto) {
     for (const linea of lineas) {
         const l = linea.trim();
         
-        if (l.match(/proveedor|proveedor:|empresa|razón social/i)) {
+        const proveedorMatch = l.match(/proveedor|proveedor:|empresa|razón social/i);
+        if (proveedorMatch) {
             const match = l.match(/proveedor:?\s*(.+)/i) || l.match(/empresa:?\s*(.+)/i);
             if (match) proveedor = match[1].trim();
         }
         
-        if (l.match(/folio|factura|documento|n°|número/i)) {
-            const match = l.match(/folio:?\s*([^\s]+)/i) || l.match(/factura:?\s*([^\s]+)/i) || l.match(/n°:?\s*([^\s]+)/i);
+        const folioMatch = l.match(/folio|factura|documento|n°|número/i);
+        if (folioMatch) {
+            const match = l.match(/folio:?\s*([^\s]+)/i) || l.match(/factura:?\s*([^\s]+)/i);
             if (match) folio = match[1].trim();
         }
         
-        if (l.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/)) {
+        const fechaMatch = l.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/);
+        if (fechaMatch) {
             const match = l.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
             if (match) fecha = match[1].trim();
         }
         
-        if (l.match(/total|neto|monto final/i)) {
+        const totalMatch = l.match(/total|neto|monto final/i);
+        if (totalMatch) {
             const match = l.match(/total:?\s*\$?\s*([\d.,]+)/i);
             if (match) total = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.'));
         }
@@ -1130,7 +1399,6 @@ function mostrarModalFactura(factura) {
     document.getElementById('modalFactura').classList.add('active');
     productosFactura = factura.productos.map(p => ({ ...p }));
     
-    // Si no hay emisor/receptor, usar proveedor
     if (!document.getElementById('facturaEmisor').textContent || document.getElementById('facturaEmisor').textContent === '-') {
         document.getElementById('facturaEmisor').textContent = factura.proveedor || 'Proveedor';
         document.getElementById('facturaReceptor').textContent = factura.rut_receptor || 'No disponible';
@@ -1214,9 +1482,41 @@ async function procesarFacturaEscaneada() {
         'trabajo': '🔧 Trabajo'
     };
     
+    // Si es documento SII, solo registrar en historial
+    if (tipoDocumentoDetectado === 'sii') {
+        const data = {
+            rut_emisor: datosFactura.rut_emisor || '',
+            rut_receptor: datosFactura.rut_receptor || '',
+            folio: datosFactura.folio || '',
+            tipo_documento: datosFactura.tipo_documento || 'Factura',
+            fecha: datosFactura.fecha || new Date().toISOString().split('T')[0],
+            monto: total || datosFactura.monto || 0,
+            codigo_autorizacion: datosFactura.codigo_autorizacion || '',
+            razon_social_emisor: datosFactura.razon_social_emisor || '',
+            razon_social_receptor: datosFactura.razon_social_receptor || '',
+            texto_original: datosFactura.texto_original || '',
+            usuario: '{{ session.get("nombre_completo", session.get("usuario")) }}'
+        };
+        
+        if (confirm(
+            `📄 ¿Registrar documento SII?\n\n` +
+            `🏢 Emisor: ${data.rut_emisor || 'No disponible'}\n` +
+            `📄 Folio: ${data.folio || 'N/A'}\n` +
+            `💰 Total: $${total.toLocaleString('es-CL')}\n` +
+            `📅 Fecha: ${data.fecha || 'No disponible'}`
+        )) {
+            await registrarFacturaSII(data);
+            cerrarModalFactura();
+            cargarFacturasSII();
+            cargarGastosPorFiltro(filtroActual);
+        }
+        return;
+    }
+    
+    // Si es factura de producto, procesar normalmente
     if (!confirm(
-        `📊 ¿Procesar factura?\n\n` +
-        `🏢 Emisor: ${datosFactura.rut_emisor || datosFactura.proveedor || 'No disponible'}\n` +
+        `📊 ¿Procesar factura de producto?\n\n` +
+        `🏢 Proveedor: ${datosFactura.proveedor || datosFactura.rut_emisor || 'No disponible'}\n` +
         `📄 Folio: ${datosFactura.folio || 'N/A'}\n` +
         `📦 Productos: ${productosFactura.length}\n` +
         `💰 Total: $${total.toLocaleString('es-CL')}\n` +
@@ -1237,7 +1537,7 @@ async function procesarFacturaEscaneada() {
             categoria: 'Repuestos',
             monto: total,
             metodo_pago: 'transferencia',
-            descripcion: `Factura ${datosFactura.folio || 'N/A'} - ${datosFactura.rut_emisor || datosFactura.proveedor || 'Proveedor'}`,
+            descripcion: `Factura ${datosFactura.folio || 'N/A'} - ${datosFactura.proveedor || datosFactura.rut_emisor || 'Proveedor'}`,
             proveedor: datosFactura.proveedor || datosFactura.rut_emisor || 'Proveedor',
             folio: datosFactura.folio || 'N/A',
             fecha: datosFactura.fecha || new Date().toISOString().split('T')[0],
@@ -1339,7 +1639,7 @@ async function procesarFacturaEscaneada() {
 }
 
 // ============================================
-// CARGAR GASTOS POR FILTRO - FUNCIÓN PRINCIPAL
+// CARGAR GASTOS POR FILTRO
 // ============================================
 
 function cargarGastosPorFiltro(filtro, btnElement) {
@@ -1611,6 +1911,7 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
 
 document.addEventListener('DOMContentLoaded', function() {
     cargarGastosPorFiltro('hoy', document.querySelector('.filtro-btn[data-filtro="hoy"]'));
+    cargarFacturasSII();
 });
 </script>
 
