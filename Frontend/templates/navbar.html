@@ -28,7 +28,7 @@
                 </li>
                 
                 <!-- ====================
-                FINANZAS (dropdown con Balance, Balance Ventas, Dashboard, Gastos, Cierre de Caja)
+                FINANZAS (dropdown con Balance, Balance Ventas, Balance Unificado, Dashboard, Gastos, Cierre de Caja)
                 ==================== -->
                 {% if session.get("rol") in ["admin", "operador"] %}
                 <li class="nav-item dropdown">
@@ -51,6 +51,15 @@
                                 Balance Ventas
                             </a>
                         </li>
+                        <!-- ✅ NUEVO: Balance Unificado -->
+                        <li>
+                            <a class="dropdown-item" href="/balance_unificado" style="background: rgba(0,255,102,0.08); border-left: 3px solid #00ff66;">
+                                <span class="material-symbols-rounded" style="color: #00ff66;">dashboard</span>
+                                <span style="color: #00ff66; font-weight: 600;">⭐ Balance Unificado</span>
+                            </a>
+                        </li>
+                        <!-- Separador -->
+                        <li><hr class="dropdown-divider"></li>
                         <!-- Dashboard -->
                         <li>
                             <a class="dropdown-item" href="/dashboard">
@@ -60,14 +69,14 @@
                         </li>
                         <!-- Separador -->
                         <li><hr class="dropdown-divider"></li>
-                        <!-- GASTOS (NUEVO) -->
+                        <!-- GASTOS -->
                         <li>
                             <a class="dropdown-item" href="/gastos">
                                 <span class="material-symbols-rounded">payments</span>
                                 Gastos
                             </a>
                         </li>
-                        <!-- CIERRE DE CAJA (NUEVO) -->
+                        <!-- CIERRE DE CAJA -->
                         <li>
                             <a class="dropdown-item" href="/cierre_caja">
                                 <span class="material-symbols-rounded">receipt_long</span>
@@ -112,9 +121,7 @@
                                 {% endif %}
                             </a>
                         </li>
-                        <!-- ============================================ -->
-                        <!-- ✅ NUEVO: DEUDORES (con badge de cantidad)   -->
-                        <!-- ============================================ -->
+                        <!-- DEUDORES (con badge de cantidad) -->
                         <li>
                             <a class="dropdown-item" href="/deudores">
                                 <span class="material-symbols-rounded">payments</span>
