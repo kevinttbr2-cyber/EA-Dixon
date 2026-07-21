@@ -408,7 +408,7 @@
                         ${{ "{:,.0f}".format(r.total_repuestos) }}
                     </td>
                     <td style="color: #ffcc00; font-weight: 600;">
-                        {% if r.descuento_aplicado and r.descuento_aplicado > 0 %}
+                        {% if r.descuento_aplicado and r.descuento_aplicado|int > 0 %}
                             -${{ "{:,.0f}".format(r.descuento_aplicado) }}
                         {% else %}
                             -
@@ -435,43 +435,52 @@
         </table>
     </div>
 
-    <!-- ============================================
-         RESUMEN FINAL CON GASTOS
-         ============================================ -->
-    <div class="resumen-final">
-        <div class="grid-3">
-            <div>
-                <div class="label">💰 Total Ventas</div>
-                <div class="value value-green">${{ "{:,.0f}".format(total_ventas|default(0)) }}</div>
-            </div>
-            <div>
-                <div class="label">💸 Total Gastos</div>
-                <div class="value value-red">${{ "{:,.0f}".format(total_gastos|default(0)) }}</div>
-            </div>
-            <div>
-                <div class="label">📊 Ganancia Real</div>
-                <div class="value {% if ganancia_real|default(0) >= 0 %}value-green{% else %}value-red{% endif %}">
-                    ${{ "{:,.0f}".format(ganancia_real|default(0)) }}
-                </div>
-            </div>
+   <!-- ============================================
+     RESUMEN FINAL CON GASTOS
+     ============================================ -->
+<div class="resumen-final">
+    <div class="grid-3">
+        <div>
+            <div class="label">💰 Total Ventas</div>
+            <div class="value value-green">${{ "{:,.0f}".format(total_ventas|default(0)|float) }}</div>
         </div>
-        <div class="grid-2">
-            <div>
-                <div class="label">📦 Descuentos Aplicados</div>
-                <div class="value-small value-yellow">-${{ "{:,.0f}".format(total_descuentos|default(0)) }}</div>
-            </div>
-            <div>
-                <div class="label">📈 Margen Real</div>
-                <div class="value-small value-blue">
-                    {% if total_ventas|default(0) > 0 %}
-                        {{ ((ganancia_real|default(0) / total_ventas|default(1)) * 100)|round(1) }}%
-                    {% else %}
-                        0%
-                    {% endif %}
-                </div>
+        <div>
+            <div class="label">💸 Total Gastos</div>
+            <div class="value value-red">${{ "{:,.0f}".format(total_gastos|default(0)|float) }}</div>
+        </div>
+        <div>
+            <div class="label">📊 Ganancia Real</div>
+            <div class="value {% if ganancia_real|default(0)|float >= 0 %}value-green{% else %}value-red{% endif %}">
+                ${{ "{:,.0f}".format(ganancia_real|default(0)|float) }}
             </div>
         </div>
     </div>
+    <div class="grid-2">
+        <div>
+            <div class="label">📦 Descuentos Aplicados</div>
+            <div class="value-small value-yellow">
+                {% set total_desc = total_descuentos|default(0)|float %}
+                {% if total_desc > 0 %}
+                    -${{ "{:,.0f}".format(total_desc) }}
+                {% else %}
+                    $0
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <div class="label">📈 Margen Real</div>
+            <div class="value-small value-blue">
+                {% set ventas = total_ventas|default(0)|float %}
+                {% set ganancia = ganancia_real|default(0)|float %}
+                {% if ventas > 0 %}
+                    {{ ((ganancia / ventas) * 100)|round(1) }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 <script>
     // ============================================
