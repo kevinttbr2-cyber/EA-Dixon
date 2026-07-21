@@ -566,34 +566,38 @@
         </div>
     </div>
 
-    <!-- ============================================================
-         SECCIÓN 2: BALANCE DE OPERACIONES
+         <!-- ============================================================
+         SECCIÓN 2: BALANCE DE OPERACIONES (SOLO TRABAJO - $207,000)
          ============================================================ -->
     <div class="section-dropdown" id="sectionTrabajo">
         <div class="section-header" onclick="toggleSection('sectionTrabajo')">
             <div class="icon-title">
                 <span style="color: #ffcc00; font-size: 22px;">🔧</span>
                 <span style="color: #ffcc00;">Balance de Operaciones</span>
-                <span class="section-badge trabajo">📦 Total Ingresos: ${{ "{:,.0f}".format(total_pagado|default(0)|float) }}</span>
+                <span class="section-badge trabajo">📦 Total Ingresos: ${{ "{:,.0f}".format((total_pagado|default(0)|float) - (total_directa|default(0)|float)) }}</span>
             </div>
             <span class="arrow">▾</span>
         </div>
         <div class="section-body">
+            {% set mano_obra = (total_pagado|default(0)|float) - (total_repuestos|default(0)|float) - (total_directa|default(0)|float) %}
+            {% set ingresos_trabajo = (total_pagado|default(0)|float) - (total_directa|default(0)|float) %}
+            
+            <!-- Total Ingresos, Repuestos y Mano de Obra -->
             <div class="data-grid">
                 <div class="data-card" style="border-color: rgba(0,255,102,0.20);">
-                    <div class="label">💰 Total Ingresos</div>
-                    <div class="value value-green">${{ "{:,.0f}".format(total_pagado|default(0)|float) }}</div>
-                    <div class="sub">De todas las ventas</div>
+                    <div class="label">💰 Total Ingresos Trabajo</div>
+                    <div class="value value-green">${{ "{:,.0f}".format(ingresos_trabajo) }}</div>
+                    <div class="sub">Mano de obra + Repuestos</div>
                 </div>
                 <div class="data-card" style="border-color: rgba(255,200,0,0.20);">
-                    <div class="label">📦 Repuestos</div>
+                    <div class="label">🔩 Repuestos Trabajo</div>
                     <div class="value value-yellow">${{ "{:,.0f}".format(total_repuestos|default(0)|float) }}</div>
-                    <div class="sub">Costo de repuestos</div>
+                    <div class="sub">Venta de repuestos instalados</div>
                 </div>
                 <div class="data-card" style="border-color: rgba(79,195,247,0.20);">
                     <div class="label">👨‍🔧 Mano de Obra</div>
-                    <div class="value value-blue">${{ "{:,.0f}".format(total_mano_obra|default(0)|float) }}</div>
-                    <div class="sub">Costo de mano de obra</div>
+                    <div class="value value-blue">${{ "{:,.0f}".format(mano_obra) }}</div>
+                    <div class="sub">Valor del trabajo realizado</div>
                 </div>
             </div>
 
@@ -621,18 +625,17 @@
                 <div class="data-card" style="border-color: rgba(255,200,0,0.20); background: rgba(255,200,0,0.04);">
                     <div class="label">📊 Ganancia Operativa</div>
                     <div class="value value-yellow">
-                        {% set ganancia_op = (total_pagado|default(0)|float) - (total_repuestos|default(0)|float) - (total_mano_obra|default(0)|float) - (total_gastos_trabajo|default(0)|float) %}
+                        {% set ganancia_op = ingresos_trabajo - (total_repuestos|default(0)|float) - (total_gastos_trabajo|default(0)|float) %}
                         ${{ "{:,.0f}".format(ganancia_op) }}
                     </div>
-                    <div class="sub">Ingresos - Costos - Gastos</div>
+                    <div class="sub">Ingresos - Repuestos - Gastos</div>
                 </div>
                 <div class="data-card" style="border-color: rgba(79,195,247,0.20); background: rgba(79,195,247,0.04);">
                     <div class="label">📊 Margen Operativo</div>
                     <div class="value value-blue">
-                        {% set ingresos = total_pagado|default(0)|float %}
-                        {% set costos = total_repuestos|default(0)|float + total_mano_obra|default(0)|float + total_gastos_trabajo|default(0)|float %}
-                        {% if ingresos > 0 %}
-                            {{ (((ingresos - costos) / ingresos) * 100)|round(1) }}%
+                        {% set costos_op = (total_repuestos|default(0)|float) + (total_gastos_trabajo|default(0)|float) %}
+                        {% if ingresos_trabajo > 0 %}
+                            {{ (((ingresos_trabajo - costos_op) / ingresos_trabajo) * 100)|round(1) }}%
                         {% else %}
                             0%
                         {% endif %}
@@ -642,10 +645,9 @@
                 <div class="data-card" style="border-color: rgba(255,107,107,0.20); background: rgba(255,107,107,0.04);">
                     <div class="label">📊 Eficiencia</div>
                     <div class="value value-red">
-                        {% set ingresos = total_pagado|default(0)|float %}
-                        {% set costos = total_repuestos|default(0)|float + total_mano_obra|default(0)|float %}
-                        {% if ingresos > 0 %}
-                            {{ ((costos / ingresos) * 100)|round(1) }}%
+                        {% set costos_eff = (total_repuestos|default(0)|float) %}
+                        {% if ingresos_trabajo > 0 %}
+                            {{ ((costos_eff / ingresos_trabajo) * 100)|round(1) }}%
                         {% else %}
                             0%
                         {% endif %}
@@ -656,8 +658,8 @@
         </div>
     </div>
 
-    <!-- ============================================================
-         SECCIÓN 3: BALANCE GENERAL (RESUMEN FINAL)
+        <!-- ============================================================
+         SECCIÓN 3: BALANCE GENERAL (TODO - $232,000)
          ============================================================ -->
     <div class="section-dropdown" id="sectionGeneral">
         <div class="section-header" onclick="toggleSection('sectionGeneral')">
@@ -669,16 +671,20 @@
             <span class="arrow">▾</span>
         </div>
         <div class="section-body">
+            {% set total_ingresos_general = total_pagado|default(0)|float %}
+            {% set total_gastos_general = total_gastos|default(0)|float %}
+            {% set mano_obra = total_ingresos_general - (total_repuestos|default(0)|float) - (total_directa|default(0)|float) %}
+            
             <!-- Resumen General -->
             <div class="data-grid-3">
                 <div class="data-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
-                    <div class="label">💰 Total Ventas</div>
-                    <div class="value value-green">${{ "{:,.0f}".format(total_ventas|default(0)|float) }}</div>
-                    <div class="sub">Trabajo + Directa</div>
+                    <div class="label">💰 Total Ingresos</div>
+                    <div class="value value-green">${{ "{:,.0f}".format(total_ingresos_general) }}</div>
+                    <div class="sub">Mano de obra + Repuestos + Directa</div>
                 </div>
                 <div class="data-card" style="border-color: rgba(255,107,107,0.30); background: rgba(255,107,107,0.04);">
                     <div class="label">💸 Total Gastos</div>
-                    <div class="value value-red">${{ "{:,.0f}".format(total_gastos|default(0)|float) }}</div>
+                    <div class="value value-red">${{ "{:,.0f}".format(total_gastos_general) }}</div>
                     <div class="sub">Trabajo + Venta + Generales</div>
                 </div>
                 <div class="data-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.08); border-width: 2px;">
@@ -686,13 +692,56 @@
                     <div class="value {% if ganancia_real|default(0)|float >= 0 %}value-green{% else %}value-red{% endif %}" style="font-size: 24px;">
                         ${{ "{:,.0f}".format(ganancia_real|default(0)|float) }}
                     </div>
-                    <div class="sub">Ventas - Gastos Totales</div>
+                    <div class="sub">Ingresos - Gastos Totales</div>
                 </div>
             </div>
 
-            <!-- Desglose de Ganancia y Gastos -->
+            <!-- Desglose de Ingresos -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                <div style="background: rgba(255,200,0,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,200,0,0.10);">
+                    <div style="color: #888; font-size: 10px;">👨‍🔧 Mano de Obra</div>
+                    <div style="color: #ffcc00; font-weight: 700; font-size: 18px;">
+                        ${{ "{:,.0f}".format(mano_obra) }}
+                    </div>
+                </div>
+                <div style="background: rgba(255,200,0,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,200,0,0.10);">
+                    <div style="color: #888; font-size: 10px;">🔩 Repuestos Trabajo</div>
+                    <div style="color: #ffcc00; font-weight: 700; font-size: 18px;">
+                        ${{ "{:,.0f}".format(total_repuestos|default(0)|float) }}
+                    </div>
+                </div>
+                <div style="background: rgba(79,195,247,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(79,195,247,0.10);">
+                    <div style="color: #888; font-size: 10px;">⚡ Venta Directa</div>
+                    <div style="color: #4fc3f7; font-weight: 700; font-size: 18px;">
+                        ${{ "{:,.0f}".format(total_directa|default(0)|float) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desglose de Gastos por Tipo -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                <div style="background: rgba(255,200,0,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,200,0,0.10);">
+                    <div style="color: #888; font-size: 10px;">🔧 Gastos de Trabajo</div>
+                    <div style="color: #ffcc00; font-weight: 700; font-size: 16px;">
+                        -${{ "{:,.0f}".format(total_gastos_trabajo|default(0)|float) }}
+                    </div>
+                </div>
+                <div style="background: rgba(79,195,247,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(79,195,247,0.10);">
+                    <div style="color: #888; font-size: 10px;">⚡ Gastos de Venta</div>
+                    <div style="color: #4fc3f7; font-weight: 700; font-size: 16px;">
+                        -${{ "{:,.0f}".format(total_gastos_venta|default(0)|float) }}
+                    </div>
+                </div>
+                <div style="background: rgba(255,107,107,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,107,107,0.10);">
+                    <div style="color: #888; font-size: 10px;">📋 Gastos Generales</div>
+                    <div style="color: #ff6b6b; font-weight: 700; font-size: 16px;">
+                        -${{ "{:,.0f}".format(total_gastos_generales|default(0)|float) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ganancia por Tipo -->
             <div class="data-grid-4">
-                <!-- Ganancia por Tipo -->
                 <div style="background: rgba(255,200,0,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,200,0,0.10);">
                     <div style="color: #888; font-size: 10px;">🔧 Ganancia Trabajo</div>
                     <div style="color: #ffcc00; font-weight: 700; font-size: 18px;">
@@ -705,22 +754,20 @@
                         ${{ "{:,.0f}".format(ganancia_directa|default(0)|float) }}
                     </div>
                 </div>
-                <div style="background: rgba(255,107,107,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,107,107,0.10);">
-                    <div style="color: #888; font-size: 10px;">📋 Gastos Generales</div>
-                    <div style="color: #ff6b6b; font-weight: 700; font-size: 18px;">
-                        -${{ "{:,.0f}".format(total_gastos_generales|default(0)|float) }}
-                    </div>
-                </div>
                 <div style="background: rgba(162,155,254,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(162,155,254,0.10);">
                     <div style="color: #888; font-size: 10px;">📈 Margen Real</div>
                     <div style="color: #a29bfe; font-weight: 700; font-size: 18px;">
-                        {% set ventas = total_ventas|default(0)|float %}
-                        {% set ganancia = ganancia_real|default(0)|float %}
-                        {% if ventas > 0 %}
-                            {{ ((ganancia / ventas) * 100)|round(1) }}%
+                        {% if total_ingresos_general > 0 %}
+                            {{ ((ganancia_real|default(0)|float / total_ingresos_general) * 100)|round(1) }}%
                         {% else %}
                             0%
                         {% endif %}
+                    </div>
+                </div>
+                <div style="background: rgba(255,107,107,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,107,107,0.10);">
+                    <div style="color: #888; font-size: 10px;">💸 Total Gastos</div>
+                    <div style="color: #ff6b6b; font-weight: 700; font-size: 18px;">
+                        -${{ "{:,.0f}".format(total_gastos_general) }}
                     </div>
                 </div>
             </div>
