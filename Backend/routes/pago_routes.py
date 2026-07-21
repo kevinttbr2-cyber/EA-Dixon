@@ -1591,6 +1591,303 @@ def get_dashboard():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 # ============================
+# 14. BALANCE UNIFICADO (COMBINA VENTAS + GANANCIA)
+# ============================
+@pago_bp.route('/balance_unificado', methods=['GET'])
+def balance_unificado():
+    try:
+        filtro = request.args.get('filtro', 'hoy')
+        
+        # ✅ VALIDAR FILTRO
+        if not validar_filtro(filtro):
+            return jsonify({"error": "Filtro inválido"}), 400
+        
+        hoy = get_fecha_chile()
+        conn, cur = get_cursor()
+        
+        # ============================================
+        # 1. OBTENER VENTAS (PAGOS)
+        # ============================================
+        query = "SELECT * FROM pagos WHERE estado = 'pagado' AND estado_pago = 'pagado'"
+        params = []
+        
+        if filtro == 'hoy':
+            query += " AND fecha = %s"
+            params.append(hoy.strftime('%Y-%m-%d'))
+        elif filtro == '7d':
+            query += " AND fecha >= %s"
+            params.append((hoy - timedelta(days=7)).strftime('%Y-%m-%d'))
+        elif filtro == 'mes':
+            query += " AND fecha >= %s"
+            params.append((hoy - timedelta(days=30)).strftime('%Y-%m-%d'))
+        
+        query += " ORDER BY fecha DESC, hora DESC"
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        
+        # ============================================
+        # 2. FILTRAR SOLO REGISTROS CON VENTA
+        # ============================================
+        registros_filtrados = []
+        total_pagado = 0
+        total_repuestos_general = 0
+        total_mano_obra = 0
+        
+        for row in rows:
+            r = dict(row)
+            
+            # Calcular total de repuestos
+            total = 0
+            detalles = r.get('detalles_repuestos', [])
+            for item in detalles:
+                cantidad = item.get('cantidad', 1)
+                precio = item.get('costo_unitario', 0) or item.get('costo', 0)
+                total += cantidad * precio
+            r['total_repuestos'] = total
+            
+            # Verificar si tiene venta real
+            monto = float(r.get('monto', 0) or 0)
+            total_repuestos = float(r.get('total_repuestos', 0) or 0)
+            
+            tiene_venta = monto > 0 or total_repuestos > 0 or len(detalles) > 0
+            
+            if tiene_venta:
+                registros_filtrados.append(r)
+                total_pagado += float(r.get('monto', 0) or 0)
+                total_repuestos_general += float(r.get('costo_repuestos_real', 0) or 0)
+                total_mano_obra += float(r.get('costo_mano_obra_real', 0) or 0)
+        
+        # ============================================
+        # 3. CLASIFICACIÓN (Trabajo / Directa)
+        # ============================================
+        trabajo = []
+        directa = []
+        
+        for r in registros_filtrados:
+            es_directa = r.get('tipo_venta') == 'directa'
+            if es_directa:
+                directa.append(r)
+            else:
+                trabajo.append(r)
+        
+        # ============================================
+        # 4. FUNCIONES DE CÁLCULO
+        # ============================================
+        def calcular_venta_repuestos(registros):
+            total = 0
+            for r in registros:
+                detalles = r.get('detalles_repuestos', [])
+                if detalles and len(detalles) > 0:
+                    for item in detalles:
+                        cantidad = int(item.get('cantidad', 1) or 1)
+                        precio_venta = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+                        total += cantidad * precio_venta
+                else:
+                    total += float(r.get('costo_repuestos_real', 0) or 0)
+            return total
+        
+        def calcular_costo_repuestos(registros):
+            total = 0
+            for r in registros:
+                detalles = r.get('detalles_repuestos', [])
+                if detalles and len(detalles) > 0:
+                    for item in detalles:
+                        nombre = item.get('nombre', '')
+                        cantidad = int(item.get('cantidad', 1) or 1)
+                        
+                        if nombre:
+                            cur.execute("SELECT costo_proveedor FROM repuestos WHERE nombre = %s", (nombre,))
+                            resultado = cur.fetchone()
+                            if resultado:
+                                costo_prov = float(resultado[0] or 0)
+                                total += costo_prov * cantidad
+                            else:
+                                precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+                                total += precio * cantidad
+                        else:
+                            precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+                            total += precio * cantidad
+                else:
+                    total += float(r.get('costo_repuestos_real', 0) or 0)
+            return total
+        
+        def calcular_margen_promedio(registros):
+            margenes = []
+            for r in registros:
+                detalles = r.get('detalles_repuestos', [])
+                for item in detalles:
+                    nombre = item.get('nombre', '')
+                    if nombre:
+                        cur.execute("SELECT margen_ganancia FROM repuestos WHERE nombre ILIKE %s", (nombre,))
+                        resultado = cur.fetchone()
+                        if resultado and resultado[0] is not None and resultado[0] > 0:
+                            margenes.append(float(resultado[0]))
+            if margenes:
+                return sum(margenes) / len(margenes)
+            return 0
+        
+        # ============================================
+        # 5. CALCULAR TOTALES DE VENTAS
+        # ============================================
+        total_ventas = calcular_venta_repuestos(registros_filtrados)
+        total_trabajo = calcular_venta_repuestos(trabajo)
+        total_directa = calcular_venta_repuestos(directa)
+        
+        costo_trabajo = calcular_costo_repuestos(trabajo)
+        costo_directa = calcular_costo_repuestos(directa)
+        
+        trabajo_margen = calcular_margen_promedio(trabajo)
+        directa_margen = calcular_margen_promedio(directa)
+        
+        # ============================================
+        # 6. OBTENER GASTOS POR TIPO
+        # ============================================
+        if filtro == 'hoy':
+            fecha_inicio = hoy.strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        elif filtro == '7d':
+            fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        elif filtro == 'mes':
+            fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        else:
+            fecha_inicio = '2020-01-01'
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        
+        cur.execute("""
+            SELECT * FROM gastos 
+            WHERE fecha BETWEEN %s AND %s
+            ORDER BY fecha DESC, hora DESC
+        """, (fecha_inicio, fecha_fin))
+        
+        gastos_rows = cur.fetchall()
+        
+        # ============================================
+        # 7. CLASIFICAR GASTOS POR TIPO
+        # ============================================
+        gastos_venta = []
+        gastos_trabajo = []
+        gastos_generales = []
+        gastos_operativos = []
+        total_gastos = 0
+        total_gastos_venta = 0
+        total_gastos_trabajo = 0
+        total_gastos_generales = 0
+        
+        for row in gastos_rows:
+            g = dict(row)
+            if g.get('hora') and hasattr(g['hora'], 'strftime'):
+                g['hora'] = g['hora'].strftime('%H:%M:%S')
+            if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
+                g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
+            
+            monto = float(g.get('monto', 0) or 0)
+            g['monto'] = monto
+            gastos_operativos.append(g)
+            
+            tipo_gasto = g.get('tipo_gasto', 'general')
+            
+            if tipo_gasto == 'venta':
+                gastos_venta.append(g)
+                total_gastos_venta += monto
+            elif tipo_gasto == 'trabajo':
+                gastos_trabajo.append(g)
+                total_gastos_trabajo += monto
+            else:
+                gastos_generales.append(g)
+                total_gastos_generales += monto
+            
+            total_gastos += monto
+        
+        # ============================================
+        # 8. GASTOS POR CATEGORÍA
+        # ============================================
+        from collections import defaultdict
+        gastos_dict = defaultdict(float)
+        for g in gastos_operativos:
+            categoria = g.get('categoria', 'Otros')
+            gastos_dict[categoria] += float(g.get('monto', 0) or 0)
+        
+        gastos_por_categoria = []
+        for cat, monto in gastos_dict.items():
+            gastos_por_categoria.append({
+                'categoria': cat,
+                'monto': monto
+            })
+        gastos_por_categoria.sort(key=lambda x: x['monto'], reverse=True)
+        
+        # ============================================
+        # 9. CALCULAR GANANCIAS
+        # ============================================
+        # Ganancia de trabajo
+        ganancia_trabajo = total_trabajo - costo_trabajo - total_gastos_trabajo
+        
+        # Ganancia de venta directa
+        ganancia_directa = total_directa - costo_directa - total_gastos_venta
+        
+        # Ganancia neta = (Ganancia trabajo + Ganancia directa) - Gastos generales
+        ganancia_neta = ganancia_trabajo + ganancia_directa - total_gastos_generales
+        
+        # Ganancia real = Ganancia neta
+        ganancia_real = ganancia_neta
+        
+        # ============================================
+        # 10. TOTAL DE DESCUENTOS
+        # ============================================
+        total_descuentos = sum(float(r.get('descuento_aplicado', 0) or 0) for r in registros_filtrados)
+        
+        cur.close()
+        conn.close()
+        
+        # ============================================
+        # 11. CONTADORES PARA FILTROS
+        # ============================================
+        hoy_str = hoy.strftime('%Y-%m-%d')
+        hoy_count = len([r for r in registros_filtrados if r.get('fecha', '') == hoy_str])
+        registros_7d = [r for r in registros_filtrados if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')]
+        registros_mes = [r for r in registros_filtrados if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
+        
+        # ============================================
+        # 12. RESPUESTA COMPLETA
+        # ============================================
+        return jsonify({
+            "registros": registros_filtrados,
+            "registros_7d": registros_7d,
+            "registros_mes": registros_mes,
+            "hoy_count": hoy_count,
+            "filtro": filtro,
+            # De balance.html
+            "total_pagado": round(total_pagado, 2),
+            "total_repuestos": round(total_repuestos_general, 2),
+            "total_mano_obra": round(total_mano_obra, 2),
+            # De balance_ventas.html
+            "total_ventas": round(total_ventas, 2),
+            "total_trabajo": round(total_trabajo, 2),
+            "total_directa": round(total_directa, 2),
+            "ganancia_trabajo": round(ganancia_trabajo, 2),
+            "ganancia_directa": round(ganancia_directa, 2),
+            "ganancia_neta": round(ganancia_neta, 2),
+            "total_repuestos_trabajo": round(costo_trabajo, 2),
+            "total_repuestos_directa": round(costo_directa, 2),
+            "trabajo_margen": round(trabajo_margen, 1),
+            "directa_margen": round(directa_margen, 1),
+            # Gastos
+            "total_gastos": round(total_gastos, 2),
+            "total_gastos_venta": round(total_gastos_venta, 2),
+            "total_gastos_trabajo": round(total_gastos_trabajo, 2),
+            "total_gastos_generales": round(total_gastos_generales, 2),
+            "gastos_operativos": gastos_operativos,
+            "gastos_por_categoria": gastos_por_categoria,
+            "ganancia_real": round(ganancia_real, 2),
+            "total_descuentos": round(total_descuentos, 2)
+        })
+    except Exception as e:
+        logger.error(f"Error en balance_unificado: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+# ============================
 # BUSCAR REPUESTOS (AUTOCOMPLETADO)
 # ============================
 @pago_bp.route('/repuestos/buscar', methods=['GET'])
