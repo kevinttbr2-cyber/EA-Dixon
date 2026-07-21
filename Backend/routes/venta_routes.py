@@ -26,6 +26,11 @@ def venta_rapida():
         fecha_chile, hora_chile = get_fecha_hora_chile()
         detalles_repuestos = data.get('detalles_repuestos', [])
         
+        # 🔥 NUEVO: Obtener descuento
+        descuento_aplicado = sanitizar_numero(data.get('descuento_aplicado', 0), min_val=0)
+        if descuento_aplicado > 0:
+            logger.info(f"💰 Descuento aplicado en venta rápida: ${descuento_aplicado}")
+        
         for item in detalles_repuestos:
             nombre = sanitizar_input(item.get('nombre', '').strip())
             cantidad = int(sanitizar_numero(item.get('cantidad', 1), min_val=1))
@@ -64,11 +69,13 @@ def venta_rapida():
                         0, True
                     ))
         
+        # 🔥 MODIFICADO: Agregar descuento_aplicado al INSERT
         cur.execute("""
             INSERT INTO pagos 
             (nombre, monto, fecha, hora, estado, tipo_venta, producto_vendido, 
-             atendido_por, observaciones_pago, telefono, forma_pago, detalles_repuestos)
-            VALUES (%s, %s, %s, %s, 'pagado', 'directa', %s, %s, %s, %s, %s, %s)
+             atendido_por, observaciones_pago, telefono, forma_pago, detalles_repuestos,
+             descuento_aplicado)
+            VALUES (%s, %s, %s, %s, 'pagado', 'directa', %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """, (
             sanitizar_input(data.get('nombre')),
@@ -80,7 +87,8 @@ def venta_rapida():
             sanitizar_input(data.get('observaciones', '')),
             sanitizar_input(data.get('telefono', '')),
             sanitizar_input(data.get('forma_pago', 'efectivo')),
-            json.dumps(detalles_repuestos)
+            json.dumps(detalles_repuestos),
+            descuento_aplicado  # 🔥 NUEVO: Descuento
         ))
         
         id_reg = cur.fetchone()[0]
@@ -88,17 +96,29 @@ def venta_rapida():
         cur.close()
         conn.close()
         
+        # 🔥 MODIFICADO: Mensaje de notificación con descuento
+        mensaje_notificacion = f"Cliente: {data.get('nombre')}\nTotal: ${float(data.get('monto', 0)):,.0f}"
+        if descuento_aplicado > 0:
+            mensaje_notificacion += f"\nDescuento: -${descuento_aplicado:,.0f}"
+        
         enviar_notificacion_push(
             titulo="⚡ Venta Rápida",
-            mensaje=f"Cliente: {data.get('nombre')}\nTotal: ${float(data.get('monto', 0)):,.0f}",
+            mensaje=mensaje_notificacion,
             url="/balance_ventas"
         )
         
-        return jsonify({"success": True, "id": id_reg})
+        return jsonify({
+            "success": True, 
+            "id": id_reg,
+            "descuento_aplicado": descuento_aplicado
+        })
     except Exception as e:
         logger.error(f"Error en venta_rapida: {e}")
         return jsonify({"error": str(e)}), 500
 
+# ============================================
+# BALANCE DE VENTAS (SIN CAMBIOS - IGUAL)
+# ============================================
 @venta_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
     try:
