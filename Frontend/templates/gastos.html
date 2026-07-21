@@ -104,7 +104,6 @@
     border: 1px solid var(--border-subtle);
 }
 
-/* ✅ ESTILO PARA TIPO DE GASTO */
 .gasto-card .tipo-gasto {
     font-size: 11px;
     font-weight: 600;
@@ -222,6 +221,61 @@
 .form-gasto .btn-registrar:hover {
     transform: scale(1.01);
     box-shadow: 0 0 30px rgba(0, 255, 102, 0.15);
+}
+
+/* Selector de mes */
+.selector-mes {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.selector-mes label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.selector-mes input[type="month"] {
+    background: rgba(0,0,0,0.40);
+    color: #fff;
+    border: 1px solid rgba(0,255,102,0.20);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.selector-mes .btn-buscar {
+    background: rgba(0,255,102,0.12);
+    color: #00ff66;
+    border: 1px solid rgba(0,255,102,0.20);
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.selector-mes .btn-buscar:hover {
+    background: rgba(0,255,102,0.20);
+}
+
+.selector-mes .btn-hoy {
+    background: rgba(79,195,247,0.12);
+    color: #4fc3f7;
+    border: 1px solid rgba(79,195,247,0.20);
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.selector-mes .btn-hoy:hover {
+    background: rgba(79,195,247,0.20);
 }
 
 /* ============================================
@@ -454,6 +508,11 @@
     .producto-factura-item .nombre {
         grid-column: 1 / -1;
     }
+    .form-gasto .grid-2,
+    .form-gasto .grid-3,
+    .form-gasto .grid-4 {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
 
@@ -469,6 +528,21 @@
             <span class="label">💰 Total Gastos</span>
             <span class="monto" id="totalGastosDisplay">$0</span>
         </div>
+    </div>
+
+    <!-- SELECTOR DE MES -->
+    <div class="selector-mes">
+        <label>📅 Período:</label>
+        <input type="month" id="selectorMes" value="{{ hoy.strftime('%Y-%m') if hoy else '' }}">
+        <button class="btn-buscar" onclick="cargarGastosPorMes()">
+            <i class="fa-solid fa-search"></i> Buscar
+        </button>
+        <button class="btn-hoy" onclick="cargarGastosHoy()">
+            <i class="fa-solid fa-calendar-day"></i> Hoy
+        </button>
+        <button class="btn-hoy" onclick="cargarGastosMesActual()" style="background:rgba(0,255,102,0.10);color:#00ff66;border-color:rgba(0,255,102,0.20);">
+            <i class="fa-solid fa-calendar"></i> Mes Actual
+        </button>
     </div>
 
     <!-- RESUMEN RÁPIDO -->
@@ -488,7 +562,6 @@
             <div style="color:#ffcc00;font-size:16px;font-weight:700;" id="gastosSueldosDisplay">$0</div>
             <div style="color:#666;font-size:9px;" id="gastosSueldosCount">0</div>
         </div>
-        <!-- ✅ NUEVO: Resumen por tipo de gasto -->
         <div style="background:rgba(79,195,247,0.06);border-radius:10px;padding:8px 12px;border:1px solid rgba(79,195,247,0.12);text-align:center;">
             <div style="color:#888;font-size:10px;">🛒 Gastos Venta</div>
             <div style="color:#4fc3f7;font-size:16px;font-weight:700;" id="gastosVentaDisplay">$0</div>
@@ -518,7 +591,6 @@
     <div class="form-gasto">
         <h4 style="color: var(--text-secondary); margin-bottom: 12px; font-size: 16px;">➕ Registrar Gasto Manual</h4>
         <form id="formGasto">
-            <!-- ✅ NUEVO: Tipo de gasto (Venta / Trabajo / General) -->
             <div class="grid-4">
                 <div>
                     <label>📂 Categoría *</label>
@@ -586,7 +658,7 @@
 
     <!-- MES ACTUAL -->
     <div style="margin-top: 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
-        📅 {{ mes_actual }}/{{ anio_actual }}
+        📅 <span id="periodoActual">{{ mes_actual }}/{{ anio_actual }}</span>
     </div>
 </div>
 
@@ -605,7 +677,6 @@ MODAL: FACTURA ESCANEADA
             </button>
         </div>
 
-        <!-- ✅ TIPO DE GASTO PARA LA FACTURA -->
         <div style="margin-bottom:12px;">
             <label style="color:var(--text-secondary);font-size:13px;font-weight:500;display:block;margin-bottom:4px;">🎯 Tipo de Gasto *</label>
             <select id="facturaTipoGasto" class="form-control" style="background: var(--bg-input) !important; color: var(--text-primary) !important; border: 2px solid transparent !important; border-radius: var(--radius-sm) !important; padding: 8px 12px !important; font-size: 14px !important; width: 100% !important;">
@@ -615,7 +686,6 @@ MODAL: FACTURA ESCANEADA
             </select>
         </div>
 
-        <!-- Datos de la factura -->
         <div style="background:rgba(255,204,0,0.04);border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid rgba(255,204,0,0.10);">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:13px;">
                 <div><span style="color:#888;">🏢 Proveedor:</span> <span id="facturaProveedor" style="color:#fff;">-</span></div>
@@ -625,7 +695,6 @@ MODAL: FACTURA ESCANEADA
             </div>
         </div>
 
-        <!-- Lista de productos -->
         <div style="margin-bottom:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                 <span style="color:var(--text-secondary);font-size:13px;font-weight:500;">📦 Productos de la factura</span>
@@ -638,7 +707,6 @@ MODAL: FACTURA ESCANEADA
             </div>
         </div>
 
-        <!-- Resumen -->
         <div class="resumen-factura">
             <div class="row-item">
                 <span class="label">💰 Total de la factura:</span>
@@ -650,7 +718,6 @@ MODAL: FACTURA ESCANEADA
             </div>
         </div>
 
-        <!-- Botones -->
         <div style="display:flex;gap:10px;margin-top:12px;">
             <button onclick="procesarFacturaEscaneada()" id="btnProcesarFactura" class="btn-registrar" style="flex:1;background:#ffcc00 !important;color:#000 !important;">
                 <span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;">save</span>
@@ -811,7 +878,6 @@ function onScanFacturaError(error) {
 function procesarTextoFactura(texto) {
     console.log('📄 Procesando texto de factura:', texto);
     
-    // Intentar parsear como JSON
     try {
         const data = JSON.parse(texto);
         if (data.productos || data.items || data.productos_list) {
@@ -822,10 +888,8 @@ function procesarTextoFactura(texto) {
         // No es JSON
     }
     
-    // Intentar parsear como texto plano con estructura
     const lineas = texto.split('\n').filter(l => l.trim());
     
-    // Buscar proveedor
     let proveedor = '';
     let folio = '';
     let fecha = '';
@@ -835,31 +899,26 @@ function procesarTextoFactura(texto) {
     for (const linea of lineas) {
         const l = linea.trim();
         
-        // Proveedor
         if (l.match(/proveedor|proveedor:|empresa|razón social/i)) {
             const match = l.match(/proveedor:?\s*(.+)/i) || l.match(/empresa:?\s*(.+)/i);
             if (match) proveedor = match[1].trim();
         }
         
-        // Folio
         if (l.match(/folio|factura|documento|n°|número/i)) {
             const match = l.match(/folio:?\s*([^\s]+)/i) || l.match(/factura:?\s*([^\s]+)/i) || l.match(/n°:?\s*([^\s]+)/i);
             if (match) folio = match[1].trim();
         }
         
-        // Fecha
         if (l.match(/\d{2}[\/\-]\d{2}[\/\-]\d{4}/)) {
             const match = l.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
             if (match) fecha = match[1].trim();
         }
         
-        // Total
         if (l.match(/total|neto|monto final/i)) {
             const match = l.match(/total:?\s*\$?\s*([\d.,]+)/i);
             if (match) total = parseFloat(match[1].replace(/[.,]/g, m => m === '.' ? '' : '.'));
         }
         
-        // Productos (formato: nombre, cantidad, precio)
         const productMatch = l.match(/^([^,;]+)[,;]\s*(\d+)[,;]\s*\$?\s*([\d.,]+)/);
         if (productMatch) {
             productos.push({
@@ -870,12 +929,10 @@ function procesarTextoFactura(texto) {
         }
     }
     
-    // Si no se encontró total, calcularlo
     if (total === 0 && productos.length > 0) {
         total = productos.reduce((sum, p) => sum + (p.cantidad * p.precio_unitario), 0);
     }
     
-    // Si no se encontró fecha, usar hoy
     if (!fecha) {
         fecha = new Date().toISOString().split('T')[0];
     }
@@ -896,10 +953,6 @@ function procesarTextoFactura(texto) {
     
     mostrarModalFactura(datosFactura);
 }
-
-// ============================================
-// PROCESAR FACTURA ESTRUCTURADA (JSON)
-// ============================================
 
 function procesarFacturaEstructurada(data) {
     const productos = data.productos || data.items || data.productos_list || [];
@@ -1035,7 +1088,6 @@ async function procesarFacturaEscaneada() {
     btn.textContent = '⏳ Procesando...';
     
     try {
-        // 1. Registrar el gasto con el tipo
         const gastoData = {
             categoria: 'Repuestos',
             monto: total,
@@ -1046,7 +1098,7 @@ async function procesarFacturaEscaneada() {
             fecha: datosFactura.fecha || new Date().toISOString().split('T')[0],
             hora: new Date().toTimeString().split(' ')[0],
             registrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}',
-            tipo_gasto: tipoGasto  // ✅ NUEVO: guardar el tipo
+            tipo_gasto: tipoGasto
         };
         
         const gastoResp = await fetch(`${API_URL}/api/gastos`, {
@@ -1060,7 +1112,6 @@ async function procesarFacturaEscaneada() {
             throw new Error('Error al registrar el gasto: ' + (gastoResult.error || 'Desconocido'));
         }
         
-        // 2. Procesar productos (misma lógica que antes)
         let actualizados = 0;
         let nuevos = 0;
         let errores = [];
@@ -1130,7 +1181,7 @@ async function procesarFacturaEscaneada() {
         alert(mensaje);
         
         cerrarModalFactura();
-        cargarGastos();
+        cargarGastosMesActual();
         setTimeout(() => location.reload(), 1500);
         
     } catch (error) {
@@ -1143,33 +1194,77 @@ async function procesarFacturaEscaneada() {
 }
 
 // ============================================
-// CARGAR GASTOS CON JAVASCRIPT
+// CARGAR GASTOS - FUNCIONES MEJORADAS
 // ============================================
 
-function cargarGastos() {
-    const hoy = new Date().toISOString().split('T')[0];
+function cargarGastosPorMes() {
+    const mes = document.getElementById('selectorMes').value;
+    if (!mes) {
+        alert('⚠️ Selecciona un mes');
+        return;
+    }
     
-    fetch(`${API_URL}/api/gastos?fecha=${hoy}`)
+    const [anio, mesNum] = mes.split('-');
+    const primerDia = `${anio}-${mesNum}-01`;
+    const ultimoDiaObj = new Date(parseInt(anio), parseInt(mesNum), 0);
+    const ultimoDia = `${anio}-${mesNum}-${String(ultimoDiaObj.getDate()).padStart(2, '0')}`;
+    
+    document.getElementById('periodoActual').textContent = `${mesNum}/${anio}`;
+    
+    fetch(`${API_URL}/api/gastos_balance?fecha_inicio=${primerDia}&fecha_fin=${ultimoDia}`)
         .then(r => {
-            if (!r.ok) {
-                throw new Error(`HTTP ${r.status}`);
-            }
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
             return r.json();
         })
         .then(gastos => {
-            console.log('📊 Gastos recibidos:', gastos);
+            console.log('📊 Gastos del mes:', gastos);
             mostrarGastos(gastos);
         })
         .catch(err => {
-            console.error('❌ Error al cargar gastos:', err);
+            console.error('❌ Error:', err);
             document.getElementById('listaGastos').innerHTML = `
                 <div style="text-align: center; color: #ff6b6b; padding: 40px 0;">
                     <span class="material-symbols-rounded" style="font-size: 48px; color: #ff6b6b; opacity: 0.3; display: block; margin-bottom: 10px;">error</span>
-                    Error al cargar los gastos
-                    <br><span style="font-size: 12px; color: #888;">${err.message}</span>
+                    Error al cargar los gastos: ${err.message}
                 </div>
             `;
         });
+}
+
+function cargarGastosHoy() {
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('selectorMes').value = hoy.substring(0, 7);
+    document.getElementById('periodoActual').textContent = 'Hoy';
+    
+    fetch(`${API_URL}/api/gastos?fecha=${hoy}`)
+        .then(r => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        })
+        .then(gastos => {
+            console.log('📊 Gastos de hoy:', gastos);
+            mostrarGastos(gastos);
+        })
+        .catch(err => {
+            console.error('❌ Error:', err);
+            document.getElementById('listaGastos').innerHTML = `
+                <div style="text-align: center; color: #ff6b6b; padding: 40px 0;">
+                    <span class="material-symbols-rounded" style="font-size: 48px; color: #ff6b6b; opacity: 0.3; display: block; margin-bottom: 10px;">error</span>
+                    Error al cargar los gastos: ${err.message}
+                </div>
+            `;
+        });
+}
+
+function cargarGastosMesActual() {
+    const hoy = new Date();
+    const mes = hoy.getMonth() + 1;
+    const anio = hoy.getFullYear();
+    const mesStr = String(mes).padStart(2, '0');
+    const selector = document.getElementById('selectorMes');
+    if (selector) selector.value = `${anio}-${mesStr}`;
+    
+    cargarGastosPorMes();
 }
 
 function mostrarGastos(gastos) {
@@ -1179,14 +1274,13 @@ function mostrarGastos(gastos) {
         container.innerHTML = `
             <div class="sin-gastos">
                 <span class="icono material-symbols-rounded">payments</span>
-                <p>💰 No hay gastos registrados hoy</p>
+                <p>💰 No hay gastos registrados en este período</p>
                 <span class="sub">Registra tus gastos usando el formulario arriba</span>
             </div>
         `;
         return;
     }
     
-    // Calcular totales
     let total = 0;
     let efectivo = 0;
     let transferencia = 0;
@@ -1216,7 +1310,6 @@ function mostrarGastos(gastos) {
             sueldosCount++;
         }
         
-        // ✅ CONTAR POR TIPO DE GASTO
         if (g.tipo_gasto === 'venta') {
             venta += monto;
             ventaCount++;
@@ -1226,7 +1319,6 @@ function mostrarGastos(gastos) {
         }
     });
     
-    // Actualizar resumen
     document.getElementById('totalGastosDisplay').textContent = '$' + total.toLocaleString('es-CL');
     document.getElementById('gastosEfectivoDisplay').textContent = '$' + efectivo.toLocaleString('es-CL');
     document.getElementById('gastosTransferenciaDisplay').textContent = '$' + transferencia.toLocaleString('es-CL');
@@ -1234,14 +1326,11 @@ function mostrarGastos(gastos) {
     document.getElementById('gastosEfectivoCount').textContent = efectivoCount + ' gastos';
     document.getElementById('gastosTransferenciaCount').textContent = transferenciaCount + ' gastos';
     document.getElementById('gastosSueldosCount').textContent = sueldosCount + ' gastos';
-    
-    // ✅ ACTUALIZAR RESUMEN POR TIPO
     document.getElementById('gastosVentaDisplay').textContent = '$' + venta.toLocaleString('es-CL');
     document.getElementById('gastosTrabajoDisplay').textContent = '$' + trabajo.toLocaleString('es-CL');
     document.getElementById('gastosVentaCount').textContent = ventaCount + ' gastos';
     document.getElementById('gastosTrabajoCount').textContent = trabajoCount + ' gastos';
     
-    // Mostrar lista
     let html = '';
     gastos.forEach(g => {
         const monto = parseFloat(g.monto) || 0;
@@ -1298,7 +1387,7 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
         fecha: new Date().toISOString().split('T')[0],
         hora: new Date().toTimeString().split(' ')[0],
         registrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}',
-        tipo_gasto: document.getElementById('tipo_gasto').value  // ✅ NUEVO
+        tipo_gasto: document.getElementById('tipo_gasto').value
     };
     
     if (!data.categoria || data.monto <= 0) {
@@ -1320,7 +1409,7 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
         if (result.success) {
             alert('✅ Gasto registrado correctamente');
             document.getElementById('formGasto').reset();
-            cargarGastos();
+            cargarGastosMesActual();
         } else {
             alert('❌ Error: ' + (result.error || 'Desconocido'));
         }
@@ -1339,7 +1428,7 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    cargarGastos();
+    cargarGastosMesActual();
 });
 </script>
 
