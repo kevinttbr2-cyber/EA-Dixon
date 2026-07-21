@@ -314,7 +314,7 @@ class PDFService:
 
         ci_data = [
             [Paragraph("<b>Técnico:</b>", label_style), Paragraph(registro.get('atendido_por',''), value_style)],
-            [Paragraph("<b>Tiempo:</b>", label_style), Paragraph(registro.get('tiempo_estimado',''), value_style)],
+           # [Paragraph("<b>Tiempo:</b>", label_style), Paragraph(registro.get('tiempo_estimado',''), value_style)],
             [Paragraph("<b>Total:</b>", label_style),
              Paragraph(f"<b>${float(registro.get('monto',0)):,.0f}</b>",
                        ParagraphStyle('TotalStyle', parent=value_style,
