@@ -26,8 +26,8 @@ class PagoRepository:
                  kilometraje, diagnostico, reparacion, resultado, tiempo_estimado, anio,
                  costo_repuestos_real, costo_mano_obra_real, costo_diagnostico_real,
                  ganancia_neta, validado, validado_por, fecha_validacion, detalles_repuestos,
-                 estado_pago, forma_pago, tipo_venta, producto_vendido)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 estado_pago, forma_pago, tipo_venta, producto_vendido, descuento_aplicado)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
                 pago.nombre, pago.monto, pago.fecha, pago.hora, pago.patente,
@@ -38,7 +38,8 @@ class PagoRepository:
                 pago.anio, pago.costo_repuestos_real, pago.costo_mano_obra_real,
                 pago.costo_diagnostico_real, pago.ganancia_neta, pago.validado,
                 pago.validado_por, pago.fecha_validacion, pago.detalles_repuestos,
-                pago.estado_pago, pago.forma_pago, pago.tipo_venta, pago.producto_vendido
+                pago.estado_pago, pago.forma_pago, pago.tipo_venta, pago.producto_vendido,
+                pago.descuento_aplicado if hasattr(pago, 'descuento_aplicado') else 0
             ))
             id_reg = cur.fetchone()[0]
             conn.commit()
@@ -62,7 +63,8 @@ class PagoRepository:
                     costo_repuestos_real=%s, costo_mano_obra_real=%s,
                     costo_diagnostico_real=%s, ganancia_neta=%s,
                     validado=%s, validado_por=%s, fecha_validacion=%s,
-                    detalles_repuestos=%s, tipo_venta=%s, producto_vendido=%s
+                    detalles_repuestos=%s, tipo_venta=%s, producto_vendido=%s,
+                    descuento_aplicado=%s
                 WHERE id=%s
             """, (
                 pago.monto, pago.estado, pago.observaciones_pago, pago.hora_pago,
@@ -72,6 +74,7 @@ class PagoRepository:
                 pago.costo_diagnostico_real, pago.ganancia_neta,
                 pago.validado, pago.validado_por, pago.fecha_validacion,
                 pago.detalles_repuestos, pago.tipo_venta, pago.producto_vendido,
+                pago.descuento_aplicado if hasattr(pago, 'descuento_aplicado') else 0,
                 id_reg
             ))
             conn.commit()
@@ -229,7 +232,8 @@ class PagoRepository:
                     COALESCE(SUM(monto) OVER(), 0) as total_pagado,
                     COALESCE(SUM(costo_repuestos_real) OVER(), 0) as total_repuestos,
                     COALESCE(SUM(costo_mano_obra_real) OVER(), 0) as total_mano_obra,
-                    COALESCE(SUM(costo_diagnostico_real) OVER(), 0) as total_diagnostico
+                    COALESCE(SUM(costo_diagnostico_real) OVER(), 0) as total_diagnostico,
+                    COALESCE(SUM(descuento_aplicado) OVER(), 0) as total_descuentos
                 FROM pagos 
                 WHERE estado = 'pagado' AND estado_pago = 'pagado'
             """
@@ -257,34 +261,103 @@ class PagoRepository:
     
     @staticmethod
     def obtener_balance_ventas(filtro, fecha):
-        """Obtiene datos para el balance de ventas"""
+        """Obtiene datos para el balance de ventas con gastos y descuentos"""
         try:
             if not validar_filtro(filtro):
                 filtro = 'todos'
             
             conn, cur = get_cursor()
-            query = "SELECT * FROM pagos WHERE estado = 'pagado' AND estado_pago = 'pagado'"
+            
+            # ============================================
+            # 1. OBTENER VENTAS CON DESCUENTO
+            # ============================================
+            query_ventas = """
+                SELECT 
+                    *,
+                    COALESCE(descuento_aplicado, 0) as descuento_aplicado,
+                    COALESCE(costo_repuestos_real, 0) as costo_repuestos_real,
+                    COALESCE(costo_mano_obra_real, 0) as costo_mano_obra_real,
+                    COALESCE(costo_diagnostico_real, 0) as costo_diagnostico_real
+                FROM pagos 
+                WHERE estado = 'pagado' AND estado_pago = 'pagado'
+            """
             params = []
             
             if filtro == 'hoy':
-                query += " AND fecha = %s"
+                query_ventas += " AND fecha = %s"
                 params.append(fecha.strftime('%Y-%m-%d'))
             elif filtro == '7d':
-                query += " AND fecha >= %s"
+                query_ventas += " AND fecha >= %s"
                 params.append((fecha - timedelta(days=7)).strftime('%Y-%m-%d'))
             elif filtro == 'mes':
-                query += " AND fecha >= %s"
+                query_ventas += " AND fecha >= %s"
                 params.append((fecha - timedelta(days=30)).strftime('%Y-%m-%d'))
             
-            query += " ORDER BY fecha DESC, hora DESC"
-            cur.execute(query, params)
+            query_ventas += " ORDER BY fecha DESC, hora DESC"
+            cur.execute(query_ventas, params)
             rows = cur.fetchall()
+            ventas = [dict(row) for row in rows]
+            
+            # ============================================
+            # 2. CALCULAR FECHAS PARA GASTOS
+            # ============================================
+            if filtro == 'hoy':
+                fecha_inicio = fecha.strftime('%Y-%m-%d')
+                fecha_fin = fecha.strftime('%Y-%m-%d')
+            elif filtro == '7d':
+                fecha_inicio = (fecha - timedelta(days=7)).strftime('%Y-%m-%d')
+                fecha_fin = fecha.strftime('%Y-%m-%d')
+            elif filtro == 'mes':
+                fecha_inicio = (fecha - timedelta(days=30)).strftime('%Y-%m-%d')
+                fecha_fin = fecha.strftime('%Y-%m-%d')
+            else:
+                fecha_inicio = '2020-01-01'
+                fecha_fin = fecha.strftime('%Y-%m-%d')
+            
+            # ============================================
+            # 3. OBTENER GASTOS OPERATIVOS
+            # ============================================
+            cur.execute("""
+                SELECT 
+                    id,
+                    categoria,
+                    descripcion,
+                    monto,
+                    metodo_pago,
+                    fecha,
+                    hora,
+                    created_at
+                FROM gastos 
+                WHERE fecha BETWEEN %s AND %s
+                ORDER BY fecha DESC, hora DESC
+            """, (fecha_inicio, fecha_fin))
+            
+            gastos_rows = cur.fetchall()
+            gastos = []
+            total_gastos = 0
+            
+            for row in gastos_rows:
+                g = dict(row)
+                if g.get('hora') and hasattr(g['hora'], 'strftime'):
+                    g['hora'] = g['hora'].strftime('%H:%M:%S')
+                if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
+                    g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
+                if g.get('created_at') and hasattr(g['created_at'], 'strftime'):
+                    g['created_at'] = g['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                gastos.append(g)
+                total_gastos += float(g.get('monto', 0) or 0)
+            
             cur.close()
             conn.close()
-            return [dict(row) for row in rows]
+            
+            return {
+                'ventas': ventas,
+                'gastos': gastos,
+                'total_gastos': total_gastos
+            }
         except Exception as e:
             logger.error(f"Error obtener balance ventas: {e}")
-            return []
+            return {'ventas': [], 'gastos': [], 'total_gastos': 0}
     
     # ============================================
     # FUNCIONES PARA FLOTAS
@@ -393,6 +466,7 @@ class PagoRepository:
                     costo_diagnostico_real = %s,
                     ganancia_neta = %s,
                     monto = %s,
+                    descuento_aplicado = %s,
                     actualizado_en = NOW() AT TIME ZONE 'America/Santiago'
                 WHERE id = %s
             """, (
@@ -402,6 +476,7 @@ class PagoRepository:
                 data.get('costo_diagnostico_real', 0),
                 data.get('ganancia_neta', 0),
                 data.get('monto', 0),
+                data.get('descuento_aplicado', 0),
                 id_reg
             ))
             
@@ -430,6 +505,7 @@ class PagoRepository:
                     COALESCE(SUM(costo_repuestos_real), 0) as total_repuestos,
                     COALESCE(SUM(costo_mano_obra_real), 0) as total_mano_obra,
                     COALESCE(SUM(costo_diagnostico_real), 0) as total_diagnostico,
+                    COALESCE(SUM(descuento_aplicado), 0) as total_descuentos,
                     COUNT(*) as total_servicios
                 FROM pagos 
                 WHERE estado = 'pagado' 
