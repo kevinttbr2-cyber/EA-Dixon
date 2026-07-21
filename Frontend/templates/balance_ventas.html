@@ -323,53 +323,53 @@
     </div>
 
     <!-- ============================================
-         SECCIÓN: GASTOS OPERATIVOS (NUEVA)
-         ============================================ -->
-    <div class="gastos-section">
-        <div class="header">
-            <h4>💸 Gastos Operativos</h4>
-            <span class="total-gastos">${{ "{:,.0f}".format(total_gastos|default(0)) }}</span>
-        </div>
-
-        <!-- Gastos por categoría (badges) -->
-        <div class="gastos-badges">
-            {% for gasto in gastos_por_categoria|default([]) %}
-                <span class="badge-gasto">{{ gasto.categoria }}: ${{ "{:,.0f}".format(gasto.monto) }}</span>
-            {% else %}
-                <span style="color: #666; font-size: 12px;">No hay gastos registrados en este período</span>
-            {% endfor %}
-        </div>
-
-        <!-- Tabla de gastos -->
-        <div class="tabla-gastos">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Categoría</th>
-                        <th>Descripción</th>
-                        <th style="text-align: right;">Monto</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for gasto in gastos_operativos|default([]) %}
-                        <tr>
-                            <td style="color: #888;">{{ gasto.fecha }}</td>
-                            <td style="color: #ff6b6b;">{{ gasto.categoria or 'Otros' }}</td>
-                            <td style="color: #fff;">{{ gasto.descripcion or '-' }}</td>
-                            <td class="monto-gasto">${{ "{:,.0f}".format(gasto.monto) }}</td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="4" style="text-align: center; color: #666; padding: 15px 0;">
-                                No hay gastos registrados en este período
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+     SECCIÓN: GASTOS OPERATIVOS
+     ============================================ -->
+<div class="gastos-section">
+    <div class="header">
+        <h4>💸 Gastos Operativos</h4>
+        <span class="total-gastos">${{ "{:,.0f}".format(total_gastos|default(0)|float) }}</span>
     </div>
+
+    <!-- Gastos por categoría (badges) -->
+    <div class="gastos-badges">
+        {% for gasto in gastos_por_categoria|default([]) %}
+            <span class="badge-gasto">{{ gasto.categoria }}: ${{ "{:,.0f}".format(gasto.monto|float) }}</span>
+        {% else %}
+            <span style="color: #666; font-size: 12px;">No hay gastos registrados en este período</span>
+        {% endfor %}
+    </div>
+
+    <!-- Tabla de gastos -->
+    <div class="tabla-gastos">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Categoría</th>
+                    <th>Descripción</th>
+                    <th style="text-align: right;">Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gasto in gastos_operativos|default([]) %}
+                    <tr>
+                        <td style="color: #888;">{{ gasto.fecha }}</td>
+                        <td style="color: #ff6b6b;">{{ gasto.categoria or 'Otros' }}</td>
+                        <td style="color: #fff;">{{ gasto.descripcion or '-' }}</td>
+                        <td class="monto-gasto">${{ "{:,.0f}".format(gasto.monto|float) }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #666; padding: 15px 0;">
+                            No hay gastos registrados en este período
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
     <!-- TABLA DE VENTAS -->
     <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(0, 255, 102, 0.15); background: #141414;">
