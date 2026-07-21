@@ -792,37 +792,68 @@ MODAL: FACTURA ESCANEADA
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
 // ============================================
-// VARIABLES GLOBALES
+// VARIABLES GLOBALES DEL ESCÁNER
 // ============================================
 let scannerFactura = null;
 let facturaActiva = false;
 let productosFactura = [];
 let datosFactura = {};
 let filtroActual = 'hoy';
-let tipoDocumentoDetectado = 'producto'; // 'producto' o 'sii'
+let tipoDocumentoDetectado = 'producto';
+let escanerInicializado = false;
 
 // ============================================
-// FUNCIONES DE ESCÁNER
+// FUNCIÓN PARA CARGAR HTML5-QRCODE
 // ============================================
-
 function cargarHtml5QrCode() {
     return new Promise((resolve, reject) => {
+        // Si ya está cargado
         if (typeof Html5Qrcode !== 'undefined') {
             console.log('✅ html5-qrcode ya cargado');
+            escanerInicializado = true;
             resolve();
             return;
         }
+        
+        // Si ya hay un script en proceso, esperar
+        const existingScript = document.querySelector('script[src*="html5-qrcode"]');
+        if (existingScript) {
+            console.log('⏳ Esperando que se cargue html5-qrcode...');
+            existingScript.onload = () => {
+                console.log('✅ html5-qrcode cargado (script existente)');
+                escanerInicializado = true;
+                resolve();
+            };
+            existingScript.onerror = () => {
+                reject(new Error('Error cargando html5-qrcode (script existente)'));
+            };
+            return;
+        }
+        
+        // Crear nuevo script
+        console.log('📥 Cargando html5-qrcode...');
         const script = document.createElement('script');
         script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+        script.async = true;
+        
         script.onload = () => {
             console.log('✅ html5-qrcode cargado correctamente');
+            escanerInicializado = true;
             resolve();
         };
-        script.onerror = () => reject(new Error('Error cargando html5-qrcode'));
+        
+        script.onerror = () => {
+            console.error('❌ Error cargando html5-qrcode');
+            reject(new Error('Error cargando html5-qrcode'));
+        };
+        
         document.head.appendChild(script);
     });
 }
 
+// ============================================
+// SOLICITAR PERMISO DE CÁMARA
+// ============================================
 async function solicitarPermisoCamara() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -831,24 +862,202 @@ async function solicitarPermisoCamara() {
         stream.getTracks().forEach(track => track.stop());
         return true;
     } catch (error) {
-        console.error('Error de cámara:', error);
+        console.error('❌ Error de cámara:', error);
         return false;
     }
 }
 
 // ============================================
-// DISCRIMINAR TIPO DE DOCUMENTO
+// INICIAR ESCÁNER DE FACTURA (CORREGIDO)
 // ============================================
+async function iniciarEscannerFactura() {
+    console.log('🔍 Iniciando escáner de factura...');
+    
+    // Si ya está activo, detenerlo
+    if (facturaActiva) {
+        await detenerScannerFactura();
+        return;
+    }
+    
+    // Verificar permisos de cámara
+    const tienePermiso = await solicitarPermisoCamara();
+    if (!tienePermiso) {
+        alert('⚠️ Para escanear facturas, necesitas permitir el acceso a la cámara.');
+        return;
+    }
+    
+    try {
+        // Cargar la librería
+        await cargarHtml5QrCode();
+        
+        // Verificar que la librería esté disponible
+        if (typeof Html5Qrcode === 'undefined') {
+            alert('❌ La librería de escáner no está disponible. Reintenta o actualiza la página.');
+            return;
+        }
+        
+        // Obtener el contenedor del video
+        const videoContainer = document.getElementById('videoContainerFactura');
+        if (!videoContainer) {
+            alert('❌ Error: Contenedor de video no encontrado');
+            return;
+        }
+        
+        // Limpiar el contenedor por si tiene elementos previos
+        videoContainer.innerHTML = `
+            <video id="videoElementFactura" autoplay playsinline></video>
+            <div class="scan-overlay"></div>
+            <div class="scan-text">🔍 Escaneando factura...</div>
+        `;
+        
+        // Mostrar el contenedor
+        videoContainer.style.display = 'block';
+        videoContainer.classList.add('active');
+        
+        // Cambiar el botón
+        const btn = document.getElementById('btnEscanearFactura');
+        if (btn) {
+            btn.textContent = '⏹️ Detener Escáner';
+            btn.classList.add('activo');
+        }
+        
+        // Configuración del escáner
+        const config = {
+            fps: 15,
+            qrbox: { width: 350, height: 200 },
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.UPC_E,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.CODE_93,
+                Html5QrcodeSupportedFormats.CODABAR,
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.PDF_417,
+                Html5QrcodeSupportedFormats.DATA_MATRIX,
+                Html5QrcodeSupportedFormats.AZTEC,
+                Html5QrcodeSupportedFormats.ITF
+            ]
+        };
+        
+        // Crear instancia del escáner
+        scannerFactura = new Html5Qrcode('videoContainerFactura');
+        facturaActiva = true;
+        
+        // Iniciar el escáner
+        await scannerFactura.start(
+            { facingMode: "environment" },
+            config,
+            onScanFacturaSuccess,
+            onScanFacturaError
+        );
+        
+        console.log('✅ Escáner iniciado correctamente');
+        
+    } catch (error) {
+        console.error('❌ Error al iniciar el escáner:', error);
+        alert('❌ Error al iniciar el escáner: ' + (error.message || 'Desconocido'));
+        await detenerScannerFactura();
+    }
+}
 
+// ============================================
+// DETENER ESCÁNER DE FACTURA
+// ============================================
+async function detenerScannerFactura() {
+    console.log('⏹️ Deteniendo escáner...');
+    
+    facturaActiva = false;
+    
+    // Ocultar contenedor del video
+    const videoContainer = document.getElementById('videoContainerFactura');
+    if (videoContainer) {
+        videoContainer.style.display = 'none';
+        videoContainer.classList.remove('active');
+        // Limpiar el contenido
+        videoContainer.innerHTML = `
+            <video id="videoElementFactura" autoplay playsinline></video>
+            <div class="scan-overlay"></div>
+            <div class="scan-text">🔍 Escaneando factura...</div>
+        `;
+    }
+    
+    // Detener el escáner
+    if (scannerFactura) {
+        try {
+            await scannerFactura.stop();
+            await scannerFactura.clear();
+        } catch (e) {
+            console.warn('⚠️ Error al detener escáner:', e);
+        }
+        scannerFactura = null;
+    }
+    
+    // Restaurar el botón
+    const btn = document.getElementById('btnEscanearFactura');
+    if (btn) {
+        btn.textContent = '📄 Escanear Factura (QR / Código de Barras)';
+        btn.classList.remove('activo');
+    }
+}
+
+// ============================================
+// MANEJAR ESCANEO EXITOSO
+// ============================================
+function onScanFacturaSuccess(decodedText, decodedResult) {
+    console.log('📄 Código escaneado:', decodedText);
+    console.log('📄 Formato:', decodedResult?.result?.format?.formatName || 'Desconocido');
+    
+    // Detener el escáner después de escanear
+    detenerScannerFactura();
+    
+    // Procesar el texto escaneado
+    const resultado = discriminarDocumento(decodedText);
+    
+    if (resultado.tipo === 'indeterminado') {
+        const opcion = confirm(
+            '📄 No se pudo determinar automáticamente el tipo de documento.\n\n' +
+            '¿Es una FACTURA DE PRODUCTO (compra de mercadería)?\n' +
+            '👉 "Aceptar" = Factura de Producto (actualiza stock)\n' +
+            '👉 "Cancelar" = Documento SII (solo registro)'
+        );
+        
+        if (opcion) {
+            tipoDocumentoDetectado = 'producto';
+            procesarFacturaProducto(decodedText);
+        } else {
+            tipoDocumentoDetectado = 'sii';
+            procesarDocumentoSII(decodedText);
+        }
+    } else if (resultado.tipo === 'producto') {
+        tipoDocumentoDetectado = 'producto';
+        procesarFacturaProducto(decodedText);
+    } else if (resultado.tipo === 'sii') {
+        tipoDocumentoDetectado = 'sii';
+        procesarDocumentoSII(decodedText);
+    }
+}
+
+// ============================================
+// MANEJAR ERROR DE ESCANEO
+// ============================================
+function onScanFacturaError(error) {
+    // No mostrar errores para no saturar la consola
+    // console.warn('⚠️ Error de escaneo:', error);
+}
+
+// ============================================
+// DISCRIMINAR DOCUMENTO
+// ============================================
 function discriminarDocumento(texto) {
     console.log('🔍 Analizando documento:', texto);
     
-    // 🔥 1. BUSCAR PATRONES DE FACTURA DE PRODUCTO
     const tieneProductos = texto.match(/producto|item|nombre|cantidad|precio|detalle/gi);
     const tieneCantidad = texto.match(/\d+\s*x\s*/gi);
     const tieneMultiplesPrecios = (texto.match(/\$?\s*[\d.,]+\s*$/gm) || []).length > 2;
     
-    // 🔥 2. BUSCAR PATRONES DE DOCUMENTO SII
     const tieneRUT = texto.match(/\d{1,2}\.\d{3}\.\d{3}-[\dkK]/);
     const tieneFolioSII = texto.match(/[Ff]olio[:]\s*(\d+)/);
     const tieneCodigoAutorizacion = texto.match(/[Cc]ódigo(?: de)? [Aa]utorización[:]\s*([A-Za-z0-9]+)/);
@@ -856,7 +1065,6 @@ function discriminarDocumento(texto) {
     const tieneResolucionSII = texto.match(/Resolución Ex\. SII/i);
     const tieneFormatoSII = texto.split('|').length >= 5;
     
-    // 🔥 3. CLASIFICAR
     let puntajeProducto = 0;
     let puntajeSII = 0;
     
@@ -884,165 +1092,64 @@ function discriminarDocumento(texto) {
 }
 
 // ============================================
-// ESCANEAR FACTURA
-// ============================================
-
-const configEscannerUniversal = {
-    fps: 15,
-    qrbox: { width: 350, height: 200 },
-    formatsToSupport: [
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.CODE_93,
-        Html5QrcodeSupportedFormats.CODABAR,
-        Html5QrcodeSupportedFormats.QR_CODE,
-        Html5QrcodeSupportedFormats.PDF_417,
-        Html5QrcodeSupportedFormats.DATA_MATRIX,
-        Html5QrcodeSupportedFormats.AZTEC,
-        Html5QrcodeSupportedFormats.ITF
-    ]
-};
-
-document.getElementById('btnEscanearFactura').addEventListener('click', async function() {
-    if (facturaActiva) {
-        await detenerScannerFactura();
-        return;
-    }
-    
-    const tienePermiso = await solicitarPermisoCamara();
-    if (!tienePermiso) {
-        alert('⚠️ Para escanear facturas, necesitas permitir el acceso a la cámara.');
-        return;
-    }
-    
-    try {
-        await cargarHtml5QrCode();
-        
-        const videoContainer = document.getElementById('videoContainerFactura');
-        videoContainer.classList.add('active');
-        
-        scannerFactura = new Html5Qrcode('videoContainerFactura');
-        facturaActiva = true;
-        
-        this.textContent = '⏹️ Detener Escáner';
-        this.classList.add('activo');
-        
-        await scannerFactura.start(
-            { facingMode: "environment" },
-            configEscannerUniversal,
-            onScanFacturaSuccess,
-            onScanFacturaError
-        );
-        
-        console.log('✅ Escáner iniciado');
-        
-    } catch (error) {
-        console.error('❌ Error al iniciar el escáner:', error);
-        alert('❌ Error al iniciar el escáner: ' + error.message);
-        await detenerScannerFactura();
-    }
-});
-
-async function detenerScannerFactura() {
-    facturaActiva = false;
-    const videoContainer = document.getElementById('videoContainerFactura');
-    videoContainer.classList.remove('active');
-    
-    if (scannerFactura) {
-        try {
-            await scannerFactura.stop();
-            await scannerFactura.clear();
-        } catch (e) {
-            console.warn('Error al detener escáner:', e);
-        }
-        scannerFactura = null;
-    }
-    
-    const btn = document.getElementById('btnEscanearFactura');
-    btn.textContent = '📄 Escanear Factura (QR / Código de Barras)';
-    btn.classList.remove('activo');
-}
-
-function onScanFacturaSuccess(decodedText, decodedResult) {
-    console.log('📄 Código escaneado:', decodedText);
-    console.log('📄 Formato:', decodedResult?.result?.format?.formatName || 'Desconocido');
-    
-    const resultado = discriminarDocumento(decodedText);
-    
-    // Mostrar en el modal qué tipo de documento es
-    const tipoLabels = {
-        'producto': '📦 Factura de Producto (actualiza stock)',
-        'sii': '📄 Documento SII (solo registro)',
-        'indeterminado': '❓ No se pudo determinar'
-    };
-    
-    if (resultado.tipo === 'indeterminado') {
-        const opcion = confirm(
-            '📄 No se pudo determinar automáticamente el tipo de documento.\n\n' +
-            '¿Es una FACTURA DE PRODUCTO (compra de mercadería)?\n' +
-            '👉 "Aceptar" = Factura de Producto (actualiza stock)\n' +
-            '👉 "Cancelar" = Documento SII (solo registro)'
-        );
-        
-        if (opcion) {
-            tipoDocumentoDetectado = 'producto';
-            procesarFacturaProducto(decodedText);
-        } else {
-            tipoDocumentoDetectado = 'sii';
-            procesarDocumentoSII(decodedText);
-        }
-    } else if (resultado.tipo === 'producto') {
-        tipoDocumentoDetectado = 'producto';
-        procesarFacturaProducto(decodedText);
-    } else if (resultado.tipo === 'sii') {
-        tipoDocumentoDetectado = 'sii';
-        procesarDocumentoSII(decodedText);
-    }
-    
-    detenerScannerFactura();
-}
-
-function onScanFacturaError(error) {
-    // No mostrar errores para no saturar
-}
-
-// ============================================
 // PROCESAR FACTURA DE PRODUCTO
 // ============================================
-
 function procesarFacturaProducto(texto) {
     console.log('📦 Procesando FACTURA DE PRODUCTO');
-    document.getElementById('modalTipoDocumento').textContent = '📦 Factura de Producto';
-    document.getElementById('modalAccionDocumento').textContent = '✅ Actualizar stock + Registrar gasto';
-    document.getElementById('modalTipoDocumento').style.color = '#00ff66';
-    procesarTextoFactura(texto);
+    // Usar la función existente para procesar texto
+    if (typeof procesarTextoFactura === 'function') {
+        procesarTextoFactura(texto);
+    } else {
+        alert('⚠️ Error: No se encontró la función para procesar la factura.');
+        console.error('❌ procesarTextoFactura no está definida');
+    }
 }
 
 // ============================================
 // PROCESAR DOCUMENTO SII
 // ============================================
-
 function procesarDocumentoSII(texto) {
     console.log('📄 Procesando DOCUMENTO SII');
-    document.getElementById('modalTipoDocumento').textContent = '📄 Documento SII (DTE)';
-    document.getElementById('modalAccionDocumento').textContent = '📋 Solo registrar en historial SII';
-    document.getElementById('modalTipoDocumento').style.color = '#ffcc00';
     
-    const facturaData = decodificarFacturaChilena(texto);
-    
-    if (!facturaData) {
-        mostrarModalSIIManual(texto);
-        return;
+    if (typeof decodificarFacturaChilena === 'function') {
+        const facturaData = decodificarFacturaChilena(texto);
+        if (facturaData) {
+            datosFactura = facturaData;
+            if (typeof mostrarFacturaChilena === 'function') {
+                mostrarFacturaChilena(facturaData);
+            } else {
+                alert('⚠️ Error: No se encontró la función para mostrar factura chilena.');
+            }
+        } else {
+            alert('⚠️ No se pudo decodificar el documento SII.');
+        }
+    } else {
+        alert('⚠️ Error: No se encontró la función para decodificar factura chilena.');
     }
-    
-    datosFactura = facturaData;
-    mostrarFacturaChilena(facturaData);
 }
 
+// ============================================
+// ASIGNAR EVENTO AL BOTÓN
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const btnEscanear = document.getElementById('btnEscanearFactura');
+    if (btnEscanear) {
+        // Eliminar eventos anteriores
+        const nuevoBtn = btnEscanear.cloneNode(true);
+        btnEscanear.parentNode.replaceChild(nuevoBtn, btnEscanear);
+        
+        // Agregar el evento
+        nuevoBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🔄 Click en botón escanear');
+            iniciarEscannerFactura();
+        });
+        
+        console.log('✅ Evento de escaneo asignado correctamente');
+    } else {
+        console.error('❌ Botón btnEscanearFactura no encontrado');
+    }
+});
 // ============================================
 // DECODIFICAR FACTURA CHILENA (SII)
 // ============================================
