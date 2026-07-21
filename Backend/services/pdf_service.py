@@ -123,7 +123,10 @@ class PDFService:
             alignment=TA_CENTER,
             fontName='Helvetica'
         )
-            # ============ ENCABEZADO ============
+
+        elements = []
+
+        # ============ ENCABEZADO ============
         header_data = [
             [
                 Paragraph(
@@ -271,6 +274,7 @@ class PDFService:
         ]))
         elements.append(rep_table)
         elements.append(Spacer(1, 10))
+
         # ============ RESULTADO + CONTROL INTERNO ============
         res_section = Table([[Paragraph("RESULTADO", section_style)]], colWidths=[doc.width*0.48])
         res_section.setStyle(TableStyle([
@@ -360,14 +364,15 @@ class PDFService:
 
         fecha_gen = datetime.now().strftime('%d/%m/%Y %H:%M')
         elements.append(Paragraph(f"Reporte generado el {fecha_gen} · OT N° {registro.get('id','')}",
-                                  ParagraphStyle('Footer2', parent=footer)
-                try:
+                                  ParagraphStyle('Footer2', parent=styles['Normal'], fontSize=8,
+                                                 textColor=colors.HexColor('#777777'),
+                                                 alignment=TA_CENTER, fontName='Helvetica')))
+
+        # ============ CONSTRUIR PDF ============
+        try:
             doc.build(elements)
             buffer.seek(0)
             return buffer
         except Exception as e:
             logger.error(f"Error generando PDF: {e}")
             return None
-
-
-        elements = []
