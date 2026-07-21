@@ -129,6 +129,10 @@
         background: rgba(0,255,102,0.15) !important;
         border-color: #00ff66 !important;
     }
+    .venta-rapida-container .btn-add-repuesto:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
     .venta-rapida-container .resumen-venta {
         background: rgba(0, 255, 102, 0.04) !important;
         border-radius: 14px !important;
@@ -183,6 +187,30 @@
         font-weight: 600;
         border: 1px solid rgba(255,200,0,0.20);
     }
+    .venta-rapida-container .descuento-section {
+        background: rgba(255, 200, 0, 0.04) !important;
+        border: 1px solid rgba(255, 200, 0, 0.15) !important;
+        border-radius: 10px !important;
+        padding: 10px 12px !important;
+        margin-top: 6px !important;
+    }
+    .venta-rapida-container .descuento-section .btn-descuento {
+        background: rgba(255, 200, 0, 0.10);
+        color: #ffcc00;
+        border: 1px dashed rgba(255, 200, 0, 0.30);
+        border-radius: 8px;
+        padding: 4px 14px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .venta-rapida-container .descuento-section .btn-descuento:hover {
+        background: rgba(255, 200, 0, 0.18);
+    }
+    .venta-rapida-container .descuento-section .btn-descuento:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
     @media (max-width: 600px) {
         .venta-rapida-container .grid-2 {
             grid-template-columns: 1fr;
@@ -220,7 +248,7 @@
     </div>
 
     <form id="formVentaRapida">
-        <!-- ✅ CAMPO OCULTO CON NOMBRE "VENTA RÁPIDA" -->
+        <!-- CAMPO OCULTO CON NOMBRE "VENTA RÁPIDA" -->
         <input type="hidden" name="nombre" value="Venta Rápida">
         <input type="hidden" name="telefono" value="">
 
@@ -275,6 +303,71 @@
                 <input type="hidden" name="costo_repuestos" id="costoRepuestosHidden" value="0">
             </div>
             <small style="color: #666; font-size: 11px;">💡 Escribe el nombre y presiona Enter para guardar el producto</small>
+
+            <!-- SECCIÓN DESCUENTO -->
+            <div class="descuento-section" style="margin-top: 10px;">
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button type="button" id="btnActivarDescuento" class="btn-descuento">
+                        🎯 Agregar Descuento
+                    </button>
+                    <span id="descuentoActivo" style="display: none; color: #ffcc00; font-size: 12px;">
+                        ✅ Descuento activo
+                    </span>
+                </div>
+
+                <div id="campoDescuento" style="display: none; margin-top: 8px; padding: 8px 12px; background: rgba(255, 200, 0, 0.06); border-radius: 8px; border: 1px solid rgba(255, 200, 0, 0.15);">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="color: #ffcc00; font-size: 12px; font-weight: 600; display: block; margin-bottom: 2px;">
+                                💰 Descuento ($)
+                            </label>
+                            <input type="number" id="inputDescuento" class="form-control" 
+                                   step="100" min="0" placeholder="0" 
+                                   style="border-color: rgba(255, 200, 0, 0.3) !important;">
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 16px;">
+                            <button type="button" id="btnAplicarDescuento" class="btn btn-sm" style="
+                                background: rgba(0, 255, 102, 0.12);
+                                color: #00ff66;
+                                border: 1px solid rgba(0, 255, 102, 0.25);
+                                border-radius: 8px;
+                                padding: 4px 14px;
+                                font-size: 12px;
+                                cursor: pointer;
+                            ">
+                                ✅ Aplicar
+                            </button>
+                            <button type="button" id="btnCancelarDescuento" class="btn btn-sm" style="
+                                background: rgba(255, 107, 107, 0.10);
+                                color: #ff6b6b;
+                                border: 1px solid rgba(255, 107, 107, 0.20);
+                                border-radius: 8px;
+                                padding: 4px 14px;
+                                font-size: 12px;
+                                cursor: pointer;
+                            ">
+                                ✖ Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESUMEN CON DESCUENTO -->
+                <div id="resumenDescuento" style="display: none; margin-top: 8px; padding: 6px 10px; background: rgba(255, 200, 0, 0.04); border-radius: 6px; border-left: 3px solid #ffcc00;">
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; color: #888;">
+                        <span>Subtotal:</span>
+                        <span id="subtotalSinDescuento" style="color: #fff;">$0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; color: #ffcc00;">
+                        <span>Descuento:</span>
+                        <span id="montoDescuento">-$0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 4px; margin-top: 4px;">
+                        <span style="color: #fff;">Total:</span>
+                        <span id="totalConDescuento" style="color: #00ff66;">$0</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- DATOS DE LA VENTA -->
@@ -310,6 +403,7 @@
                 <span class="total-value" id="totalVenta">$0</span>
             </div>
             <input type="hidden" name="monto" id="montoVentaHidden" value="0">
+            <input type="hidden" name="descuento_aplicado" id="descuentoAplicadoHidden" value="0">
         </div>
 
         <button type="submit" class="btn-primary">
@@ -322,6 +416,14 @@
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    // ============================
+    // VARIABLES GLOBALES
+    // ============================
+    let timeoutId = null;
+    let descuentoActivo = false;
+    let descuentoMonto = 0;
+    let subtotalOriginal = 0;
 
     // ============================
     // 1. REPUESTOS - TABLA Y TOTAL
@@ -342,18 +444,31 @@ document.addEventListener('DOMContentLoaded', function() {
             const subtotal = cantidad * costoUnitario;
             total += subtotal;
             
-            // Actualizar subtotal en la fila
             const subtotalSpan = fila.querySelector('.subtotal-repuesto');
             if (subtotalSpan) {
                 subtotalSpan.textContent = `$${subtotal.toLocaleString('es-CL')}`;
             }
         });
         
-        totalRepuestosSpan.textContent = `$${total.toLocaleString('es-CL')}`;
-        costoRepuestosHidden.value = total.toFixed(2);
-        resumenRepuestos.textContent = `$${total.toLocaleString('es-CL')}`;
-        totalVenta.textContent = `$${total.toLocaleString('es-CL')}`;
-        montoVentaHidden.value = total.toFixed(2);
+        // Si descuento está activo, aplicarlo
+        if (descuentoActivo && descuentoMonto > 0) {
+            const totalConDescuento = Math.max(0, total - descuentoMonto);
+            totalRepuestosSpan.textContent = `$${totalConDescuento.toLocaleString('es-CL')}`;
+            costoRepuestosHidden.value = totalConDescuento.toFixed(2);
+            resumenRepuestos.textContent = `$${totalConDescuento.toLocaleString('es-CL')}`;
+            totalVenta.textContent = `$${totalConDescuento.toLocaleString('es-CL')}`;
+            montoVentaHidden.value = totalConDescuento.toFixed(2);
+            // Actualizar resumen de descuento
+            document.getElementById('subtotalSinDescuento').textContent = `$${total.toLocaleString('es-CL')}`;
+            document.getElementById('montoDescuento').textContent = `-$${descuentoMonto.toLocaleString('es-CL')}`;
+            document.getElementById('totalConDescuento').textContent = `$${totalConDescuento.toLocaleString('es-CL')}`;
+        } else {
+            totalRepuestosSpan.textContent = `$${total.toLocaleString('es-CL')}`;
+            costoRepuestosHidden.value = total.toFixed(2);
+            resumenRepuestos.textContent = `$${total.toLocaleString('es-CL')}`;
+            totalVenta.textContent = `$${total.toLocaleString('es-CL')}`;
+            montoVentaHidden.value = total.toFixed(2);
+        }
     }
 
     function agregarFilaRepuesto(nombre = '', costo = '', cantidad = 1) {
@@ -384,7 +499,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </td>
         `;
         
-        // Evento para eliminar
         const eliminarBtn = fila.querySelector('.btn-eliminar-repuesto');
         eliminarBtn.addEventListener('click', function() {
             if (document.querySelectorAll('.fila-repuesto').length > 1) {
@@ -395,14 +509,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Eventos para actualizar total
         const cantidadInput = fila.querySelector('.cantidad-repuesto');
         const costoInput = fila.querySelector('.costo-repuesto');
         
         cantidadInput.addEventListener('input', actualizarTotalRepuestos);
         costoInput.addEventListener('input', actualizarTotalRepuestos);
         
-        // Autocompletado
         const inputNombre = fila.querySelector('.repuesto-nombre');
         if (inputNombre) {
             inputNombre.addEventListener('input', manejarAutocompletado);
@@ -423,10 +535,74 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================
-    // 2. AUTOCOMPLETADO DE REPUESTOS
+    // 2. DESCUENTO
     // ============================
-    let timeoutId = null;
+    document.getElementById('btnActivarDescuento')?.addEventListener('click', function() {
+        document.getElementById('campoDescuento').style.display = 'block';
+        document.getElementById('descuentoActivo').style.display = 'inline';
+        this.style.display = 'none';
+        document.getElementById('inputDescuento').focus();
+    });
 
+    document.getElementById('btnCancelarDescuento')?.addEventListener('click', function() {
+        descuentoActivo = false;
+        descuentoMonto = 0;
+        document.getElementById('campoDescuento').style.display = 'none';
+        document.getElementById('descuentoActivo').style.display = 'none';
+        document.getElementById('btnActivarDescuento').style.display = 'inline';
+        document.getElementById('resumenDescuento').style.display = 'none';
+        document.getElementById('inputDescuento').value = '';
+        // Habilitar campos
+        document.querySelectorAll('.fila-repuesto .cantidad-repuesto, .fila-repuesto .costo-repuesto, .fila-repuesto .repuesto-nombre').forEach(el => {
+            el.disabled = false;
+        });
+        document.getElementById('agregarRepuestoBtn').disabled = false;
+        document.getElementById('btnAplicarDescuento').disabled = false;
+        document.getElementById('btnAplicarDescuento').textContent = '✅ Aplicar';
+        document.getElementById('btnCancelarDescuento').textContent = '✖ Cancelar';
+        actualizarTotalRepuestos();
+    });
+
+    document.getElementById('btnAplicarDescuento')?.addEventListener('click', function() {
+        const monto = parseFloat(document.getElementById('inputDescuento').value) || 0;
+        const subtotal = parseFloat(document.getElementById('costoRepuestosHidden').value) || 0;
+        
+        if (monto <= 0) {
+            alert('⚠️ Ingresa un monto de descuento válido');
+            return;
+        }
+        
+        if (monto > subtotal) {
+            alert('⚠️ El descuento no puede ser mayor al subtotal');
+            return;
+        }
+        
+        descuentoActivo = true;
+        descuentoMonto = monto;
+        subtotalOriginal = subtotal;
+        
+        document.getElementById('resumenDescuento').style.display = 'block';
+        document.getElementById('subtotalSinDescuento').textContent = `$${subtotal.toLocaleString('es-CL')}`;
+        document.getElementById('montoDescuento').textContent = `-$${monto.toLocaleString('es-CL')}`;
+        document.getElementById('totalConDescuento').textContent = `$${(subtotal - monto).toLocaleString('es-CL')}`;
+        
+        // Deshabilitar campos
+        document.querySelectorAll('.fila-repuesto .cantidad-repuesto, .fila-repuesto .costo-repuesto, .fila-repuesto .repuesto-nombre').forEach(el => {
+            el.disabled = true;
+        });
+        document.getElementById('agregarRepuestoBtn').disabled = true;
+        this.disabled = true;
+        this.textContent = '✅ Aplicado';
+        document.getElementById('btnCancelarDescuento').textContent = '✖ Quitar Descuento';
+        
+        document.getElementById('descuentoAplicadoHidden').value = monto;
+        
+        actualizarTotalRepuestos();
+    });
+
+    // ============================
+    // 3. AUTOCOMPLETADO DE REPUESTOS
+    // ============================
     function manejarAutocompletado(e) {
         const input = e.target;
         const sugerencias = input.parentElement.querySelector('.repuesto-sugerencias');
@@ -488,7 +664,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================
-    // 3. EVENTOS INICIALES
+    // 4. EVENTOS INICIALES
     // ============================
     document.querySelectorAll('.repuesto-nombre').forEach(input => {
         input.addEventListener('input', manejarAutocompletado);
@@ -501,7 +677,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================
-    // 4. OBSERVER
+    // 5. OBSERVER
     // ============================
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
@@ -524,7 +700,7 @@ document.addEventListener('DOMContentLoaded', function() {
     observer.observe(tablaBody, { childList: true });
 
     // ============================
-    // 5. CERRAR SUGERENCIAS
+    // 6. CERRAR SUGERENCIAS
     // ============================
     document.addEventListener('click', function(e) {
         if (!e.target.classList.contains('repuesto-nombre')) {
@@ -535,7 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================
-    // 6. GUARDAR REPUESTO CON ENTER
+    // 7. GUARDAR REPUESTO CON ENTER
     // ============================
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -630,7 +806,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================
-    // 7. INICIALIZAR
+    // 8. INICIALIZAR
     // ============================
     if (document.querySelectorAll('.fila-repuesto').length === 0) {
         agregarFilaRepuesto();
@@ -641,7 +817,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(actualizarTotalRepuestos, 500);
 
     // ============================
-    // DESHABILITAR SCROLL EN INPUTS NUMÉRICOS
+    // 9. DESHABILITAR SCROLL EN INPUTS NUMÉRICOS
     // ============================
     document.querySelectorAll('input[type="number"]').forEach(input => {
         input.addEventListener('wheel', function(e) {
@@ -651,19 +827,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================
-    // 8. REGISTRAR VENTA
+    // 10. REGISTRAR VENTA
     // ============================
     document.getElementById('formVentaRapida').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // ✅ Nombre fijo "Venta Rápida"
         const nombre = 'Venta Rápida';
         const telefono = '';
         const forma_pago = document.getElementById('formaPago').value;
         const observaciones = document.getElementById('observacionesVenta').value.trim();
         const monto = parseFloat(document.getElementById('montoVentaHidden').value) || 0;
+        const descuento = parseFloat(document.getElementById('descuentoAplicadoHidden').value) || 0;
         
-        // Obtener detalles de productos CON CANTIDAD
         const detalles_productos = [];
         document.querySelectorAll('.fila-repuesto').forEach(fila => {
             const nombreProd = fila.querySelector('.repuesto-nombre')?.value || '';
@@ -699,7 +874,8 @@ document.addEventListener('DOMContentLoaded', function() {
             observaciones: observaciones,
             atendido_por: '{{ session.get("nombre_completo", session.get("usuario")) }}',
             detalles_repuestos: detalles_productos,
-            tipo_venta: 'directa'  // ✅ Marcar como venta directa
+            tipo_venta: 'directa',
+            descuento_aplicado: descuento
         };
         
         const btn = this.querySelector('button[type="submit"]');
@@ -715,22 +891,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(resp => {
             if (resp.success) {
                 alert(`✅ Venta rápida registrada correctamente\n\n💰 Total: $${monto.toLocaleString('es-CL')}`);
-                document.getElementById('formVentaRapida').reset();
-                // Limpiar tabla pero mantener una fila
-                const filas = document.querySelectorAll('.fila-repuesto');
-                filas.forEach((fila, index) => {
-                    if (index > 0) fila.remove();
-                });
-                const primeraFila = document.querySelector('.fila-repuesto');
-                if (primeraFila) {
-                    primeraFila.querySelector('.repuesto-nombre').value = '';
-                    primeraFila.querySelector('.costo-repuesto').value = '';
-                    primeraFila.querySelector('.cantidad-repuesto').value = 1;
-                }
-                actualizarTotalRepuestos();
-                btn.disabled = false;
-                btn.textContent = '💰 Registrar Venta';
-                // ✅ Recargar la página para limpiar todo
                 window.location.href = '/venta_rapida';
             } else {
                 alert('❌ Error: ' + (resp.error || 'Desconocido'));
