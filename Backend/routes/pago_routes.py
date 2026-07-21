@@ -374,7 +374,7 @@ def get_pendientes_validacion():
         logger.error(f"Error en get_pendientes_validacion: {e}")
         return jsonify({"error": str(e)}), 500
 # ============================
-# 9. VALIDAR PAGO (CON DESCUENTO DE STOCK Y VALIDACIÓN)
+# VALIDAR PAGO (CON DESCUENTO)
 # ============================
 @pago_bp.route('/validar_pago/<int:id_reg>', methods=['POST'])
 def validar_pago(id_reg):
@@ -395,6 +395,11 @@ def validar_pago(id_reg):
         resultado = sanitizar_input(data.get('resultado', 'reparado'))
         tiempo_estimado = data.get('tiempo_estimado', '00:00:00')
         
+        # 🔥 NUEVO: Obtener descuento
+        descuento_aplicado = sanitizar_numero(data.get('descuento_aplicado', 0), min_val=0)
+        if descuento_aplicado > 0:
+            logger.info(f"💰 Descuento aplicado: ${descuento_aplicado}")
+        
         conn = get_connection()
         cur = conn.cursor()
         
@@ -413,7 +418,7 @@ def validar_pago(id_reg):
         logger.info(f"🚛 ¿Es flota? {es_flota} → estado_pago: {estado_pago}")
         
         # ============================================
-        # ✅ PROCESAR CADA REPUESTO CON VALIDACIÓN DE STOCK (SIEMPRE DESCUENTA)
+        # ✅ PROCESAR CADA REPUESTO CON VALIDACIÓN DE STOCK
         # ============================================
         for item in detalles_repuestos:
             nombre = sanitizar_input(item.get('nombre', '').strip())
@@ -430,7 +435,7 @@ def validar_pago(id_reg):
                 if existente:
                     id_existente, stock_actual, costo_prov, costo_venta_existente = existente
                     
-                    # ✅ VERIFICAR STOCK (SIEMPRE, incluso en flotas)
+                    # ✅ VERIFICAR STOCK
                     if stock_actual is not None and stock_actual < cantidad:
                         cur.close()
                         conn.close()
@@ -438,7 +443,7 @@ def validar_pago(id_reg):
                             "error": f"Stock insuficiente para '{nombre}'. Disponible: {stock_actual}, Solicitado: {cantidad}"
                         }), 400
                     
-                    # ✅ DESCONTAR STOCK (SIEMPRE, incluso en flotas)
+                    # ✅ DESCONTAR STOCK
                     nuevo_stock = (stock_actual or 0) - cantidad
                     cur.execute("""
                         UPDATE repuestos 
@@ -483,7 +488,7 @@ def validar_pago(id_reg):
                     logger.info(f"✅ Repuesto '{nombre}' creado con costo_venta_final: ${costo_unitario} (ID: {id_nuevo})")
         
         # ============================================
-        # ✅ ACTUALIZAR PAGO
+        # ✅ ACTUALIZAR PAGO CON DESCUENTO
         # ============================================
         detalles_json = json.dumps(detalles_repuestos)
         cur.execute("""
@@ -502,7 +507,8 @@ def validar_pago(id_reg):
                 tiempo_estimado = %s,
                 detalles_repuestos = %s::jsonb,
                 estado_pago = %s,
-                fecha_pago_real = %s
+                fecha_pago_real = %s,
+                descuento_aplicado = %s
             WHERE id = %s
         """, (
             costo_repuestos,
@@ -518,6 +524,7 @@ def validar_pago(id_reg):
             detalles_json,
             estado_pago,
             fecha_pago_real,
+            descuento_aplicado,  # 🔥 NUEVO
             id_reg
         ))
         
@@ -525,7 +532,7 @@ def validar_pago(id_reg):
         cur.close()
         conn.close()
         
-        logger.info(f"✅ Validación completada para ID {id_reg} - estado_pago: {estado_pago}")
+        logger.info(f"✅ Validación completada para ID {id_reg} - estado_pago: {estado_pago} - Descuento: ${descuento_aplicado}")
         return jsonify({"success": True, "estado_pago": estado_pago})
         
     except Exception as e:
