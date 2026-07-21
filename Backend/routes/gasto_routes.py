@@ -116,9 +116,6 @@ def registrar_gasto():
         logger.error(f"Error en registrar_gasto: {e}")
         return jsonify({"error": str(e)}), 500
 
-# ============================================
-# RUTA GET - GASTOS PARA BALANCE (CORREGIDO)
-# ============================================
 @gasto_bp.route('/gastos_balance', methods=['GET'])
 def obtener_gastos_balance():
     try:
@@ -130,7 +127,7 @@ def obtener_gastos_balance():
         
         conn, cur = get_cursor()
         
-        # 🔥 CORREGIDO: Convertir created_at a zona horaria Chile
+        # 🔥 CORREGIDO: Usar fecha (que está en Chile) para el filtro
         cur.execute("""
             SELECT 
                 id,
@@ -144,8 +141,7 @@ def obtener_gastos_balance():
                 registrado_por,
                 fecha,
                 hora,
-                created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago' as created_at_chile,
-                updated_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago' as updated_at_chile
+                created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago' as created_at_chile
             FROM gastos 
             WHERE fecha BETWEEN %s AND %s
             ORDER BY fecha DESC, hora DESC
@@ -158,19 +154,14 @@ def obtener_gastos_balance():
         gastos = []
         for row in rows:
             g = dict(row)
-            # La fecha y hora YA ESTÁN en zona horaria Chile
+            # Convertir fecha y hora a string
             if g.get('hora') and hasattr(g['hora'], 'strftime'):
                 g['hora'] = g['hora'].strftime('%H:%M:%S')
             if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
                 g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
-            # Convertir created_at a string en zona Chile
             if g.get('created_at_chile'):
                 g['created_at'] = g['created_at_chile'].strftime('%Y-%m-%d %H:%M:%S')
-            if g.get('updated_at_chile'):
-                g['updated_at'] = g['updated_at_chile'].strftime('%Y-%m-%d %H:%M:%S')
-            # Eliminar campos temporales
             g.pop('created_at_chile', None)
-            g.pop('updated_at_chile', None)
             gastos.append(g)
         
         logger.info(f"📊 Gastos obtenidos: {len(gastos)} en el rango {fecha_inicio} - {fecha_fin}")
