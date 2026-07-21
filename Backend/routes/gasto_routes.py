@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify
 from database import get_connection, get_cursor
 from utils.seguridad import sanitizar_input, sanitizar_numero
 import logging
+from services.factura_sii_service import FacturaSIIService
 
 logger = logging.getLogger(__name__)
 gasto_bp = Blueprint('gasto', __name__, url_prefix='/api')
