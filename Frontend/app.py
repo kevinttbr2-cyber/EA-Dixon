@@ -1699,9 +1699,6 @@ def pagar_deuda(id_deuda):
         return redirect("/deudores")
     
     return render_template("pagar_deuda.html", deuda=deuda)
-# ============================
-# BALANCE UNIFICADO (FRONTEND)
-# ============================
 @app.route('/balance_unificado')
 @login_required
 @role_required(['admin'])
@@ -1709,6 +1706,7 @@ def balance_unificado():
     filtro = request.args.get('filtro', 'hoy')
     
     try:
+        # ✅ Asegúrate que la URL sea correcta
         resp = requests.get(
             f"{BACKEND_URL}/api/balance_unificado?filtro={filtro}",
             timeout=10
@@ -1752,17 +1750,10 @@ def balance_unificado():
         "total_descuentos": 0
     }
     
-    # Combinar datos recibidos con valores por defecto
+    # Combinar datos
     for key, value in default_data.items():
         if key not in data or data[key] is None:
             data[key] = value
-    
-    # Asegurar que los registros sean listas
-    data['registros'] = data.get('registros', [])
-    data['registros_7d'] = data.get('registros_7d', [])
-    data['registros_mes'] = data.get('registros_mes', [])
-    data['gastos_operativos'] = data.get('gastos_operativos', [])
-    data['gastos_por_categoria'] = data.get('gastos_por_categoria', [])
     
     return render_template("balance_unificado.html", **data)
 # ============================
