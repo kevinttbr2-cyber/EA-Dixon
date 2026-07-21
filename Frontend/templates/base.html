@@ -585,47 +585,37 @@
                         </a>
                     </li>
                     
-                   <!-- FINANZAS -->
-<div class="drawer-section-title">Finanzas</div>
-<!-- ✅ NUEVO: Balance Unificado -->
-<a href="/balance_unificado" class="drawer-item {% if request.path == '/balance_unificado' %}active{% endif %}" style="
-    padding-left: 36px;
-    border-left: 3px solid #00ff66;
-    background: rgba(0,255,102,0.06);
-">
-    <span class="material-symbols-rounded" style="color: #00ff66;">dashboard</span>
-    <span style="color: #00ff66; font-weight: 600;">⭐ Balance Unificado</span>
-</a>
-<!-- Balance Total -->
-<a href="/balance" class="drawer-item {% if request.path == '/balance' %}active{% endif %}" style="padding-left: 36px;">
-    <span class="material-symbols-rounded">balance</span>
-    Balance Total
-</a>
-<!-- Balance Ventas -->
-<a href="/balance_ventas" class="drawer-item {% if request.path == '/balance_ventas' %}active{% endif %}" style="padding-left: 36px;">
-    <span class="material-symbols-rounded">point_of_sale</span>
-    Balance Ventas
-</a>
-<!-- Dashboard -->
-<a href="/dashboard" class="drawer-item {% if request.path == '/dashboard' %}active{% endif %}" style="padding-left: 36px;">
-    <span class="material-symbols-rounded">analytics</span>
-    Dashboard
-</a>
-<!-- Gastos -->
-<a href="/gastos" class="drawer-item {% if request.path == '/gastos' %}active{% endif %}" style="padding-left: 36px;">
-    <span class="material-symbols-rounded">payments</span>
-    Gastos
-</a>
-<!-- Cierre de Caja -->
-<a href="/cierre_caja" class="drawer-item {% if request.path == '/cierre_caja' %}active{% endif %}" style="padding-left: 36px;">
-    <span class="material-symbols-rounded">receipt_long</span>
-    Cierre de Caja
-</a></li>
+                    <!-- FINANZAS (dropdown) -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="menuFinanzas" role="button" data-bs-toggle="dropdown">
+                            <span class="material-symbols-rounded">account_balance</span>
+                            Finanzas
+                        </a>
+                        <ul class="dropdown-menu">
+                            <!-- ✅ Balance Unificado -->
+                            <li>
+                                <a class="dropdown-item" href="/balance_unificado" style="
+                                    background: rgba(0,255,102,0.08);
+                                    border-left: 3px solid #00ff66;
+                                    font-weight: 600;
+                                ">
+                                    <span class="material-symbols-rounded" style="color: #00ff66;">dashboard</span>
+                                    <span style="color: #00ff66;">⭐ Balance Unificado</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/balance"><span class="material-symbols-rounded">balance</span> Balance Total</a></li>
+                            <li><a class="dropdown-item" href="/balance_ventas"><span class="material-symbols-rounded">point_of_sale</span> Balance Ventas</a></li>
+                            <li><a class="dropdown-item" href="/dashboard"><span class="material-symbols-rounded">analytics</span> Dashboard</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/gastos"><span class="material-symbols-rounded">payments</span> Gastos</a></li>
+                            <li><a class="dropdown-item" href="/cierre_caja"><span class="material-symbols-rounded">receipt_long</span> Cierre de Caja</a></li>
                         </ul>
                     </li>
                     {% endif %}
                     
-                    <!-- GESTIÓN (CON DEUDORES AGREGADO) -->
+                    <!-- GESTIÓN -->
                     {% if session.get("rol") in ["admin", "operador"] %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown">
@@ -637,7 +627,6 @@
                             <li><a class="dropdown-item" href="/flotas"><span class="material-symbols-rounded">directions_car</span> Flotas</a></li>
                             <li><a class="dropdown-item" href="/flotas_pendientes"><span class="material-symbols-rounded">pending_actions</span> Flotas Pendientes {% if flotas_pendientes_count > 0 %}<span class="badge-count">{{ flotas_pendientes_count }}</span>{% endif %}</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <!-- ✅ DEUDORES AGREGADO -->
                             <li><a class="dropdown-item" href="/deudores"><span class="material-symbols-rounded">payments</span> Deudores {% if deudores_count is defined and deudores_count > 0 %}<span class="badge-count" style="background:#ff6b6b;">{{ deudores_count }}</span>{% endif %}</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/repuestos"><span class="material-symbols-rounded">inventory_2</span> Repuestos</a></li>
@@ -723,6 +712,15 @@
 
         <!-- FINANZAS -->
         <div class="drawer-section-title">Finanzas</div>
+        <!-- ✅ NUEVO: Balance Unificado -->
+        <a href="/balance_unificado" class="drawer-item {% if request.path == '/balance_unificado' %}active{% endif %}" style="
+            padding-left: 36px;
+            border-left: 3px solid #00ff66;
+            background: rgba(0,255,102,0.06);
+        ">
+            <span class="material-symbols-rounded" style="color: #00ff66;">dashboard</span>
+            <span style="color: #00ff66; font-weight: 600;">⭐ Balance Unificado</span>
+        </a>
         <a href="/balance" class="drawer-item {% if request.path == '/balance' %}active{% endif %}" style="padding-left: 36px;">
             <span class="material-symbols-rounded">balance</span>
             Balance Total
@@ -744,7 +742,7 @@
             Cierre de Caja
         </a>
 
-        <!-- GESTIÓN (CON DEUDORES AGREGADO) -->
+        <!-- GESTIÓN -->
         <div class="drawer-section-title">Gestión</div>
         <a href="/registros" class="drawer-item {% if request.path == '/registros' %}active{% endif %}" style="padding-left: 36px;">
             <span class="material-symbols-rounded">history</span>
@@ -761,7 +759,6 @@
             <span class="badge-count">{{ flotas_pendientes_count }}</span>
             {% endif %}
         </a>
-        <!-- ✅ DEUDORES AGREGADO -->
         <a href="/deudores" class="drawer-item {% if request.path == '/deudores' %}active{% endif %}" style="padding-left: 36px;">
             <span class="material-symbols-rounded">payments</span>
             Deudores
@@ -780,6 +777,10 @@
             <span class="material-symbols-rounded">verified</span>
             Validar Pagos
         </a>
+        <a href="/auditoria_descargas" class="drawer-item {% if request.path == '/auditoria_descargas' %}active{% endif %}" style="padding-left: 36px;">
+            <span class="material-symbols-rounded">download</span>
+            Auditoría
+        </a>
 
         <!-- ADMINISTRACIÓN (solo admin) -->
         {% if session.get("rol") == "admin" %}
@@ -787,10 +788,6 @@
         <a href="/usuarios" class="drawer-item {% if request.path == '/usuarios' %}active{% endif %}" style="padding-left: 36px;">
             <span class="material-symbols-rounded">people</span>
             Usuarios
-        </a>
-        <a href="/auditoria_descargas" class="drawer-item {% if request.path == '/auditoria_descargas' %}active{% endif %}" style="padding-left: 36px;">
-            <span class="material-symbols-rounded">download</span>
-            Auditoría
         </a>
         <a href="/ver_logs" class="drawer-item {% if request.path == '/ver_logs' %}active{% endif %}" style="padding-left: 36px;">
             <span class="material-symbols-rounded">terminal</span>
@@ -950,6 +947,6 @@
         }
     }
     </script>
-<script src="{{ url_for('static', filename='js/update_notification.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/update_notification.js') }}"></script>
 </body>
 </html>
