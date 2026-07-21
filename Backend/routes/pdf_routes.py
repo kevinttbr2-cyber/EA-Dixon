@@ -7,6 +7,7 @@ import qrcode
 from io import BytesIO
 import base64
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 pdf_bp = Blueprint('pdf', __name__, url_prefix='/api')
@@ -29,8 +30,34 @@ def descargar_pdf(id_reg, firma):
         if not pago:
             return jsonify({"error": "Registro no encontrado"}), 404
         
+        # ✅ CONVERTIR pago.to_dict() a un diccionario con todos los campos como string
+        registro_dict = pago.to_dict()
+        
+        # ✅ CONVERTIR CAMPOS A STRING PARA EVITAR ERRORES EN PDF
+        for key, value in registro_dict.items():
+            if value is None:
+                registro_dict[key] = ''
+            elif isinstance(value, int):
+                registro_dict[key] = str(value)
+            elif isinstance(value, float):
+                registro_dict[key] = str(value)
+            elif isinstance(value, datetime):
+                registro_dict[key] = value.strftime('%Y-%m-%d')
+            elif isinstance(value, dict) or isinstance(value, list):
+                registro_dict[key] = str(value)
+        
+        # ✅ AGREGAR CAMPOS ADICIONALES SI FALTAN
+        if 'empresa' not in registro_dict:
+            registro_dict['empresa'] = 'DIXON'
+        if 'empresa_sub' not in registro_dict:
+            registro_dict['empresa_sub'] = 'Electricidad Automotriz'
+        if 'direccion' not in registro_dict:
+            registro_dict['direccion'] = 'Neptuno 163, Local C, Lo Prado'
+        if 'telefono' not in registro_dict:
+            registro_dict['telefono'] = '+569 9855 0331'
+        
         # Generar PDF
-        buffer = PDFService.generar_pdf_formal(pago.to_dict())
+        buffer = PDFService.generar_pdf_formal(registro_dict)
         if not buffer:
             return jsonify({"error": "Error generando PDF"}), 500
         
@@ -51,14 +78,17 @@ def descargar_pdf(id_reg, firma):
         except Exception as e:
             logger.error(f"Error registrando descarga: {e}")
         
-        # Nombre del archivo
-        nombre_cliente = pago.nombre.replace(' ', '_').replace('/', '_') if pago.nombre else 'cliente'
+        # ✅ NOMBRE DEL ARCHIVO - CONVERTIR TODO A STRING Y LIMPIAR
+        nombre_cliente = registro_dict.get('nombre', 'cliente')
+        if nombre_cliente:
+            nombre_cliente = str(nombre_cliente).replace(' ', '_').replace('/', '_').replace('\\', '_')
+        else:
+            nombre_cliente = 'cliente'
         
-        if pago.fecha:
-            if hasattr(pago.fecha, 'strftime'):
-                fecha = pago.fecha.strftime('%Y%m%d')
-            else:
-                fecha = str(pago.fecha)[:10].replace('-', '')
+        # ✅ FECHA - ASEGURAR QUE ES STRING
+        fecha = registro_dict.get('fecha', '')
+        if fecha:
+            fecha = str(fecha).replace('-', '')[:8]
         else:
             fecha = 'sin_fecha'
         
@@ -71,7 +101,9 @@ def descargar_pdf(id_reg, firma):
             download_name=download_name
         )
     except Exception as e:
-        logger.error(f"Error en descargar_pdf: {e}")
+        logger.error(f"❌ Error en descargar_pdf: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @pdf_bp.route('/qr/<int:id_reg>/<firma>', methods=['GET'])
@@ -104,5 +136,7 @@ def generar_qr(id_reg, firma):
         
         return jsonify({"qr": f"data:image/png;base64,{img_base64}"})
     except Exception as e:
-        logger.error(f"Error en generar_qr: {e}")
+        logger.error(f"❌ Error en generar_qr: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
