@@ -781,6 +781,27 @@ def balance():
     filtro = request.args.get('filtro', 'hoy')
     hoy = datetime.now().date()
     
+    # ============================================
+    # 1. DETERMINAR FECHAS SEGÚN FILTRO (VENTAS Y GASTOS)
+    # ============================================
+    if filtro == 'hoy':
+        fecha_inicio = hoy.strftime('%Y-%m-%d')
+        fecha_fin = hoy.strftime('%Y-%m-%d')
+    elif filtro == '7d':
+        fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+        fecha_fin = hoy.strftime('%Y-%m-%d')
+    elif filtro == 'mes':
+        fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+        fecha_fin = hoy.strftime('%Y-%m-%d')
+    else:  # 'todos' o cualquier otro
+        fecha_inicio = '2020-01-01'
+        fecha_fin = hoy.strftime('%Y-%m-%d')
+    
+    logger.info(f"📊 Balance - Filtro: {filtro}, Fechas: {fecha_inicio} a {fecha_fin}")
+    
+    # ============================================
+    # 2. OBTENER VENTAS CON EL FILTRO
+    # ============================================
     try:
         resp = requests.get(f"{BACKEND_URL}/api/balance?filtro={filtro}", timeout=10)
         if resp.status_code == 200:
@@ -797,17 +818,15 @@ def balance():
         logger.error(f"Error en /balance (ventas): {e}")
         registros, total_pagado, total_repuestos, total_mano_obra, total_diagnostico, ganancia_neta = [], 0, 0, 0, 0, 0
     
+    # ============================================
+    # 3. OBTENER GASTOS CON EL MISMO FILTRO (CORREGIDO)
+    # ============================================
     gastos_operativos = []
     total_gastos = 0
     
     try:
-        primer_dia_mes = hoy.replace(day=1).strftime('%Y-%m-%d')
-        ultimo_dia_mes = hoy.strftime('%Y-%m-%d')
-        
-        logger.info(f"📊 Balance - Buscando gastos del mes: {primer_dia_mes} a {ultimo_dia_mes}")
-        
         resp_gastos = requests.get(
-            f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={primer_dia_mes}&fecha_fin={ultimo_dia_mes}",
+            f"{BACKEND_URL}/api/gastos_balance?fecha_inicio={fecha_inicio}&fecha_fin={fecha_fin}",
             timeout=10
         )
         
@@ -816,7 +835,7 @@ def balance():
             for g in gastos_operativos:
                 g['monto'] = float(g['monto']) if g.get('monto') else 0
             total_gastos = sum(g.get('monto', 0) for g in gastos_operativos)
-            logger.info(f"✅ Gastos encontrados: {len(gastos_operativos)} - Total: ${total_gastos}")
+            logger.info(f"✅ Gastos encontrados para {filtro}: {len(gastos_operativos)} - Total: ${total_gastos}")
         else:
             logger.error(f"❌ Error al obtener gastos: {resp_gastos.status_code}")
             
@@ -825,16 +844,41 @@ def balance():
         gastos_operativos = []
         total_gastos = 0
     
+    # ============================================
+    # 4. CALCULAR GANANCIA REAL
+    # ============================================
     ganancia_real = total_pagado - total_repuestos - total_mano_obra - total_gastos
     
+    # ============================================
+    # 5. DATOS PARA LOS FILTROS DE LA VISTA
+    # ============================================
+    hoy_str = hoy.strftime('%Y-%m-%d')
+    
+    # Ya tenemos registros filtrados, pero necesitamos los contadores para los botones
+    # Usamos los mismos registros que ya tenemos
+    registros_hoy = [r for r in registros if r.get('fecha', '') == hoy_str]
+    registros_7d = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')]
+    registros_mes = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
+    registros_todos = registros
+    
+    # Para los contadores de los botones, usamos el backend
+    try:
+        resp_all = requests.get(f"{BACKEND_URL}/api/balance?filtro=todos", timeout=5)
+        if resp_all.status_code == 200:
+            data_all = resp_all.json()
+            registros_all = data_all.get('registros', [])
+        else:
+            registros_all = []
+    except:
+        registros_all = []
+    
+    # Contadores para los botones
+    hoy_count = len([r for r in registros_all if r.get('fecha', '') == hoy_str])
+    semana_count = len([r for r in registros_all if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')])
+    mes_count = len([r for r in registros_all if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')])
+    todos_count = len(registros_all)
+    
     logger.info(f"📊 Balance final: Ingresos=${total_pagado}, Repuestos=${total_repuestos}, MO=${total_mano_obra}, Gastos=${total_gastos}, Ganancia=${ganancia_real}")
-    
-    hoy_list = [r for r in registros if r.get('fecha') == hoy.strftime('%Y-%m-%d')]
-    semana_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')]
-    mes_list = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
-    todos_list = registros
-    
-    logger.info(f"📊 ENVIANDO AL TEMPLATE: gastos_operativos={len(gastos_operativos)}, total_gastos={total_gastos}")
     
     return render_template(
         "balance.html",
@@ -848,10 +892,10 @@ def balance():
         total_gastos=total_gastos,
         gastos_operativos=gastos_operativos,
         filtro=filtro,
-        hoy=hoy_list,
-        semana=semana_list,
-        mes=mes_list,
-        todos=todos_list
+        hoy=hoy_count,      # ← Ahora son números (contadores)
+        semana=semana_count, # ← Ahora son números (contadores)
+        mes=mes_count,       # ← Ahora son números (contadores)
+        todos=todos_count    # ← Ahora son números (contadores)
     )
 
 # ============================
