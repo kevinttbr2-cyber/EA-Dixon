@@ -117,7 +117,7 @@ def venta_rapida():
         return jsonify({"error": str(e)}), 500
 
 # ============================================
-# BALANCE DE VENTAS CON DESCUENTO
+# BALANCE DE VENTAS - FILTRADO (SOLO CON VENTA)
 # ============================================
 @venta_bp.route('/balance_ventas', methods=['GET'])
 def balance_ventas():
@@ -128,41 +128,55 @@ def balance_ventas():
             return jsonify({"error": "Filtro inválido"}), 400
         
         hoy = get_fecha_chile()
-        registros = PagoService.obtener_balance_ventas(filtro, hoy)
+        data_balance = PagoService.obtener_balance_ventas(filtro, hoy)
         
-        if not registros:
+        registros = data_balance.get('ventas', [])
+        gastos_operativos = data_balance.get('gastos', [])
+        total_gastos = data_balance.get('total_gastos', 0)
+        
+        # 🔥 FILTRAR: Solo registros con monto > 0
+        registros_filtrados = []
+        for r in registros:
+            # Calcular total de la venta
+            total_venta = 0
+            detalles = r.get('detalles_repuestos', [])
+            if detalles and len(detalles) > 0:
+                for item in detalles:
+                    cantidad = int(item.get('cantidad', 1) or 1)
+                    precio = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
+                    total_venta += cantidad * precio
+            else:
+                total_venta = float(r.get('costo_repuestos_real', 0) or 0)
+            
+            # 🔥 Si tiene monto > 0, lo incluimos
+            if total_venta > 0:
+                r['total_repuestos'] = total_venta
+                registros_filtrados.append(r)
+        
+        # Si no hay registros con venta
+        if not registros_filtrados:
             return jsonify({
                 "registros": [],
+                "gastos_operativos": gastos_operativos,
+                "gastos_por_categoria": [],
+                "total_gastos": total_gastos,
                 "total_ventas": 0,
                 "total_trabajo": 0,
                 "total_directa": 0,
                 "ganancia_trabajo": 0,
                 "ganancia_directa": 0,
                 "ganancia_neta": 0,
+                "ganancia_real": 0 - total_gastos,
                 "total_repuestos_trabajo": 0,
                 "total_repuestos_directa": 0,
-                "total_descuentos": 0  # 🔥 NUEVO
+                "total_descuentos": 0
             })
         
-        # 🔥 NUEVO: Calcular total de descuentos
-        total_descuentos = 0
-        for r in registros:
-            descuento = float(r.get('descuento_aplicado', 0) or 0)
-            total_descuentos += descuento
-        # Procesar registros
-        for r in registros:
-            total = 0
-            detalles = r.get('detalles_repuestos', [])
-            for item in detalles:
-                cantidad = item.get('cantidad', 1)
-                precio = item.get('costo_unitario', 0) or item.get('costo', 0)
-                total += cantidad * precio
-            r['total_repuestos'] = total
-        
+        # 🔥 CLASIFICAR SOLO REGISTROS CON VENTA
         trabajo = []
         directa = []
         
-        for r in registros:
+        for r in registros_filtrados:
             tiene_vehiculo = r.get('marca') and r.get('marca').strip() != '' and r.get('modelo') and r.get('modelo').strip() != ''
             es_directa = r.get('tipo_venta') == 'directa' or not tiene_vehiculo
             
@@ -171,19 +185,18 @@ def balance_ventas():
             else:
                 trabajo.append(r)
         
+        # 🔥 CALCULAR DESCUENTOS
+        total_descuentos = 0
+        for r in registros_filtrados:
+            descuento = float(r.get('descuento_aplicado', 0) or 0)
+            total_descuentos += descuento
+        
         conn, cur = get_cursor()
         
         def calcular_venta_repuestos(registros):
             total = 0
             for r in registros:
-                detalles = r.get('detalles_repuestos', [])
-                if detalles and len(detalles) > 0:
-                    for item in detalles:
-                        cantidad = int(item.get('cantidad', 1) or 1)
-                        precio_venta = float(item.get('costo_unitario', 0) or item.get('costo', 0) or 0)
-                        total += cantidad * precio_venta
-                else:
-                    total += float(r.get('costo_repuestos_real', 0) or 0)
+                total += float(r.get('total_repuestos', 0) or 0)
             return total
         
         def calcular_costo_repuestos(registros):
@@ -211,7 +224,7 @@ def balance_ventas():
                     total += float(r.get('costo_repuestos_real', 0) or 0)
             return total
         
-        total_ventas = calcular_venta_repuestos(registros)
+        total_ventas = calcular_venta_repuestos(registros_filtrados)
         total_trabajo = calcular_venta_repuestos(trabajo)
         total_directa = calcular_venta_repuestos(directa)
         
@@ -222,21 +235,37 @@ def balance_ventas():
         ganancia_directa = total_directa - costo_directa
         ganancia_neta = ganancia_trabajo + ganancia_directa
         
+        # Ganancia real
+        ganancia_real = ganancia_neta - total_gastos
+        
+        # Gastos por categoría
+        gastos_por_categoria = {}
+        for g in gastos_operativos:
+            categoria = g.get('categoria', 'Otros')
+            gastos_por_categoria[categoria] = gastos_por_categoria.get(categoria, 0) + float(g.get('monto', 0) or 0)
+        
+        gastos_categoria_lista = [{'categoria': k, 'monto': v} for k, v in gastos_por_categoria.items()]
+        gastos_categoria_lista.sort(key=lambda x: x['monto'], reverse=True)
+        
         cur.close()
         conn.close()
         
         return jsonify({
-            "registros": registros,
-            "total_ventas": total_ventas,
-            "total_trabajo": total_trabajo,
-            "total_directa": total_directa,
+            "registros": registros_filtrados,
+            "gastos_operativos": gastos_operativos,
+            "gastos_por_categoria": gastos_categoria_lista,
+            "total_gastos": round(total_gastos, 2),
+            "total_ventas": round(total_ventas, 2),
+            "total_trabajo": round(total_trabajo, 2),
+            "total_directa": round(total_directa, 2),
             "ganancia_trabajo": round(ganancia_trabajo, 2),
             "ganancia_directa": round(ganancia_directa, 2),
             "ganancia_neta": round(ganancia_neta, 2),
+            "ganancia_real": round(ganancia_real, 2),
             "total_repuestos_trabajo": round(costo_trabajo, 2),
             "total_repuestos_directa": round(costo_directa, 2),
             "total_descuentos": round(total_descuentos, 2)
         })
     except Exception as e:
         logger.error(f"Error en balance_ventas: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500    
