@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 gasto_bp = Blueprint('gasto', __name__, url_prefix='/api')
 
 # ============================================
-# RUTA GET - OBTENER GASTOS POR FECHA
+# RUTA GET - OBTENER GASTOS POR FECHA (CORREGIDO)
 # ============================================
 @gasto_bp.route('/gastos', methods=['GET'])
 def obtener_gastos():
@@ -18,7 +18,26 @@ def obtener_gastos():
             return jsonify({"error": "Fecha requerida"}), 400
         
         conn, cur = get_cursor()
-        cur.execute("SELECT * FROM gastos WHERE fecha = %s ORDER BY hora DESC", (fecha,))
+        cur.execute("""
+            SELECT 
+                id,
+                categoria,
+                descripcion,
+                monto,
+                metodo_pago,
+                proveedor,
+                folio,
+                tipo_gasto,
+                registrado_por,
+                fecha,
+                hora,
+                created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago' as created_at_chile,
+                updated_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago' as updated_at_chile
+            FROM gastos 
+            WHERE fecha = %s 
+            ORDER BY hora DESC
+        """, (fecha,))
+        
         rows = cur.fetchall()
         cur.close()
         conn.close()
@@ -30,10 +49,12 @@ def obtener_gastos():
                 g['hora'] = g['hora'].strftime('%H:%M:%S')
             if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
                 g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
-            if g.get('created_at') and hasattr(g['created_at'], 'strftime'):
-                g['created_at'] = g['created_at'].strftime('%Y-%m-%d %H:%M:%S')
-            if g.get('updated_at') and hasattr(g['updated_at'], 'strftime'):
-                g['updated_at'] = g['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+            if g.get('created_at_chile'):
+                g['created_at'] = g['created_at_chile'].strftime('%Y-%m-%d %H:%M:%S')
+            if g.get('updated_at_chile'):
+                g['updated_at'] = g['updated_at_chile'].strftime('%Y-%m-%d %H:%M:%S')
+            g.pop('created_at_chile', None)
+            g.pop('updated_at_chile', None)
             gastos.append(g)
         
         return jsonify(gastos)
@@ -53,7 +74,6 @@ def registrar_gasto():
         if not data.get('categoria') or not data.get('monto'):
             return jsonify({"error": "Categoría y monto son obligatorios"}), 400
         
-        # ✅ OBTENER TIPO DE GASTO
         tipo_gasto = sanitizar_input(data.get('tipo_gasto', 'general').strip())
         if tipo_gasto not in ['venta', 'trabajo', 'general']:
             tipo_gasto = 'general'
@@ -61,6 +81,7 @@ def registrar_gasto():
         conn = get_connection()
         cur = conn.cursor()
         
+        # 🔥 AHORA CON ZONA HORARIA CHILE PARA TODOS LOS CAMPOS
         cur.execute("""
             INSERT INTO gastos 
             (categoria, monto, metodo_pago, descripcion, proveedor, folio, 
@@ -80,7 +101,7 @@ def registrar_gasto():
             sanitizar_input(data.get('proveedor', '')),
             sanitizar_input(data.get('folio', '')),
             sanitizar_input(data.get('registrado_por', 'Sistema')),
-            tipo_gasto  # ✅ NUEVO: guardar tipo de gasto
+            tipo_gasto
         ))
         
         id_gasto = cur.fetchone()[0]
@@ -96,7 +117,7 @@ def registrar_gasto():
         return jsonify({"error": str(e)}), 500
 
 # ============================================
-# RUTA GET - GASTOS PARA BALANCE (CON TIPO_GASTO)
+# RUTA GET - GASTOS PARA BALANCE (CORREGIDO)
 # ============================================
 @gasto_bp.route('/gastos_balance', methods=['GET'])
 def obtener_gastos_balance():
@@ -108,8 +129,24 @@ def obtener_gastos_balance():
             return jsonify({"error": "Fechas requeridas"}), 400
         
         conn, cur = get_cursor()
+        
+        # 🔥 CORREGIDO: Convertir created_at a zona horaria Chile
         cur.execute("""
-            SELECT * FROM gastos 
+            SELECT 
+                id,
+                categoria,
+                descripcion,
+                monto,
+                metodo_pago,
+                proveedor,
+                folio,
+                tipo_gasto,
+                registrado_por,
+                fecha,
+                hora,
+                created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago' as created_at_chile,
+                updated_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago' as updated_at_chile
+            FROM gastos 
             WHERE fecha BETWEEN %s AND %s
             ORDER BY fecha DESC, hora DESC
         """, (fecha_inicio, fecha_fin))
@@ -121,14 +158,19 @@ def obtener_gastos_balance():
         gastos = []
         for row in rows:
             g = dict(row)
+            # La fecha y hora YA ESTÁN en zona horaria Chile
             if g.get('hora') and hasattr(g['hora'], 'strftime'):
                 g['hora'] = g['hora'].strftime('%H:%M:%S')
             if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
                 g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
-            if g.get('created_at') and hasattr(g['created_at'], 'strftime'):
-                g['created_at'] = g['created_at'].strftime('%Y-%m-%d %H:%M:%S')
-            if g.get('updated_at') and hasattr(g['updated_at'], 'strftime'):
-                g['updated_at'] = g['updated_at'].strftime('%Y-%m-%d %H:%M:%S')
+            # Convertir created_at a string en zona Chile
+            if g.get('created_at_chile'):
+                g['created_at'] = g['created_at_chile'].strftime('%Y-%m-%d %H:%M:%S')
+            if g.get('updated_at_chile'):
+                g['updated_at'] = g['updated_at_chile'].strftime('%Y-%m-%d %H:%M:%S')
+            # Eliminar campos temporales
+            g.pop('created_at_chile', None)
+            g.pop('updated_at_chile', None)
             gastos.append(g)
         
         logger.info(f"📊 Gastos obtenidos: {len(gastos)} en el rango {fecha_inicio} - {fecha_fin}")
