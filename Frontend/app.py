@@ -1417,11 +1417,46 @@ def venta_rapida():
 @role_required(['admin'])
 def balance_ventas():
     filtro = request.args.get('filtro', 'hoy')
+    hoy = datetime.now().date()
+    
+    # Fechas según filtro
+    if filtro == 'hoy':
+        fecha_inicio = hoy.strftime('%Y-%m-%d')
+        fecha_fin = hoy.strftime('%Y-%m-%d')
+    elif filtro == '7d':
+        fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+        fecha_fin = hoy.strftime('%Y-%m-%d')
+    elif filtro == 'mes':
+        fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+        fecha_fin = hoy.strftime('%Y-%m-%d')
+    else:
+        fecha_inicio = '2020-01-01'
+        fecha_fin = hoy.strftime('%Y-%m-%d')
+    
     try:
-        resp = requests.get(f"{BACKEND_URL}/api/balance_ventas?filtro={filtro}", timeout=10)
+        resp = requests.get(
+            f"{BACKEND_URL}/api/balance_ventas?filtro={filtro}", 
+            timeout=10
+        )
         if resp.status_code == 200:
             data = resp.json()
             registros = data.get('registros', [])
+            
+            # 🔥 FILTRAR: Solo registros con venta (monto > 0 O tiene repuestos)
+            registros_filtrados = []
+            for r in registros:
+                # Verificar si tiene venta real
+                monto = r.get('monto', 0) or 0
+                total_repuestos = r.get('total_repuestos', 0) or 0
+                
+                # Tiene venta si: monto > 0 O tiene repuestos con costo > 0
+                tiene_venta = float(monto) > 0 or float(total_repuestos) > 0
+                
+                if tiene_venta:
+                    registros_filtrados.append(r)
+            
+            registros = registros_filtrados
+            
             total_ventas = data.get('total_ventas', 0)
             total_trabajo = data.get('total_trabajo', 0)
             total_directa = data.get('total_directa', 0)
@@ -1432,36 +1467,40 @@ def balance_ventas():
             total_repuestos_directa = data.get('total_repuestos_directa', 0)
             trabajo_margen = data.get('trabajo_margen', 0)
             directa_margen = data.get('directa_margen', 0)
+            total_gastos = data.get('total_gastos', 0)
+            gastos_operativos = data.get('gastos_operativos', [])
+            gastos_por_categoria = data.get('gastos_por_categoria', [])
+            ganancia_real = data.get('ganancia_real', 0)
+            total_descuentos = data.get('total_descuentos', 0)
         else:
             registros = []
-            total_ventas = 0
-            total_trabajo = 0
-            total_directa = 0
-            ganancia_trabajo = 0
-            ganancia_directa = 0
-            ganancia_neta = 0
-            total_repuestos_trabajo = 0
-            total_repuestos_directa = 0
-            trabajo_margen = 0
-            directa_margen = 0
+            total_ventas = total_trabajo = total_directa = 0
+            ganancia_trabajo = ganancia_directa = ganancia_neta = 0
+            total_repuestos_trabajo = total_repuestos_directa = 0
+            trabajo_margen = directa_margen = 0
+            total_gastos = 0
+            gastos_operativos = []
+            gastos_por_categoria = []
+            ganancia_real = 0
+            total_descuentos = 0
     except Exception as e:
         logger.error(f"Error en /balance_ventas: {e}")
         registros = []
-        total_ventas = 0
-        total_trabajo = 0
-        total_directa = 0
-        ganancia_trabajo = 0
-        ganancia_directa = 0
-        ganancia_neta = 0
-        total_repuestos_trabajo = 0
-        total_repuestos_directa = 0
-        trabajo_margen = 0
-        directa_margen = 0
+        total_ventas = total_trabajo = total_directa = 0
+        ganancia_trabajo = ganancia_directa = ganancia_neta = 0
+        total_repuestos_trabajo = total_repuestos_directa = 0
+        trabajo_margen = directa_margen = 0
+        total_gastos = 0
+        gastos_operativos = []
+        gastos_por_categoria = []
+        ganancia_real = 0
+        total_descuentos = 0
     
-    hoy = datetime.now().strftime('%Y-%m-%d')
-    hoy_count = sum(1 for r in registros if r.get('fecha', '') == hoy)
-    registros_7d = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')]
-    registros_mes = [r for r in registros if r.get('fecha', '') >= (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')]
+    # Contadores para los botones
+    hoy_str = hoy.strftime('%Y-%m-%d')
+    hoy_count = len([r for r in registros if r.get('fecha', '') == hoy_str])
+    registros_7d = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=7)).strftime('%Y-%m-%d')]
+    registros_mes = [r for r in registros if r.get('fecha', '') >= (hoy - timedelta(days=30)).strftime('%Y-%m-%d')]
     
     return render_template(
         "balance_ventas.html",
@@ -1480,6 +1519,11 @@ def balance_ventas():
         total_repuestos_directa=total_repuestos_directa,
         trabajo_margen=trabajo_margen,
         directa_margen=directa_margen,
+        total_gastos=total_gastos,
+        gastos_operativos=gastos_operativos,
+        gastos_por_categoria=gastos_por_categoria,
+        ganancia_real=ganancia_real,
+        total_descuentos=total_descuentos,
         filtro=filtro
     )
 
