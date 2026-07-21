@@ -473,5 +473,31 @@
         </div>
     </div>
 </div>
-
+<script>
+    // ============================================
+// FILTRAR SOLO VENTAS CON MONTO > 0
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const filas = document.querySelectorAll('#tablaVentas tbody tr');
+    let contador = 0;
+    
+    filas.forEach(fila => {
+        const montoCelda = fila.querySelector('td:nth-child(4)');
+        if (montoCelda) {
+            const monto = parseFloat(montoCelda.textContent.replace(/[$,]/g, '')) || 0;
+            if (monto === 0) {
+                fila.style.display = 'none'; // Ocultar filas con monto 0
+            } else {
+                contador++;
+            }
+        }
+    });
+    
+    // Actualizar contadores
+    const totalRegistros = document.querySelector('.total-registros');
+    if (totalRegistros) {
+        totalRegistros.textContent = contador;
+    }
+});
+</script>
 {% endblock %}
