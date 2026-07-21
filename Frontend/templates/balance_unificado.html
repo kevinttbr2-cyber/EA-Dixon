@@ -3,58 +3,31 @@
 {% block content %}
 
 <style>
-    /* ===== ESTILOS UNIFICADOS ===== */
-    .badge-trabajo {
-        background: rgba(255,200,0,0.12);
-        color: #ffcc00;
-        padding: 2px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        border: 1px solid rgba(255,200,0,0.20);
+    /* ===== ESTILOS GENERALES ===== */
+    .balance-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 10px 15px;
     }
-    .badge-directa {
-        background: rgba(79,195,247,0.12);
-        color: #4fc3f7;
-        padding: 2px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        border: 1px solid rgba(79,195,247,0.20);
-    }
-    .badge-general {
-        background: rgba(255,255,255,0.06);
-        color: #888;
-        padding: 2px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        border: 1px solid rgba(255,255,255,0.08);
-    }
-    .comparativo-card {
-        background: rgba(20,20,20,0.80);
-        border-radius: 14px;
-        padding: 14px 16px;
-        border: 1px solid rgba(255,255,255,0.08);
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-    .comparativo-card:hover {
-        border-color: rgba(0,255,102,0.30);
-        box-shadow: 0 0 30px rgba(0,255,102,0.04);
-    }
-    .comparativo-card .total {
-        font-size: 22px;
+    
+    .balance-title {
+        color: #00ff66;
         font-weight: 700;
+        font-size: 24px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
-    .comparativo-card .label {
-        color: #888;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+    
+    /* ===== FILTROS ===== */
+    .filtros-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
+        margin-bottom: 20px;
     }
-    .comparativo-card .sub {
-        font-size: 11px;
-        color: #666;
-        margin-top: 2px;
-    }
+    
     .filtro-card {
         display: flex;
         flex-direction: column;
@@ -62,7 +35,6 @@
         padding: 10px 12px;
         border-radius: 12px;
         text-decoration: none;
-        min-width: 70px;
         transition: all 0.3s ease;
         border: 1px solid rgba(255,255,255,0.08);
         background: rgba(255,255,255,0.02);
@@ -89,216 +61,269 @@
         color: #00ff66;
     }
     
-    /* Gastos */
-    .gastos-section {
-        background: rgba(255, 107, 107, 0.04);
+    /* ===== SECCIÓN DROPDOWN ===== */
+    .section-dropdown {
+        background: rgba(20,20,20,0.80);
         border-radius: 14px;
-        padding: 16px 18px;
-        margin: 15px 0;
-        border: 1px solid rgba(255, 107, 107, 0.15);
+        border: 1px solid rgba(255,255,255,0.06);
+        margin-bottom: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
     }
-    .gastos-section .header {
+    .section-dropdown:hover {
+        border-color: rgba(255,255,255,0.12);
+    }
+    
+    .section-dropdown .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
-        flex-wrap: wrap;
-        gap: 8px;
+        padding: 14px 18px;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s ease;
+        background: rgba(255,255,255,0.02);
     }
-    .gastos-section .header h4 {
-        color: #ff6b6b;
-        margin: 0;
-        font-size: 16px;
-        font-weight: 700;
+    .section-dropdown .section-header:hover {
+        background: rgba(255,255,255,0.04);
     }
-    .gastos-section .total-gastos {
-        color: #ff6b6b;
-        font-weight: 700;
-        font-size: 20px;
-    }
-    .gastos-section .gastos-badges {
+    
+    .section-dropdown .section-header .icon-title {
         display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-        margin-bottom: 10px;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 16px;
     }
-    .gastos-section .gastos-badges .badge-gasto {
-        background: rgba(255,107,107,0.10);
-        color: #ff6b6b;
-        padding: 2px 10px;
-        border-radius: 20px;
+    
+    .section-dropdown .section-header .arrow {
+        font-size: 20px;
+        transition: transform 0.3s ease;
+        color: #888;
+    }
+    .section-dropdown.open .section-header .arrow {
+        transform: rotate(180deg);
+    }
+    
+    .section-dropdown .section-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease, padding 0.3s ease;
+        padding: 0 18px;
+    }
+    .section-dropdown.open .section-body {
+        max-height: 3000px;
+        padding: 0 18px 18px 18px;
+    }
+    
+    /* Badge de estado en header */
+    .section-badge {
         font-size: 11px;
-        border: 1px solid rgba(255,107,107,0.15);
+        padding: 2px 12px;
+        border-radius: 20px;
+        font-weight: 600;
     }
-    .gastos-section .tabla-gastos {
-        overflow-x: auto;
-        max-height: 200px;
-        overflow-y: auto;
-        border-radius: 8px;
+    .section-badge.ventas {
+        background: rgba(0,255,102,0.12);
+        color: #00ff66;
+        border: 1px solid rgba(0,255,102,0.20);
+    }
+    .section-badge.trabajo {
+        background: rgba(255,200,0,0.12);
+        color: #ffcc00;
+        border: 1px solid rgba(255,200,0,0.20);
+    }
+    .section-badge.general {
+        background: rgba(79,195,247,0.12);
+        color: #4fc3f7;
+        border: 1px solid rgba(79,195,247,0.20);
+    }
+    
+    /* ===== TARJETAS DE DATOS ===== */
+    .data-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .data-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .data-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .data-grid-4 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    
+    .data-card {
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+        padding: 10px 14px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.04);
+        transition: all 0.2s ease;
+    }
+    .data-card:hover {
+        border-color: rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.05);
+    }
+    .data-card .label {
+        color: #888;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .data-card .value {
+        font-weight: 700;
+        font-size: 18px;
+        margin-top: 2px;
+    }
+    .data-card .sub {
+        font-size: 11px;
+        color: #666;
+        margin-top: 2px;
+    }
+    
+    /* Colores de valores */
+    .value-green { color: #00ff66; }
+    .value-red { color: #ff6b6b; }
+    .value-yellow { color: #ffcc00; }
+    .value-blue { color: #4fc3f7; }
+    .value-purple { color: #a29bfe; }
+    .value-orange { color: #ff9f43; }
+    .value-cyan { color: #00d2d3; }
+    
+    /* ===== GASTOS MINI ===== */
+    .gastos-mini {
+        background: rgba(255,107,107,0.04);
+        border-radius: 10px;
+        padding: 10px 14px;
         border: 1px solid rgba(255,107,107,0.10);
+        margin-top: 8px;
     }
-    .gastos-section .tabla-gastos table {
+    .gastos-mini .gasto-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 3px 0;
+        font-size: 13px;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .gastos-mini .gasto-item:last-child {
+        border-bottom: none;
+    }
+    .gastos-mini .gasto-item .cat {
+        color: #ff6b6b;
+    }
+    .gastos-mini .gasto-item .mnt {
+        color: #ff6b6b;
+        font-weight: 600;
+    }
+    
+    /* ===== BADGE TIPO GASTO ===== */
+    .tipo-badge {
+        font-size: 10px;
+        padding: 1px 8px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .tipo-badge.venta {
+        background: rgba(79,195,247,0.15);
+        color: #4fc3f7;
+    }
+    .tipo-badge.trabajo {
+        background: rgba(255,200,0,0.15);
+        color: #ffcc00;
+    }
+    .tipo-badge.general {
+        background: rgba(255,255,255,0.06);
+        color: #888;
+    }
+    
+    /* ===== TABLA DE VENTAS ===== */
+    .tabla-ventas {
+        overflow-x: auto;
+        border-radius: 10px;
+        border: 1px solid rgba(0,255,102,0.10);
+        background: rgba(0,0,0,0.20);
+        margin-top: 10px;
+    }
+    .tabla-ventas table {
         width: 100%;
         font-size: 12px;
         border-collapse: collapse;
     }
-    .gastos-section .tabla-gastos thead {
-        background: rgba(255,107,107,0.10);
-        position: sticky;
-        top: 0;
-        z-index: 1;
+    .tabla-ventas thead {
+        background: rgba(0,255,102,0.06);
     }
-    .gastos-section .tabla-gastos th {
-        padding: 4px 8px;
-        color: #ff6b6b;
-        text-align: left;
-        font-weight: 600;
-    }
-    .gastos-section .tabla-gastos td {
-        padding: 4px 8px;
-        border-bottom: 1px solid rgba(255,255,255,0.03);
-    }
-    .gastos-section .tabla-gastos .monto-gasto {
-        text-align: right;
-        color: #ff6b6b;
-        font-weight: 600;
-    }
-    
-    /* Resumen Final */
-    .resumen-final {
-        background: rgba(0, 255, 102, 0.04);
-        border-radius: 14px;
-        padding: 16px 20px;
-        margin-top: 15px;
-        border: 2px solid rgba(0, 255, 102, 0.20);
-    }
-    .resumen-final .grid-3 {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 10px;
-        text-align: center;
-    }
-    .resumen-final .grid-4 {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        gap: 10px;
-        text-align: center;
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255,255,255,0.06);
-    }
-    .resumen-final .grid-5 {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-        gap: 8px;
-        text-align: center;
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255,255,255,0.06);
-    }
-    .resumen-final .label {
+    .tabla-ventas th {
+        padding: 6px 10px;
         color: #888;
+        font-weight: 600;
+        text-align: left;
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
-    .resumen-final .value {
-        font-weight: 700;
-        font-size: 20px;
-    }
-    .resumen-final .value-small {
-        font-weight: 600;
-        font-size: 15px;
-    }
-    .resumen-final .value-green { color: #00ff66; }
-    .resumen-final .value-red { color: #ff6b6b; }
-    .resumen-final .value-yellow { color: #ffcc00; }
-    .resumen-final .value-blue { color: #4fc3f7; }
-    .resumen-final .value-orange { color: #ff9f43; }
-    .resumen-final .value-purple { color: #a29bfe; }
-    
-    /* Tabla Ventas */
-    .tabla-ventas {
-        overflow-x: auto;
-        border-radius: 12px;
-        border: 1px solid rgba(0, 255, 102, 0.15);
-        background: #141414;
-        margin-top: 15px;
-    }
-    .tabla-ventas table {
-        font-size: 13px;
-        min-width: 700px;
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .tabla-ventas thead {
-        background: #2a6d44 !important;
-        color: #ffffff !important;
-    }
-    .tabla-ventas th {
-        padding: 8px 12px;
-        text-align: left;
-        font-weight: 600;
-    }
     .tabla-ventas td {
-        padding: 6px 12px;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+        padding: 5px 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
     }
     .tabla-ventas .text-right {
         text-align: right;
     }
     
-    /* Badge de tipo de gasto en tabla */
-    .tipo-gasto-badge {
-        font-size: 10px;
-        padding: 2px 8px;
-        border-radius: 12px;
-    }
-    .tipo-gasto-badge.venta {
-        background: rgba(79,195,247,0.15);
-        color: #4fc3f7;
-        border: 1px solid rgba(79,195,247,0.20);
-    }
-    .tipo-gasto-badge.trabajo {
-        background: rgba(255,200,0,0.15);
-        color: #ffcc00;
-        border: 1px solid rgba(255,200,0,0.20);
-    }
-    .tipo-gasto-badge.general {
-        background: rgba(255,255,255,0.06);
+    /* ===== BOTÓN VER DETALLE ===== */
+    .btn-ver-detalle {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.06);
         color: #888;
-        border: 1px solid rgba(255,255,255,0.08);
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .btn-ver-detalle:hover {
+        background: rgba(255,255,255,0.08);
+        color: #fff;
     }
     
-    /* Responsive */
+    /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
-        .resumen-final .grid-3,
-        .resumen-final .grid-4,
-        .resumen-final .grid-5 {
+        .data-grid-2, .data-grid-3, .data-grid-4 {
             grid-template-columns: 1fr 1fr;
         }
-        .comparativo-card {
-            padding: 10px 12px;
-        }
-        .comparativo-card .total {
-            font-size: 18px;
+        .section-dropdown .section-header .icon-title {
+            font-size: 14px;
         }
     }
     @media (max-width: 480px) {
-        .resumen-final .grid-3,
-        .resumen-final .grid-4,
-        .resumen-final .grid-5 {
+        .data-grid-2, .data-grid-3, .data-grid-4 {
             grid-template-columns: 1fr;
+        }
+        .data-grid {
+            grid-template-columns: 1fr 1fr;
         }
     }
 </style>
 
-<div class="base-container">
-    <!-- ===== ENCABEZADO ===== -->
+<div class="balance-container">
+    <!-- ===== TÍTULO ===== -->
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-        <h2 style="color: #00ff66; font-weight: 700; margin: 0; font-size: 22px;">
-            📊 Balance Unificado
-        </h2>
+        <div class="balance-title">
+            <span style="font-size: 28px;">📊</span>
+            Balance Unificado
+        </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <a href="/venta_rapida" class="btn btn-sm" style="
                 background: rgba(0,255,102,0.15);
@@ -327,7 +352,7 @@
     </div>
 
     <!-- ===== FILTROS ===== -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 16px;">
+    <div class="filtros-container">
         <a href="?filtro=hoy" class="filtro-card {% if filtro == 'hoy' %}active{% endif %}">
             <div class="etiqueta">Hoy</div>
             <div class="numero">{{ hoy_count|default(0) }}</div>
@@ -346,294 +371,445 @@
         </a>
     </div>
 
-    <!-- ============================================
-         FILA 1: TOTAL INGRESOS, REPUESTOS, MANO DE OBRA (de balance.html)
-         ============================================ -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <div class="comparativo-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
-            <div style="font-size: 28px;">💰</div>
-            <div class="label">Total Ingresos</div>
-            <div class="total" style="color: #00ff66;">${{ "{:,.0f}".format(total_pagado|default(0)|float) }}</div>
-            <div class="sub">{{ registros|length }} registros</div>
-        </div>
-        <div class="comparativo-card" style="border-color: rgba(255,200,0,0.30); background: rgba(255,200,0,0.04);">
-            <div style="font-size: 28px;">📦</div>
-            <div class="label">Repuestos</div>
-            <div class="total" style="color: #ffcc00;">${{ "{:,.0f}".format(total_repuestos|default(0)|float) }}</div>
-            <div class="sub">Costo de repuestos vendidos</div>
-        </div>
-        <div class="comparativo-card" style="border-color: rgba(79,195,247,0.30); background: rgba(79,195,247,0.04);">
-            <div style="font-size: 28px;">👨‍🔧</div>
-            <div class="label">Mano de Obra</div>
-            <div class="total" style="color: #4fc3f7;">${{ "{:,.0f}".format(total_mano_obra|default(0)|float) }}</div>
-            <div class="sub">Costo de mano de obra</div>
-        </div>
-    </div>
-
-    <!-- ============================================
-         FILA 2: COMPARATIVO VENTAS (de balance_ventas.html)
-         ============================================ -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <div class="comparativo-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
-            <div style="font-size: 28px;">💰</div>
-            <div class="label">Total Ventas</div>
-            <div class="total" style="color: #00ff66;">${{ "{:,.0f}".format(total_ventas|default(0)|float) }}</div>
-            <div class="sub">{{ registros|length }} registros</div>
-        </div>
-        <div class="comparativo-card" style="border-color: rgba(255,200,0,0.30); background: rgba(255,200,0,0.04);">
-            <div style="font-size: 28px;">🔧</div>
-            <div class="label">Trabajo</div>
-            <div class="total" style="color: #ffcc00;">${{ "{:,.0f}".format(total_trabajo|default(0)|float) }}</div>
-            <div class="sub">📦 Costo repuestos: ${{ "{:,.0f}".format(total_repuestos_trabajo|default(0)|float) }}</div>
-            <div class="sub" style="color: #ffcc00;">📈 {{ trabajo_margen|default(0) }}% margen</div>
-        </div>
-        <div class="comparativo-card" style="border-color: rgba(79,195,247,0.30); background: rgba(79,195,247,0.04);">
-            <div style="font-size: 28px;">⚡</div>
-            <div class="label">Venta Directa</div>
-            <div class="total" style="color: #4fc3f7;">${{ "{:,.0f}".format(total_directa|default(0)|float) }}</div>
-            <div class="sub">📦 Costo productos: ${{ "{:,.0f}".format(total_repuestos_directa|default(0)|float) }}</div>
-            <div class="sub" style="color: #4fc3f7;">📈 {{ directa_margen|default(0) }}% margen</div>
-        </div>
-    </div>
-
-    <!-- ============================================
-         FILA 3: GANANCIA (combinada)
-         ============================================ -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <div class="comparativo-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
-            <div style="font-size: 24px;">📊</div>
-            <div class="label">Ganancia Neta</div>
-            <div class="total" style="color: #00ff66;">${{ "{:,.0f}".format(ganancia_neta|default(0)|float) }}</div>
-            <div class="sub">(de balance.html)</div>
-        </div>
-        <div class="comparativo-card" style="border-color: rgba(255,200,0,0.30); background: rgba(255,200,0,0.04);">
-            <div style="font-size: 24px;">📊</div>
-            <div class="label">Ganancia Trabajo</div>
-            <div class="total" style="color: #ffcc00;">${{ "{:,.0f}".format(ganancia_trabajo|default(0)|float) }}</div>
-            <div class="sub">(de balance_ventas.html)</div>
-        </div>
-        <div class="comparativo-card" style="border-color: rgba(79,195,247,0.30); background: rgba(79,195,247,0.04);">
-            <div style="font-size: 24px;">📊</div>
-            <div class="label">Ganancia Directa</div>
-            <div class="total" style="color: #4fc3f7;">${{ "{:,.0f}".format(ganancia_directa|default(0)|float) }}</div>
-            <div class="sub">(de balance_ventas.html)</div>
-        </div>
-        <div class="comparativo-card" style="border-color: rgba(255,107,107,0.30); background: rgba(255,107,107,0.04);">
-            <div style="font-size: 24px;">📊</div>
-            <div class="label">Ganancia Real</div>
-            <div class="total" style="color: {% if ganancia_real|default(0)|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %};">
-                ${{ "{:,.0f}".format(ganancia_real|default(0)|float) }}
+    <!-- ============================================================
+         SECCIÓN 1: BALANCE DE VENTAS
+         ============================================================ -->
+    <div class="section-dropdown open" id="sectionVentas">
+        <div class="section-header" onclick="toggleSection('sectionVentas')">
+            <div class="icon-title">
+                <span style="color: #00ff66; font-size: 22px;">💰</span>
+                <span style="color: #00ff66;">Balance de Ventas</span>
+                <span class="section-badge ventas">💰 Total: ${{ "{:,.0f}".format(total_ventas|default(0)|float) }}</span>
             </div>
-            <div class="sub">(después de gastos)</div>
+            <span class="arrow">▾</span>
         </div>
-    </div>
-
-    <!-- ============================================
-         GASTOS OPERATIVOS (combinado)
-         ============================================ -->
-    <div class="gastos-section">
-        <div class="header">
-            <h4>💸 Gastos Operativos</h4>
-            <span class="total-gastos">${{ "{:,.0f}".format(total_gastos|default(0)|float) }}</span>
-        </div>
-
-        <!-- Desglose de gastos por tipo -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-            <div style="background: rgba(255,200,0,0.06); border-radius: 8px; padding: 6px 12px; text-align: center; border: 1px solid rgba(255,200,0,0.12);">
-                <span style="color: #888; font-size: 10px;">🔧 Gastos Trabajo</span>
-                <div style="color: #ffcc00; font-weight: 700; font-size: 16px;">-${{ "{:,.0f}".format(total_gastos_trabajo|default(0)|float) }}</div>
+        <div class="section-body">
+            <!-- Fila 1: Total Ventas -->
+            <div class="data-grid">
+                <div class="data-card" style="border-color: rgba(0,255,102,0.20);">
+                    <div class="label">💰 Total Ventas</div>
+                    <div class="value value-green">${{ "{:,.0f}".format(total_ventas|default(0)|float) }}</div>
+                    <div class="sub">{{ registros|length }} registros</div>
+                </div>
+                <div class="data-card" style="border-color: rgba(255,200,0,0.20);">
+                    <div class="label">📦 Ventas con Descuento</div>
+                    <div class="value value-yellow">${{ "{:,.0f}".format(total_descuentos|default(0)|float) }}</div>
+                    <div class="sub">Total descuentos aplicados</div>
+                </div>
+                <div class="data-card" style="border-color: rgba(79,195,247,0.20);">
+                    <div class="label">📈 Margen Bruto</div>
+                    <div class="value value-blue">
+                        {% set ventas = total_ventas|default(0)|float %}
+                        {% set gastos = total_gastos_venta|default(0)|float + total_gastos_trabajo|default(0)|float %}
+                        {% if ventas > 0 %}
+                            {{ (((ventas - gastos) / ventas) * 100)|round(1) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                    <div class="sub">Ventas - Gastos operativos</div>
+                </div>
             </div>
-            <div style="background: rgba(79,195,247,0.06); border-radius: 8px; padding: 6px 12px; text-align: center; border: 1px solid rgba(79,195,247,0.12);">
-                <span style="color: #888; font-size: 10px;">⚡ Gastos Venta</span>
-                <div style="color: #4fc3f7; font-weight: 700; font-size: 16px;">-${{ "{:,.0f}".format(total_gastos_venta|default(0)|float) }}</div>
-            </div>
-            <div style="background: rgba(255,107,107,0.06); border-radius: 8px; padding: 6px 12px; text-align: center; border: 1px solid rgba(255,107,107,0.12);">
-                <span style="color: #888; font-size: 10px;">📋 Gastos Generales</span>
-                <div style="color: #ff6b6b; font-weight: 700; font-size: 16px;">-${{ "{:,.0f}".format(total_gastos_generales|default(0)|float) }}</div>
-            </div>
-        </div>
 
-        <!-- Gastos por categoría (badges) -->
-        <div class="gastos-badges">
-            {% for gasto in gastos_por_categoria|default([]) %}
-                <span class="badge-gasto">{{ gasto.categoria }}: ${{ "{:,.0f}".format(gasto.monto|float) }}</span>
-            {% else %}
-                <span style="color: #666; font-size: 12px;">No hay gastos registrados en este período</span>
-            {% endfor %}
-        </div>
-
-        <!-- Tabla de gastos -->
-        <div class="tabla-gastos">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Categoría</th>
-                        <th>Tipo</th>
-                        <th>Descripción</th>
-                        <th style="text-align: right;">Monto</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for gasto in gastos_operativos|default([]) %}
-                        <tr>
-                            <td style="color: #888;">{{ gasto.fecha }}</td>
-                            <td style="color: #ff6b6b;">{{ gasto.categoria or 'Otros' }}</td>
-                            <td>
-                                {% set tipo = gasto.tipo_gasto or 'general' %}
-                                <span class="tipo-gasto-badge {{ tipo }}">
-                                    {% if tipo == 'venta' %}⚡ Venta
-                                    {% elif tipo == 'trabajo' %}🔧 Trabajo
-                                    {% else %}📋 General{% endif %}
-                                </span>
-                            </td>
-                            <td style="color: #fff;">{{ gasto.descripcion or '-' }}</td>
-                            <td class="monto-gasto">${{ "{:,.0f}".format(gasto.monto|float) }}</td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: #666; padding: 15px 0;">
-                                No hay gastos registrados en este período
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ============================================
-         TABLA DE VENTAS
-         ============================================ -->
-    <div class="tabla-ventas">
-        <table class="table table-dark table-hover table-bordered mb-0">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Productos</th>
-                    <th class="text-right">Total Venta</th>
-                    <th class="text-right">Descuento</th>
-                    <th>Fecha</th>
-                    <th>Tipo</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in registros %}
-                <tr>
-                    <td>{{ r.id }}</td>
-                    <td>{{ r.nombre }}</td>
-                    <td>
-                        {% if r.detalles_repuestos %}
-                            {% for item in r.detalles_repuestos %}
-                                <span style="display: inline-block; background: rgba(0,255,102,0.06); padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 11px;">
-                                    {{ item.nombre }}
-                                    {% if item.cantidad and item.cantidad > 1 %}
-                                        <span style="color: #888; font-size: 10px;">x{{ item.cantidad }}</span>
-                                    {% endif %}
-                                </span>
+            <!-- Fila 2: Venta por Trabajo y Venta Directa -->
+            <div class="data-grid-2">
+                <!-- Trabajo -->
+                <div style="background: rgba(255,200,0,0.04); border-radius: 10px; padding: 12px 14px; border: 1px solid rgba(255,200,0,0.12);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="color: #ffcc00; font-weight: 700; font-size: 14px;">🔧 Venta por Trabajo</span>
+                        <span style="color: #ffcc00; font-weight: 700; font-size: 18px;">${{ "{:,.0f}".format(total_trabajo|default(0)|float) }}</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; font-size: 12px;">
+                        <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 4px;">
+                            <div style="color: #888;">Costo Repuestos</div>
+                            <div style="color: #ffcc00; font-weight: 600;">${{ "{:,.0f}".format(total_repuestos_trabajo|default(0)|float) }}</div>
+                        </div>
+                        <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 4px;">
+                            <div style="color: #888;">Ganancia</div>
+                            <div style="color: {% if ganancia_trabajo|default(0)|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight: 600;">
+                                ${{ "{:,.0f}".format(ganancia_trabajo|default(0)|float) }}
+                            </div>
+                        </div>
+                        <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 4px;">
+                            <div style="color: #888;">Margen</div>
+                            <div style="color: #ffcc00; font-weight: 600;">{{ trabajo_margen|default(0) }}%</div>
+                        </div>
+                    </div>
+                    <!-- Gastos de Trabajo -->
+                    <div class="gastos-mini" style="margin-top: 8px; background: rgba(255,200,0,0.06); border-color: rgba(255,200,0,0.12);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #ffcc00; font-size: 12px; font-weight: 600;">💸 Gastos de Trabajo</span>
+                            <span style="color: #ff6b6b; font-weight: 700;">-${{ "{:,.0f}".format(total_gastos_trabajo|default(0)|float) }}</span>
+                        </div>
+                        <div style="font-size: 11px; color: #666; margin-top: 3px;">
+                            {% for g in gastos_por_categoria|default([]) %}
+                                {% if g.categoria in ['Sueldos', 'Mano de Obra', 'Herramientas', 'Equipos', 'Mantención'] %}
+                                    <span style="display: inline-block; background: rgba(255,200,0,0.08); padding: 1px 8px; border-radius: 8px; margin: 2px;">
+                                        {{ g.categoria }}: ${{ "{:,.0f}".format(g.monto|float) }}
+                                    </span>
+                                {% endif %}
                             {% endfor %}
-                        {% else %}
-                            {{ r.producto_vendido or r.marca or '-' }}
-                        {% endif %}
-                    </td>
-                    <td class="text-right" style="color: #00ff66; font-weight: 600;">
-                        ${{ "{:,.0f}".format(r.total_repuestos|float) }}
-                    </td>
-                    <td class="text-right" style="color: #ffcc00; font-weight: 600;">
-                        {% if r.descuento_aplicado and r.descuento_aplicado|int > 0 %}
-                            -${{ "{:,.0f}".format(r.descuento_aplicado|float) }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>{{ r.fecha }}</td>
-                    <td>
-                        {% if r.tipo_venta == 'directa' %}
-                            <span class="badge-directa">⚡ Venta Rápida</span>
-                        {% else %}
-                            <span class="badge-trabajo">🔧 Trabajo</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="7" style="text-align: center; color: #666; padding: 30px 0;">
-                        <i class="fa-solid fa-inbox" style="font-size: 48px; color: #00ff66; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
-                        <p>No hay ventas registradas en este período</p>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Venta Directa -->
+                <div style="background: rgba(79,195,247,0.04); border-radius: 10px; padding: 12px 14px; border: 1px solid rgba(79,195,247,0.12);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="color: #4fc3f7; font-weight: 700; font-size: 14px;">⚡ Venta Directa</span>
+                        <span style="color: #4fc3f7; font-weight: 700; font-size: 18px;">${{ "{:,.0f}".format(total_directa|default(0)|float) }}</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; font-size: 12px;">
+                        <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 4px;">
+                            <div style="color: #888;">Costo Productos</div>
+                            <div style="color: #4fc3f7; font-weight: 600;">${{ "{:,.0f}".format(total_repuestos_directa|default(0)|float) }}</div>
+                        </div>
+                        <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 4px;">
+                            <div style="color: #888;">Ganancia</div>
+                            <div style="color: {% if ganancia_directa|default(0)|float >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight: 600;">
+                                ${{ "{:,.0f}".format(ganancia_directa|default(0)|float) }}
+                            </div>
+                        </div>
+                        <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 6px; padding: 4px;">
+                            <div style="color: #888;">Margen</div>
+                            <div style="color: #4fc3f7; font-weight: 600;">{{ directa_margen|default(0) }}%</div>
+                        </div>
+                    </div>
+                    <!-- Gastos de Venta -->
+                    <div class="gastos-mini" style="margin-top: 8px; background: rgba(79,195,247,0.06); border-color: rgba(79,195,247,0.12);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #4fc3f7; font-size: 12px; font-weight: 600;">💸 Gastos de Venta</span>
+                            <span style="color: #ff6b6b; font-weight: 700;">-${{ "{:,.0f}".format(total_gastos_venta|default(0)|float) }}</span>
+                        </div>
+                        <div style="font-size: 11px; color: #666; margin-top: 3px;">
+                            {% for g in gastos_por_categoria|default([]) %}
+                                {% if g.categoria in ['Publicidad', 'Marketing', 'Comisiones', 'Ventas', 'Promociones'] %}
+                                    <span style="display: inline-block; background: rgba(79,195,247,0.08); padding: 1px 8px; border-radius: 8px; margin: 2px;">
+                                        {{ g.categoria }}: ${{ "{:,.0f}".format(g.monto|float) }}
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Ventas (colapsable) -->
+            <div style="margin-top: 10px;">
+                <button class="btn-ver-detalle" onclick="toggleTable('tablaVentas')">
+                    📋 Ver detalle de ventas
+                </button>
+                <div id="tablaVentas" style="display: none; margin-top: 8px;">
+                    <div class="tabla-ventas">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Productos</th>
+                                    <th class="text-right">Total</th>
+                                    <th class="text-right">Descuento</th>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in registros %}
+                                <tr>
+                                    <td>{{ r.id }}</td>
+                                    <td>{{ r.nombre }}</td>
+                                    <td>
+                                        {% if r.detalles_repuestos %}
+                                            {% for item in r.detalles_repuestos %}
+                                                <span style="display: inline-block; background: rgba(0,255,102,0.06); padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 11px;">
+                                                    {{ item.nombre }}
+                                                    {% if item.cantidad and item.cantidad > 1 %}
+                                                        <span style="color: #888; font-size: 10px;">x{{ item.cantidad }}</span>
+                                                    {% endif %}
+                                                </span>
+                                            {% endfor %}
+                                        {% else %}
+                                            {{ r.producto_vendido or r.marca or '-' }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-right" style="color: #00ff66; font-weight: 600;">
+                                        ${{ "{:,.0f}".format(r.total_repuestos|float) }}
+                                    </td>
+                                    <td class="text-right" style="color: #ffcc00; font-weight: 600;">
+                                        {% if r.descuento_aplicado and r.descuento_aplicado|int > 0 %}
+                                            -${{ "{:,.0f}".format(r.descuento_aplicado|float) }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ r.fecha }}</td>
+                                    <td>
+                                        {% if r.tipo_venta == 'directa' %}
+                                            <span style="background: rgba(79,195,247,0.12); color: #4fc3f7; padding: 2px 8px; border-radius: 12px; font-size: 10px; border: 1px solid rgba(79,195,247,0.20);">⚡ Directa</span>
+                                        {% else %}
+                                            <span style="background: rgba(255,200,0,0.12); color: #ffcc00; padding: 2px 8px; border-radius: 12px; font-size: 10px; border: 1px solid rgba(255,200,0,0.20);">🔧 Trabajo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" style="text-align: center; color: #666; padding: 20px 0;">
+                                        No hay ventas registradas
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- ============================================
-         RESUMEN FINAL (COMBINADO)
-         ============================================ -->
-    <div class="resumen-final">
-        <div class="grid-3">
-            <div>
-                <div class="label">💰 Total Ingresos</div>
-                <div class="value value-green">${{ "{:,.0f}".format(total_pagado|default(0)|float) }}</div>
+    <!-- ============================================================
+         SECCIÓN 2: BALANCE DE OPERACIONES
+         ============================================================ -->
+    <div class="section-dropdown" id="sectionTrabajo">
+        <div class="section-header" onclick="toggleSection('sectionTrabajo')">
+            <div class="icon-title">
+                <span style="color: #ffcc00; font-size: 22px;">🔧</span>
+                <span style="color: #ffcc00;">Balance de Operaciones</span>
+                <span class="section-badge trabajo">📦 Total Ingresos: ${{ "{:,.0f}".format(total_pagado|default(0)|float) }}</span>
             </div>
-            <div>
-                <div class="label">💸 Total Gastos</div>
-                <div class="value value-red">${{ "{:,.0f}".format(total_gastos|default(0)|float) }}</div>
-            </div>
-            <div>
-                <div class="label">📊 Ganancia Real</div>
-                <div class="value {% if ganancia_real|default(0)|float >= 0 %}value-green{% else %}value-red{% endif %}">
-                    ${{ "{:,.0f}".format(ganancia_real|default(0)|float) }}
+            <span class="arrow">▾</span>
+        </div>
+        <div class="section-body">
+            <div class="data-grid">
+                <div class="data-card" style="border-color: rgba(0,255,102,0.20);">
+                    <div class="label">💰 Total Ingresos</div>
+                    <div class="value value-green">${{ "{:,.0f}".format(total_pagado|default(0)|float) }}</div>
+                    <div class="sub">De todas las ventas</div>
+                </div>
+                <div class="data-card" style="border-color: rgba(255,200,0,0.20);">
+                    <div class="label">📦 Repuestos</div>
+                    <div class="value value-yellow">${{ "{:,.0f}".format(total_repuestos|default(0)|float) }}</div>
+                    <div class="sub">Costo de repuestos</div>
+                </div>
+                <div class="data-card" style="border-color: rgba(79,195,247,0.20);">
+                    <div class="label">👨‍🔧 Mano de Obra</div>
+                    <div class="value value-blue">${{ "{:,.0f}".format(total_mano_obra|default(0)|float) }}</div>
+                    <div class="sub">Costo de mano de obra</div>
                 </div>
             </div>
-        </div>
-        <div class="grid-5">
-            <div>
-                <div class="label">📦 Repuestos</div>
-                <div class="value-small value-yellow">${{ "{:,.0f}".format(total_repuestos|default(0)|float) }}</div>
-            </div>
-            <div>
-                <div class="label">👨‍🔧 Mano de Obra</div>
-                <div class="value-small value-blue">${{ "{:,.0f}".format(total_mano_obra|default(0)|float) }}</div>
-            </div>
-            <div>
-                <div class="label">🔧 Ganancia Trabajo</div>
-                <div class="value-small value-yellow">${{ "{:,.0f}".format(ganancia_trabajo|default(0)|float) }}</div>
-            </div>
-            <div>
-                <div class="label">⚡ Ganancia Directa</div>
-                <div class="value-small value-blue">${{ "{:,.0f}".format(ganancia_directa|default(0)|float) }}</div>
-            </div>
-            <div>
-                <div class="label">📈 Margen Real</div>
-                <div class="value-small value-purple">
-                    {% set ventas = total_ventas|default(0)|float %}
-                    {% set ganancia = ganancia_real|default(0)|float %}
-                    {% if ventas > 0 %}
-                        {{ ((ganancia / ventas) * 100)|round(1) }}%
+
+            <!-- Gastos de Trabajo (operativos) -->
+            <div class="gastos-mini" style="background: rgba(255,200,0,0.06); border-color: rgba(255,200,0,0.15);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #ffcc00; font-weight: 700; font-size: 14px;">💸 Gastos Operativos de Trabajo</span>
+                    <span style="color: #ff6b6b; font-weight: 700; font-size: 16px;">-${{ "{:,.0f}".format(total_gastos_trabajo|default(0)|float) }}</span>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
+                    {% for g in gastos_por_categoria|default([]) %}
+                        {% if g.categoria in ['Sueldos', 'Mano de Obra', 'Herramientas', 'Equipos', 'Mantención'] %}
+                            <span style="background: rgba(255,200,0,0.08); padding: 2px 10px; border-radius: 12px; font-size: 11px; border: 1px solid rgba(255,200,0,0.10);">
+                                {{ g.categoria }}: ${{ "{:,.0f}".format(g.monto|float) }}
+                            </span>
+                        {% endif %}
                     {% else %}
-                        0%
-                    {% endif %}
+                        <span style="color: #666; font-size: 12px;">No hay gastos operativos registrados</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Resultado Operativo -->
+            <div class="data-grid-3">
+                <div class="data-card" style="border-color: rgba(255,200,0,0.20); background: rgba(255,200,0,0.04);">
+                    <div class="label">📊 Ganancia Operativa</div>
+                    <div class="value value-yellow">
+                        {% set ganancia_op = (total_pagado|default(0)|float) - (total_repuestos|default(0)|float) - (total_mano_obra|default(0)|float) - (total_gastos_trabajo|default(0)|float) %}
+                        ${{ "{:,.0f}".format(ganancia_op) }}
+                    </div>
+                    <div class="sub">Ingresos - Costos - Gastos</div>
+                </div>
+                <div class="data-card" style="border-color: rgba(79,195,247,0.20); background: rgba(79,195,247,0.04);">
+                    <div class="label">📊 Margen Operativo</div>
+                    <div class="value value-blue">
+                        {% set ingresos = total_pagado|default(0)|float %}
+                        {% set costos = total_repuestos|default(0)|float + total_mano_obra|default(0)|float + total_gastos_trabajo|default(0)|float %}
+                        {% if ingresos > 0 %}
+                            {{ (((ingresos - costos) / ingresos) * 100)|round(1) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                    <div class="sub">Ganancia / Ingresos</div>
+                </div>
+                <div class="data-card" style="border-color: rgba(255,107,107,0.20); background: rgba(255,107,107,0.04);">
+                    <div class="label">📊 Eficiencia</div>
+                    <div class="value value-red">
+                        {% set ingresos = total_pagado|default(0)|float %}
+                        {% set costos = total_repuestos|default(0)|float + total_mano_obra|default(0)|float %}
+                        {% if ingresos > 0 %}
+                            {{ ((costos / ingresos) * 100)|round(1) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                    <div class="sub">Costos / Ingresos</div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- ============================================================
+         SECCIÓN 3: BALANCE GENERAL (RESUMEN FINAL)
+         ============================================================ -->
+    <div class="section-dropdown" id="sectionGeneral">
+        <div class="section-header" onclick="toggleSection('sectionGeneral')">
+            <div class="icon-title">
+                <span style="color: #4fc3f7; font-size: 22px;">📊</span>
+                <span style="color: #4fc3f7;">Balance General</span>
+                <span class="section-badge general">🏆 Ganancia Real: ${{ "{:,.0f}".format(ganancia_real|default(0)|float) }}</span>
+            </div>
+            <span class="arrow">▾</span>
+        </div>
+        <div class="section-body">
+            <!-- Resumen General -->
+            <div class="data-grid-3">
+                <div class="data-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.04);">
+                    <div class="label">💰 Total Ventas</div>
+                    <div class="value value-green">${{ "{:,.0f}".format(total_ventas|default(0)|float) }}</div>
+                    <div class="sub">Trabajo + Directa</div>
+                </div>
+                <div class="data-card" style="border-color: rgba(255,107,107,0.30); background: rgba(255,107,107,0.04);">
+                    <div class="label">💸 Total Gastos</div>
+                    <div class="value value-red">${{ "{:,.0f}".format(total_gastos|default(0)|float) }}</div>
+                    <div class="sub">Trabajo + Venta + Generales</div>
+                </div>
+                <div class="data-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.08); border-width: 2px;">
+                    <div class="label">🏆 Ganancia Real</div>
+                    <div class="value {% if ganancia_real|default(0)|float >= 0 %}value-green{% else %}value-red{% endif %}" style="font-size: 24px;">
+                        ${{ "{:,.0f}".format(ganancia_real|default(0)|float) }}
+                    </div>
+                    <div class="sub">Ventas - Gastos Totales</div>
+                </div>
+            </div>
+
+            <!-- Desglose de Ganancia y Gastos -->
+            <div class="data-grid-4">
+                <!-- Ganancia por Tipo -->
+                <div style="background: rgba(255,200,0,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,200,0,0.10);">
+                    <div style="color: #888; font-size: 10px;">🔧 Ganancia Trabajo</div>
+                    <div style="color: #ffcc00; font-weight: 700; font-size: 18px;">
+                        ${{ "{:,.0f}".format(ganancia_trabajo|default(0)|float) }}
+                    </div>
+                </div>
+                <div style="background: rgba(79,195,247,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(79,195,247,0.10);">
+                    <div style="color: #888; font-size: 10px;">⚡ Ganancia Directa</div>
+                    <div style="color: #4fc3f7; font-weight: 700; font-size: 18px;">
+                        ${{ "{:,.0f}".format(ganancia_directa|default(0)|float) }}
+                    </div>
+                </div>
+                <div style="background: rgba(255,107,107,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,107,107,0.10);">
+                    <div style="color: #888; font-size: 10px;">📋 Gastos Generales</div>
+                    <div style="color: #ff6b6b; font-weight: 700; font-size: 18px;">
+                        -${{ "{:,.0f}".format(total_gastos_generales|default(0)|float) }}
+                    </div>
+                </div>
+                <div style="background: rgba(162,155,254,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(162,155,254,0.10);">
+                    <div style="color: #888; font-size: 10px;">📈 Margen Real</div>
+                    <div style="color: #a29bfe; font-weight: 700; font-size: 18px;">
+                        {% set ventas = total_ventas|default(0)|float %}
+                        {% set ganancia = ganancia_real|default(0)|float %}
+                        {% if ventas > 0 %}
+                            {{ ((ganancia / ventas) * 100)|round(1) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Gastos Detallada -->
+            <div style="margin-top: 10px;">
+                <button class="btn-ver-detalle" onclick="toggleTable('tablaGastos')">
+                    📋 Ver detalle de gastos
+                </button>
+                <div id="tablaGastos" style="display: none; margin-top: 8px;">
+                    <div class="tabla-ventas" style="border-color: rgba(255,107,107,0.15);">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Categoría</th>
+                                    <th>Tipo</th>
+                                    <th>Descripción</th>
+                                    <th class="text-right">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for gasto in gastos_operativos|default([]) %}
+                                    <tr>
+                                        <td style="color: #888;">{{ gasto.fecha }}</td>
+                                        <td style="color: #ff6b6b;">{{ gasto.categoria or 'Otros' }}</td>
+                                        <td>
+                                            {% set tipo = gasto.tipo_gasto or 'general' %}
+                                            <span class="tipo-badge {{ tipo }}">
+                                                {% if tipo == 'venta' %}⚡ Venta
+                                                {% elif tipo == 'trabajo' %}🔧 Trabajo
+                                                {% else %}📋 General{% endif %}
+                                            </span>
+                                        </td>
+                                        <td style="color: #fff;">{{ gasto.descripcion or '-' }}</td>
+                                        <td class="text-right" style="color: #ff6b6b; font-weight: 600;">
+                                            ${{ "{:,.0f}".format(gasto.monto|float) }}
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: #666; padding: 20px 0;">
+                                            No hay gastos registrados
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Ocultar filas con monto 0
-    const filas = document.querySelectorAll('.tabla-ventas tbody tr');
-    filas.forEach(fila => {
-        const montoCelda = fila.querySelector('td:nth-child(4)');
-        if (montoCelda) {
-            const monto = parseFloat(montoCelda.textContent.replace(/[$,]/g, '')) || 0;
-            if (monto === 0 && !fila.querySelector('td[colspan]')) {
-                fila.style.display = 'none';
+    // ============================================
+    // TOGGLE SECCIÓN DROPDOWN
+    // ============================================
+    function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.classList.toggle('open');
+        }
+    }
+
+    // ============================================
+    // TOGGLE TABLA
+    // ============================================
+    function toggleTable(tableId) {
+        const table = document.getElementById(tableId);
+        if (table) {
+            if (table.style.display === 'none') {
+                table.style.display = 'block';
+            } else {
+                table.style.display = 'none';
             }
         }
+    }
+
+    // ============================================
+    // ABRIR PRIMERA SECCIÓN POR DEFECTO
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        // La primera sección ya tiene la clase 'open' en el HTML
+        // Las demás se abren al hacer clic
+        console.log('✅ Balance Unificado cargado');
     });
-});
 </script>
+
 {% endblock %}
