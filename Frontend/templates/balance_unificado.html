@@ -658,7 +658,7 @@
         </div>
     </div>
 
-        <!-- ============================================================
+         <!-- ============================================================
          SECCIÓN 3: BALANCE GENERAL (TODO - $232,000)
          ============================================================ -->
     <div class="section-dropdown" id="sectionGeneral">
@@ -671,9 +671,24 @@
             <span class="arrow">▾</span>
         </div>
         <div class="section-body">
-            {% set total_ingresos_general = total_pagado|default(0)|float %}
-            {% set total_gastos_general = total_gastos|default(0)|float %}
-            {% set mano_obra = total_ingresos_general - (total_repuestos|default(0)|float) - (total_directa|default(0)|float) %}
+            {% set total_ingresos_general = total_pagado|default(0)|float %}  {# 232,000 #}
+            {% set total_gastos_general = total_gastos|default(0)|float %}   {# 48,000 #}
+            {% set mano_obra = total_ingresos_general - (total_repuestos|default(0)|float) - (total_directa|default(0)|float) %}  {# 175,000 #}
+            
+            {# Ganancia de repuestos del trabajo #}
+            {% set ganancia_repuestos_trabajo = ganancia_trabajo|default(0)|float %}  {# 26,130 #}
+            
+            {# Ganancia Trabajo TOTAL = Mano de obra + Ganancia de repuestos del trabajo #}
+            {% set ganancia_trabajo_total = mano_obra + ganancia_repuestos_trabajo %}  {# 175,000 + 26,130 = 201,130 #}
+            
+            {# Ganancia Directa #}
+            {% set ganancia_directa_total = ganancia_directa|default(0)|float %}  {# 17,046 #}
+            
+            {# Ganancia Bruta (antes de gastos) #}
+            {% set ganancia_bruta = ganancia_trabajo_total + ganancia_directa_total %}  {# 218,176 #}
+            
+            {# Ganancia Real = Ganancia Bruta - Gastos Totales #}
+            {% set ganancia_real_calc = ganancia_bruta - total_gastos_general %}  {# 218,176 - 48,000 = 170,176 #}
             
             <!-- Resumen General -->
             <div class="data-grid-3">
@@ -689,10 +704,10 @@
                 </div>
                 <div class="data-card" style="border-color: rgba(0,255,102,0.30); background: rgba(0,255,102,0.08); border-width: 2px;">
                     <div class="label">🏆 Ganancia Real</div>
-                    <div class="value {% if ganancia_real|default(0)|float >= 0 %}value-green{% else %}value-red{% endif %}" style="font-size: 24px;">
-                        ${{ "{:,.0f}".format(ganancia_real|default(0)|float) }}
+                    <div class="value {% if ganancia_real_calc >= 0 %}value-green{% else %}value-red{% endif %}" style="font-size: 24px;">
+                        ${{ "{:,.0f}".format(ganancia_real_calc) }}
                     </div>
-                    <div class="sub">Ingresos - Gastos Totales</div>
+                    <div class="sub">Ganancia Bruta - Gastos Totales</div>
                 </div>
             </div>
 
@@ -703,18 +718,46 @@
                     <div style="color: #ffcc00; font-weight: 700; font-size: 18px;">
                         ${{ "{:,.0f}".format(mano_obra) }}
                     </div>
+                    <div style="color: #666; font-size: 9px;">100% ganancia del trabajo</div>
                 </div>
                 <div style="background: rgba(255,200,0,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,200,0,0.10);">
                     <div style="color: #888; font-size: 10px;">🔩 Repuestos Trabajo</div>
                     <div style="color: #ffcc00; font-weight: 700; font-size: 18px;">
                         ${{ "{:,.0f}".format(total_repuestos|default(0)|float) }}
                     </div>
+                    <div style="color: #666; font-size: 9px;">Ganancia: ${{ "{:,.0f}".format(ganancia_repuestos_trabajo) }}</div>
                 </div>
                 <div style="background: rgba(79,195,247,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(79,195,247,0.10);">
                     <div style="color: #888; font-size: 10px;">⚡ Venta Directa</div>
                     <div style="color: #4fc3f7; font-weight: 700; font-size: 18px;">
                         ${{ "{:,.0f}".format(total_directa|default(0)|float) }}
                     </div>
+                    <div style="color: #666; font-size: 9px;">Ganancia: ${{ "{:,.0f}".format(ganancia_directa_total) }}</div>
+                </div>
+            </div>
+
+            <!-- GANANCIA BRUTA -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                <div style="background: rgba(0,255,102,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(0,255,102,0.15);">
+                    <div style="color: #888; font-size: 10px;">🔧 Ganancia Trabajo</div>
+                    <div style="color: #00ff66; font-weight: 700; font-size: 18px;">
+                        ${{ "{:,.0f}".format(ganancia_trabajo_total) }}
+                    </div>
+                    <div style="color: #666; font-size: 9px;">Mano de obra + Ganancia repuestos</div>
+                </div>
+                <div style="background: rgba(79,195,247,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(79,195,247,0.15);">
+                    <div style="color: #888; font-size: 10px;">⚡ Ganancia Directa</div>
+                    <div style="color: #4fc3f7; font-weight: 700; font-size: 18px;">
+                        ${{ "{:,.0f}".format(ganancia_directa_total) }}
+                    </div>
+                    <div style="color: #666; font-size: 9px;">Ganancia de venta directa</div>
+                </div>
+                <div style="background: rgba(162,155,254,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(162,155,254,0.15);">
+                    <div style="color: #888; font-size: 10px;">📊 Ganancia Bruta</div>
+                    <div style="color: #a29bfe; font-weight: 700; font-size: 18px;">
+                        ${{ "{:,.0f}".format(ganancia_bruta) }}
+                    </div>
+                    <div style="color: #666; font-size: 9px;">Trabajo + Directa (antes de gastos)</div>
                 </div>
             </div>
 
@@ -740,35 +783,52 @@
                 </div>
             </div>
 
-            <!-- Ganancia por Tipo -->
-            <div class="data-grid-4">
-                <div style="background: rgba(255,200,0,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,200,0,0.10);">
-                    <div style="color: #888; font-size: 10px;">🔧 Ganancia Trabajo</div>
-                    <div style="color: #ffcc00; font-weight: 700; font-size: 18px;">
-                        ${{ "{:,.0f}".format(ganancia_trabajo|default(0)|float) }}
-                    </div>
-                </div>
-                <div style="background: rgba(79,195,247,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(79,195,247,0.10);">
-                    <div style="color: #888; font-size: 10px;">⚡ Ganancia Directa</div>
-                    <div style="color: #4fc3f7; font-weight: 700; font-size: 18px;">
-                        ${{ "{:,.0f}".format(ganancia_directa|default(0)|float) }}
-                    </div>
-                </div>
-                <div style="background: rgba(162,155,254,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(162,155,254,0.10);">
-                    <div style="color: #888; font-size: 10px;">📈 Margen Real</div>
+            <!-- GANANCIA REAL FINAL -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                <div style="background: rgba(0,255,102,0.08); border-radius: 8px; padding: 8px 12px; text-align: center; border: 2px solid rgba(0,255,102,0.20);">
+                    <div style="color: #888; font-size: 10px;">📊 Ganancia Bruta</div>
                     <div style="color: #a29bfe; font-weight: 700; font-size: 18px;">
-                        {% if total_ingresos_general > 0 %}
-                            {{ ((ganancia_real|default(0)|float / total_ingresos_general) * 100)|round(1) }}%
-                        {% else %}
-                            0%
-                        {% endif %}
+                        ${{ "{:,.0f}".format(ganancia_bruta) }}
                     </div>
                 </div>
-                <div style="background: rgba(255,107,107,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,107,107,0.10);">
+                <div style="background: rgba(255,107,107,0.08); border-radius: 8px; padding: 8px 12px; text-align: center; border: 2px solid rgba(255,107,107,0.20);">
                     <div style="color: #888; font-size: 10px;">💸 Total Gastos</div>
                     <div style="color: #ff6b6b; font-weight: 700; font-size: 18px;">
                         -${{ "{:,.0f}".format(total_gastos_general) }}
                     </div>
+                </div>
+                <div style="background: rgba(0,255,102,0.12); border-radius: 8px; padding: 8px 12px; text-align: center; border: 3px solid #00ff66;">
+                    <div style="color: #888; font-size: 10px;">🏆 GANANCIA REAL</div>
+                    <div style="color: {% if ganancia_real_calc >= 0 %}#00ff66{% else %}#ff6b6b{% endif %}; font-weight: 800; font-size: 22px;">
+                        ${{ "{:,.0f}".format(ganancia_real_calc) }}
+                    </div>
+                    <div style="color: #666; font-size: 9px;">Ganancia Bruta - Gastos Totales</div>
+                </div>
+            </div>
+
+            <!-- Margen Real -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                <div style="background: rgba(162,155,254,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(162,155,254,0.10);">
+                    <div style="color: #888; font-size: 10px;">📈 Margen Real</div>
+                    <div style="color: #a29bfe; font-weight: 700; font-size: 18px;">
+                        {% if total_ingresos_general > 0 %}
+                            {{ ((ganancia_real_calc / total_ingresos_general) * 100)|round(1) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                    <div style="color: #666; font-size: 9px;">Ganancia Real / Total Ingresos</div>
+                </div>
+                <div style="background: rgba(255,200,0,0.06); border-radius: 8px; padding: 8px 12px; text-align: center; border: 1px solid rgba(255,200,0,0.10);">
+                    <div style="color: #888; font-size: 10px;">📊 Margen Trabajo</div>
+                    <div style="color: #ffcc00; font-weight: 700; font-size: 18px;">
+                        {% if total_ingresos_general > 0 %}
+                            {{ ((ganancia_trabajo_total / total_ingresos_general) * 100)|round(1) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                    <div style="color: #666; font-size: 9px;">Ganancia Trabajo / Total Ingresos</div>
                 </div>
             </div>
 
