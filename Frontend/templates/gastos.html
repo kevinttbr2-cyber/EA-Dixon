@@ -126,6 +126,11 @@
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.gasto-card .fecha-gasto {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
 .sin-gastos {
     text-align: center;
     padding: 60px 20px;
@@ -223,59 +228,43 @@
     box-shadow: 0 0 30px rgba(0, 255, 102, 0.15);
 }
 
-/* Selector de mes */
-.selector-mes {
+/* FILTROS DE GASTOS */
+.filtros-gastos {
     display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 15px;
+    gap: 8px;
     flex-wrap: wrap;
+    margin-bottom: 15px;
 }
 
-.selector-mes label {
+.filtros-gastos .filtro-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
     color: var(--text-secondary);
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.selector-mes input[type="month"] {
-    background: rgba(0,0,0,0.40);
-    color: #fff;
-    border: 1px solid rgba(0,255,102,0.20);
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-.selector-mes .btn-buscar {
-    background: rgba(0,255,102,0.12);
-    color: #00ff66;
-    border: 1px solid rgba(0,255,102,0.20);
-    border-radius: 8px;
-    padding: 6px 16px;
-    font-size: 13px;
-    cursor: pointer;
     transition: var(--transition);
 }
 
-.selector-mes .btn-buscar:hover {
-    background: rgba(0,255,102,0.20);
+.filtros-gastos .filtro-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
-.selector-mes .btn-hoy {
-    background: rgba(79,195,247,0.12);
-    color: #4fc3f7;
-    border: 1px solid rgba(79,195,247,0.20);
-    border-radius: 8px;
-    padding: 6px 16px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: var(--transition);
+.filtros-gastos .filtro-btn.active {
+    border-color: var(--accent-green);
+    background: var(--accent-green-subtle);
+    color: var(--accent-green);
 }
 
-.selector-mes .btn-hoy:hover {
-    background: rgba(79,195,247,0.20);
+.filtros-gastos .filtro-btn .badge {
+    background: rgba(255,255,255,0.10);
+    border-radius: 10px;
+    padding: 0 8px;
+    margin-left: 4px;
+    font-size: 10px;
 }
 
 /* ============================================
@@ -513,6 +502,13 @@
     .form-gasto .grid-4 {
         grid-template-columns: 1fr;
     }
+    .filtros-gastos {
+        gap: 4px;
+    }
+    .filtros-gastos .filtro-btn {
+        font-size: 10px;
+        padding: 4px 10px;
+    }
 }
 </style>
 
@@ -530,18 +526,23 @@
         </div>
     </div>
 
-    <!-- SELECTOR DE MES -->
-    <div class="selector-mes">
-        <label>📅 Período:</label>
-        <input type="month" id="selectorMes" value="{{ hoy.strftime('%Y-%m') if hoy else '' }}">
-        <button class="btn-buscar" onclick="cargarGastosPorMes()">
-            <i class="fa-solid fa-search"></i> Buscar
+    <!-- FILTROS DE GASTOS -->
+    <div class="filtros-gastos">
+        <button class="filtro-btn active" data-filtro="hoy" onclick="cargarGastosPorFiltro('hoy', this)">
+            📅 Hoy
+            <span class="badge" id="badgeHoy">0</span>
         </button>
-        <button class="btn-hoy" onclick="cargarGastosHoy()">
-            <i class="fa-solid fa-calendar-day"></i> Hoy
+        <button class="filtro-btn" data-filtro="7d" onclick="cargarGastosPorFiltro('7d', this)">
+            📅 7 días
+            <span class="badge" id="badge7d">0</span>
         </button>
-        <button class="btn-hoy" onclick="cargarGastosMesActual()" style="background:rgba(0,255,102,0.10);color:#00ff66;border-color:rgba(0,255,102,0.20);">
-            <i class="fa-solid fa-calendar"></i> Mes Actual
+        <button class="filtro-btn" data-filtro="mes" onclick="cargarGastosPorFiltro('mes', this)">
+            📅 1 Mes
+            <span class="badge" id="badgeMes">0</span>
+        </button>
+        <button class="filtro-btn" data-filtro="todos" onclick="cargarGastosPorFiltro('todos', this)">
+            📅 Todos
+            <span class="badge" id="badgeTodos">0</span>
         </button>
     </div>
 
@@ -656,9 +657,9 @@
         </div>
     </div>
 
-    <!-- MES ACTUAL -->
+    <!-- PERÍODO ACTUAL -->
     <div style="margin-top: 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
-        📅 <span id="periodoActual">{{ mes_actual }}/{{ anio_actual }}</span>
+        📅 <span id="periodoActual">Cargando...</span>
     </div>
 </div>
 
@@ -747,6 +748,7 @@ let scannerFactura = null;
 let facturaActiva = false;
 let productosFactura = [];
 let datosFactura = {};
+let filtroActual = 'hoy';
 
 // ============================================
 // FUNCIONES DE ESCÁNER (html5-qrcode)
@@ -1181,7 +1183,7 @@ async function procesarFacturaEscaneada() {
         alert(mensaje);
         
         cerrarModalFactura();
-        cargarGastosMesActual();
+        cargarGastosPorFiltro(filtroActual);
         setTimeout(() => location.reload(), 1500);
         
     } catch (error) {
@@ -1194,78 +1196,106 @@ async function procesarFacturaEscaneada() {
 }
 
 // ============================================
-// CARGAR GASTOS - FUNCIONES MEJORADAS
+// CARGAR GASTOS POR FILTRO - FUNCIÓN PRINCIPAL
 // ============================================
 
-function cargarGastosPorMes() {
-    const mes = document.getElementById('selectorMes').value;
-    if (!mes) {
-        alert('⚠️ Selecciona un mes');
-        return;
+function cargarGastosPorFiltro(filtro, btnElement) {
+    filtroActual = filtro;
+    
+    // Actualizar botones activos
+    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+    if (btnElement) {
+        btnElement.classList.add('active');
+    } else {
+        document.querySelector(`.filtro-btn[data-filtro="${filtro}"]`)?.classList.add('active');
     }
     
-    const [anio, mesNum] = mes.split('-');
-    const primerDia = `${anio}-${mesNum}-01`;
-    const ultimoDiaObj = new Date(parseInt(anio), parseInt(mesNum), 0);
-    const ultimoDia = `${anio}-${mesNum}-${String(ultimoDiaObj.getDate()).padStart(2, '0')}`;
-    
-    document.getElementById('periodoActual').textContent = `${mesNum}/${anio}`;
-    
-    fetch(`${API_URL}/api/gastos_balance?fecha_inicio=${primerDia}&fecha_fin=${ultimoDia}`)
-        .then(r => {
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            return r.json();
-        })
-        .then(gastos => {
-            console.log('📊 Gastos del mes:', gastos);
-            mostrarGastos(gastos);
-        })
-        .catch(err => {
-            console.error('❌ Error:', err);
-            document.getElementById('listaGastos').innerHTML = `
-                <div style="text-align: center; color: #ff6b6b; padding: 40px 0;">
-                    <span class="material-symbols-rounded" style="font-size: 48px; color: #ff6b6b; opacity: 0.3; display: block; margin-bottom: 10px;">error</span>
-                    Error al cargar los gastos: ${err.message}
-                </div>
-            `;
-        });
-}
-
-function cargarGastosHoy() {
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('selectorMes').value = hoy.substring(0, 7);
-    document.getElementById('periodoActual').textContent = 'Hoy';
-    
-    fetch(`${API_URL}/api/gastos?fecha=${hoy}`)
-        .then(r => {
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            return r.json();
-        })
-        .then(gastos => {
-            console.log('📊 Gastos de hoy:', gastos);
-            mostrarGastos(gastos);
-        })
-        .catch(err => {
-            console.error('❌ Error:', err);
-            document.getElementById('listaGastos').innerHTML = `
-                <div style="text-align: center; color: #ff6b6b; padding: 40px 0;">
-                    <span class="material-symbols-rounded" style="font-size: 48px; color: #ff6b6b; opacity: 0.3; display: block; margin-bottom: 10px;">error</span>
-                    Error al cargar los gastos: ${err.message}
-                </div>
-            `;
-        });
-}
-
-function cargarGastosMesActual() {
     const hoy = new Date();
-    const mes = hoy.getMonth() + 1;
-    const anio = hoy.getFullYear();
-    const mesStr = String(mes).padStart(2, '0');
-    const selector = document.getElementById('selectorMes');
-    if (selector) selector.value = `${anio}-${mesStr}`;
+    const hoyStr = hoy.toISOString().split('T')[0];
+    let fechaInicio = '';
+    let fechaFin = hoyStr;
+    let labelPeriodo = '';
     
-    cargarGastosPorMes();
+    switch(filtro) {
+        case 'hoy':
+            fechaInicio = hoyStr;
+            fechaFin = hoyStr;
+            labelPeriodo = `Hoy (${hoy.toLocaleDateString('es-CL')})`;
+            break;
+        case '7d':
+            const fecha7d = new Date(hoy);
+            fecha7d.setDate(fecha7d.getDate() - 7);
+            fechaInicio = fecha7d.toISOString().split('T')[0];
+            labelPeriodo = `Últimos 7 días (${fechaInicio} al ${hoyStr})`;
+            break;
+        case 'mes':
+            const fechaMes = new Date(hoy);
+            fechaMes.setDate(fechaMes.getDate() - 30);
+            fechaInicio = fechaMes.toISOString().split('T')[0];
+            labelPeriodo = `Último mes (${fechaInicio} al ${hoyStr})`;
+            break;
+        case 'todos':
+            fechaInicio = '2020-01-01';
+            fechaFin = hoyStr;
+            labelPeriodo = 'Todos los gastos';
+            break;
+        default:
+            fechaInicio = hoyStr;
+            fechaFin = hoyStr;
+            labelPeriodo = 'Hoy';
+    }
+    
+    document.getElementById('periodoActual').textContent = labelPeriodo;
+    
+    // Mostrar loading
+    document.getElementById('listaGastos').innerHTML = `
+        <div style="text-align: center; color: #888; padding: 40px 0;">
+            <span class="material-symbols-rounded" style="font-size: 48px; color: #888; opacity: 0.3; display: block; margin-bottom: 10px;">hourglass_empty</span>
+            Cargando gastos...
+        </div>
+    `;
+    
+    // Si es filtro "hoy", usar el endpoint /gastos (más rápido)
+    let url;
+    if (filtro === 'hoy') {
+        url = `${API_URL}/api/gastos?fecha=${hoyStr}`;
+    } else {
+        url = `${API_URL}/api/gastos_balance?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+    }
+    
+    fetch(url)
+        .then(r => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        })
+        .then(gastos => {
+            // Asegurar que gastos sea un array
+            if (!Array.isArray(gastos)) {
+                gastos = [];
+            }
+            console.log(`📊 Gastos (${filtro}):`, gastos);
+            mostrarGastos(gastos);
+            
+            // Actualizar badges
+            document.getElementById('badgeHoy').textContent = gastos.length;
+            document.getElementById('badge7d').textContent = gastos.length;
+            document.getElementById('badgeMes').textContent = gastos.length;
+            document.getElementById('badgeTodos').textContent = gastos.length;
+        })
+        .catch(err => {
+            console.error('❌ Error al cargar gastos:', err);
+            document.getElementById('listaGastos').innerHTML = `
+                <div style="text-align: center; color: #ff6b6b; padding: 40px 0;">
+                    <span class="material-symbols-rounded" style="font-size: 48px; color: #ff6b6b; opacity: 0.3; display: block; margin-bottom: 10px;">error</span>
+                    Error al cargar los gastos: ${err.message}
+                </div>
+            `;
+        });
 }
+
+// ============================================
+// MOSTRAR GASTOS
+// ============================================
 
 function mostrarGastos(gastos) {
     const container = document.getElementById('listaGastos');
@@ -1278,6 +1308,8 @@ function mostrarGastos(gastos) {
                 <span class="sub">Registra tus gastos usando el formulario arriba</span>
             </div>
         `;
+        // Actualizar totales a 0
+        actualizarResumen(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         return;
     }
     
@@ -1319,17 +1351,8 @@ function mostrarGastos(gastos) {
         }
     });
     
-    document.getElementById('totalGastosDisplay').textContent = '$' + total.toLocaleString('es-CL');
-    document.getElementById('gastosEfectivoDisplay').textContent = '$' + efectivo.toLocaleString('es-CL');
-    document.getElementById('gastosTransferenciaDisplay').textContent = '$' + transferencia.toLocaleString('es-CL');
-    document.getElementById('gastosSueldosDisplay').textContent = '$' + sueldos.toLocaleString('es-CL');
-    document.getElementById('gastosEfectivoCount').textContent = efectivoCount + ' gastos';
-    document.getElementById('gastosTransferenciaCount').textContent = transferenciaCount + ' gastos';
-    document.getElementById('gastosSueldosCount').textContent = sueldosCount + ' gastos';
-    document.getElementById('gastosVentaDisplay').textContent = '$' + venta.toLocaleString('es-CL');
-    document.getElementById('gastosTrabajoDisplay').textContent = '$' + trabajo.toLocaleString('es-CL');
-    document.getElementById('gastosVentaCount').textContent = ventaCount + ' gastos';
-    document.getElementById('gastosTrabajoCount').textContent = trabajoCount + ' gastos';
+    actualizarResumen(total, efectivo, transferencia, sueldos, venta, trabajo, 
+                      efectivoCount, transferenciaCount, sueldosCount, ventaCount, trabajoCount);
     
     let html = '';
     gastos.forEach(g => {
@@ -1346,9 +1369,17 @@ function mostrarGastos(gastos) {
             'trabajo': 'trabajo'
         };
         
+        // Formatear fecha
+        let fechaDisplay = g.fecha || '';
+        if (g.fecha && g.fecha.includes('-')) {
+            const partes = g.fecha.split('-');
+            fechaDisplay = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+        
         html += `
             <div class="gasto-card" data-id="${g.id}">
                 <div class="info">
+                    <span class="fecha-gasto">📅 ${fechaDisplay}</span>
                     <span class="categoria">${g.categoria}</span>
                     <span class="tipo-gasto ${tipoClass[tipoGasto]}">${tipoLabels[tipoGasto]}</span>
                     ${g.descripcion ? `<span class="descripcion">📝 ${g.descripcion}</span>` : ''}
@@ -1368,6 +1399,21 @@ function mostrarGastos(gastos) {
     });
     
     container.innerHTML = html;
+}
+
+function actualizarResumen(total, efectivo, transferencia, sueldos, venta, trabajo, 
+                            efectivoCount, transferenciaCount, sueldosCount, ventaCount, trabajoCount) {
+    document.getElementById('totalGastosDisplay').textContent = '$' + total.toLocaleString('es-CL');
+    document.getElementById('gastosEfectivoDisplay').textContent = '$' + efectivo.toLocaleString('es-CL');
+    document.getElementById('gastosTransferenciaDisplay').textContent = '$' + transferencia.toLocaleString('es-CL');
+    document.getElementById('gastosSueldosDisplay').textContent = '$' + sueldos.toLocaleString('es-CL');
+    document.getElementById('gastosVentaDisplay').textContent = '$' + venta.toLocaleString('es-CL');
+    document.getElementById('gastosTrabajoDisplay').textContent = '$' + trabajo.toLocaleString('es-CL');
+    document.getElementById('gastosEfectivoCount').textContent = efectivoCount + ' gastos';
+    document.getElementById('gastosTransferenciaCount').textContent = transferenciaCount + ' gastos';
+    document.getElementById('gastosSueldosCount').textContent = sueldosCount + ' gastos';
+    document.getElementById('gastosVentaCount').textContent = ventaCount + ' gastos';
+    document.getElementById('gastosTrabajoCount').textContent = trabajoCount + ' gastos';
 }
 
 // ============================================
@@ -1409,7 +1455,7 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
         if (result.success) {
             alert('✅ Gasto registrado correctamente');
             document.getElementById('formGasto').reset();
-            cargarGastosMesActual();
+            cargarGastosPorFiltro(filtroActual);
         } else {
             alert('❌ Error: ' + (result.error || 'Desconocido'));
         }
@@ -1428,7 +1474,7 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    cargarGastosMesActual();
+    cargarGastosPorFiltro('hoy', document.querySelector('.filtro-btn[data-filtro="hoy"]'));
 });
 </script>
 
