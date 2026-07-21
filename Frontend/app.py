@@ -1699,7 +1699,72 @@ def pagar_deuda(id_deuda):
         return redirect("/deudores")
     
     return render_template("pagar_deuda.html", deuda=deuda)
-
+# ============================
+# BALANCE UNIFICADO (FRONTEND)
+# ============================
+@app.route('/balance_unificado')
+@login_required
+@role_required(['admin'])
+def balance_unificado():
+    filtro = request.args.get('filtro', 'hoy')
+    
+    try:
+        resp = requests.get(
+            f"{BACKEND_URL}/api/balance_unificado?filtro={filtro}",
+            timeout=10
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+        else:
+            logger.error(f"❌ Error en balance_unificado: {resp.status_code}")
+            data = {}
+    except Exception as e:
+        logger.error(f"❌ Error en /balance_unificado: {e}")
+        data = {}
+    
+    # Valores por defecto
+    default_data = {
+        "registros": [],
+        "registros_7d": [],
+        "registros_mes": [],
+        "hoy_count": 0,
+        "filtro": filtro,
+        "total_pagado": 0,
+        "total_repuestos": 0,
+        "total_mano_obra": 0,
+        "total_ventas": 0,
+        "total_trabajo": 0,
+        "total_directa": 0,
+        "ganancia_trabajo": 0,
+        "ganancia_directa": 0,
+        "ganancia_neta": 0,
+        "total_repuestos_trabajo": 0,
+        "total_repuestos_directa": 0,
+        "trabajo_margen": 0,
+        "directa_margen": 0,
+        "total_gastos": 0,
+        "total_gastos_venta": 0,
+        "total_gastos_trabajo": 0,
+        "total_gastos_generales": 0,
+        "gastos_operativos": [],
+        "gastos_por_categoria": [],
+        "ganancia_real": 0,
+        "total_descuentos": 0
+    }
+    
+    # Combinar datos recibidos con valores por defecto
+    for key, value in default_data.items():
+        if key not in data or data[key] is None:
+            data[key] = value
+    
+    # Asegurar que los registros sean listas
+    data['registros'] = data.get('registros', [])
+    data['registros_7d'] = data.get('registros_7d', [])
+    data['registros_mes'] = data.get('registros_mes', [])
+    data['gastos_operativos'] = data.get('gastos_operativos', [])
+    data['gastos_por_categoria'] = data.get('gastos_por_categoria', [])
+    
+    return render_template("balance_unificado.html", **data)
 # ============================
 # RUTAS ESTÁTICAS
 # ============================
