@@ -114,108 +114,103 @@ class PagoService:
         return PagoRepository.obtener_balance_completo(filtro, fecha)
     
     @staticmethod
-    def obtener_balance_ventas(filtro, fecha):
-        """Obtiene datos para el balance de ventas con gastos incluidos"""
-        try:
-            from database import get_cursor
-            from datetime import timedelta
-            
-            if not validar_filtro(filtro):
-                filtro = 'todos'
-            
-            conn, cur = get_cursor()
-            
-            # ============================================
-            # 1. OBTENER VENTAS
-            # ============================================
-            query_ventas = """
-                SELECT 
-                    *, 
-                    COALESCE(descuento_aplicado, 0) as descuento_aplicado,
-                    COALESCE(costo_repuestos_real, 0) as costo_repuestos_real,
-                    COALESCE(costo_mano_obra_real, 0) as costo_mano_obra_real,
-                    COALESCE(costo_diagnostico_real, 0) as costo_diagnostico_real
-                FROM pagos 
-                WHERE estado = 'pagado' AND estado_pago = 'pagado'
-            """
-            params = []
-            
-            if filtro == 'hoy':
-                query_ventas += " AND fecha = %s"
-                params.append(fecha.strftime('%Y-%m-%d'))
-            elif filtro == '7d':
-                query_ventas += " AND fecha >= %s"
-                params.append((fecha - timedelta(days=7)).strftime('%Y-%m-%d'))
-            elif filtro == 'mes':
-                query_ventas += " AND fecha >= %s"
-                params.append((fecha - timedelta(days=30)).strftime('%Y-%m-%d'))
-            
-            query_ventas += " ORDER BY fecha DESC, hora DESC"
-            cur.execute(query_ventas, params)
-            rows = cur.fetchall()
-            ventas = [dict(row) for row in rows]
-            
-            # ============================================
-            # 2. CALCULAR FECHAS PARA GASTOS
-            # ============================================
-            if filtro == 'hoy':
-                fecha_inicio = fecha.strftime('%Y-%m-%d')
-                fecha_fin = fecha.strftime('%Y-%m-%d')
-            elif filtro == '7d':
-                fecha_inicio = (fecha - timedelta(days=7)).strftime('%Y-%m-%d')
-                fecha_fin = fecha.strftime('%Y-%m-%d')
-            elif filtro == 'mes':
-                fecha_inicio = (fecha - timedelta(days=30)).strftime('%Y-%m-%d')
-                fecha_fin = fecha.strftime('%Y-%m-%d')
-            else:
-                fecha_inicio = '2020-01-01'
-                fecha_fin = fecha.strftime('%Y-%m-%d')
-            
-            # ============================================
-            # 3. OBTENER GASTOS OPERATIVOS
-            # ============================================
-            cur.execute("""
-                SELECT 
-                    id,
-                    categoria,
-                    descripcion,
-                    monto,
-                    metodo_pago,
-                    fecha,
-                    hora,
-                    created_at
-                FROM gastos 
-                WHERE fecha BETWEEN %s AND %s
-                ORDER BY fecha DESC, hora DESC
-            """, (fecha_inicio, fecha_fin))
-            
-            gastos_rows = cur.fetchall()
-            gastos = []
-            total_gastos = 0
-            
-            for row in gastos_rows:
-                g = dict(row)
-                if g.get('hora') and hasattr(g['hora'], 'strftime'):
-                    g['hora'] = g['hora'].strftime('%H:%M:%S')
-                if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
-                    g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
-                if g.get('created_at') and hasattr(g['created_at'], 'strftime'):
-                    g['created_at'] = g['created_at'].strftime('%Y-%m-%d %H:%M:%S')
-                gastos.append(g)
-                total_gastos += float(g.get('monto', 0) or 0)
-            
-            cur.close()
-            conn.close()
-            
-            return {
-                'ventas': ventas,
-                'gastos': gastos,
-                'total_gastos': total_gastos
-            }
-        except Exception as e:
-            logger.error(f"Error obtener balance ventas: {e}")
-            return {'ventas': [], 'gastos': [], 'total_gastos': 0}
-    
+def obtener_balance_ventas(filtro, fecha):
+    """Obtiene datos para el balance de ventas con gastos"""
+    try:
+        from database import get_cursor
+        from datetime import timedelta
+        from utils.fecha_utils import get_fecha_chile
+        
+        if not validar_filtro(filtro):
+            filtro = 'todos'
+        
+        hoy = get_fecha_chile()
+        
+        # 🔥 CALCULAR FECHAS EN ZONA CHILE
+        if filtro == 'hoy':
+            fecha_inicio = hoy.strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        elif filtro == '7d':
+            fecha_inicio = (hoy - timedelta(days=7)).strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        elif filtro == 'mes':
+            fecha_inicio = (hoy - timedelta(days=30)).strftime('%Y-%m-%d')
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        else:
+            fecha_inicio = '2020-01-01'
+            fecha_fin = hoy.strftime('%Y-%m-%d')
+        
+        conn, cur = get_cursor()
+        
+        # ============================================
+        # 1. OBTENER VENTAS (usando fecha en zona Chile)
+        # ============================================
+        query_ventas = """
+            SELECT 
+                *,
+                COALESCE(descuento_aplicado, 0) as descuento_aplicado,
+                COALESCE(costo_repuestos_real, 0) as costo_repuestos_real,
+                COALESCE(costo_mano_obra_real, 0) as costo_mano_obra_real,
+                COALESCE(costo_diagnostico_real, 0) as costo_diagnostico_real
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pagado'
+            AND fecha BETWEEN %s AND %s
+            ORDER BY fecha DESC, hora DESC
+        """
+        cur.execute(query_ventas, (fecha_inicio, fecha_fin))
+        rows = cur.fetchall()
+        ventas = [dict(row) for row in rows]
+        
+        # ============================================
+        # 2. OBTENER GASTOS (usando fecha en zona Chile)
+        # ============================================
+        cur.execute("""
+            SELECT 
+                id,
+                categoria,
+                descripcion,
+                monto,
+                metodo_pago,
+                proveedor,
+                folio,
+                tipo_gasto,
+                registrado_por,
+                fecha,
+                hora,
+                created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago' as created_at_chile
+            FROM gastos 
+            WHERE fecha BETWEEN %s AND %s
+            ORDER BY fecha DESC, hora DESC
+        """, (fecha_inicio, fecha_fin))
+        
+        gastos_rows = cur.fetchall()
+        gastos = []
+        total_gastos = 0
+        
+        for row in gastos_rows:
+            g = dict(row)
+            if g.get('hora') and hasattr(g['hora'], 'strftime'):
+                g['hora'] = g['hora'].strftime('%H:%M:%S')
+            if g.get('fecha') and hasattr(g['fecha'], 'strftime'):
+                g['fecha'] = g['fecha'].strftime('%Y-%m-%d')
+            if g.get('created_at_chile'):
+                g['created_at'] = g['created_at_chile'].strftime('%Y-%m-%d %H:%M:%S')
+            g.pop('created_at_chile', None)
+            gastos.append(g)
+            total_gastos += float(g.get('monto', 0) or 0)
+        
+        cur.close()
+        conn.close()
+        
+        return {
+            'ventas': ventas,
+            'gastos': gastos,
+            'total_gastos': total_gastos
+        }
+    except Exception as e:
+        logger.error(f"Error obtener balance ventas: {e}")
+        return {'ventas': [], 'gastos': [], 'total_gastos': 0}
     # ============================================
     # FUNCIONES PARA FLOTAS
     # ============================================
