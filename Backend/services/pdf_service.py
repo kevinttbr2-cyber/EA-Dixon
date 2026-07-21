@@ -360,7 +360,7 @@ class PDFService:
 
         fecha_gen = datetime.now().strftime('%d/%m/%Y %H:%M')
         elements.append(Paragraph(f"Reporte generado el {fecha_gen} · OT N° {registro.get('id','')}",
-                                  ParagraphStyle('Footer2', parent=footer
+                                  ParagraphStyle('Footer2', parent=footer)
                 try:
             doc.build(elements)
             buffer.seek(0)
