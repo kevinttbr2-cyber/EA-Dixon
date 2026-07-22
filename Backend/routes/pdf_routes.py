@@ -2,6 +2,7 @@
 from flask import Blueprint, request, jsonify, send_file
 from services.pago_service import PagoService
 from services.pdf_service import PDFService
+from services.notification_service import enviar_notificacion_push  # ✅ AGREGAR ESTA LÍNEA
 from database import get_connection, get_cursor
 import qrcode
 from io import BytesIO
