@@ -586,7 +586,7 @@
                     </li>
                     
                     <!-- FINANZAS (dropdown) -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
+                    {% if session.get("rol") in ["admin"] %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuFinanzas" role="button" data-bs-toggle="dropdown">
                             <span class="material-symbols-rounded">account_balance</span>
@@ -616,7 +616,7 @@
                     {% endif %}
                     
                     <!-- GESTIÓN -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
+                    {% if session.get("rol") in ["admin"] %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown">
                             <span class="material-symbols-rounded">settings</span>
@@ -636,7 +636,7 @@
                     {% endif %}
                     
                     <!-- VALIDAR PAGOS -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
+                    {% if session.get("rol") in ["admin"] %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/pendientes_validacion' %}active{% endif %}" href="/pendientes_validacion">
                             <span class="material-symbols-rounded">verified</span>
