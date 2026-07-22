@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from utils.fecha_utils import get_fecha_chile, get_hora_chile, now_santiago
 from utils.seguridad import sanitizar_input, sanitizar_patente, sanitizar_numero, validar_filtro
 import logging
+from database import get_connection  # ✅ AGREGAR ESTE IMPORT
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +64,9 @@ class PagoService:
             pago.resultado = data.get('resultado', 'reparado')
             pago.tiempo_estimado = data.get('tiempo_estimado', '00:00:00')
             pago.forma_pago = data.get('forma_pago', 'efectivo')
-            pago.fecha_pago = get_fecha_chile()  # ✅ Cambiar a fecha_pago (sin _real)
+            pago.fecha_pago = get_fecha_chile()
         
-        # Log para depuración
+            # Log para depuración
             logger.info(f"📝 Procesando pago ID {id_reg}: Monto=${pago.monto}, Atendido por={pago.atendido_por}")
         
             if PagoRepository.actualizar(id_reg, pago):
@@ -220,42 +221,47 @@ class PagoService:
         except Exception as e:
             logger.error(f"Error obtener balance ventas: {e}")
             return {'ventas': [], 'gastos': [], 'total_gastos': 0}
+    
+    # ============================================
+    # FUNCIONES PARA AUDITORÍA DE DESCARGAS
+    # ============================================
+    
     @staticmethod
-def registrar_descarga_pdf(id_reg, usuario, tipo_usuario="usuario", ip=None):
-    """Registra la descarga de un PDF"""
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        
-        # Obtener datos del pago
-        cur.execute("SELECT nombre, monto FROM pagos WHERE id = %s", (id_reg,))
-        pago = cur.fetchone()
-        
-        if not pago:
+    def registrar_descarga_pdf(id_reg, usuario, tipo_usuario="usuario", ip=None):
+        """Registra la descarga de un PDF"""
+        try:
+            conn = get_connection()
+            cur = conn.cursor()
+            
+            # Obtener datos del pago
+            cur.execute("SELECT nombre, monto FROM pagos WHERE id = %s", (id_reg,))
+            pago = cur.fetchone()
+            
+            if not pago:
+                return False
+            
+            # Insertar registro de auditoría de descarga
+            cur.execute("""
+                INSERT INTO auditoria_descargas 
+                (id_registro, nombre_cliente, monto, usuario_descarga, tipo_usuario, ip, fecha_descarga)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW() AT TIME ZONE 'America/Santiago')
+            """, (
+                id_reg,
+                pago[0],
+                float(pago[1]),
+                usuario,
+                tipo_usuario,
+                ip
+            ))
+            
+            conn.commit()
+            cur.close()
+            conn.close()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error registrando descarga PDF: {e}")
             return False
-        
-        # Insertar registro de auditoría de descarga
-        cur.execute("""
-            INSERT INTO auditoria_descargas 
-            (id_registro, nombre_cliente, monto, usuario_descarga, tipo_usuario, ip, fecha_descarga)
-            VALUES (%s, %s, %s, %s, %s, %s, NOW() AT TIME ZONE 'America/Santiago')
-        """, (
-            id_reg,
-            pago[0],
-            float(pago[1]),
-            usuario,
-            tipo_usuario,
-            ip
-        ))
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        return True
-        
-    except Exception as e:
-        logger.error(f"Error registrando descarga PDF: {e}")
-        return False
     
     # ============================================
     # FUNCIONES PARA FLOTAS
