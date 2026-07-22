@@ -8,6 +8,7 @@ const urlsToCache = [
   '/static/manifest.json',
   '/static/js/imprimir.js',
   '/static/js/imprimir_ticket.js',
+  '/static/js/lector.js', 
   '/offline'
 ];
 
