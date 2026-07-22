@@ -2,83 +2,346 @@
 
 {% block content %}
 
-<div class="base-container">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-        <h2 style="color: #4fc3f7; font-weight: 700; margin: 0; font-size: 22px;">
-            📋 Logs del Sistema
-        </h2>
-        <div style="display: flex; gap: 8px;">
-            <a href="/dashboard" class="btn btn-sm" style="
-                background: rgba(255,255,255,0.06);
-                color: #888;
-                border: 1px solid rgba(255,255,255,0.08);
-                border-radius: 20px;
-                padding: 6px 16px;
-                text-decoration: none;
-                font-size: 13px;
-            ">
+<style>
+    .logs-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 10px 15px;
+    }
+    
+    .logs-container .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+    
+    .logs-container .header h2 {
+        color: #4fc3f7;
+        font-weight: 700;
+        margin: 0;
+        font-size: 22px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .stats-grid .stat-card {
+        background: rgba(20,20,20,0.80);
+        border-radius: 10px;
+        padding: 8px 12px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+    
+    .stats-grid .stat-card .label {
+        color: #888;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    
+    .stats-grid .stat-card .value {
+        font-weight: 700;
+        font-size: 18px;
+    }
+    .stats-grid .stat-card .value.total { color: #fff; }
+    .stats-grid .stat-card .value.error { color: #ff6b6b; }
+    .stats-grid .stat-card .value.warning { color: #ffcc00; }
+    .stats-grid .stat-card .value.info { color: #4fc3f7; }
+    
+    .filtros-container {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+        background: rgba(255,255,255,0.02);
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.06);
+        align-items: center;
+    }
+    
+    .filtros-container select,
+    .filtros-container input {
+        padding: 6px 12px;
+        background: rgba(0,0,0,0.40);
+        color: #fff;
+        border: 1px solid rgba(79,195,247,0.20);
+        border-radius: 6px;
+        font-size: 13px;
+    }
+    
+    .filtros-container select:focus,
+    .filtros-container input:focus {
+        outline: none;
+        border-color: #4fc3f7;
+    }
+    
+    .filtros-container .btn-filtro {
+        background: rgba(79,195,247,0.12);
+        color: #4fc3f7;
+        border: 1px solid rgba(79,195,247,0.20);
+        border-radius: 6px;
+        padding: 6px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .filtros-container .btn-filtro:hover {
+        background: rgba(79,195,247,0.20);
+    }
+    
+    .filtros-container .btn-limpiar {
+        background: rgba(255,255,255,0.04);
+        color: #888;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 6px;
+        padding: 6px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .filtros-container .btn-limpiar:hover {
+        background: rgba(255,255,255,0.08);
+    }
+    
+    .logs-view {
+        background: #0a0a0a;
+        border-radius: 10px;
+        padding: 15px;
+        border: 1px solid rgba(79,195,247,0.15);
+        max-height: 600px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+    
+    .logs-view .log-line {
+        padding: 2px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    
+    .logs-view .log-line.info { color: #4fc3f7; }
+    .logs-view .log-line.error { color: #ff6b6b; }
+    .logs-view .log-line.warning { color: #ffcc00; }
+    .logs-view .log-line.debug { color: #888; }
+    
+    .logs-view .log-line .timestamp {
+        color: #666;
+        font-size: 10px;
+    }
+    
+    .logs-view .log-line .level {
+        font-weight: 700;
+        padding: 0 6px;
+        border-radius: 3px;
+        margin: 0 4px;
+    }
+    .logs-view .log-line .level.INFO { color: #4fc3f7; }
+    .logs-view .log-line .level.ERROR { color: #ff6b6b; }
+    .logs-view .log-line .level.WARNING { color: #ffcc00; }
+    .logs-view .log-line .level.DEBUG { color: #888; }
+    
+    .no-logs {
+        text-align: center;
+        color: #666;
+        padding: 40px 0;
+    }
+    
+    .btn-sm {
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+    
+    .btn-danger {
+        background: rgba(255,107,107,0.12);
+        color: #ff6b6b;
+        border: 1px solid rgba(255,107,107,0.20);
+    }
+    .btn-danger:hover {
+        background: rgba(255,107,107,0.20);
+    }
+    
+    .btn-success {
+        background: rgba(0,255,102,0.06);
+        color: #00ff66;
+        border: 1px solid rgba(0,255,102,0.12);
+    }
+    .btn-success:hover {
+        background: rgba(0,255,102,0.12);
+    }
+    
+    .btn-secondary {
+        background: rgba(255,255,255,0.06);
+        color: #888;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+    .btn-secondary:hover {
+        background: rgba(255,255,255,0.12);
+    }
+    
+    @media (max-width: 600px) {
+        .filtros-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+<div class="base-container logs-container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h2>📋 Logs del Sistema</h2>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="/dashboard" class="btn-sm btn-secondary">
                 ← Volver
             </a>
         </div>
     </div>
 
-    <!-- Botones de control -->
+    <!-- ESTADÍSTICAS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">📊 Total Líneas</div>
+            <div class="value total">{{ total_lines|default(0) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">🔴 Errores</div>
+            <div class="value error">{{ total_errors|default(0) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">🟡 Advertencias</div>
+            <div class="value warning">{{ total_warnings|default(0) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">🔵 Información</div>
+            <div class="value info">{{ total_info|default(0) }}</div>
+        </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filtros-container">
+        <form method="GET" action="/ver_logs" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; width: 100%;">
+            <!-- Filtro por fecha -->
+            <select name="fecha" style="min-width: 120px;">
+                <option value="">📅 Todas las fechas</option>
+                {% for fecha in fechas_disponibles|default([]) %}
+                    <option value="{{ fecha }}" {% if fecha_actual == fecha %}selected{% endif %}>
+                        {{ fecha }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <!-- Filtro por nivel -->
+            <select name="nivel" style="min-width: 100px;">
+                <option value="todos">📊 Todos los niveles</option>
+                <option value="info" {% if nivel_actual == 'info' %}selected{% endif %}>🔵 Info</option>
+                <option value="warning" {% if nivel_actual == 'warning' %}selected{% endif %}>🟡 Warning</option>
+                <option value="error" {% if nivel_actual == 'error' %}selected{% endif %}>🔴 Error</option>
+                <option value="debug" {% if nivel_actual == 'debug' %}selected{% endif %}>⚪ Debug</option>
+            </select>
+
+            <!-- Búsqueda -->
+            <input type="text" name="buscar" placeholder="🔍 Buscar en logs..." value="{{ busqueda_actual or '' }}" style="flex: 1; min-width: 150px;">
+
+            <!-- Límite de líneas -->
+            <select name="limite" style="min-width: 80px;">
+                <option value="200" {% if limite == 200 %}selected{% endif %}>200</option>
+                <option value="500" {% if limite == 500 %}selected{% endif %}>500</option>
+                <option value="1000" {% if limite == 1000 %}selected{% endif %}>1.000</option>
+                <option value="2000" {% if limite == 2000 %}selected{% endif %}>2.000</option>
+                <option value="5000" {% if limite == 5000 %}selected{% endif %}>5.000</option>
+                <option value="10000" {% if limite == 10000 %}selected{% endif %}>10.000</option>
+            </select>
+
+            <button type="submit" class="btn-filtro">
+                🔍 Filtrar
+            </button>
+            <a href="/ver_logs" class="btn-limpiar">
+                🗑️ Limpiar filtros
+            </a>
+        </form>
+    </div>
+
+    <!-- BOTONES DE CONTROL -->
     <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-        <a href="/ver_logs?limpiar=si" class="btn btn-sm" style="
-            background: rgba(255,107,107,0.12);
-            color: #ff6b6b;
-            border: 1px solid rgba(255,107,107,0.20);
-            border-radius: 8px;
-            padding: 6px 16px;
-            text-decoration: none;
-            font-size: 13px;
-            cursor: pointer;
-        " onclick="return confirm('⚠️ ¿Estás seguro de limpiar todos los logs?')">
-            🗑️ Limpiar logs
+        <a href="/ver_logs?limpiar=si" class="btn-sm btn-danger" 
+           onclick="return confirm('⚠️ ¿Estás seguro de limpiar TODOS los logs? Esta acción no se puede deshacer.')">
+            🗑️ Limpiar todos los logs
         </a>
-        <a href="/ver_logs" class="btn btn-sm" style="
-            background: rgba(0,255,102,0.06);
-            color: #00ff66;
-            border: 1px solid rgba(0,255,102,0.12);
-            border-radius: 8px;
-            padding: 6px 16px;
-            text-decoration: none;
-            font-size: 13px;
-            cursor: pointer;
-        ">
+        <a href="/ver_logs" class="btn-sm btn-success">
             🔄 Recargar
+        </a>
+        <a href="/ver_logs?limite=10000" class="btn-sm btn-secondary">
+            📄 Ver todos (10.000)
         </a>
     </div>
 
-    <!-- Visualización de logs -->
-    <div style="
-        background: #0a0a0a; 
-        border-radius: 10px; 
-        padding: 15px; 
-        border: 1px solid rgba(79,195,247,0.15);
-        max-height: 600px;
-        overflow-y: auto;
-    ">
-        {% if logs %}
-        <pre style="
-            color: #00ff66; 
-            font-family: 'Courier New', monospace; 
-            font-size: 12px; 
-            margin: 0;
-            padding: 0;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            line-height: 1.6;
-        ">{{ logs }}</pre>
+    <!-- VISUALIZACIÓN DE LOGS -->
+    <div class="logs-view">
+        {% if logs and logs != "No hay logs disponibles" %}
+            {% for line in logs.split('\n') if line.strip() %}
+                {% set nivel = 'info' %}
+                {% if ' - ERROR - ' in line %}
+                    {% set nivel = 'error' %}
+                {% elif ' - WARNING - ' in line %}
+                    {% set nivel = 'warning' %}
+                {% elif ' - DEBUG - ' in line %}
+                    {% set nivel = 'debug' %}
+                {% endif %}
+                <div class="log-line {{ nivel }}">
+                    {% if ' - ' in line %}
+                        {% set parts = line.split(' - ', 3) %}
+                        {% if parts|length >= 4 %}
+                            <span class="timestamp">{{ parts[0] }}</span>
+                            <span class="level {{ parts[1] }}">{{ parts[1] }}</span>
+                            <span>{{ parts[3] }}</span>
+                        {% else %}
+                            {{ line }}
+                        {% endif %}
+                    {% else %}
+                        {{ line }}
+                    {% endif %}
+                </div>
+            {% endfor %}
         {% else %}
-        <div style="text-align: center; color: #666; padding: 40px 0;">
-            <p>No hay logs disponibles</p>
-        </div>
+            <div class="no-logs">
+                <span style="font-size: 48px; display: block; margin-bottom: 10px;">📭</span>
+                <p style="font-size: 16px; color: #fff;">No hay logs disponibles</p>
+                <p style="color: #888; font-size: 13px;">Los logs se generarán automáticamente cuando ocurran eventos en el sistema</p>
+            </div>
         {% endif %}
     </div>
 
     <div style="margin-top: 10px; color: #666; font-size: 12px; text-align: center;">
-        <i class="fa-regular fa-circle-info"></i> Se muestran las últimas 200 líneas
+        <i class="fa-regular fa-circle-info"></i> 
+        {% if logs and logs != "No hay logs disponibles" %}
+            Mostrando líneas de logs 
+            {% if limite %}
+                (máximo {{ limite }})
+            {% endif %}
+        {% endif %}
+        | Archivo: {{ LOG_FILE or 'dixon_app.log' }}
     </div>
 </div>
 
