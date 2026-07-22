@@ -30,7 +30,7 @@
                 <!-- ====================
                 FINANZAS (dropdown con Balance, Balance Ventas, Balance Unificado, Dashboard, Gastos, Cierre de Caja)
                 ==================== -->
-                {% if session.get("rol") in ["admin", "operador"] %}
+                {% if session.get("rol") in ["admin"] %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="menuFinanzas" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="material-symbols-rounded">account_balance</span>
@@ -90,7 +90,7 @@
                 <!-- ====================
                 GESTIÓN (dropdown con Registros, Flotas, Flotas Pendientes, Deudores, Repuestos, Auditoría)
                 ==================== -->
-                {% if session.get("rol") in ["admin", "operador"] %}
+                {% if session.get("rol") in ["admin"] %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="material-symbols-rounded">settings</span>
@@ -154,7 +154,7 @@
                 <!-- ====================
                 VALIDAR PAGOS (directo)
                 ==================== -->
-                {% if session.get("rol") in ["admin", "operador"] %}
+                {% if session.get("rol") in ["admin"] %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.path == '/pendientes_validacion' %}active{% endif %}" href="/pendientes_validacion">
                         <span class="material-symbols-rounded">verified</span>
