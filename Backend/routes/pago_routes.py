@@ -315,14 +315,14 @@ def pagar(id_reg):
         if not validar_metodo_pago(data_sanitizada['forma_pago']):
             return jsonify({"error": "Forma de pago inválida"}), 400
         
-        logger.info(f"💰 Procesando pago ID {id_reg} - Monto: ${data_sanitizada['monto']}")
+        logger.info(f"💰 Procesando pago ID {id_reg} - Monto: ${data_sanitizada['monto']} - Atendido por: {data_sanitizada['atendido_por']}")
         
         pago = PagoService.procesar_pago(id_reg, data_sanitizada)
         if pago:
-            # Notificación push
+            # ✅ Notificación push CON atendido_por
             enviar_notificacion_push(
                 titulo="💰 Pago Express",
-                mensaje=f"Cliente: {pago.nombre}\nMonto: ${float(pago.monto):,.0f}\nForma: {pago.forma_pago}",
+                mensaje=f"Cliente: {pago.nombre}\nMonto: ${float(pago.monto):,.0f}\nForma: {pago.forma_pago}\n👨‍🔧 Atendido por: {data_sanitizada['atendido_por']}",
                 url=f"/pago_exitoso/{id_reg}",
                 id=id_reg
             )
