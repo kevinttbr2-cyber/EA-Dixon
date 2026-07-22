@@ -397,6 +397,32 @@
             <label style="color: var(--text-secondary); font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">🔧 Reparación realizada</label>
             <textarea id="reparacionInput" class="form-control" rows="2">Reparación realizada</textarea>
         </div>
+       <!-- ============================================
+ATENDIDO POR (DROPDOWN CON TÉCNICOS)
+============================================ -->
+<div class="atendido-por-container">
+    <label>👨‍🔧 Atendido por</label>
+    <select id="atendidoPor" class="form-control">
+        <option value="">Selecciona un técnico...</option>
+        {% if tecnicos %}
+            {% for tecnico in tecnicos %}
+                <option value="{{ tecnico.nombre_completo }}" 
+                        {% if tecnico.id == session.get('usuario_id') %}selected{% endif %}>
+                    {{ tecnico.nombre_completo }}
+                </option>
+            {% endfor %}
+        {% else %}
+            <option value="{{ session.get('nombre_completo', session.get('usuario')) }}" selected>
+                {{ session.get('nombre_completo', session.get('usuario')) }}
+            </option>
+        {% endif %}
+    </select>
+    <small style="color:#666;font-size:11px;display:block;margin-top:4px;">
+        {% if not tecnicos %}
+            ⚠️ No hay técnicos registrados. Usando tu nombre por defecto.
+        {% endif %}
+    </small>
+</div>
 
         <div class="form-group">
             <label style="color: var(--text-secondary); font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">✅ Resultado</label>
