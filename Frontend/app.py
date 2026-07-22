@@ -195,7 +195,9 @@ def role_required(allowed_roles):
             if not session.get("usuario"):
                 return redirect("/login")
             if session.get("rol") not in allowed_roles:
-                return "No tienes permisos para acceder a esta sección", 403
+                # 🔥 REDIRIGIR A ESTADO EN VEZ DE MOSTRAR ERROR 403
+                flash('⚠️ No tienes permisos para acceder a esta sección', 'warning')
+                return redirect("/estado")
             return f(*args, **kwargs)
         return decorated
     return decorator
