@@ -133,21 +133,25 @@
                             <i class="fa-solid fa-file-pdf" style="font-size: 12px;"></i> #{{ item.id_registro }}
                         </a>
                     </td>
-                    <td style="padding: 8px 10px; color: #ffffff; text-align: center;">{{ item.nombre_cliente or 'N/A' }}</td>
-                    <td style="padding: 8px 10px; color: #ffffff; text-align: center;">
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center; font-weight: 500;">
+                        {{ item.nombre_cliente or 'N/A' }}
+                    </td>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center; font-weight: 500;">
                         {% if item.tipo_usuario == 'cliente' %}
-                        <span style="color: #ffcc00;">{{ item.usuario_descarga }}</span>
+                            <span style="color: #ffcc00;">{{ item.usuario_descarga }}</span>
                         {% else %}
-                        {{ item.usuario_descarga }}
+                            {{ item.usuario_descarga or 'Sistema' }}
                         {% endif %}
                     </td>
                     <td style="padding: 8px 10px; color: #ffffff; text-align: center;">
                         {% if item.tipo_usuario == 'admin' %}
-                        <span style="color: #00ff66;">🔴 Admin</span>
+                            <span style="color: #00ff66; font-weight: 700;">🔴 Admin</span>
                         {% elif item.tipo_usuario == 'operador' %}
-                        <span style="color: #4fc3f7;">🟢 Operador</span>
+                            <span style="color: #4fc3f7; font-weight: 700;">🟢 Operador</span>
+                        {% elif item.tipo_usuario == 'cliente' %}
+                            <span style="color: #ffcc00; font-weight: 700;">👤 Cliente</span>
                         {% else %}
-                        <span style="color: #ffcc00;">👤 Cliente</span>
+                            <span style="color: #888;">{{ item.tipo_usuario or 'Desconocido' }}</span>
                         {% endif %}
                     </td>
                     <td style="padding: 8px 10px; color: #888; text-align: center; font-size: 12px; font-family: monospace;">
