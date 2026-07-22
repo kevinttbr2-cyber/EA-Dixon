@@ -1378,7 +1378,7 @@ def api_repuestos():
 # ============================
 @app.route('/deudores')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def deudores():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/deudores/todos", timeout=10)
