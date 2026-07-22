@@ -603,6 +603,30 @@
         <span class="material-symbols-rounded" style="font-size: 22px;">scan</span>
         📄 Escanear Factura (QR / Código de Barras)
     </button>
+    <!-- ============================================
+     LECTOR USB DE CÓDIGO DE BARRAS (GASTOS)
+     ============================================ -->
+<div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+    <button id="btnLectorUSBGastos" onclick="conectarLectorUSBGastos()" style="
+        background: #ffcc00;
+        color: #000;
+        font-weight: 700;
+        border: none;
+        border-radius: var(--radius-md);
+        padding: 10px 20px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        justify-content: center;
+    ">
+        <i class="fa-solid fa-usb"></i> 🔌 Conectar Lector USB
+    </button>
+    <span id="statusLectorUSBGastos" style="color: #888; font-size: 12px;">⚠️ No conectado</span>
+</div>
 
     <!-- CONTENEDOR DEL ESCÁNER -->
     <div id="videoContainerFactura">
@@ -801,6 +825,162 @@ let datosFactura = {};
 let filtroActual = 'hoy';
 let tipoDocumentoDetectado = 'producto';
 let escanerInicializado = false;
+
+    // ============================================
+// LECTOR USB DE CÓDIGO DE BARRAS (GASTOS)
+// ============================================
+let lectorUSB = null;
+let lectorUSBConectado = false;
+
+function conectarLectorUSBGastos() {
+    if (lectorUSB && lectorUSBConectado) {
+        desconectarLectorUSBGastos();
+        return;
+    }
+
+    lectorUSB = new LectorUSB();
+    
+    lectorUSB.onConnect = function() {
+        lectorUSBConectado = true;
+        const btn = document.getElementById('btnLectorUSBGastos');
+        if (btn) {
+            btn.textContent = '🔌 Desconectar Lector USB';
+            btn.style.background = '#ff6b6b';
+            btn.style.color = '#fff';
+        }
+        document.getElementById('statusLectorUSBGastos').textContent = '✅ Lector USB conectado';
+        document.getElementById('statusLectorUSBGastos').style.color = '#00ff66';
+    };
+
+    lectorUSB.onDisconnect = function() {
+        lectorUSBConectado = false;
+        const btn = document.getElementById('btnLectorUSBGastos');
+        if (btn) {
+            btn.textContent = '🔌 Conectar Lector USB';
+            btn.style.background = '#ffcc00';
+            btn.style.color = '#000';
+        }
+        document.getElementById('statusLectorUSBGastos').textContent = '⚠️ Lector USB desconectado';
+        document.getElementById('statusLectorUSBGastos').style.color = '#ff6b6b';
+    };
+
+    lectorUSB.onBarcode = function(barcode) {
+        console.log('📦 Código escaneado por USB (Gastos):', barcode);
+        
+        // Buscar repuesto en el sistema
+        buscarRepuestoPorCodigo(barcode);
+        
+        // También mostrar en el campo de folio o descripción
+        const folioInput = document.getElementById('folio');
+        if (folioInput && !folioInput.value) {
+            folioInput.value = barcode;
+        }
+        
+        const descInput = document.getElementById('descripcion');
+        if (descInput) {
+            descInput.value = `Producto escaneado: ${barcode}`;
+        }
+    };
+
+    lectorUSB.connect();
+}
+
+function desconectarLectorUSBGastos() {
+    if (lectorUSB && lectorUSBConectado) {
+        lectorUSB.disconnect();
+        lectorUSBConectado = false;
+    }
+}
+
+async function buscarRepuestoPorCodigo(codigo) {
+    try {
+        const resp = await fetch(`${API_URL}/api/repuestos?q=${encodeURIComponent(codigo)}`);
+        const repuestos = await resp.json();
+        
+        if (repuestos && repuestos.length > 0) {
+            const repuesto = repuestos[0];
+            const categoriaSelect = document.getElementById('categoria');
+            const montoInput = document.getElementById('monto');
+            const descInput = document.getElementById('descripcion');
+            const proveedorInput = document.getElementById('proveedor');
+            
+            if (categoriaSelect) {
+                const categorias = ['Sueldos', 'Arriendo', 'Servicios Públicos', 'Alimentación', 'Herramientas', 'Impuestos', 'Repuestos', 'Otros'];
+                if (repuesto.categoria_nombre) {
+                    const encontrada = categorias.find(c => c.toLowerCase() === repuesto.categoria_nombre.toLowerCase());
+                    if (encontrada) {
+                        categoriaSelect.value = encontrada;
+                    } else {
+                        categoriaSelect.value = 'Repuestos';
+                    }
+                } else {
+                    categoriaSelect.value = 'Repuestos';
+                }
+            }
+            
+            if (montoInput) {
+                montoInput.value = repuesto.costo_venta_final || 0;
+            }
+            
+            if (descInput) {
+                descInput.value = `Repuesto: ${repuesto.nombre} - Código: ${codigo}`;
+            }
+            
+            if (proveedorInput) {
+                proveedorInput.value = repuesto.proveedor || '';
+            }
+            
+            // Registrar automáticamente el gasto
+            registrarGastoAutomatico({
+                categoria: categoriaSelect ? categoriaSelect.value : 'Repuestos',
+                monto: repuesto.costo_venta_final || 0,
+                descripcion: `Compra de repuesto: ${repuesto.nombre}`,
+                proveedor: repuesto.proveedor || 'Proveedor',
+                folio: codigo
+            });
+            
+            alert(`✅ Repuesto encontrado: ${repuesto.nombre}\n💰 Precio: $${(repuesto.costo_venta_final || 0).toLocaleString()}`);
+        } else {
+            // Si no se encuentra, preguntar si quiere registrar como nuevo gasto
+            if (confirm(`⚠️ No se encontró el repuesto "${codigo}"\n\n¿Deseas registrar un nuevo gasto con este código?`)) {
+                const descInput = document.getElementById('descripcion');
+                if (descInput) descInput.value = `Código escaneado: ${codigo}`;
+                
+                const folioInput = document.getElementById('folio');
+                if (folioInput) folioInput.value = codigo;
+            }
+        }
+    } catch (error) {
+        console.error('Error buscando repuesto:', error);
+    }
+}
+
+async function registrarGastoAutomatico(datos) {
+    try {
+        const resp = await fetch(`${API_URL}/api/gastos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                categoria: datos.categoria || 'Repuestos',
+                monto: datos.monto || 0,
+                metodo_pago: 'efectivo',
+                descripcion: datos.descripcion || '',
+                proveedor: datos.proveedor || 'Proveedor',
+                folio: datos.folio || '',
+                fecha: new Date().toISOString().split('T')[0],
+                hora: new Date().toTimeString().split(' ')[0],
+                registrado_por: '{{ session.get("nombre_completo", session.get("usuario")) }}',
+                tipo_gasto: 'general'
+            })
+        });
+        const result = await resp.json();
+        if (result.success) {
+            console.log('✅ Gasto registrado automáticamente');
+        }
+    } catch (error) {
+        console.error('Error registrando gasto:', error);
+    }
+}
 
 // ============================================
 // FUNCIÓN PARA CARGAR HTML5-QRCODE
