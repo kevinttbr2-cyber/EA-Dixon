@@ -2281,9 +2281,12 @@ def descargar_pdf(id_reg, firma):
         if not PDFService.verificar_firma(id_reg, firma):
             return jsonify({"error": "Firma inválida"}), 403
         
-        # Obtener el pago
+        # Obtener el pago COMPLETO (no solo nombre y monto)
         conn, cur = get_cursor()
-        cur.execute("SELECT nombre, monto FROM pagos WHERE id = %s", (id_reg,))
+        cur.execute("""
+            SELECT id, nombre, monto, patente, marca, modelo, telefono, flota 
+            FROM pagos WHERE id = %s
+        """, (id_reg,))
         pago = cur.fetchone()
         cur.close()
         conn.close()
@@ -2291,27 +2294,48 @@ def descargar_pdf(id_reg, firma):
         if not pago:
             return jsonify({"error": "Registro no encontrado"}), 404
         
-        # Registrar descarga en auditoría
+        # ✅ OBTENER DATOS DEL USUARIO DESDE EL FRONTEND
         usuario = request.args.get('usuario', 'Sistema')
         tipo_usuario = request.args.get('tipo_usuario', 'usuario')
         ip = request.remote_addr
         
-        # Guardar en auditoría
+        # ✅ SI NO VIENE TIPO_USUARIO, DETECTAR AUTOMÁTICAMENTE
+        if not tipo_usuario or tipo_usuario == 'usuario':
+            # Intentar obtener el rol del usuario desde la base de datos
+            try:
+                conn2, cur2 = get_cursor()
+                cur2.execute("SELECT rol FROM usuarios WHERE username = %s", (usuario,))
+                result = cur2.fetchone()
+                if result:
+                    tipo_usuario = result[0]  # 'admin', 'operador', 'basico'
+                cur2.close()
+                conn2.close()
+            except:
+                tipo_usuario = 'usuario'
+        
+        # ✅ GUARDAR EN AUDITORÍA CON DATOS CORRECTOS
         conn = get_connection()
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO auditoria_descargas 
             (id_registro, nombre_cliente, monto, usuario_descarga, tipo_usuario, ip, fecha_descarga)
             VALUES (%s, %s, %s, %s, %s, %s, NOW() AT TIME ZONE 'America/Santiago')
-        """, (id_reg, pago[0], float(pago[1]), usuario, tipo_usuario, ip))
+        """, (
+            id_reg,
+            pago[1],  # ← Nombre del cliente (pago[1] es 'nombre')
+            float(pago[2]),  # ← Monto
+            usuario,  # ← Nombre del usuario que descargó
+            tipo_usuario,  # ← 'admin', 'operador' o 'cliente'
+            ip
+        ))
         conn.commit()
         cur.close()
         conn.close()
         
-        # ✅ ENVIAR NOTIFICACIÓN PUSH
+        # ✅ ENVIAR NOTIFICACIÓN CON DATOS CORRECTOS
         enviar_notificacion_push(
             titulo="📄 PDF Descargado",
-            mensaje=f"📄 {pago[0]}\n💰 ${float(pago[1]):,.0f}\n👤 Descargado por: {usuario}\n📌 Tipo: {tipo_usuario}\n📅 {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+            mensaje=f"📄 Cliente: {pago[1]}\n💰 ${float(pago[2]):,.0f}\n👤 Descargado por: {usuario}\n📌 Rol: {tipo_usuario}\n📅 {datetime.now().strftime('%d/%m/%Y %H:%M')}",
             url=f"/auditoria_descargas",
             id=id_reg
         )
