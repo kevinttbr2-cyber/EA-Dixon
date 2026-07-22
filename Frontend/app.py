@@ -557,6 +557,7 @@ def pago_exitoso(id_reg):
 # ============================
 @app.route('/cambiar_password', methods=['GET', 'POST'])
 @login_required
+@role_required(['admin'])
 def cambiar_password():
     usuario = session.get('usuario')
     error = None
