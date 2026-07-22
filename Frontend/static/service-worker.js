@@ -1,27 +1,25 @@
 // frontend/static/service-worker.js
-const CACHE_NAME = 'dixon-v2';
+const CACHE_NAME = 'dixon-v3';
 
-// ✅ ARCHIVOS A CACHEAR (SOLO LOS QUE EXISTEN)
+// ✅ ARCHIVOS A CACHEAR (INCLUYENDO LOS DE IMPRESIÓN)
 const urlsToCache = [
   '/',
   '/static/theme.css',
   '/static/manifest.json',
+  '/static/js/imprimir.js',
+  '/static/js/imprimir_ticket.js',
   '/offline'
-  // ❌ ELIMINA imágenes que no existen
-  // '/static/images/icon-192.png',
-  // '/static/images/icon-512.png'
 ];
 
 // INSTALACIÓN
 self.addEventListener('install', function(event) {
+  console.log('🔧 Service Worker instalando...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
         console.log('✅ Cache abierto');
-        // ✅ Intentar cachear, pero no fallar si algún archivo no existe
         return cache.addAll(urlsToCache).catch(function(err) {
           console.warn('⚠️ Error cacheando algunos archivos:', err);
-          // Intentar cachear uno por uno
           return Promise.all(
             urlsToCache.map(function(url) {
               return cache.add(url).catch(function(e) {
@@ -39,6 +37,7 @@ self.addEventListener('install', function(event) {
 
 // ACTIVACIÓN
 self.addEventListener('activate', function(event) {
+  console.log('🔧 Service Worker activando...');
   event.waitUntil(
     caches.keys().then(function(cacheNames) {
       return Promise.all(
@@ -57,11 +56,34 @@ self.addEventListener('activate', function(event) {
 
 // FETCH
 self.addEventListener('fetch', function(event) {
+  // No interceptar llamadas a la API ni al backend
   if (event.request.url.includes('/api/') || 
-      event.request.url.includes('.railway.app')) {
+      event.request.url.includes('.railway.app') ||
+      event.request.url.includes('chrome-extension')) {
     return;
   }
 
+  // Estrategia: Cache First para assets estáticos
+  if (event.request.url.includes('/static/')) {
+    event.respondWith(
+      caches.match(event.request)
+        .then(function(response) {
+          if (response) {
+            return response;
+          }
+          return fetch(event.request).then(function(res) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(function(cache) {
+              cache.put(event.request, clone);
+            });
+            return res;
+          });
+        })
+    );
+    return;
+  }
+
+  // Estrategia: Network First para páginas HTML
   event.respondWith(
     fetch(event.request)
       .then(function(response) {
@@ -96,8 +118,8 @@ self.addEventListener('push', function(event) {
     const data = event.data.json();
     const options = {
       body: data.body || 'Notificación',
-      icon: '/static/theme.css', // ✅ Usar un archivo que existe
-      badge: '/static/theme.css',
+      icon: '/static/images/icon-192.png',
+      badge: '/static/images/icon-192.png',
       vibrate: [200, 100, 200],
       data: {
         url: data.url || '/estado',
@@ -125,8 +147,8 @@ self.addEventListener('push', function(event) {
     console.error('❌ Error procesando push:', error);
     const options = {
       body: event.data.text() || 'Nueva notificación',
-      icon: '/static/theme.css',
-      badge: '/static/theme.css'
+      icon: '/static/images/icon-192.png',
+      badge: '/static/images/icon-192.png'
     };
     event.waitUntil(
       self.registration.showNotification('Dixon', options)
