@@ -537,6 +537,31 @@
 </div>
 
 <!-- ============================================
+     LECTOR USB DE CÓDIGO DE BARRAS (REPUESTOS)
+     ============================================ -->
+<div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+    <button id="btnLectorUSBRepuestos" onclick="conectarLectorUSBRepuestos()" style="
+        background: #ffcc00;
+        color: #000;
+        font-weight: 700;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        justify-content: center;
+    ">
+        <i class="fa-solid fa-usb"></i> 🔌 Conectar Lector USB
+    </button>
+    <span id="statusLectorUSBRepuestos" style="color: #888; font-size: 12px;">⚠️ No conectado</span>
+</div>
+
+<!-- ============================================
      MODAL: REPORTE DE STOCK BAJO
      ============================================ -->
 <div id="modalReporteStock" class="modal-dixon">
@@ -914,6 +939,199 @@ let escanerProductoActivo = false;
 let datosProductos = [];
 let productoEscanerData = null;
 let categoriasCargadas = false;
+
+// ============================================
+// LECTOR USB DE CÓDIGO DE BARRAS (REPUESTOS)
+// ============================================
+let lectorUSB = null;
+let lectorUSBConectado = false;
+
+function conectarLectorUSBRepuestos() {
+    if (lectorUSB && lectorUSBConectado) {
+        desconectarLectorUSBRepuestos();
+        return;
+    }
+
+    lectorUSB = new LectorUSB();
+    
+    lectorUSB.onConnect = function() {
+        lectorUSBConectado = true;
+        const btn = document.getElementById('btnLectorUSBRepuestos');
+        if (btn) {
+            btn.textContent = '🔌 Desconectar Lector USB';
+            btn.style.background = '#ff6b6b';
+            btn.style.color = '#fff';
+        }
+        document.getElementById('statusLectorUSBRepuestos').textContent = '✅ Lector USB conectado';
+        document.getElementById('statusLectorUSBRepuestos').style.color = '#00ff66';
+    };
+
+    lectorUSB.onDisconnect = function() {
+        lectorUSBConectado = false;
+        const btn = document.getElementById('btnLectorUSBRepuestos');
+        if (btn) {
+            btn.textContent = '🔌 Conectar Lector USB';
+            btn.style.background = '#ffcc00';
+            btn.style.color = '#000';
+        }
+        document.getElementById('statusLectorUSBRepuestos').textContent = '⚠️ Lector USB desconectado';
+        document.getElementById('statusLectorUSBRepuestos').style.color = '#ff6b6b';
+    };
+
+    lectorUSB.onBarcode = function(barcode) {
+        console.log('📦 Código escaneado por USB (Repuestos):', barcode);
+        
+        // Buscar repuesto y mostrarlo
+        buscarRepuestoEnTabla(barcode);
+        
+        // Si está en el modal de agregar/editar, llenar campos
+        const modalAgregar = document.getElementById('modalAgregarRepuesto');
+        if (modalAgregar && modalAgregar.classList.contains('active')) {
+            const inputNombre = document.getElementById('inputNombreRepuesto');
+            if (inputNombre) inputNombre.value = barcode;
+        }
+        
+        const buscador = document.getElementById('buscadorRepuestos');
+        if (buscador) {
+            buscador.value = barcode;
+            filtrarTabla();
+        }
+    };
+
+    lectorUSB.connect();
+}
+
+function desconectarLectorUSBRepuestos() {
+    if (lectorUSB && lectorUSBConectado) {
+        lectorUSB.disconnect();
+        lectorUSBConectado = false;
+    }
+}
+
+function buscarRepuestoEnTabla(codigo) {
+    const filas = document.querySelectorAll('.fila-repuesto-lista');
+    let encontrado = false;
+    
+    filas.forEach(fila => {
+        const nombre = fila.querySelector('td:nth-child(2)')?.textContent || '';
+        const id = fila.dataset.id || '';
+        
+        if (nombre.toLowerCase().includes(codigo.toLowerCase()) || 
+            id === codigo) {
+            fila.style.background = 'rgba(0,255,102,0.15)';
+            fila.style.border = '2px solid #00ff66';
+            encontrado = true;
+            
+            // Scroll al elemento
+            fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Resaltar por 3 segundos
+            setTimeout(() => {
+                fila.style.background = '';
+                fila.style.border = '';
+            }, 3000);
+            
+            // Mostrar en buscador
+            const buscador = document.getElementById('buscadorRepuestos');
+            if (buscador) {
+                buscador.value = nombre;
+                filtrarTabla();
+            }
+        }
+    });
+    
+    if (!encontrado) {
+        alert(`⚠️ No se encontró el repuesto "${codigo}"\n\n¿Deseas agregarlo?`);
+        abrirModalAgregar();
+        const inputNombre = document.getElementById('inputNombreRepuesto');
+        if (inputNombre) inputNombre.value = codigo;
+    }
+}
+
+// ============================================
+// INICIALIZAR LECTOR USB (conectar automático)
+// ============================================
+function conectarLectorUSBAlInicio() {
+    // No conectar automáticamente, esperar click del usuario
+    console.log('🔄 Lector USB listo para conectar manualmente');
+}
+
+// ============================================
+// AGREGAR LECTOR USB AL MODAL
+// ============================================
+// Esta función se ejecuta cuando se abre el modal de agregar
+function agregarBotonLectorUSBAlModal() {
+    const modalAgregar = document.getElementById('modalAgregarRepuesto');
+    if (!modalAgregar) return;
+    
+    const modalContent = modalAgregar.querySelector('.modal-content');
+    if (!modalContent) return;
+    
+    // Buscar si ya existe el botón para no duplicar
+    if (modalContent.querySelector('.btn-lector-usb-modal')) return;
+    
+    const form = document.getElementById('formAgregarRepuesto');
+    if (!form) return;
+    
+    const btnLector = document.createElement('button');
+    btnLector.type = 'button';
+    btnLector.className = 'btn-lector-usb-modal';
+    btnLector.style.cssText = `
+        background: #ffcc00;
+        color: #000;
+        font-weight: 700;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        justify-content: center;
+    `;
+    btnLector.innerHTML = `<i class="fa-solid fa-usb"></i> 📸 Escanear con Lector USB`;
+    
+    btnLector.onclick = function() {
+        if (lectorUSB && lectorUSBConectado) {
+            alert('📷 Escanea el código de barras con el lector USB');
+        } else {
+            conectarLectorUSBRepuestos();
+            setTimeout(() => {
+                if (lectorUSB && lectorUSBConectado) {
+                    alert('📷 Lector USB conectado. Escanea el código de barras.');
+                }
+            }, 1000);
+        }
+    };
+    
+    // Insertar antes del primer input
+    const firstInput = form.querySelector('.mb-3');
+    if (firstInput) {
+        form.insertBefore(btnLector, firstInput);
+    } else {
+        form.prepend(btnLector);
+    }
+}
+
+// Ejecutar cuando se abre el modal de agregar
+const observerModal = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const modal = document.getElementById('modalAgregarRepuesto');
+            if (modal && modal.classList.contains('active')) {
+                setTimeout(agregarBotonLectorUSBAlModal, 100);
+            }
+        }
+    });
+});
+
+const modalAgregar = document.getElementById('modalAgregarRepuesto');
+if (modalAgregar) {
+    observerModal.observe(modalAgregar, { attributes: true });
+}
 
 // ============================================
 // FUNCIONES DE CIERRE DE MODALES
