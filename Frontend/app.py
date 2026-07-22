@@ -1406,7 +1406,6 @@ def deudores():
 # ============================
 @app.route('/venta_rapida')
 @login_required
-@role_required(['admin', 'operador'])
 def venta_rapida():
     return render_template("venta_rapida.html")
 
@@ -1588,7 +1587,7 @@ def ver_logs():
 # ============================
 @app.route('/gastos')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def gastos():
     hoy = datetime.now(pytz.timezone('America/Santiago'))
     primer_dia_mes = hoy.replace(day=1).strftime('%Y-%m-%d')
@@ -1683,7 +1682,7 @@ def cierre_caja():
 # ============================
 @app.route('/pagar_deuda/<int:id_deuda>')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def pagar_deuda(id_deuda):
     try:
         resp = requests.get(f"{BACKEND_URL}/api/deuda/{id_deuda}", timeout=10)
@@ -1762,7 +1761,7 @@ def balance_unificado():
 # ============================
 @app.route('/lector')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def lector():
     """Página para usar el lector de código de barras"""
     return render_template("lector.html")
