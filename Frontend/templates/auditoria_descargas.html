@@ -49,7 +49,13 @@
                 Admin
             </div>
             <div style="font-size: 16px; font-weight: 700; color: #00ff66;">
-                {{ historial|selectattr('tipo', 'equalto', 'admin')|list|length }}
+                {% set admin_count = 0 %}
+                {% for item in historial %}
+                    {% if item.tipo_usuario == 'admin' %}
+                        {% set admin_count = admin_count + 1 %}
+                    {% endif %}
+                {% endfor %}
+                {{ admin_count }}
             </div>
         </div>
 
@@ -65,7 +71,13 @@
                 Operador
             </div>
             <div style="font-size: 16px; font-weight: 700; color: #4fc3f7;">
-                {{ historial|selectattr('tipo', 'equalto', 'operador')|list|length }}
+                {% set operador_count = 0 %}
+                {% for item in historial %}
+                    {% if item.tipo_usuario == 'operador' %}
+                        {% set operador_count = operador_count + 1 %}
+                    {% endif %}
+                {% endfor %}
+                {{ operador_count }}
             </div>
         </div>
 
@@ -80,7 +92,13 @@
                 Cliente
             </div>
             <div style="font-size: 16px; font-weight: 700; color: #ffcc00;">
-                {{ historial|selectattr('tipo', 'equalto', 'cliente')|list|length }}
+                {% set cliente_count = 0 %}
+                {% for item in historial %}
+                    {% if item.tipo_usuario == 'cliente' %}
+                        {% set cliente_count = cliente_count + 1 %}
+                    {% endif %}
+                {% endfor %}
+                {{ cliente_count }}
             </div>
         </div>
 
@@ -98,10 +116,10 @@
                     <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">#</th>
                     <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">OT</th>
                     <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Cliente</th>
-                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Usuario</th>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Descargado por</th>
                     <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Rol</th>
-                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Fecha/Hora</th>
-                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Vehículo</th>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">IP</th>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Fecha / Hora</th>
                 </tr>
             </thead>
             <tbody>
@@ -115,30 +133,34 @@
                             <i class="fa-solid fa-file-pdf" style="font-size: 12px;"></i> #{{ item.id_registro }}
                         </a>
                     </td>
-                    <td style="padding: 8px 10px; color: #ffffff; text-align: center;">{{ item.cliente or 'N/A' }}</td>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center;">{{ item.nombre_cliente or 'N/A' }}</td>
                     <td style="padding: 8px 10px; color: #ffffff; text-align: center;">
-                        {% if item.tipo == 'cliente' %}
-                        <span style="color: #ffcc00;">{{ item.usuario }}</span>
+                        {% if item.tipo_usuario == 'cliente' %}
+                        <span style="color: #ffcc00;">{{ item.usuario_descarga }}</span>
                         {% else %}
-                        {{ item.usuario }}
+                        {{ item.usuario_descarga }}
                         {% endif %}
                     </td>
                     <td style="padding: 8px 10px; color: #ffffff; text-align: center;">
-                        {% if item.tipo == 'admin' %}
+                        {% if item.tipo_usuario == 'admin' %}
                         <span style="color: #00ff66;">🔴 Admin</span>
-                        {% elif item.tipo == 'operador' %}
+                        {% elif item.tipo_usuario == 'operador' %}
                         <span style="color: #4fc3f7;">🟢 Operador</span>
                         {% else %}
                         <span style="color: #ffcc00;">👤 Cliente</span>
                         {% endif %}
                     </td>
-                    <td style="padding: 8px 10px; color: #ffffff; text-align: center; font-size: 12px; white-space: nowrap;">
-                        {{ item.fecha if item.fecha else '' }}
-                        <br><span style="color: #888; font-size: 10px;">{{ item.fecha if item.fecha else '' }}</span>
+                    <td style="padding: 8px 10px; color: #888; text-align: center; font-size: 12px; font-family: monospace;">
+                        {{ item.ip or '-' }}
                     </td>
-                    <td style="padding: 8px 10px; color: #ffffff; text-align: center; font-size: 12px;">
-                        {{ item.marca or '' }} {{ item.modelo or '' }}
-                        <br><span style="color: #888; font-size: 10px;">{{ item.patente or '' }}</span>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center; font-size: 12px; white-space: nowrap;">
+                        {% if item.fecha_descarga_str %}
+                            {{ item.fecha_descarga_str }}
+                        {% elif item.fecha_descarga %}
+                            {{ item.fecha_descarga }}
+                        {% else %}
+                            {{ item.fecha or 'N/A' }}
+                        {% endif %}
                     </td>
                 </tr>
                 {% else %}
