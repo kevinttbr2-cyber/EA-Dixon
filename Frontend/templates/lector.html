@@ -1,0 +1,548 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+    .lector-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 10px;
+    }
+    
+    .card-lector {
+        background: rgba(20,20,20,0.80);
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+    
+    .card-lector h2 {
+        color: #4fc3f7;
+        font-size: 18px;
+        margin-top: 0;
+        margin-bottom: 16px;
+    }
+    
+    .status-lector {
+        text-align: center;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 12px 0;
+        font-weight: 600;
+    }
+    
+    .status-lector.connected {
+        background: rgba(0,255,102,0.10);
+        color: #00ff66;
+        border: 1px solid rgba(0,255,102,0.20);
+    }
+    
+    .status-lector.disconnected {
+        background: rgba(255,107,107,0.10);
+        color: #ff6b6b;
+        border: 1px solid rgba(255,107,107,0.20);
+    }
+    
+    .status-lector.scanning {
+        background: rgba(255,204,0,0.10);
+        color: #ffcc00;
+        border: 1px solid rgba(255,204,0,0.20);
+        animation: pulse 1s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    .btn-lector {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 8px 0;
+    }
+    
+    .btn-lector.btn-primary {
+        background: #4fc3f7;
+        color: #121214;
+    }
+    .btn-lector.btn-primary:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 30px rgba(79,195,247,0.2);
+    }
+    
+    .btn-lector.btn-secondary {
+        background: #2a2a32;
+        color: #f5f5f5;
+        border: 1px solid #2e3138;
+    }
+    .btn-lector.btn-secondary:hover {
+        background: #3a3a42;
+    }
+    
+    .btn-lector.btn-danger {
+        background: #ff6b6b;
+        color: #121214;
+    }
+    .btn-lector.btn-danger:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 30px rgba(255,107,107,0.2);
+    }
+    
+    .btn-lector.btn-success {
+        background: #00ff66;
+        color: #121214;
+    }
+    .btn-lector.btn-success:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 30px rgba(0,255,102,0.2);
+    }
+    
+    .barcode-display {
+        font-size: 28px;
+        font-weight: 700;
+        text-align: center;
+        padding: 20px;
+        background: rgba(0,0,0,0.30);
+        border-radius: 12px;
+        border: 2px dashed rgba(79,195,247,0.30);
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        word-break: break-all;
+        margin: 12px 0;
+    }
+    
+    .barcode-display.has-value {
+        border-color: #00ff66;
+        background: rgba(0,255,102,0.04);
+    }
+    
+    .barcode-display .icon {
+        font-size: 48px;
+        display: block;
+        color: #888;
+        margin-bottom: 8px;
+    }
+    
+    .barcode-display .placeholder {
+        color: #888;
+        font-size: 16px;
+        font-weight: 400;
+    }
+    
+    .barcode-list {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .barcode-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        font-size: 14px;
+    }
+    
+    .barcode-item .code {
+        color: #4fc3f7;
+        font-weight: 600;
+        font-family: monospace;
+    }
+    
+    .barcode-item .time {
+        color: #888;
+        font-size: 12px;
+    }
+    
+    .barcode-item .btn-use {
+        background: rgba(0,255,102,0.10);
+        border: 1px solid rgba(0,255,102,0.20);
+        color: #00ff66;
+        padding: 4px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s ease;
+    }
+    .barcode-item .btn-use:hover {
+        background: rgba(0,255,102,0.20);
+    }
+    
+    .flex-buttons {
+        display: flex;
+        gap: 8px;
+    }
+    .flex-buttons .btn-lector {
+        flex: 1;
+    }
+    
+    .compatibilidad-info {
+        background: rgba(255,200,0,0.06);
+        border-radius: 10px;
+        padding: 12px 16px;
+        border: 1px solid rgba(255,200,0,0.12);
+        font-size: 13px;
+        color: #888;
+        margin-top: 12px;
+    }
+    
+    .compatibilidad-info .icon {
+        color: #ffcc00;
+    }
+    
+    @media (max-width: 480px) {
+        .flex-buttons {
+            flex-direction: column;
+        }
+        .barcode-display {
+            font-size: 22px;
+            padding: 16px;
+            min-height: 60px;
+        }
+    }
+</style>
+
+<div class="lector-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+        <h2 style="color: #4fc3f7; font-weight: 700; margin: 0; font-size: 22px;">
+            📷 Lector de Código de Barras
+        </h2>
+        <a href="/venta_rapida" class="btn btn-sm" style="
+            background: rgba(79,195,247,0.15);
+            color: #4fc3f7;
+            border: 1px solid rgba(79,195,247,0.25);
+            border-radius: 20px;
+            padding: 6px 16px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+        ">
+            ← Volver
+        </a>
+    </div>
+
+    <!-- Estado del lector -->
+    <div class="card-lector">
+        <div id="statusLector" class="status-lector disconnected">
+            ⚠️ Lector no conectado
+        </div>
+
+        <div class="flex-buttons">
+            <button class="btn-lector btn-primary" id="btnConectar" onclick="conectarLector()">
+                🔌 Conectar Lector
+            </button>
+            <button class="btn-lector btn-secondary" id="btnDesconectar" onclick="desconectarLector()" disabled>
+                🔌 Desconectar
+            </button>
+        </div>
+    </div>
+
+    <!-- Código escaneado -->
+    <div class="card-lector">
+        <h2>📦 Código Escaneado</h2>
+        <div id="barcodeDisplay" class="barcode-display">
+            <div>
+                <span class="icon">📷</span>
+                <div class="placeholder">Escanea un código de barras</div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <button class="btn-lector btn-success" onclick="usarCodigo()" style="flex:1;" id="btnUsar" disabled>
+                ✅ Usar Código
+            </button>
+            <button class="btn-lector btn-secondary" onclick="limpiarCodigo()" style="flex:0.5;">
+                🗑️ Limpiar
+            </button>
+        </div>
+    </div>
+
+    <!-- Historial de códigos -->
+    <div class="card-lector">
+        <h2>📋 Historial <span style="color: #888; font-size: 12px; font-weight: 400;" id="historialCount">(0)</span></h2>
+        <div id="historialList" class="barcode-list">
+            <div style="text-align: center; color: #666; padding: 20px 0; font-size: 14px;">
+                No hay códigos escaneados aún
+            </div>
+        </div>
+        <button class="btn-lector btn-secondary" onclick="limpiarHistorial()" style="margin-top: 8px;">
+            🗑️ Limpiar Historial
+        </button>
+    </div>
+
+    <!-- Compatibilidad -->
+    <div class="card-lector" style="border-color: rgba(255,200,0,0.15);">
+        <h2 style="color: #ffcc00; font-size: 16px;">ℹ️ Información</h2>
+        <div class="compatibilidad-info">
+            <p style="margin: 0 0 8px 0;">
+                <span class="icon">📌</span> <strong style="color: #fff;">Compatible con:</strong>
+            </p>
+            <ul style="margin: 0; padding-left: 20px;">
+                <li>✅ Lectores USB en modo serie (Web Serial API)</li>
+                <li>✅ Windows, macOS, Linux con Chrome/Edge/Opera</li>
+                <li>⚠️ No funciona en iPhone/iPad (Safari)</li>
+                <li>⚠️ No funciona en Firefox</li>
+            </ul>
+            <p style="margin: 8px 0 0 0; color: #666; font-size: 12px;">
+                💡 Para usar el lector, conectalo por USB, selecciona el puerto y escanea.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================
+SCRIPTS
+============================================ -->
+<script type="importmap">
+{
+    "imports": {
+        "/static/js/lector.js": "/static/js/lector.js"
+    }
+}
+</script>
+
+<script type="module">
+    import LectorCodigoBarras from '/static/js/lector.js';
+
+    // ============================================
+    // INSTANCIA DEL LECTOR
+    // ============================================
+    const lector = new LectorCodigoBarras();
+    let ultimoCodigo = '';
+    let historial = [];
+
+    // ============================================
+    // ELEMENTOS DOM
+    // ============================================
+    const statusEl = document.getElementById('statusLector');
+    const btnConectar = document.getElementById('btnConectar');
+    const btnDesconectar = document.getElementById('btnDesconectar');
+    const barcodeDisplay = document.getElementById('barcodeDisplay');
+    const btnUsar = document.getElementById('btnUsar');
+    const historialList = document.getElementById('historialList');
+    const historialCount = document.getElementById('historialCount');
+
+    // ============================================
+    // FUNCIONES GLOBALES
+    // ============================================
+    window.conectarLector = async function() {
+        // Verificar compatibilidad
+        if (!lector.isAvailable()) {
+            alert('⚠️ Web Serial API no está disponible.\n\n' +
+                  'Usa Chrome, Edge u Opera.\n' +
+                  'No funciona en Firefox o Safari.');
+            return;
+        }
+
+        // Verificar si es iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (isIOS) {
+            alert('⚠️ En iPhone/iPad no es posible usar lectores USB.\n\n' +
+                  'Usa un computador con Chrome o Edge.');
+            return;
+        }
+
+        btnConectar.disabled = true;
+        btnConectar.textContent = '⏳ Conectando...';
+        
+        const conectado = await lector.connect();
+        
+        btnConectar.disabled = false;
+        btnConectar.textContent = '🔌 Conectar Lector';
+        
+        if (!conectado) {
+            statusEl.className = 'status-lector disconnected';
+            statusEl.innerHTML = '⚠️ No se pudo conectar';
+        }
+    };
+
+    window.desconectarLector = async function() {
+        btnDesconectar.disabled = true;
+        btnDesconectar.textContent = '⏳ Desconectando...';
+        
+        await lector.disconnect();
+        
+        btnDesconectar.disabled = false;
+        btnDesconectar.textContent = '🔌 Desconectar';
+        
+        statusEl.className = 'status-lector disconnected';
+        statusEl.innerHTML = '⚠️ Lector desconectado';
+    };
+
+    window.usarCodigo = function() {
+        if (ultimoCodigo) {
+            // Buscar en historial si ya existe
+            const existente = historial.find(h => h.code === ultimoCodigo);
+            if (existente) {
+                existente.usado = true;
+            }
+            
+            // Disparar evento para usar el código
+            const event = new CustomEvent('codigo-usado', { detail: { code: ultimoCodigo } });
+            document.dispatchEvent(event);
+            
+            // Mostrar en consola
+            console.log('✅ Código usado:', ultimoCodigo);
+            
+            // Alerta visual
+            const display = document.getElementById('barcodeDisplay');
+            const originalHTML = display.innerHTML;
+            display.innerHTML = `
+                <div style="color: #00ff66;">
+                    <span style="font-size: 32px;">✅</span>
+                    <div style="font-size: 16px; margin-top: 4px;">Código enviado</div>
+                    <div style="font-size: 12px; color: #888;">${ultimoCodigo}</div>
+                </div>
+            `;
+            setTimeout(() => {
+                display.innerHTML = originalHTML;
+            }, 1500);
+        }
+    };
+
+    window.limpiarCodigo = function() {
+        ultimoCodigo = '';
+        barcodeDisplay.className = 'barcode-display';
+        barcodeDisplay.innerHTML = `
+            <div>
+                <span class="icon">📷</span>
+                <div class="placeholder">Escanea un código de barras</div>
+            </div>
+        `;
+        btnUsar.disabled = true;
+    };
+
+    window.limpiarHistorial = function() {
+        historial = [];
+        actualizarHistorial();
+    };
+
+    // ============================================
+    // ACTUALIZAR HISTORIAL
+    // ============================================
+    function actualizarHistorial() {
+        historialCount.textContent = `(${historial.length})`;
+        
+        if (historial.length === 0) {
+            historialList.innerHTML = `
+                <div style="text-align: center; color: #666; padding: 20px 0; font-size: 14px;">
+                    No hay códigos escaneados aún
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        // Mostrar en orden inverso (más reciente primero)
+        const reversed = [...historial].reverse();
+        for (const item of reversed) {
+            const usado = item.usado ? '✅' : '⏳';
+            html += `
+                <div class="barcode-item">
+                    <span class="code">${item.code}</span>
+                    <span class="time">${item.time} ${usado}</span>
+                    <button class="btn-use" onclick="usarCodigoDesdeHistorial('${item.code}')">
+                        Usar
+                    </button>
+                </div>
+            `;
+        }
+        historialList.innerHTML = html;
+    }
+
+    // ============================================
+    // USAR CÓDIGO DESDE HISTORIAL
+    // ============================================
+    window.usarCodigoDesdeHistorial = function(code) {
+        ultimoCodigo = code;
+        barcodeDisplay.className = 'barcode-display has-value';
+        barcodeDisplay.innerHTML = `
+            <div style="color: #4fc3f7; font-weight: 700; font-size: 32px; word-break: break-all;">
+                ${code}
+            </div>
+        `;
+        btnUsar.disabled = false;
+        
+        // Marcar como usado en historial
+        const item = historial.find(h => h.code === code);
+        if (item) {
+            item.usado = true;
+            actualizarHistorial();
+        }
+    };
+
+    // ============================================
+    // EVENTOS DEL LECTOR
+    // ============================================
+    lector.onConnected((port) => {
+        console.log('✅ Lector conectado:', port);
+        statusEl.className = 'status-lector connected';
+        statusEl.innerHTML = '✅ Lector conectado - Listo para escanear';
+        btnConectar.disabled = true;
+        btnDesconectar.disabled = false;
+    });
+
+    lector.onDisconnected(() => {
+        console.log('⚠️ Lector desconectado');
+        statusEl.className = 'status-lector disconnected';
+        statusEl.innerHTML = '⚠️ Lector desconectado';
+        btnConectar.disabled = false;
+        btnDesconectar.disabled = true;
+    });
+
+    lector.onBarcodeRead((barcode) => {
+        console.log('📦 Código escaneado:', barcode);
+        
+        // Sonido de confirmación
+        try {
+            const audio = new Audio('/static/sounds/beep.mp3');
+            audio.play().catch(() => {});
+        } catch (e) {}
+        
+        // Mostrar en pantalla
+        ultimoCodigo = barcode;
+        barcodeDisplay.className = 'barcode-display has-value';
+        barcodeDisplay.innerHTML = `
+            <div style="color: #4fc3f7; font-weight: 700; font-size: 32px; word-break: break-all;">
+                ${barcode}
+            </div>
+        `;
+        btnUsar.disabled = false;
+        
+        // Agregar al historial
+        const ahora = new Date();
+        const timeStr = ahora.toLocaleTimeString('es-CL');
+        historial.push({
+            code: barcode,
+            time: timeStr,
+            usado: false
+        });
+        actualizarHistorial();
+        
+        // Cambiar estado a "escanenado"
+        statusEl.className = 'status-lector scanning';
+        statusEl.innerHTML = `📷 Escaneando... ${barcode}`;
+        setTimeout(() => {
+            statusEl.className = 'status-lector connected';
+            statusEl.innerHTML = '✅ Lector conectado - Listo para escanear';
+        }, 1000);
+    });
+
+    // ============================================
+    // INICIALIZAR
+    // ============================================
+    console.log('✅ Lector de código de barras listo');
+</script>
+
+{% endblock %}
