@@ -1757,6 +1757,15 @@ def balance_unificado():
     
     return render_template("balance_unificado.html", **data)
 # ============================
+# LECTOR DE CÓDIGO DE BARRAS
+# ============================
+@app.route('/lector')
+@login_required
+@role_required(['admin', 'operador'])
+def lector():
+    """Página para usar el lector de código de barras"""
+    return render_template("lector.html")
+# ============================
 # RUTAS ESTÁTICAS
 # ============================
 @app.route('/static/<path:path>')
