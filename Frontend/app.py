@@ -208,7 +208,6 @@ def generar_firma_pdf(id_reg):
         str(id_reg).encode(),
         hashlib.sha256
     ).hexdigest()[:16]
-
 # ============================
 # CONTEXT PROCESSOR
 # ============================
@@ -261,13 +260,47 @@ def inject_globals():
     
     vapid_public_key = os.environ.get("VAPID_PUBLIC_KEY", "")
     
+    # ============================================
+    # ✅ CONFIGURACIÓN DE LOGS
+    # ============================================
+    LOG_DIR = '/tmp/logs' if os.environ.get('VERCEL_ENV') == 'production' or os.environ.get('VERCEL') else 'logs'
+    LOG_FILE = os.path.join(LOG_DIR, 'dixon_app.log') if LOG_DIR else 'No disponible'
+    
+    # Verificar si el archivo de logs existe y obtener su tamaño
+    log_size = 0
+    log_exists = False
+    if LOG_DIR and os.path.exists(LOG_FILE):
+        try:
+            log_size = os.path.getsize(LOG_FILE)
+            log_exists = True
+        except:
+            pass
+    
+    # Formatear tamaño del archivo
+    def format_size(bytes):
+        if bytes < 1024:
+            return f"{bytes} B"
+        elif bytes < 1024 * 1024:
+            return f"{bytes / 1024:.1f} KB"
+        elif bytes < 1024 * 1024 * 1024:
+            return f"{bytes / (1024 * 1024):.1f} MB"
+        else:
+            return f"{bytes / (1024 * 1024 * 1024):.1f} GB"
+    
+    log_size_formatted = format_size(log_size) if log_exists else "0 B"
+    
     return dict(
         backend_url=BACKEND_URL,
         fecha_espanol=fecha_espanol,
         fecha_corta_espanol=fecha_corta_espanol,
         flotas_pendientes_count=flotas_pendientes_count,
         deudores_count=deudores_count,
-        vapid_public_key=vapid_public_key
+        vapid_public_key=vapid_public_key,
+        # ✅ NUEVAS VARIABLES PARA LOGS
+        LOG_FILE=LOG_FILE,
+        LOG_DIR=LOG_DIR,
+        LOG_SIZE=log_size_formatted,
+        LOG_EXISTS=log_exists
     )
 
 # ============================
