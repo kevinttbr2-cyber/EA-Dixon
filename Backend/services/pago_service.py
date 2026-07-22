@@ -209,6 +209,42 @@ class PagoService:
         except Exception as e:
             logger.error(f"Error obtener balance ventas: {e}")
             return {'ventas': [], 'gastos': [], 'total_gastos': 0}
+    @staticmethod
+def registrar_descarga_pdf(id_reg, usuario, tipo_usuario="usuario", ip=None):
+    """Registra la descarga de un PDF"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Obtener datos del pago
+        cur.execute("SELECT nombre, monto FROM pagos WHERE id = %s", (id_reg,))
+        pago = cur.fetchone()
+        
+        if not pago:
+            return False
+        
+        # Insertar registro de auditoría de descarga
+        cur.execute("""
+            INSERT INTO auditoria_descargas 
+            (id_registro, nombre_cliente, monto, usuario_descarga, tipo_usuario, ip, fecha_descarga)
+            VALUES (%s, %s, %s, %s, %s, %s, NOW() AT TIME ZONE 'America/Santiago')
+        """, (
+            id_reg,
+            pago[0],
+            float(pago[1]),
+            usuario,
+            tipo_usuario,
+            ip
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error registrando descarga PDF: {e}")
+        return False
     
     # ============================================
     # FUNCIONES PARA FLOTAS
