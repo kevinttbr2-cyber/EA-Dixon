@@ -1179,17 +1179,11 @@ def descargar_pdf(id_reg):
     """Descarga el PDF con auditoría"""
     try:
         # ✅ OBTENER DATOS CORRECTOS DE LA SESIÓN
-        usuario = session.get('nombre_completo', session.get('usuario'))
+        usuario = session.get('nombre_completo') or session.get('usuario') or 'Sistema'
         tipo_usuario = session.get('rol', 'usuario')
         
-        # ✅ SI EL USUARIO ES 'cliente', usar el nombre del cliente
-        if tipo_usuario == 'cliente':
-            # Obtener el nombre del cliente desde el registro
-            resp = requests.get(f"{BACKEND_URL}/api/registro/{id_reg}", timeout=5)
-            if resp.status_code == 200:
-                registro = resp.json()
-                cliente_nombre = registro.get('nombre', 'Cliente')
-                usuario = cliente_nombre
+        # ✅ LOG PARA DEPURACIÓN
+        logger.info(f"📄 Descargando PDF ID {id_reg} - Usuario: {usuario}, Rol: {tipo_usuario}")
         
         # Generar firma
         firma = generar_firma_pdf(id_reg)
@@ -1203,7 +1197,6 @@ def descargar_pdf(id_reg):
         logger.error(f"Error en descarga: {e}")
         flash('❌ Error al descargar PDF', 'error')
         return redirect("/estado")
-        
 @app.route("/exportar_flota_pdf/<flota>", methods=["GET", "POST"])
 @login_required
 @role_required(['admin'])
