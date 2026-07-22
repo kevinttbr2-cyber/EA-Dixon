@@ -2271,6 +2271,65 @@ def enviar_notificacion_desde_frontend():
     except Exception as e:
         logger.error(f"Error en enviar_notificacion: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+# ============================
+# DESCARGAR PDF CON AUDITORÍA
+# ============================
+@pago_bp.route('/pdf/<int:id_reg>/<firma>', methods=['GET'])
+def descargar_pdf(id_reg, firma):
+    try:
+        # Verificar firma
+        if not PDFService.verificar_firma(id_reg, firma):
+            return jsonify({"error": "Firma inválida"}), 403
+        
+        # Obtener el pago
+        conn, cur = get_cursor()
+        cur.execute("SELECT nombre, monto FROM pagos WHERE id = %s", (id_reg,))
+        pago = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if not pago:
+            return jsonify({"error": "Registro no encontrado"}), 404
+        
+        # Registrar descarga en auditoría
+        usuario = request.args.get('usuario', 'Sistema')
+        tipo_usuario = request.args.get('tipo_usuario', 'usuario')
+        ip = request.remote_addr
+        
+        # Guardar en auditoría
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO auditoria_descargas 
+            (id_registro, nombre_cliente, monto, usuario_descarga, tipo_usuario, ip, fecha_descarga)
+            VALUES (%s, %s, %s, %s, %s, %s, NOW() AT TIME ZONE 'America/Santiago')
+        """, (id_reg, pago[0], float(pago[1]), usuario, tipo_usuario, ip))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # ✅ ENVIAR NOTIFICACIÓN PUSH
+        enviar_notificacion_push(
+            titulo="📄 PDF Descargado",
+            mensaje=f"📄 {pago[0]}\n💰 ${float(pago[1]):,.0f}\n👤 Descargado por: {usuario}\n📌 Tipo: {tipo_usuario}\n📅 {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+            url=f"/auditoria_descargas",
+            id=id_reg
+        )
+        
+        # Generar PDF
+        pdf_buffer = PDFService.generar_pdf(id_reg)
+        if pdf_buffer:
+            return send_file(
+                io.BytesIO(pdf_buffer),
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=f'pago_{id_reg}.pdf'
+            )
+        return jsonify({"error": "Error generando PDF"}), 500
+        
+    except Exception as e:
+        logger.error(f"Error descargando PDF: {e}")
+        return jsonify({"error": str(e)}), 500
 
 # ============================
 # FIN DEL ARCHIVO - NO HAY CÓDIGO FUERA DE FUNCIONES
