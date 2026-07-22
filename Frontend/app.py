@@ -1348,7 +1348,7 @@ def dashboard():
 # ============================
 @app.route('/repuestos')
 @login_required
-@role_required(['admin', 'operador'])
+@role_required(['admin'])
 def repuestos():
     try:
         resp = requests.get(f"{BACKEND_URL}/api/repuestos", timeout=10)
