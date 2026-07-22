@@ -491,6 +491,23 @@ def pagar(id_reg):
         logger.error(f"⚠️ Error al obtener registro ID {id_reg}: {str(e)}")
         return "Error de conexión", 500
     
+    # ============================================
+    # ✅ OBTENER LISTA DE TÉCNICOS PARA EL DROPDOWN
+    # ============================================
+    tecnicos = []
+    try:
+        resp_tecnicos = requests.get(f"{BACKEND_URL}/api/usuarios", timeout=5)
+        if resp_tecnicos.status_code == 200:
+            usuarios = resp_tecnicos.json()
+            # Filtrar solo técnicos (roles: admin, operador) con nombre_completo
+            tecnicos = [
+                u for u in usuarios 
+                if u.get('rol') in ['admin', 'operador'] and u.get('nombre_completo')
+            ]
+            logger.info(f"👨‍🔧 Técnicos obtenidos: {len(tecnicos)}")
+    except Exception as e:
+        logger.error(f"⚠️ Error al obtener técnicos: {str(e)}")
+    
     if request.method == 'POST':
         monto = float(request.form.get('monto', 0))
         forma_pago = sanitizar_input(request.form.get('forma_pago', 'efectivo').strip())
@@ -500,12 +517,17 @@ def pagar(id_reg):
         resultado = sanitizar_input(request.form.get('resultado', 'reparado').strip())
         tiempo_estimado = sanitizar_input(request.form.get('tiempo_estimado', '00:00:00').strip())
         
+        # ✅ OBTENER EL TÉCNICO DEL FORMULARIO
+        atendido_por = sanitizar_input(request.form.get('atendido_por', '').strip())
+        if not atendido_por:
+            atendido_por = session.get('nombre_completo', session.get('usuario'))
+        
         if monto <= 0:
             logger.warning(f"⚠️ Intento de pago con monto 0 o negativo ID {id_reg}")
             flash('⚠️ El monto debe ser mayor a 0', 'error')
-            return render_template("pagar.html", id=id_reg, registro=registro)
+            return render_template("pagar.html", id=id_reg, registro=registro, tecnicos=tecnicos)
         
-        logger.info(f"💳 Usuario '{usuario}' procesando pago ID {id_reg}: monto ${monto}, forma: {forma_pago}")
+        logger.info(f"💳 Usuario '{usuario}' procesando pago ID {id_reg}: monto ${monto}, forma: {forma_pago}, atendido: {atendido_por}")
         
         data = {
             'monto': monto,
@@ -514,7 +536,7 @@ def pagar(id_reg):
             'reparacion': reparacion,
             'resultado': resultado,
             'tiempo_estimado': tiempo_estimado,
-            'atendido_por': session.get('nombre_completo', session.get('usuario')),
+            'atendido_por': atendido_por,  # ✅ ENVIAR EL TÉCNICO SELECCIONADO
             'forma_pago': forma_pago
         }
         
@@ -525,13 +547,17 @@ def pagar(id_reg):
                 return redirect(f"/pago_exitoso/{id_reg}")
             logger.error(f"❌ Error en pago ID {id_reg}: {resp.text}")
             flash('❌ Error al procesar el pago', 'error')
-            return render_template("pagar.html", id=id_reg, registro=registro)
+            return render_template("pagar.html", id=id_reg, registro=registro, tecnicos=tecnicos)
         except Exception as e:
             logger.error(f"⚠️ Error en pago ID {id_reg}: {str(e)}")
             flash('⚠️ Error de conexión', 'error')
-            return render_template("pagar.html", id=id_reg, registro=registro)
+            return render_template("pagar.html", id=id_reg, registro=registro, tecnicos=tecnicos)
     
-    return render_template("pagar.html", id=id_reg, registro=registro)
+    # ✅ ENVIAR TÉCNICOS AL TEMPLATE EN GET Y POST
+    return render_template("pagar.html", 
+                          id=id_reg, 
+                          registro=registro, 
+                          tecnicos=tecnicos)
 
 @app.route('/pago_exitoso/<int:id_reg>')
 @login_required
