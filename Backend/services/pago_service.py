@@ -44,31 +44,42 @@ class PagoService:
             return None
     
     @staticmethod
-    def procesar_pago(id_reg, data):
-        try:
-            pago = PagoRepository.obtener_por_id(id_reg)
-            if not pago:
-                return None
-            
-            pago.monto = data.get('monto', 0)
-            pago.estado = 'pagado'
-            pago.estado_pago = 'pagado'
-            pago.observaciones_pago = data.get('observaciones_pago', '')
-            pago.hora_pago = get_hora_chile().strftime("%H:%M:%S")
-            pago.atendido_por = data.get('atendido_por', 'Técnico')
-            pago.diagnostico = data.get('diagnostico', '')
-            pago.reparacion = data.get('reparacion', 'Reparación realizada')
-            pago.resultado = data.get('resultado', 'reparado')
-            pago.tiempo_estimado = data.get('tiempo_estimado', '00:00:00')
-            pago.forma_pago = data.get('forma_pago', 'efectivo')
-            pago.fecha_pago_real = get_fecha_chile()
-            
-            if PagoRepository.actualizar(id_reg, pago):
-                return pago
+def procesar_pago(id_reg, data):
+    try:
+        pago = PagoRepository.obtener_por_id(id_reg)
+        if not pago:
+            logger.error(f"❌ Pago ID {id_reg} no encontrado")
             return None
-        except Exception as e:
-            logger.error(f"Error en procesar_pago: {e}")
-            return None
+        
+        # Asignar valores
+        pago.monto = data.get('monto', 0)
+        pago.estado = 'pagado'
+        pago.estado_pago = 'pagado'
+        pago.observaciones_pago = data.get('observaciones_pago', '')
+        pago.hora_pago = get_hora_chile().strftime("%H:%M:%S")
+        pago.atendido_por = data.get('atendido_por', 'Técnico')
+        pago.diagnostico = data.get('diagnostico', '')
+        pago.reparacion = data.get('reparacion', 'Reparación realizada')
+        pago.resultado = data.get('resultado', 'reparado')
+        pago.tiempo_estimado = data.get('tiempo_estimado', '00:00:00')
+        pago.forma_pago = data.get('forma_pago', 'efectivo')
+        pago.fecha_pago = get_fecha_chile()  # ✅ Cambiar a fecha_pago (sin _real)
+        
+        # Log para depuración
+        logger.info(f"📝 Procesando pago ID {id_reg}: Monto=${pago.monto}, Atendido por={pago.atendido_por}")
+        
+        if PagoRepository.actualizar(id_reg, pago):
+            logger.info(f"✅ Pago ID {id_reg} actualizado correctamente")
+            return pago
+        
+        logger.error(f"❌ Error al actualizar pago ID {id_reg} en el repositorio")
+        return None
+        
+    except Exception as e:
+        logger.error(f"❌ Error en procesar_pago ID {id_reg}: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
     
     @staticmethod
     def eliminar_pago(id_reg):
