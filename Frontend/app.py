@@ -1139,6 +1139,33 @@ def auditoria_descargas():
         logger.error(f"Error en /auditoria_descargas: {e}")
         historial = []
     return render_template("auditoria_descargas.html", historial=historial)
+@app.route('/descargar_pdf/<int:id_reg>')
+@login_required
+def descargar_pdf(id_reg):
+    """Descarga el PDF con auditoría"""
+    try:
+        usuario = session.get('nombre_completo', session.get('usuario'))
+        tipo_usuario = session.get('rol', 'usuario')
+        
+        # Generar firma
+        firma = generar_firma_pdf(id_reg)
+        
+        # Redirigir al backend con los datos del usuario
+        url_pdf = f"{BACKEND_URL}/api/pdf/{id_reg}/{firma}?usuario={usuario}&tipo_usuario={tipo_usuario}"
+        
+        # Registrar en el frontend también
+        enviar_notificacion_push(
+            titulo="📄 PDF Descargado desde Frontend",
+            mensaje=f"👤 {usuario}\n📌 {tipo_usuario}\n📅 {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+            url="/auditoria_descargas"
+        )
+        
+        return redirect(url_pdf)
+        
+    except Exception as e:
+        logger.error(f"Error en descarga: {e}")
+        flash('❌ Error al descargar PDF', 'error')
+        return redirect("/estado")
 
 @app.route("/exportar_flota_pdf/<flota>", methods=["GET", "POST"])
 @login_required
