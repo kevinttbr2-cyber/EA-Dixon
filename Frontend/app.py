@@ -1611,7 +1611,7 @@ def formato_fecha_espanol(fecha):
 app.jinja_env.filters['fecha_espanol'] = formato_fecha_espanol
 
 # ============================
-# VER LOGS
+# VER LOGS (CON HISTORIAL COMPLETO)
 # ============================
 @app.route('/ver_logs')
 @login_required
@@ -1620,6 +1620,7 @@ def ver_logs():
     try:
         log_file = os.path.join(LOG_DIR, 'dixon_app.log')
         
+        # ✅ LIMPIAR LOGS
         if request.args.get('limpiar') == 'si':
             if os.path.exists(log_file):
                 with open(log_file, 'w') as f:
@@ -1628,15 +1629,83 @@ def ver_logs():
                 flash('✅ Logs limpiados correctamente', 'success')
                 return redirect('/ver_logs')
         
+        # ✅ OBTENER PARÁMETROS DE FILTRO
+        fecha = request.args.get('fecha')
+        nivel = request.args.get('nivel')
+        buscar = request.args.get('buscar', '').strip()
+        limite = int(request.args.get('limite', 2000))
+        
+        # ✅ LEER TODOS LOS LOGS (sin límite)
         if not os.path.exists(log_file):
             logs = "No hay logs disponibles"
         else:
-            with open(log_file, 'r') as f:
-                lines = f.readlines()
-                ultimas = lines[-200:] if len(lines) > 200 else lines
-                logs = ''.join(ultimas)
+            with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                all_lines = f.readlines()
+            
+            # ✅ APLICAR FILTROS
+            filtered_lines = all_lines
+            
+            # 🔥 FILTRAR POR FECHA
+            if fecha:
+                filtered_lines = [line for line in filtered_lines if fecha in line]
+            
+            # 🔥 FILTRAR POR NIVEL (INFO, ERROR, WARNING, DEBUG)
+            if nivel and nivel != 'todos':
+                filtered_lines = [line for line in filtered_lines if f' - {nivel.upper()} - ' in line]
+            
+            # 🔥 FILTRAR POR BÚSQUEDA
+            if buscar:
+                filtered_lines = [line for line in filtered_lines if buscar.lower() in line.lower()]
+            
+            # ✅ SI HAY MUCHAS LÍNEAS, MOSTRAR LAS MÁS RECIENTES (pero con límite configurable)
+            if len(filtered_lines) > limite:
+                logs = ''.join(filtered_lines[-limite:])
+            else:
+                logs = ''.join(filtered_lines)
         
-        return render_template("ver_logs.html", logs=logs)
+        # ✅ OBTENER ESTADÍSTICAS DE LOGS
+        total_lines = 0
+        total_errors = 0
+        total_warnings = 0
+        total_info = 0
+        
+        if os.path.exists(log_file):
+            with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                all_lines = f.readlines()
+                total_lines = len(all_lines)
+                total_errors = len([l for l in all_lines if ' - ERROR - ' in l])
+                total_warnings = len([l for l in all_lines if ' - WARNING - ' in l])
+                total_info = len([l for l in all_lines if ' - INFO - ' in l])
+        
+        # ✅ OBTENER FECHAS DISPONIBLES (para el filtro)
+        fechas_disponibles = []
+        if os.path.exists(log_file):
+            with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    if line and len(line) > 10:
+                        # Extraer fecha del formato: "2026-07-22 22:56:29 - dixon_app - INFO - ..."
+                        try:
+                            fecha_str = line.split(' - ')[0] if ' - ' in line else ''
+                            if fecha_str and fecha_str not in fechas_disponibles:
+                                fechas_disponibles.append(fecha_str)
+                        except:
+                            pass
+            fechas_disponibles.sort(reverse=True)
+        
+        return render_template(
+            "ver_logs.html",
+            logs=logs,
+            total_lines=total_lines,
+            total_errors=total_errors,
+            total_warnings=total_warnings,
+            total_info=total_info,
+            fechas_disponibles=fechas_disponibles[:30],  # Últimas 30 fechas
+            fecha_actual=fecha,
+            nivel_actual=nivel,
+            busqueda_actual=buscar,
+            limite=limite
+        )
+        
     except Exception as e:
         logger.error(f"Error al leer logs: {str(e)}")
         return render_template("ver_logs.html", logs=f"Error al leer logs: {str(e)}")
