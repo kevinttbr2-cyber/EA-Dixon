@@ -2191,6 +2191,164 @@ document.getElementById('formGasto').addEventListener('submit', function(e) {
         btn.innerHTML = '<span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">add</span> Registrar Gasto';
     });
 });
+// ============================================
+// MANEJO DE PDF417 DEL SII EN GASTOS
+// ============================================
+
+function conectarLectorUSBGastos() {
+    if (lectorUSB && lectorUSBConectado) {
+        desconectarLectorUSBGastos();
+        return;
+    }
+
+    lectorUSB = new LectorUSB();
+    
+    lectorUSB.onConnect = function() {
+        lectorUSBConectado = true;
+        const btn = document.getElementById('btnLectorUSBGastos');
+        if (btn) {
+            btn.textContent = '🔌 Desconectar Lector USB';
+            btn.style.background = '#ff6b6b';
+            btn.style.color = '#fff';
+        }
+        document.getElementById('statusLectorUSBGastos').textContent = '✅ Lector USB conectado (PDF417 listo)';
+        document.getElementById('statusLectorUSBGastos').style.color = '#00ff66';
+    };
+
+    lectorUSB.onDisconnect = function() {
+        lectorUSBConectado = false;
+        const btn = document.getElementById('btnLectorUSBGastos');
+        if (btn) {
+            btn.textContent = '🔌 Conectar Lector USB';
+            btn.style.background = '#ffcc00';
+            btn.style.color = '#000';
+        }
+        document.getElementById('statusLectorUSBGastos').textContent = '⚠️ Lector USB desconectado';
+        document.getElementById('statusLectorUSBGastos').style.color = '#ff6b6b';
+    };
+
+    // ============================================
+    // EVENTO: Código de barras normal
+    // ============================================
+    lectorUSB.onBarcode = function(barcode) {
+        console.log('📦 Código escaneado por USB:', barcode);
+        
+        const folioInput = document.getElementById('folio');
+        if (folioInput && !folioInput.value) {
+            folioInput.value = barcode;
+        }
+        
+        const descInput = document.getElementById('descripcion');
+        if (descInput) {
+            descInput.value = `Código escaneado: ${barcode}`;
+        }
+    };
+
+    // ============================================
+    // EVENTO: PDF417 del SII (NUEVO)
+    // ============================================
+    lectorUSB.onPDF417 = function(datosSII) {
+        console.log('📄 PDF417 del SII detectado:', datosSII);
+        
+        // Verificar si tenemos datos válidos
+        if (!datosSII.es_valido) {
+            alert('⚠️ El PDF417 escaneado no contiene datos válidos del SII');
+            return;
+        }
+        
+        // Mostrar en modal los datos del documento
+        mostrarDatosPDF417(datosSII);
+        
+        // Llenar automáticamente los campos del gasto
+        const folioInput = document.getElementById('folio');
+        if (folioInput) {
+            folioInput.value = datosSII.folio || '';
+        }
+        
+        const descInput = document.getElementById('descripcion');
+        if (descInput) {
+            let desc = `Documento SII: `;
+            if (datosSII.tipo_documento) desc += `${datosSII.tipo_documento}`;
+            if (datosSII.rut_emisor) desc += ` - Emisor: ${datosSII.rut_emisor}`;
+            descInput.value = desc;
+        }
+        
+        const proveedorInput = document.getElementById('proveedor');
+        if (proveedorInput && datosSII.razon_social_emisor) {
+            proveedorInput.value = datosSII.razon_social_emisor;
+        }
+        
+        const montoInput = document.getElementById('monto');
+        if (montoInput && datosSII.monto > 0) {
+            montoInput.value = datosSII.monto;
+        }
+        
+        // Preguntar si quiere registrar el gasto automáticamente
+        if (confirm(
+            `📄 Documento SII detectado:\n\n` +
+            `🏢 Emisor: ${datosSII.rut_emisor || 'N/A'}\n` +
+            `📄 Folio: ${datosSII.folio || 'N/A'}\n` +
+            `📅 Fecha: ${datosSII.fecha || 'N/A'}\n` +
+            `💰 Monto: $${(datosSII.monto || 0).toLocaleString()}\n\n` +
+            `¿Registrar este documento como gasto?`
+        )) {
+            const tipoSelect = document.getElementById('tipo_gasto');
+            if (tipoSelect && tipoSelect.value === 'general') {
+                tipoSelect.value = 'trabajo'; // Por defecto, cambiar según necesidad
+            }
+            
+            // Disparar submit del formulario
+            const form = document.getElementById('formGasto');
+            if (form) {
+                form.dispatchEvent(new Event('submit'));
+            }
+        }
+    };
+
+    lectorUSB.connect();
+}
+
+// ============================================
+// MOSTRAR DATOS DEL PDF417 EN MODAL
+// ============================================
+function mostrarDatosPDF417(datosSII) {
+    // Reutilizar el modal de factura existente
+    const modal = document.getElementById('modalFactura');
+    if (!modal) {
+        // Si no existe, crear uno simple
+        mostrarAlertaPDF417(datosSII);
+        return;
+    }
+    
+    // Llenar el modal con los datos del PDF417
+    document.getElementById('facturaEmisor').textContent = datosSII.rut_emisor || 'No disponible';
+    document.getElementById('facturaReceptor').textContent = datosSII.rut_receptor || 'No disponible';
+    document.getElementById('facturaFolio').textContent = datosSII.folio || 'N/A';
+    document.getElementById('facturaFecha').textContent = datosSII.fecha || 'No disponible';
+    document.getElementById('facturaTotal').textContent = '$' + (datosSII.monto || 0).toLocaleString('es-CL');
+    document.getElementById('facturaTipoDocumento').textContent = '📄 Tipo: ' + (datosSII.tipo_documento || 'PDF417 SII');
+    
+    // Si hay código de autorización, mostrarlo
+    const codAut = document.getElementById('facturaCodAut') || document.createElement('span');
+    if (datosSII.codigo_autorizacion) {
+        codAut.textContent = `🔐 Código Autorización: ${datosSII.codigo_autorizacion}`;
+    }
+    
+    modal.classList.add('active');
+}
+
+function mostrarAlertaPDF417(datosSII) {
+    const mensaje = 
+        `📄 DOCUMENTO SII DETECTADO\n\n` +
+        `📌 Tipo: ${datosSII.tipo_documento || 'Factura Electrónica'}\n` +
+        `🏢 Emisor: ${datosSII.rut_emisor || 'N/A'}\n` +
+        `📄 Folio: ${datosSII.folio || 'N/A'}\n` +
+        `📅 Fecha: ${datosSII.fecha || 'N/A'}\n` +
+        `💰 Monto: $${(datosSII.monto || 0).toLocaleString()}\n` +
+        `🔐 Código Autorización: ${datosSII.codigo_autorizacion || 'N/A'}`;
+    
+    alert(mensaje);
+}
 
 // ============================================
 // INICIALIZAR
