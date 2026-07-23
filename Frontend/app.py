@@ -1166,8 +1166,12 @@ def eliminar_usuario(id_usuario):
 @role_required(['admin'])
 def auditoria_descargas():
     try:
-        resp = requests.get(f"{BACKEND_URL}/api/auditoria", timeout=10)
-        historial = resp.json() if resp.status_code == 200 else []
+        # ✅ CORREGIDO
+        resp = requests.get(f"{BACKEND_URL}/api/auditoria_descargas", timeout=10)
+        if resp.status_code == 200:
+            historial = resp.json()
+        else:
+            historial = []
     except Exception as e:
         logger.error(f"Error en /auditoria_descargas: {e}")
         historial = []
