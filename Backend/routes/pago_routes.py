@@ -286,6 +286,42 @@ def agregar_pago():
     except Exception as e:
         logger.error(f"Error en agregar_pago: {e}")
         return jsonify({"error": str(e)}), 500
+# ============================
+# REGISTRAR DESCARGA EN AUDITORÍA (DESDE FRONTEND)
+# ============================
+@pago_bp.route('/auditoria_descargas', methods=['POST'])
+def registrar_auditoria_descarga():
+    """Registra una descarga en la auditoría (desde el frontend)"""
+    try:
+        data = request.json
+        
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO auditoria_descargas 
+            (id_registro, nombre_cliente, monto, usuario_descarga, tipo_usuario, ip, user_agent, tipo_documento, descripcion, fecha_descarga)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW() AT TIME ZONE 'America/Santiago')
+        """, (
+            data.get('id_registro'),
+            data.get('nombre_cliente', 'N/A'),
+            data.get('monto', 0),
+            data.get('usuario_descarga', 'Sistema'),
+            data.get('tipo_usuario', 'usuario'),
+            data.get('ip'),
+            data.get('user_agent'),
+            data.get('tipo_documento', 'pdf'),
+            data.get('descripcion', '')
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        logger.info(f"✅ Auditoría registrada: {data.get('tipo_documento')} - {data.get('nombre_cliente')}")
+        return jsonify({"success": True})
+        
+    except Exception as e:
+        logger.error(f"Error registrando auditoría: {e}")
+        return jsonify({"error": str(e)}), 500
 
 # ============================
 # 7. PROCESAR PAGO (CON VALIDACIÓN)
