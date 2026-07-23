@@ -22,14 +22,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "permissions": ["usb"],
-  "usb": {
-    "filters": [
-      { "vendorId": 0x6868, "productId": 0x0200 },
-      { "vendorId": 0x6868 },
-      { "vendorId": 0x0483 },
-      { "vendorId": 0x1A86, "productId": 0x7584 }
-    ]
-  }
+  ]
 }
