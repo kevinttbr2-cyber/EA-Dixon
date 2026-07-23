@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="base-container" style="text-align: center; padding: 60px 20px;">
+    <span style="font-size: 64px; display: block; margin-bottom: 20px;">📡</span>
+    <h2 style="color: #ffcc00;">Sin conexión a Internet</h2>
+    <p style="color: #888; font-size: 16px; margin: 20px 0;">
+        Parece que no tienes conexión a Internet.<br>
+        Algunas funciones pueden no estar disponibles.
+    </p>
+    <button onclick="location.reload()" style="
+        background: #00ff66;
+        color: #000;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 30px;
+        font-weight: 700;
+        font-size: 16px;
+        cursor: pointer;
+    ">
+        🔄 Reintentar
+    </button>
+</div>
+{% endblock %}
