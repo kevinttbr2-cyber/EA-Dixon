@@ -5,7 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
     <title>Dixon Electricidad Automotriz</title>
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#2ecc71">
+    
+    <!-- ✅ METAS PARA PWA (SIN BORDES BLANCOS) -->
+    <meta name="theme-color" content="#121214">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dixon">
+    <meta name="mobile-web-app-capable" content="yes">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -52,6 +58,15 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+
+        /* ✅ ELIMINAR BORDES BLANCOS EN PWA */
+        html, body {
+            background: #121214 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 100vh !important;
+            min-height: 100dvh !important; /* Para dispositivos modernos */
         }
 
         body {
@@ -465,6 +480,36 @@
             }
             .drawer {
                 width: 100%;
+            }
+        }
+
+        /* ============================================
+           ✅ ELIMINAR BORDES BLANCOS EN PWA (MODO STANDALONE)
+           ============================================ */
+        @media (display-mode: standalone) {
+            body {
+                padding-top: 0 !important;
+                background: #121214 !important;
+            }
+            
+            .base-container {
+                margin: 0 auto 20px !important;
+                border-radius: 0 !important;
+                border: none !important;
+                max-width: 100% !important;
+                padding: 16px 20px !important;
+                background: #181a1f !important;
+            }
+            
+            /* Ajustar navbar en modo standalone */
+            .navbar-custom {
+                border-radius: 0 !important;
+            }
+            
+            /* Eliminar padding extra del body en iOS */
+            body {
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
             }
         }
     </style>
