@@ -1920,6 +1920,12 @@ def lector():
     """Página para usar el lector de código de barras"""
     return render_template("lector.html")
 # ============================
+# OFFLINE
+# ============================
+@app.route('/offline')
+def offline():
+    return render_template("offline.html"), 503
+# ============================
 # RUTAS ESTÁTICAS
 # ============================
 @app.route('/static/<path:path>')
