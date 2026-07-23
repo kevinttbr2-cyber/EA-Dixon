@@ -23,13 +23,6 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/static/images/screenshot-mobile.png",
-      "sizes": "1080x1920",
-      "type": "image/png"
-    }
-  ],
   "permissions": [
     "usb"
   ],
