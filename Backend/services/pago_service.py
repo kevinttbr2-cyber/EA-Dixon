@@ -267,10 +267,29 @@ class PagoService:
     # FUNCIONES PARA FLOTAS
     # ============================================
     
-    @staticmethod
-    def obtener_flotas_pendientes():
-        """Obtiene flotas pendientes de pago"""
-        return PagoRepository.obtener_flotas_pendientes()
+    # Backend/services/pago_service.py
+
+@staticmethod
+def obtener_flotas_pendientes_count():
+    """Obtiene el número de flotas pendientes de pago"""
+    try:
+        from database import get_cursor
+        conn, cur = get_cursor()
+        cur.execute("""
+            SELECT COUNT(DISTINCT flota) as count
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pendiente'
+            AND flota IS NOT NULL 
+            AND flota != ''
+        """)
+        count = cur.fetchone()[0] or 0
+        cur.close()
+        conn.close()
+        return count
+    except Exception as e:
+        logger.error(f"Error obteniendo flotas pendientes count: {e}")
+        return 0
     
     @staticmethod
     def obtener_flotas_pendientes_count():
