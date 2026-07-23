@@ -17,6 +17,9 @@ import logging
 logger = logging.getLogger(__name__)
 flota_bp = Blueprint('flota', __name__, url_prefix='/api')
 
+# ============================================
+# OBTENER FLOTAS
+# ============================================
 @flota_bp.route('/flotas', methods=['GET'])
 def get_flotas():
     try:
@@ -26,6 +29,39 @@ def get_flotas():
         logger.error(f"Error en get_flotas: {e}")
         return jsonify({"error": str(e)}), 500
 
+# ============================================
+# ✅ NUEVO: CONTADOR DE FLOTAS PENDIENTES
+# ============================================
+@flota_bp.route('/flotas_pendientes_count', methods=['GET'])
+def get_flotas_pendientes_count():
+    """Obtiene el número de flotas pendientes de pago"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT COUNT(DISTINCT flota) as count
+            FROM pagos 
+            WHERE estado = 'pagado' 
+            AND estado_pago = 'pendiente'
+            AND flota IS NOT NULL 
+            AND flota != ''
+        """)
+        
+        count = cur.fetchone()[0] or 0
+        cur.close()
+        conn.close()
+        
+        logger.info(f"📊 Flotas pendientes: {count}")
+        return jsonify({"count": count})
+        
+    except Exception as e:
+        logger.error(f"Error en get_flotas_pendientes_count: {e}")
+        return jsonify({"count": 0})
+
+# ============================================
+# EXPORTAR FLOTA A PDF
+# ============================================
 @flota_bp.route('/exportar_flota_pdf/<flota>', methods=['POST'])
 def exportar_flota_pdf(flota):
     """Genera un PDF con los servicios de una flota en un rango de fechas"""
