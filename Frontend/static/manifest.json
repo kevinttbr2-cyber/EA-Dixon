@@ -1,11 +1,13 @@
 {
   "name": "Dixon Electricidad Automotriz",
   "short_name": "Dixon",
+  "description": "Sistema de gestión para taller automotriz",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#121214",
   "theme_color": "#00ff66",
   "orientation": "portrait",
+  "scope": "/",
   "categories": ["business", "finance", "utilities"],
   "icons": [
     {
@@ -19,6 +21,13 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/images/screenshot-mobile.png",
+      "sizes": "1080x1920",
+      "type": "image/png"
     }
   ],
   "permissions": [
