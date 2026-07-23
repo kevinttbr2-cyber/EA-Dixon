@@ -574,7 +574,9 @@
                     
                     {% if session.get("usuario") %}
                     
-                    <!-- ESTADO (directo) -->
+                    <!-- ====================
+                    ESTADO (todos)
+                    ==================== -->
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/estado' %}active{% endif %}" href="/estado">
                             <span class="material-symbols-rounded">dashboard</span>
@@ -585,15 +587,16 @@
                         </a>
                     </li>
                     
-                    <!-- FINANZAS (dropdown) -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <!-- ====================
+                    FINANZAS (SOLO ADMIN)
+                    ==================== -->
+                    {% if session.get("rol") == "admin" %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuFinanzas" role="button" data-bs-toggle="dropdown">
                             <span class="material-symbols-rounded">account_balance</span>
                             Finanzas
                         </a>
                         <ul class="dropdown-menu">
-                            <!-- ✅ Balance Unificado -->
                             <li>
                                 <a class="dropdown-item" href="/balance_unificado" style="
                                     background: rgba(0,255,102,0.08);
@@ -615,8 +618,10 @@
                     </li>
                     {% endif %}
                     
-                    <!-- GESTIÓN -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <!-- ====================
+                    GESTIÓN (SOLO ADMIN)
+                    ==================== -->
+                    {% if session.get("rol") == "admin" %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown">
                             <span class="material-symbols-rounded">settings</span>
@@ -635,8 +640,10 @@
                     </li>
                     {% endif %}
                     
-                    <!-- VALIDAR PAGOS -->
-                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <!-- ====================
+                    VALIDAR PAGOS (SOLO ADMIN)
+                    ==================== -->
+                    {% if session.get("rol") == "admin" %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/pendientes_validacion' %}active{% endif %}" href="/pendientes_validacion">
                             <span class="material-symbols-rounded">verified</span>
@@ -645,7 +652,9 @@
                     </li>
                     {% endif %}
                     
-                    <!-- USUARIOS (solo admin) -->
+                    <!-- ====================
+                    USUARIOS (SOLO ADMIN) - INCLUYE CAMBIAR CONTRASEÑA
+                    ==================== -->
                     {% if session.get("rol") == "admin" %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuUsuarios" role="button" data-bs-toggle="dropdown">
@@ -655,11 +664,16 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="/register"><span class="material-symbols-rounded">person_add</span> Crear Usuario</a></li>
                             <li><a class="dropdown-item" href="/usuarios"><span class="material-symbols-rounded">group</span> Lista de Usuarios</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <!-- ✅ Cambiar Contraseña DENTRO de Usuarios -->
+                            <li><a class="dropdown-item" href="/cambiar_password"><span class="material-symbols-rounded">key</span> Cambiar Contraseña</a></li>
                         </ul>
                     </li>
                     {% endif %}
                     
-                    <!-- LOGS (solo admin) -->
+                    <!-- ====================
+                    LOGS (SOLO ADMIN)
+                    ==================== -->
                     {% if session.get("rol") == "admin" %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/ver_logs' %}active{% endif %}" href="/ver_logs">
@@ -669,19 +683,26 @@
                     </li>
                     {% endif %}
                     
-                    <!-- PERFIL + CAMBIAR CONTRASEÑA + SALIR -->
+                    <!-- ====================
+                    VENTA RÁPIDA (ADMIN Y OPERADOR)
+                    ==================== -->
+                    {% if session.get("rol") in ["admin", "operador"] %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/venta_rapida' %}active{% endif %}" href="/venta_rapida">
+                            <span class="material-symbols-rounded">bolt</span>
+                            Venta Rápida
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- ====================
+                    PERFIL + SALIR (TODOS)
+                    ==================== -->
                     <li class="nav-item">
                         <span class="user-name">
                             <span class="material-symbols-rounded" style="font-size: 16px;">account_circle</span>
                             {{ session.get('nombre_completo', session.get('usuario')) }}
                         </span>
-                    </li>
-                    <!-- ✅ CAMBIAR CONTRASEÑA (NUEVO) -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="/cambiar_password" style="color: #4fc3f7;">
-                            <span class="material-symbols-rounded">key</span>
-                            Cambiar Contraseña
-                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link logout-link" href="/logout">
@@ -708,7 +729,7 @@
             <div class="user-role">{{ session.get('rol', 'usuario') }}</div>
         </div>
 
-        <!-- Estado -->
+        <!-- Estado (todos) -->
         <a href="/estado" class="drawer-item {% if request.path == '/estado' %}active{% endif %}">
             <span class="material-symbols-rounded">dashboard</span>
             Estado
@@ -717,9 +738,9 @@
             {% endif %}
         </a>
 
-        <!-- FINANZAS -->
+        <!-- FINANZAS (SOLO ADMIN) -->
+        {% if session.get("rol") == "admin" %}
         <div class="drawer-section-title">Finanzas</div>
-        <!-- ✅ Balance Unificado -->
         <a href="/balance_unificado" class="drawer-item {% if request.path == '/balance_unificado' %}active{% endif %}" style="
             padding-left: 36px;
             border-left: 3px solid #00ff66;
@@ -748,8 +769,10 @@
             <span class="material-symbols-rounded">receipt_long</span>
             Cierre de Caja
         </a>
+        {% endif %}
 
-        <!-- GESTIÓN -->
+        <!-- GESTIÓN (SOLO ADMIN) -->
+        {% if session.get("rol") == "admin" %}
         <div class="drawer-section-title">Gestión</div>
         <a href="/registros" class="drawer-item {% if request.path == '/registros' %}active{% endif %}" style="padding-left: 36px;">
             <span class="material-symbols-rounded">history</span>
@@ -777,9 +800,21 @@
             <span class="material-symbols-rounded">inventory_2</span>
             Repuestos
         </a>
+        {% endif %}
 
         <!-- OPERACIONES -->
         <div class="drawer-section-title">Operaciones</div>
+        
+        <!-- Venta Rápida (admin y operador) -->
+        {% if session.get("rol") in ["admin", "operador"] %}
+        <a href="/venta_rapida" class="drawer-item {% if request.path == '/venta_rapida' %}active{% endif %}" style="padding-left: 36px;">
+            <span class="material-symbols-rounded">bolt</span>
+            Venta Rápida
+        </a>
+        {% endif %}
+        
+        <!-- Validar Pagos (solo admin) -->
+        {% if session.get("rol") == "admin" %}
         <a href="/pendientes_validacion" class="drawer-item {% if request.path == '/pendientes_validacion' %}active{% endif %}" style="padding-left: 36px;">
             <span class="material-symbols-rounded">verified</span>
             Validar Pagos
@@ -788,6 +823,7 @@
             <span class="material-symbols-rounded">download</span>
             Auditoría
         </a>
+        {% endif %}
 
         <!-- ADMINISTRACIÓN (solo admin) -->
         {% if session.get("rol") == "admin" %}
@@ -796,20 +832,19 @@
             <span class="material-symbols-rounded">people</span>
             Usuarios
         </a>
+        <!-- ✅ Cambiar Contraseña DENTRO de Administración -->
+        <a href="/cambiar_password" class="drawer-item {% if request.path == '/cambiar_password' %}active{% endif %}" style="padding-left: 36px; color: #4fc3f7;">
+            <span class="material-symbols-rounded">key</span>
+            Cambiar Contraseña
+        </a>
         <a href="/ver_logs" class="drawer-item {% if request.path == '/ver_logs' %}active{% endif %}" style="padding-left: 36px;">
             <span class="material-symbols-rounded">terminal</span>
             Logs
         </a>
         {% endif %}
 
-        <!-- ✅ CAMBIAR CONTRASEÑA (NUEVO) -->
+        <!-- SALIR (todos) -->
         <div style="padding: 8px 20px 4px; border-top: 1px solid #2e3138; margin-top: 8px;"></div>
-        <a href="/cambiar_password" class="drawer-item" style="color: #4fc3f7;">
-            <span class="material-symbols-rounded">key</span>
-            Cambiar Contraseña
-        </a>
-
-        <!-- SALIR -->
         <a href="/logout" class="drawer-item" style="color: #e74c3c;">
             <span class="material-symbols-rounded">logout</span>
             Salir
