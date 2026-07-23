@@ -110,7 +110,7 @@
          TABLA DE DATOS
          ============================ -->
     <div style="overflow-x: auto; border-radius: 0 0 12px 12px; border: 1px solid rgba(0, 255, 102, 0.20); border-top: none; background: #141414;">
-        <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 750px; width: 100%; margin-bottom: 0;">
+        <table class="table table-dark table-hover table-bordered mb-0" style="font-size: 13px; min-width: 900px; width: 100%; margin-bottom: 0;">
             <thead style="background: #2a6d44 !important; color: #ffffff !important;">
                 <tr>
                     <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">#</th>
@@ -118,6 +118,7 @@
                     <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Cliente</th>
                     <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Descargado por</th>
                     <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Rol</th>
+                    <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Tipo</th>
                     <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">IP</th>
                     <th style="padding: 10px 12px; color: #ffffff !important; text-align: center; font-weight: 700; background: #2a6d44 !important;">Fecha / Hora</th>
                 </tr>
@@ -127,11 +128,15 @@
                 <tr>
                     <td style="padding: 8px 10px; color: #ffffff; text-align: center;">{{ loop.index }}</td>
                     <td style="padding: 8px 10px; color: #ffffff; text-align: center;">
-                        <a href="/orden_trabajo_publico/{{ item.id_registro }}/{{ item.firma }}" 
-                           target="_blank" 
-                           style="color: #00ff66; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                            <i class="fa-solid fa-file-pdf" style="font-size: 12px;"></i> #{{ item.id_registro }}
-                        </a>
+                        {% if item.id_registro %}
+                            <a href="/orden_trabajo_publico/{{ item.id_registro }}/{{ item.firma }}" 
+                               target="_blank" 
+                               style="color: #00ff66; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid fa-file-pdf" style="font-size: 12px;"></i> #{{ item.id_registro }}
+                            </a>
+                        {% else %}
+                            <span style="color: #666;">-</span>
+                        {% endif %}
                     </td>
                     <td style="padding: 8px 10px; color: #ffffff; text-align: center; font-weight: 500;">
                         {{ item.nombre_cliente or 'N/A' }}
@@ -154,6 +159,18 @@
                             <span style="color: #888;">{{ item.tipo_usuario or 'Desconocido' }}</span>
                         {% endif %}
                     </td>
+                    <td style="padding: 8px 10px; color: #ffffff; text-align: center;">
+                        {% if item.tipo_documento == 'flota_pdf' %}
+                            <span style="color: #ffcc00; font-weight: 600;">🚛 Flota</span>
+                        {% elif item.tipo_documento == 'pdf' or not item.tipo_documento %}
+                            <span style="color: #00ff66; font-weight: 600;">📄 OT</span>
+                        {% else %}
+                            <span style="color: #888;">{{ item.tipo_documento or '📄 OT' }}</span>
+                        {% endif %}
+                        {% if item.descripcion %}
+                            <br><span style="color: #666; font-size: 9px;">{{ item.descripcion }}</span>
+                        {% endif %}
+                    </td>
                     <td style="padding: 8px 10px; color: #888; text-align: center; font-size: 12px; font-family: monospace;">
                         {{ item.ip or '-' }}
                     </td>
@@ -169,7 +186,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" style="text-align: center; color: #666; padding: 40px 0;">
+                    <td colspan="8" style="text-align: center; color: #666; padding: 40px 0;">
                         <i class="fa-solid fa-file-pdf" style="font-size: 48px; color: #00ff66; opacity: 0.2; display: block; margin-bottom: 10px;"></i>
                         <p style="font-size: 16px;">No hay descargas registradas</p>
                         <p style="color: #888; font-size: 13px;">Los informes se registrarán automáticamente cuando se descarguen</p>
