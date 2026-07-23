@@ -1220,10 +1220,40 @@ def exportar_flota_pdf(flota):
         resp = requests.post(url, json={"fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta}, timeout=60)
         
         if resp.status_code == 200:
+            # ============================================
+            # ✅ REGISTRAR DESCARGA EN AUDITORÍA
+            # ============================================
+            usuario = session.get('nombre_completo') or session.get('usuario') or 'Sistema'
+            tipo_usuario = session.get('rol', 'usuario')
+            ip = request.remote_addr
+            user_agent = request.headers.get('User-Agent', '')
+            
+            # ✅ Enviar a la API de auditoría del backend
+            try:
+                requests.post(
+                    f"{backend_url}/api/auditoria_descargas",
+                    json={
+                        "id_registro": None,  # No es una OT específica
+                        "nombre_cliente": f"Flota: {flota}",
+                        "monto": 0,
+                        "usuario_descarga": usuario,
+                        "tipo_usuario": tipo_usuario,
+                        "ip": ip,
+                        "user_agent": user_agent,
+                        "tipo_documento": "flota_pdf",
+                        "descripcion": f"Exportación de flota {flota} ({fecha_desde} a {fecha_hasta})"
+                    },
+                    timeout=5
+                )
+                logger.info(f"✅ Auditoría registrada: Exportación flota {flota} por {usuario}")
+            except Exception as e:
+                logger.error(f"Error registrando auditoría de flota: {e}")
+            
+            # ✅ ENVIAR NOTIFICACIÓN PUSH
             enviar_notificacion_push(
-                titulo="📄 Reporte Generado",
-                mensaje=f"Flota: {flota}\nFechas: {fecha_desde} - {fecha_hasta}\nGenerado por: {session.get('usuario')}",
-                url="/flotas"
+                titulo="📄 Reporte de Flota Descargado",
+                mensaje=f"🚛 Flota: {flota}\n📅 {fecha_desde} - {fecha_hasta}\n👤 Descargado por: {usuario}\n📌 Rol: {tipo_usuario}",
+                url="/auditoria_descargas"
             )
             
             return send_file(
