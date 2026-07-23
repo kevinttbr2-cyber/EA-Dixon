@@ -586,7 +586,7 @@
                     </li>
                     
                     <!-- FINANZAS (dropdown) -->
-                    {% if session.get("rol") in ["admin"] %}
+                    {% if session.get("rol") in ["admin", "operador"] %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuFinanzas" role="button" data-bs-toggle="dropdown">
                             <span class="material-symbols-rounded">account_balance</span>
@@ -616,7 +616,7 @@
                     {% endif %}
                     
                     <!-- GESTIÓN -->
-                    {% if session.get("rol") in ["admin"] %}
+                    {% if session.get("rol") in ["admin", "operador"] %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="menuGestion" role="button" data-bs-toggle="dropdown">
                             <span class="material-symbols-rounded">settings</span>
@@ -636,7 +636,7 @@
                     {% endif %}
                     
                     <!-- VALIDAR PAGOS -->
-                    {% if session.get("rol") in ["admin"] %}
+                    {% if session.get("rol") in ["admin", "operador"] %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/pendientes_validacion' %}active{% endif %}" href="/pendientes_validacion">
                             <span class="material-symbols-rounded">verified</span>
@@ -669,12 +669,19 @@
                     </li>
                     {% endif %}
                     
-                    <!-- PERFIL + SALIR -->
+                    <!-- PERFIL + CAMBIAR CONTRASEÑA + SALIR -->
                     <li class="nav-item">
                         <span class="user-name">
                             <span class="material-symbols-rounded" style="font-size: 16px;">account_circle</span>
                             {{ session.get('nombre_completo', session.get('usuario')) }}
                         </span>
+                    </li>
+                    <!-- ✅ CAMBIAR CONTRASEÑA (NUEVO) -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cambiar_password" style="color: #4fc3f7;">
+                            <span class="material-symbols-rounded">key</span>
+                            Cambiar Contraseña
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link logout-link" href="/logout">
@@ -712,7 +719,7 @@
 
         <!-- FINANZAS -->
         <div class="drawer-section-title">Finanzas</div>
-        <!-- ✅ NUEVO: Balance Unificado -->
+        <!-- ✅ Balance Unificado -->
         <a href="/balance_unificado" class="drawer-item {% if request.path == '/balance_unificado' %}active{% endif %}" style="
             padding-left: 36px;
             border-left: 3px solid #00ff66;
@@ -795,8 +802,14 @@
         </a>
         {% endif %}
 
-        <!-- SALIR -->
+        <!-- ✅ CAMBIAR CONTRASEÑA (NUEVO) -->
         <div style="padding: 8px 20px 4px; border-top: 1px solid #2e3138; margin-top: 8px;"></div>
+        <a href="/cambiar_password" class="drawer-item" style="color: #4fc3f7;">
+            <span class="material-symbols-rounded">key</span>
+            Cambiar Contraseña
+        </a>
+
+        <!-- SALIR -->
         <a href="/logout" class="drawer-item" style="color: #e74c3c;">
             <span class="material-symbols-rounded">logout</span>
             Salir
