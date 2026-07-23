@@ -1166,15 +1166,22 @@ def eliminar_usuario(id_usuario):
 @role_required(['admin'])
 def auditoria_descargas():
     try:
-        # ✅ CORREGIDO
+        # ✅ CORREGIDO - Usar la ruta correcta del backend
         resp = requests.get(f"{BACKEND_URL}/api/auditoria_descargas", timeout=10)
         if resp.status_code == 200:
             historial = resp.json()
+            # ✅ Agregar firma para cada registro (si tiene id_registro)
+            for item in historial:
+                if item.get('id_registro'):
+                    item['firma'] = generar_firma_pdf(item['id_registro'])
+                else:
+                    item['firma'] = None
         else:
             historial = []
     except Exception as e:
         logger.error(f"Error en /auditoria_descargas: {e}")
         historial = []
+    
     return render_template("auditoria_descargas.html", historial=historial)
     
 @app.route('/descargar_pdf/<int:id_reg>')
