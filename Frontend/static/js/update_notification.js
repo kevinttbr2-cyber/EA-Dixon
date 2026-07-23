@@ -3,11 +3,17 @@
 const API_URL = 'https://ea-dixon-production.up.railway.app';
 
 // ============================================
-// VERIFICAR ACTUALIZACIONES CADA 5 MINUTOS
+// VERIFICAR ACTUALIZACIONES (CADA 6 HORAS)
 // ============================================
 let updateChecked = false;
 
 function verificarActualizacion() {
+    // ✅ NO verificar si la app está instalada como PWA
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('📱 App en modo standalone - Sistema de actualización desactivado');
+        return;
+    }
+    
     console.log('🔍 Verificando actualizaciones...');
     
     fetch(`${API_URL}/api/update/check`, {
@@ -38,7 +44,6 @@ function mostrarBanner(data) {
     
     if (!banner) return;
     
-    // Actualizar mensajes
     if (message) {
         message.textContent = `Versión actual: v${data.current_version || '1.0.0'} → Nueva: v${data.latest_version || '1.1.0'}`;
     }
@@ -47,10 +52,7 @@ function mostrarBanner(data) {
         notes.textContent = data.release_notes || '📌 Corrección de errores y mejoras';
     }
     
-    // Mostrar banner
     banner.style.display = 'block';
-    
-    // Animación de entrada
     banner.style.animation = 'slideUp 0.5s ease-out';
 }
 
@@ -58,11 +60,9 @@ function mostrarBanner(data) {
 // EJECUTAR ACTUALIZACIÓN
 // ============================================
 function ejecutarActualizacion() {
-    // Mostrar modal
     const modal = document.getElementById('updateModal');
     if (modal) modal.style.display = 'flex';
     
-    // Actualizar progreso
     const progressBar = document.getElementById('progressBar');
     const updateLog = document.getElementById('updateLog');
     const btn = document.getElementById('btnUpdate');
@@ -77,7 +77,6 @@ function ejecutarActualizacion() {
     if (updateLog) updateLog.innerHTML = '🔄 Iniciando actualización...\n';
     if (progressBar) progressBar.style.width = '10%';
     
-    // Obtener usuario actual
     const user = localStorage.getItem('username') || 'Usuario';
     
     fetch(`${API_URL}/api/update/execute`, {
@@ -95,7 +94,6 @@ function ejecutarActualizacion() {
             if (progressBar) progressBar.style.width = '100%';
             
             setTimeout(() => {
-                // Recargar la página después de 2 segundos
                 location.reload();
             }, 2000);
         } else {
@@ -129,13 +127,12 @@ function cerrarBanner() {
     const banner = document.getElementById('updateBanner');
     if (banner) {
         banner.style.display = 'none';
-        // Guardar preferencia
         localStorage.setItem('updateBannerDismissed', 'true');
-        // Volver a verificar en 1 hora
+        // ✅ Volver a verificar en 24 horas
         setTimeout(() => {
             localStorage.removeItem('updateBannerDismissed');
             verificarActualizacion();
-        }, 3600000);
+        }, 86400000); // 24 horas
     }
 }
 
@@ -151,20 +148,25 @@ function cerrarModalActualizacion() {
 // INICIALIZAR
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Verificar si el banner fue cerrado recientemente
+    // ✅ NO verificar si la app está instalada como PWA
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log('📱 App en modo standalone - Sistema de actualización desactivado');
+        return;
+    }
+    
     const dismissed = localStorage.getItem('updateBannerDismissed');
     
     if (!dismissed) {
-        // Esperar 3 segundos después de cargar la página
+        // ✅ Esperar 10 segundos (no 3) para no interferir con la carga
         setTimeout(() => {
             verificarActualizacion();
-        }, 3000);
+        }, 10000);
     }
     
-    // Verificar cada 5 minutos
+    // ✅ Verificar cada 6 horas (no 5 minutos)
     setInterval(() => {
         verificarActualizacion();
-    }, 300000); // 5 minutos
+    }, 21600000); // 6 horas
 });
 
 // ============================================
