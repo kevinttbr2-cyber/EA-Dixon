@@ -1,18 +1,18 @@
 // frontend/static/service-worker.js
 const CACHE_NAME = 'dixon-v3';
 
-// ✅ ARCHIVOS A CACHEAR (INCLUYENDO LOS DE IMPRESIÓN)
+// ✅ ARCHIVOS A CACHEAR
 const urlsToCache = [
   '/',
   '/static/theme.css',
   '/static/manifest.json',
   '/static/js/imprimir.js',
   '/static/js/imprimir_ticket.js',
-  '/static/js/lector.js', 
+  '/static/js/lector.js',
   '/offline'
 ];
 
-// INSTALACIÓN
+// INSTALACIÓN - SIN skipWaiting()
 self.addEventListener('install', function(event) {
   console.log('🔧 Service Worker instalando...');
   event.waitUntil(
@@ -30,13 +30,11 @@ self.addEventListener('install', function(event) {
           );
         });
       })
-      .then(function() {
-        return self.skipWaiting();
-      })
+      // ❌ ELIMINAR self.skipWaiting()
   );
 });
 
-// ACTIVACIÓN
+// ACTIVACIÓN - SIN clients.claim()
 self.addEventListener('activate', function(event) {
   console.log('🔧 Service Worker activando...');
   event.waitUntil(
@@ -49,22 +47,19 @@ self.addEventListener('activate', function(event) {
           }
         })
       );
-    }).then(function() {
-      return self.clients.claim();
     })
+    // ❌ ELIMINAR self.clients.claim()
   );
 });
 
-// FETCH
+// FETCH (sin cambios)
 self.addEventListener('fetch', function(event) {
-  // No interceptar llamadas a la API ni al backend
   if (event.request.url.includes('/api/') || 
       event.request.url.includes('.railway.app') ||
       event.request.url.includes('chrome-extension')) {
     return;
   }
 
-  // Estrategia: Cache First para assets estáticos
   if (event.request.url.includes('/static/')) {
     event.respondWith(
       caches.match(event.request)
@@ -84,7 +79,6 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
-  // Estrategia: Network First para páginas HTML
   event.respondWith(
     fetch(event.request)
       .then(function(response) {
@@ -108,7 +102,7 @@ self.addEventListener('fetch', function(event) {
   );
 });
 
-// ✅ RECIBIR NOTIFICACIONES PUSH
+// ✅ NOTIFICACIONES PUSH (sin cambios)
 self.addEventListener('push', function(event) {
   if (!event.data) {
     console.warn('⚠️ Push sin datos');
@@ -157,7 +151,7 @@ self.addEventListener('push', function(event) {
   }
 });
 
-// ✅ CLICK EN NOTIFICACIÓN
+// ✅ CLICK EN NOTIFICACIÓN (sin cambios)
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   const url = event.notification.data?.url || '/estado';
