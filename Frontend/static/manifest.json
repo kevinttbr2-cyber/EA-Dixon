@@ -23,9 +23,7 @@
       "purpose": "any maskable"
     }
   ],
-  "permissions": [
-    "usb"
-  ],
+  "permissions": ["usb"],
   "usb": {
     "filters": [
       { "vendorId": 0x6868, "productId": 0x0200 },
