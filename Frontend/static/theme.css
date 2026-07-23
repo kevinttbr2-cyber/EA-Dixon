@@ -845,3 +845,49 @@ textarea.form-control {
     font-size: 14px;
   }
 }
+/* ============================
+   ✅ ELIMINAR BORDES BLANCOS EN PWA
+   ============================ */
+
+/* Fondo general de la app */
+html, body {
+    background: #121214 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important; /* Para dispositivos modernos */
+}
+
+/* Eliminar bordes blancos en el splash screen */
+:root {
+    --bg-primary: #121214;
+}
+
+/* Para iOS - eliminar bordes blancos */
+body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
+/* Para Android - status bar transparente */
+@media (display-mode: standalone) {
+    body {
+        background: #121214 !important;
+    }
+    
+    /* Eliminar espacios blancos en los bordes */
+    .base-container {
+        background: #181a1f !important;
+        border: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    
+    /* Ajustar el padding para que no haya bordes blancos */
+    .base-container {
+        padding: 16px 20px !important;
+    }
+}
